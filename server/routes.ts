@@ -9,6 +9,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
+import { openAIService } from "./services/openai-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -532,6 +533,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
         users: usersResult
       });
     } catch (error) {
+      next(error);
+    }
+  });
+  
+  // AI Recommendations API
+  
+  // 1. Generate objective recommendations for teams
+  app.get("/api/recommendations/objectives/:teamId", async (req, res, next) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const count = req.query.count ? parseInt(req.query.count as string) : 3;
+      
+      // Get team data
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      // Get existing team objectives 
+      const teamObjectives = await storage.getObjectivesByTeam(teamId);
+      
+      // Get company objectives for alignment
+      const companyObjectives = await storage.getAllObjectives().then(
+        objectives => objectives.filter(obj => obj.level === 'company')
+      );
+      
+      // Generate recommendations
+      const recommendations = await openAIService.generateObjectiveRecommendations(
+        teamId, 
+        team, 
+        teamObjectives, 
+        companyObjectives,
+        count
+      );
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating objective recommendations:", error);
+      next(error);
+    }
+  });
+  
+  // 2. Generate key result recommendations for an objective
+  app.get("/api/recommendations/key-results/:objectiveId", async (req, res, next) => {
+    try {
+      const objectiveId = parseInt(req.params.objectiveId);
+      const count = req.query.count ? parseInt(req.query.count as string) : 5;
+      
+      // Get objective data
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Get existing key results for this objective
+      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      
+      // Generate recommendations
+      const recommendations = await openAIService.generateKeyResultRecommendations(
+        objective,
+        keyResults,
+        count
+      );
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating key result recommendations:", error);
+      next(error);
+    }
+  });
+  
+  // 3. Analyze and improve an existing OKR
+  app.get("/api/recommendations/improve/:objectiveId", async (req, res, next) => {
+    try {
+      const objectiveId = parseInt(req.params.objectiveId);
+      
+      // Get objective data
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Get key results for this objective
+      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      
+      // Generate improvement suggestions
+      const improvement = await openAIService.analyzeAndImproveOKR(
+        objective,
+        keyResults
+      );
+      
+      res.json(improvement);
+    } catch (error) {
+      console.error("Error analyzing OKR for improvements:", error);
+      next(error);
+    }
+  });
+  
+  // 4. Analyze team objectives alignment with company objectives
+  app.get("/api/recommendations/alignment/:teamId", async (req, res, next) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      // Get team data
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      // Get team objectives 
+      const teamObjectives = await storage.getObjectivesByTeam(teamId);
+      
+      // Get company objectives for alignment analysis
+      const companyObjectives = await storage.getAllObjectives().then(
+        objectives => objectives.filter(obj => obj.level === 'company')
+      );
+      
+      // Generate alignment analysis
+      const alignmentAnalysis = await openAIService.analyzeTeamAlignment(
+        teamId,
+        teamObjectives,
+        companyObjectives
+      );
+      
+      res.json(alignmentAnalysis);
+    } catch (error) {
+      console.error("Error analyzing team alignment:", error);
       next(error);
     }
   });
