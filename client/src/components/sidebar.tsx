@@ -57,10 +57,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800 flex items-center">
+      <div className="p-5 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
+        <h1 className="text-xl font-semibold flex items-center">
           <BarChart3 className="h-7 w-7 mr-2 text-primary" />
-          OKR System
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
         </h1>
       </div>
       
@@ -400,22 +400,22 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       </nav>
       
       {/* User Profile */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-border p-4 bg-muted/30">
         <div className="flex items-center">
-          <Avatar className="h-8 w-8 mr-3">
+          <Avatar className="h-9 w-9 mr-3 border-2 border-primary/20">
             <AvatarImage src="" alt="User profile" />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
           </Avatar>
           <div>
             <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-            <p className="text-xs text-gray-500">{user?.role}</p>
+            <p className="text-xs text-muted-foreground">{user?.role}</p>
           </div>
           <div className="ml-auto">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={handleLogout} 
-              className="text-gray-400 hover:text-gray-500"
+              className="text-gray-400 hover:text-gray-500 hover:bg-muted transition-colors duration-200"
             >
               <MoreHorizontal className="h-5 w-5" />
             </Button>
@@ -428,13 +428,13 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 h-full">
+      <aside className="hidden md:flex md:flex-col w-64 bg-background border-r border-border h-full shadow-sm">
         {sidebarContent}
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="p-0 w-72">
+        <SheetContent side="left" className="p-0 w-72 border-r-0">
           {sidebarContent}
         </SheetContent>
       </Sheet>
