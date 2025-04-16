@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Users, Search, AlertCircle } from "lucide-react";
+import { PlusCircle, Users, Search, AlertCircle, Mail, MoreHorizontal, Eye, Target } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -30,6 +30,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -202,6 +203,12 @@ const Teams = () => {
   // Fetch team members when a team is selected
   const { data: teamMembers, isLoading: membersLoading } = useQuery<User[]>({
     queryKey: ["/api/teams", selectedTeam?.id, "users"],
+    enabled: !!selectedTeam,
+  });
+  
+  // Fetch team objectives when a team is selected
+  const { data: teamObjectives, isLoading: objectivesLoading } = useQuery<TeamObjective[]>({
+    queryKey: ["/api/teams", selectedTeam?.id, "objectives"],
     enabled: !!selectedTeam,
   });
 
@@ -404,8 +411,11 @@ const Teams = () => {
             </TabsList>
             
             <TabsContent value="members" className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Team Members</h3>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium">Team Members</h3>
+                  <p className="text-sm text-muted-foreground">View and manage team members</p>
+                </div>
                 <Button size="sm">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Member
@@ -415,7 +425,7 @@ const Teams = () => {
               {membersLoading ? (
                 <div className="animate-pulse space-y-4">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="flex items-center p-3">
+                    <div key={i} className="flex items-center p-3 border rounded-lg">
                       <div className="rounded-full bg-slate-200 h-10 w-10 mr-3"></div>
                       <div className="space-y-2">
                         <div className="h-4 bg-slate-200 rounded w-24"></div>
@@ -425,9 +435,31 @@ const Teams = () => {
                   ))}
                 </div>
               ) : teamMembers && teamMembers.length > 0 ? (
-                <div className="space-y-2">
+                <div className="grid gap-3">
                   {teamMembers.map(member => (
-                    <TeamMember key={member.id} user={member} />
+                    <Card key={member.id} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex items-center p-4">
+                          <div className="rounded-full bg-primary/10 h-12 w-12 flex items-center justify-center mr-4">
+                            <span className="text-lg font-semibold text-primary">
+                              {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-grow">
+                            <div className="font-medium">{member.firstName} {member.lastName}</div>
+                            <div className="text-sm text-muted-foreground">{member.email || member.username}</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               ) : (
@@ -442,72 +474,148 @@ const Teams = () => {
             </TabsContent>
             
             <TabsContent value="objectives" className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Team Objectives</h3>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium">Team Objectives</h3>
+                  <p className="text-sm text-muted-foreground">Track and manage team objectives</p>
+                </div>
                 <Button size="sm">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Objective
                 </Button>
               </div>
               
-              <div className="text-center py-6 text-gray-500">
-                Team objectives will be displayed here
-              </div>
+              {objectivesLoading ? (
+                <div className="animate-pulse space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-card rounded-lg p-4 border">
+                      <div className="space-y-2 mb-3">
+                        <div className="h-5 bg-slate-200 rounded w-2/3"></div>
+                        <div className="h-3 bg-slate-200 rounded w-full"></div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="h-3 bg-slate-200 rounded w-20"></div>
+                        <div className="h-7 w-16 bg-slate-200 rounded-full"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : teamObjectives && teamObjectives.length > 0 ? (
+                <div className="grid gap-4">
+                  {teamObjectives.map(objective => (
+                    <Card key={objective.id} className="overflow-hidden">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-base">{objective.title}</CardTitle>
+                          <Badge 
+                            variant="outline"
+                            className={
+                              objective.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100" :
+                              objective.status === "on_track" ? "bg-blue-100 text-blue-800 hover:bg-blue-100" :
+                              objective.status === "at_risk" ? "bg-amber-100 text-amber-800 hover:bg-amber-100" :
+                              "bg-red-100 text-red-800 hover:bg-red-100"
+                            }
+                          >
+                            {objective.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        <CardDescription>{objective.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm font-medium">Progress</span>
+                          <span className="text-sm font-medium">{objective.progress}%</span>
+                        </div>
+                        <Progress value={objective.progress} className="h-2" />
+                      </CardContent>
+                      <CardFooter className="pt-0 pb-3 flex justify-between">
+                        <div className="text-xs text-muted-foreground">
+                          Owner: {objective.ownerId}
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-7">
+                          <Eye className="h-3.5 w-3.5 mr-1.5" />
+                          View Details
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <Target className="h-4 w-4" />
+                  <AlertTitle>No objectives found</AlertTitle>
+                  <AlertDescription>
+                    This team doesn't have any objectives yet. Add objectives to track team progress.
+                  </AlertDescription>
+                </Alert>
+              )}
             </TabsContent>
             
-            <TabsContent value="settings" className="space-y-4 mt-4">
-              <h3 className="text-lg font-medium">Team Settings</h3>
-              
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Team Name
-                  </label>
-                  <Input defaultValue={selectedTeam?.name} />
-                </div>
-                
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <Input defaultValue={selectedTeam?.description || ''} />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Team Color
-                    </label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        defaultValue={selectedTeam?.color || '#3B82F6'} 
-                        className="h-10 w-10 p-0 border-0" 
+            <TabsContent value="settings" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Settings</CardTitle>
+                  <CardDescription>Manage team information and appearance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-6">
+                    <div className="grid gap-3">
+                      <label className="text-sm font-medium text-gray-700">
+                        Team Name
+                      </label>
+                      <Input defaultValue={selectedTeam?.name} />
+                    </div>
+                    
+                    <div className="grid gap-3">
+                      <label className="text-sm font-medium text-gray-700">
+                        Description
+                      </label>
+                      <Textarea 
+                        defaultValue={selectedTeam?.description || ''} 
+                        className="min-h-[100px]" 
+                        placeholder="Describe the team's purpose and responsibilities"
                       />
-                      <Input defaultValue={selectedTeam?.color || '#3B82F6'} />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid gap-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Team Color
+                        </label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            defaultValue={selectedTeam?.color || '#3B82F6'} 
+                            className="h-10 w-10 p-0 border-0 rounded" 
+                          />
+                          <Input defaultValue={selectedTeam?.color || '#3B82F6'} />
+                        </div>
+                      </div>
+                      
+                      <div className="grid gap-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Team Icon
+                        </label>
+                        <Select defaultValue={selectedTeam?.icon || 'building'}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select icon" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="building">Building</SelectItem>
+                            <SelectItem value="code-box">Code Box</SelectItem>
+                            <SelectItem value="line-chart">Line Chart</SelectItem>
+                            <SelectItem value="users">Users</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Team Icon
-                    </label>
-                    <Select defaultValue={selectedTeam?.icon || 'building'}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select icon" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="building">Building</SelectItem>
-                        <SelectItem value="code-box">Code Box</SelectItem>
-                        <SelectItem value="line-chart">Line Chart</SelectItem>
-                        <SelectItem value="users">Users</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <Button className="mt-4">Save Changes</Button>
-              </div>
+                </CardContent>
+                <CardFooter className="flex justify-between border-t pt-6">
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Save Changes</Button>
+                </CardFooter>
+              </Card>
             </TabsContent>
           </Tabs>
         </DialogContent>
