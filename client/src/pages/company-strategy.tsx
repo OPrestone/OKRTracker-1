@@ -77,78 +77,289 @@ const CompanyStrategy = () => {
         </CardHeader>
         <CardContent>
           <div className="flex justify-center">
-            <div className="relative w-full max-w-3xl overflow-x-auto">
-              <div className="min-w-[800px]">
-                {/* Vision & Mission */}
-                <div className="mb-8 text-center">
-                  <div className="bg-primary-50 border border-primary py-6 px-8 rounded-lg">
-                    <h3 className="text-lg font-bold text-primary mb-1">Our Vision</h3>
-                    <p className="text-gray-700">
-                      To be the leading innovative platform that transforms how organizations achieve their goals
-                    </p>
+            <div className="relative w-full max-w-4xl overflow-x-auto">
+              <div className="min-w-[800px] pb-6">
+                {/* Top Navigation Bar - similar to the one in the image */}
+                <div className="flex items-center border-b border-gray-200 pb-2 mb-6">
+                  <div className="flex space-x-2 text-sm">
+                    <div className="flex items-center px-3 py-1 border-b-2 border-primary">
+                      <Flag className="h-4 w-4 mr-1.5" />
+                      <span>Goals</span>
+                    </div>
+                    <div className="flex items-center px-3 py-1 font-medium">
+                      <Target className="h-4 w-4 mr-1.5" />
+                      <span>Strategy Map</span>
+                    </div>
+                    <div className="flex items-center px-3 py-1">
+                      <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 17L15 12L9 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Network</span>
+                    </div>
                   </div>
-
-                  <div className="h-8 border-l border-dashed border-gray-300 mx-auto"></div>
-
-                  <div className="bg-blue-50 border border-blue-200 py-6 px-8 rounded-lg">
-                    <h3 className="text-lg font-bold text-blue-600 mb-1">Our Mission</h3>
-                    <p className="text-gray-700">
-                      Empower teams to align, focus, and achieve extraordinary results through effective goal management
-                    </p>
+                  <div className="ml-auto text-sm text-gray-500">
+                    {new Date().toISOString().split('T')[0]}
                   </div>
                 </div>
 
-                {/* Strategic Pillars */}
-                <h3 className="text-center font-bold text-gray-700 mb-3">Strategic Pillars</h3>
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  <div className="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
-                    <h4 className="font-semibold text-green-700 mb-2">Customer Success</h4>
-                    <p className="text-sm text-gray-600">Deliver exceptional value and experience</p>
-                  </div>
-                  <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
-                    <h4 className="font-semibold text-purple-700 mb-2">Product Excellence</h4>
-                    <p className="text-sm text-gray-600">Build innovative and reliable solutions</p>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg text-center">
-                    <h4 className="font-semibold text-amber-700 mb-2">Operational Efficiency</h4>
-                    <p className="text-sm text-gray-600">Optimize processes and maximize resources</p>
+                {/* Top Level Strategy Node */}
+                <div className="flex justify-center mb-16">
+                  <div className="w-[280px] border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-emerald-50 p-4 border-l-4 border-emerald-400">
+                      <div className="flex items-start mb-2">
+                        <div className="h-2 w-2 mt-1.5 rounded-full bg-emerald-400 mr-1.5"></div>
+                        <div>
+                          <h3 className="font-medium text-gray-800">Market Expansion & Growth</h3>
+                        </div>
+                      </div>
+                      <div className="ml-3.5 text-xs text-gray-500">ICT Team</div>
+                    </div>
+                    <div className="flex justify-end p-1.5 bg-white border-t border-gray-200">
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 12H16M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Connection lines */}
-                <div className="h-8 flex justify-center items-center mb-4">
-                  <div className="border-b border-dashed border-gray-300 w-3/4"></div>
+                {/* Connecting Line */}
+                <div className="h-20 flex justify-center items-center">
+                  <div className="border-l border-gray-300 h-full"></div>
                 </div>
 
-                {/* Strategic Objectives */}
-                <h3 className="text-center font-bold text-gray-700 mb-3">Key Company Objectives</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white border border-gray-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-800 mb-2">Expand Global Market Presence</h4>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Progress value={75} className="h-1.5 flex-1 mr-2" />
-                      <span>75%</span>
+                {/* Second Level - Two Strategy Boxes */}
+                <div className="grid grid-cols-2 gap-x-24 mb-16">
+                  {/* Left Strategy Box */}
+                  <div className="w-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-emerald-50 p-4 border-l-4 border-emerald-400">
+                      <div className="flex items-start mb-2">
+                        <div className="h-2 w-2 mt-1.5 rounded-full bg-emerald-400 mr-1.5"></div>
+                        <div>
+                          <h3 className="font-medium text-gray-800">Drive new customer acquisition and revenue growth from inbound channels</h3>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center">
+                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                          <div className="bg-emerald-400 h-full rounded-full" style={{ width: '37%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">37%</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <div className="px-2 py-0.5 bg-gray-100 rounded-sm text-xs flex items-center">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1"></span>
+                          Operations
+                        </div>
+                        <div className="px-2 py-0.5 bg-gray-100 rounded-sm text-xs flex items-center">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                          Sales
+                        </div>
+                        <div className="px-2 py-0.5 bg-gray-100 rounded-sm text-xs flex items-center">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span>
+                          ICT Team
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center text-xs text-gray-500">
+                        <svg className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        Sophie Hansen
+                        <div className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-sm">
+                          On track
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end p-1.5 bg-white border-t border-gray-200">
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 12H16M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className="bg-white border border-gray-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-800 mb-2">Improve Customer Experience</h4>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Progress value={45} className="h-1.5 flex-1 mr-2" />
-                      <span>45%</span>
+
+                  {/* Right Strategy Box */}
+                  <div className="w-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-emerald-50 p-4 border-l-4 border-emerald-400">
+                      <div className="flex items-start mb-2">
+                        <div className="h-2 w-2 mt-1.5 rounded-full bg-emerald-400 mr-1.5"></div>
+                        <div>
+                          <h3 className="font-medium text-gray-800">Build a powerful Outbound engine that drives significant revenue</h3>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center">
+                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                          <div className="bg-emerald-400 h-full rounded-full" style={{ width: '80%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">80%</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        <div className="px-2 py-0.5 bg-gray-100 rounded-sm text-xs flex items-center">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1"></span>
+                          Operations
+                        </div>
+                        <div className="px-2 py-0.5 bg-gray-100 rounded-sm text-xs flex items-center">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span>
+                          ICT Team
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center text-xs text-gray-500">
+                        <svg className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                        Sophie Hansen
+                        <div className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-sm">
+                          On track
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end p-1.5 bg-white border-t border-gray-200">
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8 12H16M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                      <button className="p-1 text-gray-400 hover:text-gray-700">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className="bg-white border border-gray-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-800 mb-2">Launch Mobile Platform</h4>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Progress value={90} className="h-1.5 flex-1 mr-2" />
-                      <span>90%</span>
+                </div>
+
+                {/* Connecting Lines */}
+                <div className="grid grid-cols-2 gap-x-24 mb-2">
+                  <div className="flex justify-center">
+                    <div className="border-l border-gray-300 h-16"></div>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="border-l border-gray-300 h-16"></div>
+                  </div>
+                </div>
+
+                {/* Bottom Row - Multiple Key Results */}
+                <div className="grid grid-cols-5 gap-2">
+                  {/* Key Result 1 */}
+                  <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white p-3">
+                      <div className="flex items-start mb-2">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-800">Achieve a 10% increase in average deal size</h3>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-blue-400 h-full rounded-full" style={{ width: '5%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">5%</span>
+                      </div>
+                      <div className="mt-2 flex items-center text-xs">
+                        <div className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                          <span>Sales</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-white border border-gray-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-800 mb-2">Increase Quarterly Revenue</h4>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Progress value={82} className="h-1.5 flex-1 mr-2" />
-                      <span>82%</span>
+
+                  {/* Key Result 2 */}
+                  <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white p-3">
+                      <div className="flex items-start mb-2">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-800">Generate $5M in new ARR from inbound leads</h3>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-blue-400 h-full rounded-full" style={{ width: '25%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">25%</span>
+                      </div>
+                      <div className="mt-2 flex items-center text-xs">
+                        <div className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                          <span>Sales</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key Result 3 */}
+                  <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white p-3">
+                      <div className="flex items-start mb-2">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-800">Convert 12% of MQLs into Opportunities</h3>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-blue-400 h-full rounded-full" style={{ width: '8%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">8%</span>
+                      </div>
+                      <div className="mt-2 flex items-center text-xs">
+                        <div className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                          <span>Sales</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key Result 4 */}
+                  <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white p-3">
+                      <div className="flex items-start mb-2">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-800">Achieve average cold email open rate of 40% or higher</h3>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-emerald-400 h-full rounded-full" style={{ width: '64%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">64%</span>
+                      </div>
+                      <div className="mt-2 flex items-center text-xs">
+                        <div className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                          <span>Sales</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key Result 5 */}
+                  <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                    <div className="bg-white p-3">
+                      <div className="flex items-start mb-2">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-800">Generate $2M in new ARR through Outbound</h3>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center">
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-emerald-400 h-full rounded-full" style={{ width: '60%' }}></div>
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">60%</span>
+                      </div>
+                      <div className="mt-2 flex items-center text-xs">
+                        <div className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                          <span>Sales</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
