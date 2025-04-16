@@ -40,7 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 const TeamMember = ({ user }: { user: User }) => {
   const initials = user.firstName && user.lastName 
     ? `${user.firstName[0]}${user.lastName[0]}` 
-    : user.username[0];
+    : (user.username ? user.username[0] : '?');
 
   return (
     <div className="flex items-center p-3 hover:bg-gray-50 rounded-md">
