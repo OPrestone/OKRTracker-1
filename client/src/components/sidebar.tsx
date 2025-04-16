@@ -97,7 +97,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link href="/" className="flex items-center w-full">
-            <BarChart3 className="mr-3 h-5 w-5" />
+            <BarChart3 className="mr-3 h-5 w-5 text-indigo-500" />
             Dashboard
           </Link>
         </div>
@@ -111,7 +111,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link href="/home" className="flex items-center w-full">
-            <Home className="mr-3 h-5 w-5" />
+            <Home className="mr-3 h-5 w-5 text-teal-500" />
             Home
           </Link>
         </div>
@@ -139,7 +139,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link href="/company-strategy" className="flex items-center w-full">
-            <Flag className="mr-3 h-5 w-5" />
+            <Flag className="mr-3 h-5 w-5 text-red-500" />
             Company Strategy
           </Link>
         </div>
@@ -154,7 +154,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-600 hover:bg-muted"
           )}
         >
-          <Flag className="mr-3 h-5 w-5" />
+          <Flag className="mr-3 h-5 w-5 text-orange-500" />
           Manage OKRs
           {okrsExpanded ? (
             <ChevronUp className="ml-auto h-5 w-5" />
@@ -221,7 +221,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-600 hover:bg-muted"
           )}
         >
-          <Users className="mr-3 h-5 w-5" />
+          <Users className="mr-3 h-5 w-5 text-blue-500" />
           User Management
           {userManagementExpanded ? (
             <ChevronUp className="ml-auto h-5 w-5" />
@@ -265,7 +265,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link href="/checkins" className="flex items-center w-full">
-            <CalendarCheck className="mr-3 h-5 w-5" />
+            <CalendarCheck className="mr-3 h-5 w-5 text-teal-600" />
             Check-ins
           </Link>
         </div>
@@ -294,7 +294,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-600 hover:bg-muted"
           )}
         >
-          <PieChart className="mr-3 h-5 w-5" />
+          <PieChart className="mr-3 h-5 w-5 text-purple-500" />
           Reports & Analytics
           {reportsExpanded ? (
             <ChevronUp className="ml-auto h-5 w-5" />
@@ -365,7 +365,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-600 hover:bg-muted"
           )}
         >
-          <Settings className="mr-3 h-5 w-5" />
+          <Settings className="mr-3 h-5 w-5 text-gray-500" />
           Configure
           {configExpanded ? (
             <ChevronUp className="ml-auto h-5 w-5" />
