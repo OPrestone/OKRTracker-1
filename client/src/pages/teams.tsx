@@ -516,7 +516,7 @@ const Teams = () => {
                               "bg-red-100 text-red-800 hover:bg-red-100"
                             }
                           >
-                            {objective.status.replace('_', ' ')}
+                            {objective.status ? objective.status.replace('_', ' ') : 'Unknown'}
                           </Badge>
                         </div>
                         <CardDescription>{objective.description}</CardDescription>
@@ -524,9 +524,9 @@ const Teams = () => {
                       <CardContent className="pb-3">
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-sm font-medium">Progress</span>
-                          <span className="text-sm font-medium">{objective.progress}%</span>
+                          <span className="text-sm font-medium">{objective.progress ?? 0}%</span>
                         </div>
-                        <Progress value={objective.progress} className="h-2" />
+                        <Progress value={objective.progress ?? 0} className="h-2" />
                       </CardContent>
                       <CardFooter className="pt-0 pb-3 flex justify-between">
                         <div className="text-xs text-muted-foreground">
