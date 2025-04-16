@@ -26,14 +26,16 @@ const Progress = React.forwardRef<
       }
     }
     
-    // If no status is provided, determine color by progress value
+    // If no status is provided, determine color by progress value according to the new requirements
     const progressValue = value || 0;
-    if (progressValue >= 70) {
-      return "bg-green-500";
-    } else if (progressValue >= 40) {
-      return "bg-amber-500";
+    if (progressValue >= 76) {
+      return "bg-green-500"; // Green: 76-100%
+    } else if (progressValue >= 51) {
+      return "bg-yellow-500"; // Yellow: 51-75%
+    } else if (progressValue >= 26) {
+      return "bg-orange-500"; // Orange: 26-50%
     } else {
-      return "bg-red-500";
+      return "bg-red-500"; // Red: 0-25%
     }
   };
   
