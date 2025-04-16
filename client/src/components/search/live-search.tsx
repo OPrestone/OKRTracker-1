@@ -1,9 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Target, FileText, Users, UserRound } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { SearchResults, SearchItem } from "@/types/search";
 import { useDebounce } from "@/hooks/use-debounce";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+
+interface SearchItem {
+  id: number;
+  title: string;
+}
+
+interface SearchResults {
+  objectives: any[];
+  keyResults: any[];
+  teams: any[];
+  users: any[];
+}
 
 interface LiveSearchProps {
   onSelect: (type: string, id: number) => void;
@@ -25,52 +37,45 @@ export function LiveSearch({
   initialValue = ""
 }: LiveSearchProps) {
   const [searchTerm, setSearchTerm] = useState(initialValue);
-  const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<SearchResults>({
-    objectives: [],
-    keyResults: [],
-    teams: [],
-    users: []
-  });
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   
   const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
   
-  const fetchResults = useCallback(async (term: string) => {
-    if (term.length < minChars) {
-      setResults({
-        objectives: [],
-        keyResults: [],
-        teams: [],
-        users: []
-      });
-      return;
+  // Use existing search API with React Query
+  const { data: results, isLoading } = useQuery<SearchResults>({
+    queryKey: ["/api/search", debouncedSearchTerm],
+    queryFn: async () => {
+      if (!debouncedSearchTerm || debouncedSearchTerm.length < minChars) {
+        return {
+          objectives: [],
+          keyResults: [],
+          teams: [],
+          users: []
+        };
+      }
+      
+      const query = encodeURIComponent(debouncedSearchTerm);
+      const response = await fetch(`/api/search?q=${query}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch search results");
+      }
+      
+      return response.json();
+    },
+    enabled: debouncedSearchTerm.length >= minChars,
+    // Only refetch when the debounced search term changes
+    staleTime: 30000, // 30 seconds
+    // Clear results when input changes
+    placeholderData: {
+      objectives: [],
+      keyResults: [],
+      teams: [],
+      users: []
     }
-    
-    setIsLoading(true);
-    try {
-      const response = await apiRequest("GET", `/api/search?q=${encodeURIComponent(term)}`);
-      const data = await response.json();
-      setResults(data);
-    } catch (error) {
-      console.error("Error searching:", error);
-      setResults({
-        objectives: [],
-        keyResults: [],
-        teams: [],
-        users: []
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [minChars]);
-
-  // Effect to perform search when debounced term changes
-  useEffect(() => {
-    fetchResults(debouncedSearchTerm);
-  }, [debouncedSearchTerm, fetchResults]);
+  });
 
   // Effect to handle click outside to close results
   useEffect(() => {
@@ -92,6 +97,7 @@ export function LiveSearch({
 
   // Helper to calculate total results count
   const getResultsCount = () => {
+    if (!results) return 0;
     return (
       results.objectives.length +
       results.keyResults.length +
@@ -148,34 +154,40 @@ export function LiveSearch({
           
           {!isLoading && getResultsCount() === 0 && (
             <div className="text-center py-3 text-muted-foreground text-sm">
-              No results found
+              No results found for "{searchTerm}"
             </div>
           )}
           
           {!isLoading && getResultsCount() > 0 && (
             <div className="max-h-[300px] overflow-auto space-y-3">
               {/* Objectives */}
-              {results.objectives.length > 0 && (
+              {results && results.objectives.length > 0 && (
                 <SearchResultSection 
                   title="Objectives" 
-                  items={results.objectives}
+                  items={results.objectives.map(obj => ({
+                    id: obj.id,
+                    title: obj.title
+                  }))}
                   onSelect={(id) => handleSelect("objective", id)}
                   icon="target"
                 />
               )}
               
               {/* Key Results */}
-              {results.keyResults.length > 0 && (
+              {results && results.keyResults.length > 0 && (
                 <SearchResultSection 
                   title="Key Results" 
-                  items={results.keyResults}
+                  items={results.keyResults.map(kr => ({
+                    id: kr.id,
+                    title: kr.title
+                  }))}
                   onSelect={(id) => handleSelect("keyResult", id)}
                   icon="fileText"
                 />
               )}
               
               {/* Teams */}
-              {results.teams.length > 0 && (
+              {results && results.teams.length > 0 && (
                 <SearchResultSection 
                   title="Teams" 
                   items={results.teams.map(team => ({
@@ -188,7 +200,7 @@ export function LiveSearch({
               )}
               
               {/* Users */}
-              {results.users.length > 0 && (
+              {results && results.users.length > 0 && (
                 <SearchResultSection 
                   title="Users" 
                   items={results.users.map(user => ({
@@ -216,10 +228,10 @@ interface SearchResultSectionProps {
 
 function SearchResultSection({ title, items, onSelect, icon }: SearchResultSectionProps) {
   const iconMap = {
-    target: <Search className="h-3 w-3 mr-1" />,
-    fileText: <Search className="h-3 w-3 mr-1" />,
-    users: <Search className="h-3 w-3 mr-1" />,
-    user: <Search className="h-3 w-3 mr-1" />
+    target: <Target className="h-3 w-3 mr-1" />,
+    fileText: <FileText className="h-3 w-3 mr-1" />,
+    users: <Users className="h-3 w-3 mr-1" />,
+    user: <UserRound className="h-3 w-3 mr-1" />
   };
 
   return (

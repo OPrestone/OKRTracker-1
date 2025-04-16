@@ -1,19 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useSearch } from "@/hooks/use-search";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, FileText, Target, Users, UserRound, HelpCircle } from "lucide-react";
+import { Search, HelpCircle, Target, FileText, Users, UserRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { searchHelp } from "@/components/help/help-content";
 import { useHelp } from "@/hooks/use-help-context";
+import { LiveSearch } from "./live-search";
+import { Form } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 
 export function SearchDialog() {
   const [open, setOpen] = useState(false);
   const { searchTerm, setSearchTerm, results, isLoading } = useSearch();
   const [, setLocation] = useLocation();
   const { markSearchUsed } = useHelp();
+  const { toast } = useToast();
   
   // Mark search as used whenever the user performs a search
   useEffect(() => {
@@ -48,21 +51,53 @@ export function SearchDialog() {
            results.users.length;
   };
   
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (searchTerm.trim().length < 2) {
+      toast({
+        title: "Search term too short",
+        description: "Please enter at least 2 characters to search",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // If there's only one result, go directly to it
+    if (getResultsCount() === 1) {
+      if (results.objectives.length === 1) {
+        handleItemClick("objective", results.objectives[0].id);
+      } else if (results.keyResults.length === 1) {
+        handleItemClick("keyResult", results.keyResults[0].id);
+      } else if (results.teams.length === 1) {
+        handleItemClick("team", results.teams[0].id);
+      } else if (results.users.length === 1) {
+        handleItemClick("user", results.users[0].id);
+      }
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <HelpTooltip
-          id={searchHelp.id}
-          title={searchHelp.title}
-          description={searchHelp.description}
-          showFor={3}
-        >
-          <Button variant="outline" className="w-full justify-start text-muted-foreground sm:w-64 lg:w-80">
-            <Search className="mr-2 h-4 w-4" />
-            <span>Search...</span>
-            <span className="ml-auto hidden lg:block">⌘K</span>
-          </Button>
-        </HelpTooltip>
+        <form className="w-full sm:w-64 lg:w-80" onSubmit={(e) => { e.preventDefault(); setOpen(true); }}>
+          <HelpTooltip
+            id={searchHelp.id}
+            title={searchHelp.title}
+            description={searchHelp.description}
+            showFor={3}
+          >
+            <Button 
+              type="submit" 
+              variant="outline" 
+              className="w-full justify-start text-muted-foreground"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              <span>Search...</span>
+              <span className="ml-auto hidden lg:block">⌘K</span>
+            </Button>
+          </HelpTooltip>
+        </form>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
@@ -72,6 +107,8 @@ export function SearchDialog() {
               id={searchHelp.id}
               title={searchHelp.title}
               description={searchHelp.description}
+              persistent={true}
+              feature="search"
             >
               <Button variant="ghost" size="icon" className="h-5 w-5 p-0 text-muted-foreground">
                 <HelpCircle className="h-4 w-4" />
@@ -79,21 +116,23 @@ export function SearchDialog() {
             </HelpTooltip>
           </div>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search for objectives, key results, teams, or users..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              autoFocus
-            />
-          </div>
+        
+        <form onSubmit={handleSearchSubmit} className="space-y-4 py-4">
+          <LiveSearch
+            placeholder="Search for objectives, key results, teams, or users..."
+            onSelect={handleItemClick}
+            initialValue={searchTerm}
+            autoFocus={true}
+            minChars={2}
+            className="w-full"
+          />
           
+          {/* If LiveSearch component doesn't work, fallback to original search UI */}
           {isLoading && (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="text-center text-muted-foreground">
+                <div className="animate-pulse">Searching...</div>
+              </div>
             </div>
           )}
           
@@ -114,6 +153,7 @@ export function SearchDialog() {
                     {results.objectives.map((objective) => (
                       <Button 
                         key={objective.id} 
+                        type="button"
                         variant="ghost" 
                         className="w-full justify-start text-left" 
                         onClick={() => handleItemClick("objective", objective.id)}
@@ -134,6 +174,7 @@ export function SearchDialog() {
                     {results.keyResults.map((keyResult) => (
                       <Button 
                         key={keyResult.id} 
+                        type="button"
                         variant="ghost" 
                         className="w-full justify-start text-left" 
                         onClick={() => handleItemClick("keyResult", keyResult.id)}
@@ -154,6 +195,7 @@ export function SearchDialog() {
                     {results.teams.map((team) => (
                       <Button 
                         key={team.id} 
+                        type="button"
                         variant="ghost" 
                         className="w-full justify-start text-left" 
                         onClick={() => handleItemClick("team", team.id)}
@@ -174,6 +216,7 @@ export function SearchDialog() {
                     {results.users.map((user) => (
                       <Button 
                         key={user.id} 
+                        type="button"
                         variant="ghost" 
                         className="w-full justify-start text-left" 
                         onClick={() => handleItemClick("user", user.id)}
@@ -186,7 +229,7 @@ export function SearchDialog() {
               )}
             </div>
           )}
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
