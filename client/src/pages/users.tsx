@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
+import { useHelp } from "@/hooks/use-help-context";
+import { HelpTooltip } from "@/components/help/tooltip";
+import { usersHelp } from "@/components/help/help-content";
 import { 
   Table,
   TableBody,
@@ -56,6 +59,7 @@ import { useToast } from "@/hooks/use-toast";
 const UsersPage = () => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const { isNewUser } = useHelp();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);

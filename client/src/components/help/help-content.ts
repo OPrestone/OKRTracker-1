@@ -95,3 +95,9 @@ export const authenticationHelp: HelpItem = {
   title: "Login & Registration",
   description: "Create an account to track your objectives and key results. If you're new, register with your details. Returning users can login with their username and password."
 };
+
+export const usersHelp: HelpItem = {
+  id: "users-management",
+  title: "User Management",
+  description: "Manage users across your organization. You can view team assignments, roles, contact details, and perform actions like editing profiles or assigning users to different teams."
+};
