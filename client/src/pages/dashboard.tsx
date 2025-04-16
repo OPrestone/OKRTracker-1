@@ -27,8 +27,11 @@ import {
   ChevronDown,
   Calendar,
   Download,
+  FileText,
+  Pencil,
   Plus,
   PlusCircle,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -51,6 +54,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useLocation } from "wouter";
 
 const Dashboard = () => {
@@ -427,13 +439,32 @@ const Dashboard = () => {
             </Button>
             
             <div className="flex items-center gap-2">
-              <Dialog open={isNewObjectiveOpen} onOpenChange={setIsNewObjectiveOpen}>
-                <DialogTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    New Objective
+                    Create OKR
                   </Button>
-                </DialogTrigger>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuLabel>Create Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/ai-recommendations")}>
+                    <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
+                    <span>Create with AI</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsNewObjectiveOpen(true)}>
+                    <Pencil className="mr-2 h-4 w-4 text-blue-500" />
+                    <span>Create Manually</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/draft-okrs")}>
+                    <FileText className="mr-2 h-4 w-4 text-slate-500" />
+                    <span>View Draft OKRs</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Dialog open={isNewObjectiveOpen} onOpenChange={setIsNewObjectiveOpen}>
                 <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New Objective</DialogTitle>
