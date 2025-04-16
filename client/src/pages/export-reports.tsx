@@ -11,8 +11,8 @@ import {
   Presentation, 
   PlayCircle,
   Calendar,
-  Filter,
-  FileOutput 
+  Filter, 
+  FilePlus2 as FileOutput
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Team, Timeframe } from "@/types/custom-types";
