@@ -207,17 +207,38 @@ export default function Cadences() {
   return (
     <DashboardLayout title="Configuration - Cadences">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex items-center">
           <h1 className="text-2xl font-bold text-gray-900">Cadences</h1>
-          <p className="text-gray-600">Manage cadences for your OKR cycles</p>
+          <div className="ml-2">
+            <ContextualTooltip
+              id={cadencesContextualHelp["cadences-overview"].id}
+              title={cadencesContextualHelp["cadences-overview"].title}
+              description={cadencesContextualHelp["cadences-overview"].description}
+              helpfulTips={cadencesContextualHelp["cadences-overview"].helpfulTips}
+              priority={cadencesContextualHelp["cadences-overview"].priority}
+              placement={cadencesContextualHelp["cadences-overview"].placement}
+            />
+          </div>
+          <p className="text-gray-600 ml-1">Manage cadences for your OKR cycles</p>
         </div>
         
         <Dialog open={isNewCadenceDialogOpen} onOpenChange={setIsNewCadenceDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Cadence
-            </Button>
+            <div className="flex items-center">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Cadence
+              </Button>
+              <div className="ml-1">
+                <ContextualTooltip
+                  id={cadencesContextualHelp["new-cadence"].id}
+                  title={cadencesContextualHelp["new-cadence"].title}
+                  description={cadencesContextualHelp["new-cadence"].description}
+                  helpfulTips={cadencesContextualHelp["new-cadence"].helpfulTips}
+                  priority={cadencesContextualHelp["new-cadence"].priority}
+                />
+              </div>
+            </div>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -495,7 +516,17 @@ export default function Cadences() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <div className="flex items-center px-2 pt-1 pb-2">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <ContextualTooltip
+                                id={cadencesContextualHelp["cadence-actions"].id}
+                                title={cadencesContextualHelp["cadence-actions"].title}
+                                description={cadencesContextualHelp["cadence-actions"].description}
+                                helpfulTips={cadencesContextualHelp["cadence-actions"].helpfulTips}
+                                priority={cadencesContextualHelp["cadence-actions"].priority}
+                                placement={cadencesContextualHelp["cadence-actions"].placement}
+                              />
+                            </div>
                             <DropdownMenuItem 
                               onClick={() => {
                                 setSelectedCadence(cadence);
