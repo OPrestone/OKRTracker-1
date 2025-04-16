@@ -203,7 +203,7 @@ export default function Timeframes() {
       name: "",
       startDate: new Date(),
       endDate: new Date(),
-      cadenceId: filterCadenceId || ""
+      cadenceId: filterCadenceId !== "all" && filterCadenceId ? filterCadenceId : ""
     });
   };
 
@@ -262,14 +262,14 @@ export default function Timeframes() {
         <div className="flex gap-3">
           <div className="w-48">
             <Select 
-              value={filterCadenceId || ""} 
-              onValueChange={(value) => setFilterCadenceId(value || null)}
+              value={filterCadenceId || "all"} 
+              onValueChange={(value) => setFilterCadenceId(value !== "all" ? value : null)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by cadence" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All cadences</SelectItem>
+                <SelectItem value="all">All cadences</SelectItem>
                 {cadences?.map(cadence => (
                   <SelectItem key={cadence.id} value={cadence.id.toString()}>
                     {cadence.name}
