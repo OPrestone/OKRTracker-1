@@ -9,7 +9,10 @@ import {
   Settings, 
   ChevronDown, 
   ChevronUp, 
-  MoreHorizontal 
+  MoreHorizontal,
+  PieChart,
+  LineChart,
+  AreaChart
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
