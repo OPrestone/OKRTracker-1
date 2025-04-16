@@ -1,10 +1,34 @@
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, ChevronRight, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Sample data
 const myObjectives = [
@@ -61,6 +85,43 @@ const myObjectives = [
 export default function MyOKRs() {
   // For demonstration, we're not using isLoading since we have sample data
   const isLoading = false;
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    level: "individual",
+    status: "on_track"
+  });
+  const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    // Here you would typically call your API to create a new objective
+    console.log('Creating new objective:', formData);
+    
+    // Show success toast
+    toast({
+      title: "Objective Created",
+      description: "Your new objective has been created successfully.",
+    });
+    
+    // Close modal and reset form
+    setOpen(false);
+    setFormData({
+      title: "",
+      description: "",
+      level: "individual",
+      status: "on_track"
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { bg: string, text: string }> = {
@@ -87,10 +148,93 @@ export default function MyOKRs() {
           <p className="text-gray-600">Manage your personal objectives and key results</p>
         </div>
         
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Objective
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Objective
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create New Objective</DialogTitle>
+              <DialogDescription>
+                Add a new objective to track. You can add key results later.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="Enter objective title"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  placeholder="Enter detailed description of this objective"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="level" className="text-right">
+                  Level
+                </Label>
+                <Select
+                  value={formData.level}
+                  onValueChange={(value) => handleSelectChange("level", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="company">Company</SelectItem>
+                    <SelectItem value="department">Department</SelectItem>
+                    <SelectItem value="team">Team</SelectItem>
+                    <SelectItem value="individual">Individual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleSelectChange("status", value)}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on_track">On Track</SelectItem>
+                    <SelectItem value="at_risk">At Risk</SelectItem>
+                    <SelectItem value="behind">Behind</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" onClick={handleSubmit}>Create Objective</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {isLoading ? (
@@ -158,7 +302,7 @@ export default function MyOKRs() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create your first objective
             </Button>
