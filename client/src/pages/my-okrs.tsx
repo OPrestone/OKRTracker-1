@@ -86,6 +86,8 @@ export default function MyOKRs() {
   // For demonstration, we're not using isLoading since we have sample data
   const isLoading = false;
   const [open, setOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedObjective, setSelectedObjective] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -121,6 +123,11 @@ export default function MyOKRs() {
       level: "individual",
       status: "on_track"
     });
+  };
+  
+  const handleViewDetails = (objective: any) => {
+    setSelectedObjective(objective);
+    setDetailsOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -285,7 +292,12 @@ export default function MyOKRs() {
                   ))}
                 </ul>
                 <div className="mt-4 flex justify-end">
-                  <Button size="sm" variant="ghost" className="text-sm">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-sm"
+                    onClick={() => handleViewDetails(objective)}
+                  >
                     View Details <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
@@ -309,6 +321,78 @@ export default function MyOKRs() {
           </CardContent>
         </Card>
       )}
+      
+      {/* Details Modal */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          {selectedObjective && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>{selectedObjective.title}</span>
+                  {getStatusBadge(selectedObjective.status)}
+                </DialogTitle>
+                <DialogDescription className="text-base mt-2">
+                  {selectedObjective.description}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="py-4">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-medium">Overall Progress</h3>
+                    <span className="text-lg font-medium">{selectedObjective.progress}%</span>
+                  </div>
+                  <Progress value={selectedObjective.progress} className="h-2.5" />
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Key Results</h3>
+                    <div className="space-y-4">
+                      {selectedObjective.keyResults.map((kr) => (
+                        <div key={kr.id} className="border border-border rounded-lg p-4">
+                          <div className="flex justify-between mb-2">
+                            <h4 className="font-medium">{kr.title}</h4>
+                            <span className="font-medium">{kr.progress}%</span>
+                          </div>
+                          <Progress value={kr.progress} className="h-2 mb-3" />
+                          <div className="flex justify-end mt-2">
+                            <Button size="sm" variant="outline" className="text-xs">Update Progress</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Actions</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Add Key Result
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Add Initiative
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Add Check-in
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
+                <Button>Edit Objective</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
