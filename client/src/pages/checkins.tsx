@@ -26,6 +26,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { 
   PlusCircle, 
@@ -38,6 +46,8 @@ import {
   BarChart3,
   ClipboardCheck,
   Goal,
+  CheckCircle,
+  XCircle,
   ListChecks
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';

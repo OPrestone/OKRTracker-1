@@ -1,5 +1,4 @@
 import { 
-  Bell, 
   HelpCircle, 
   Menu,
   ChevronRight,
@@ -13,6 +12,7 @@ import { SearchDialog } from "@/components/search/search-dialog";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { dashboardHelp } from "@/components/help/help-content";
+import NotificationDropdown from "@/components/notifications/notification-dropdown";
 
 interface HeaderProps {
   title: string;
@@ -43,10 +43,7 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
         <div className="flex items-center space-x-4">
           <SearchDialog />
           
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
-          </Button>
+          <NotificationDropdown />
           
           <ThemeToggle />
           
