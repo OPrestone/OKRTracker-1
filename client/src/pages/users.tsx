@@ -445,14 +445,14 @@ const UsersPage = () => {
                             <Badge 
                               variant="outline"
                               className={
-                                user.role === "admin" 
+                                (user.role || "") === "admin" 
                                   ? "bg-purple-100 text-purple-800 hover:bg-purple-100" 
-                                  : user.role === "manager" 
+                                  : (user.role || "") === "manager" 
                                   ? "bg-blue-100 text-blue-800 hover:bg-blue-100" 
                                   : "bg-gray-100 text-gray-800 hover:bg-gray-100"
                               }
                             >
-                              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                              {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
