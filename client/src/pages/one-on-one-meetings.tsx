@@ -43,7 +43,9 @@ import {
   CalendarClock,
   Timer,
   UserCircle2,
-  Target
+  Target,
+  Video,
+  ExternalLink
 } from "lucide-react";
 import { 
   Select, 
@@ -55,6 +57,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type MeetingStatus = "upcoming" | "completed" | "cancelled";
+type MeetingPlatform = "google_meet" | "microsoft_teams" | "zoom" | "in_person" | "other";
 
 interface Meeting {
   id: number;
@@ -63,6 +66,8 @@ interface Meeting {
   time: string;
   duration: string;
   status: MeetingStatus;
+  platform?: MeetingPlatform;
+  meeting_link?: string;
   attendees: {
     id: number;
     name: string;
@@ -94,6 +99,8 @@ export default function OneOnOneMeetings() {
       time: "10:00 AM",
       duration: "30 min",
       status: "upcoming",
+      platform: "google_meet",
+      meeting_link: "https://meet.google.com/abc-defg-hij",
       attendees: [
         { id: 1, name: "John Doe", role: "Product Manager", initials: "JD" },
         { id: 2, name: "Sarah Kim", role: "Developer", initials: "SK" }
@@ -134,6 +141,8 @@ export default function OneOnOneMeetings() {
       time: "11:00 AM",
       duration: "60 min",
       status: "upcoming",
+      platform: "microsoft_teams",
+      meeting_link: "https://teams.microsoft.com/l/meetup-join/meeting_abc123",
       attendees: [
         { id: 5, name: "Michael Wong", role: "Engineering Lead", initials: "MW" },
         { id: 6, name: "Laura Smith", role: "Senior Developer", initials: "LS" },
@@ -178,6 +187,8 @@ export default function OneOnOneMeetings() {
   const [meetingDuration, setMeetingDuration] = useState("30 min");
   const [meetingAgenda, setMeetingAgenda] = useState("");
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
+  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform | "">("");
+  const [meetingLink, setMeetingLink] = useState("");
 
   // Create a new meeting
   const handleCreateMeeting = () => {
@@ -193,6 +204,8 @@ export default function OneOnOneMeetings() {
       time: meetingTime,
       duration: meetingDuration,
       status: "upcoming",
+      platform: meetingPlatform as MeetingPlatform || undefined,
+      meeting_link: meetingLink || undefined,
       attendees: selectedAttendees.map((name, index) => ({
         id: 100 + index,
         name,
@@ -350,6 +363,88 @@ export default function OneOnOneMeetings() {
                     </div>
                   </div>
                 )}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="platform" className="text-right">
+                    Platform
+                  </Label>
+                  <Select 
+                    value={meetingPlatform} 
+                    onValueChange={(value) => {
+                      setMeetingPlatform(value as MeetingPlatform);
+                      
+                      // Auto-generate a meeting link based on platform
+                      if (value === "google_meet") {
+                        const meetCode = Math.random().toString(36).substring(2, 8);
+                        setMeetingLink(`https://meet.google.com/${meetCode}`);
+                      } else if (value === "microsoft_teams") {
+                        const meetId = Math.random().toString(36).substring(2, 10);
+                        setMeetingLink(`https://teams.microsoft.com/l/meetup-join/meeting_${meetId}`);
+                      } else if (value === "zoom") {
+                        const meetId = Math.floor(Math.random() * 1000000000);
+                        setMeetingLink(`https://zoom.us/j/${meetId}`);
+                      } else {
+                        setMeetingLink("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select meeting platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="google_meet">Google Meet</SelectItem>
+                      <SelectItem value="microsoft_teams">Microsoft Teams</SelectItem>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="in_person">In Person</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {meetingPlatform && meetingPlatform !== "in_person" && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="meeting_link" className="text-right">
+                      Meeting Link
+                    </Label>
+                    <div className="col-span-3 flex gap-2">
+                      <Input
+                        id="meeting_link"
+                        value={meetingLink}
+                        onChange={(e) => setMeetingLink(e.target.value)}
+                        placeholder="Enter meeting link"
+                        className="flex-1"
+                      />
+                      {meetingPlatform === "google_meet" && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={() => {
+                            const meetCode = Math.random().toString(36).substring(2, 8);
+                            setMeetingLink(`https://meet.google.com/${meetCode}`);
+                          }}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center rounded-sm bg-blue-600 text-white text-xs font-bold">G</div>
+                        </Button>
+                      )}
+                      {meetingPlatform === "microsoft_teams" && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={() => {
+                            const meetId = Math.random().toString(36).substring(2, 10);
+                            setMeetingLink(`https://teams.microsoft.com/l/meetup-join/meeting_${meetId}`);
+                          }}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center rounded-sm bg-purple-600 text-white text-xs font-bold">T</div>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-4 items-start gap-4">
                   <Label htmlFor="agenda" className="text-right pt-2">
                     Agenda
@@ -475,6 +570,42 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+  
+  // Get platform icon and color
+  const getPlatformInfo = (platform?: MeetingPlatform) => {
+    switch (platform) {
+      case "google_meet":
+        return {
+          icon: <div className="w-4 h-4 flex items-center justify-center rounded-sm bg-blue-600 text-white text-xs font-bold">G</div>,
+          label: "Google Meet",
+          color: "text-blue-600"
+        };
+      case "microsoft_teams":
+        return {
+          icon: <div className="w-4 h-4 flex items-center justify-center rounded-sm bg-purple-600 text-white text-xs font-bold">T</div>,
+          label: "Microsoft Teams",
+          color: "text-purple-600"
+        };
+      case "zoom":
+        return {
+          icon: <div className="w-4 h-4 flex items-center justify-center rounded-sm bg-blue-500 text-white text-xs font-bold">Z</div>,
+          label: "Zoom",
+          color: "text-blue-500"
+        };
+      case "in_person":
+        return {
+          icon: <Users className="w-4 h-4 text-gray-600" />,
+          label: "In Person",
+          color: "text-gray-600"
+        };
+      default:
+        return {
+          icon: <Video className="w-4 h-4 text-gray-500" />,
+          label: "Other",
+          color: "text-gray-500"
+        };
+    }
   };
 
   return (
