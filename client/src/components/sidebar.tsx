@@ -14,7 +14,9 @@ import {
   LineChart,
   AreaChart,
   Lightbulb,
-  Brain
+  Brain,
+  BookOpen,
+  Rocket
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -68,6 +70,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       <nav className="flex-1 overflow-y-auto py-4">
         <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Main
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/quick-start-guide" 
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
+        >
+          <Link href="/quick-start-guide" className="flex items-center w-full">
+            <Rocket className="mr-3 h-5 w-5 text-emerald-500" />
+            <span className="font-medium">Quick Start Guide</span>
+          </Link>
         </div>
         
         <div
