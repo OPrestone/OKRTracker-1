@@ -490,7 +490,7 @@ export default function ObjectiveDetail() {
 
   // Go back to previous page
   const handleGoBack = () => {
-    navigate(-1);
+    navigate("/my-okrs");
   };
 
   return (

@@ -62,12 +62,16 @@ function AppRoutes() {
       <PublicRoute path="/draft-okrs" component={DraftOKRs} />
       <PublicRoute path="/approved-okrs" component={ApprovedOKRs} />
       <PublicRoute path="/company-okrs" component={CompanyOKRs} />
+      <PublicRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       
       {/* User Management Section */}
       <PublicRoute path="/teams" component={Teams} />
       <PublicRoute path="/users" component={UsersPage} />
       <PublicRoute path="/all-users" component={AllUsers} />
+      <PublicRoute path="/user-profile" component={UserProfile} />
       
+      {/* Dashboards */}
+      <PublicRoute path="/team-leader-dashboard" component={TeamLeaderDashboard} />
       <PublicRoute path="/checkins" component={Checkins} />
       <PublicRoute path="/one-on-one-meetings" component={OneOnOneMeetings} />
       

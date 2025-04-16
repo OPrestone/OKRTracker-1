@@ -23,7 +23,9 @@ import {
   PanelLeftOpen,
   CheckCircle,
   Clock,
-  FilePlus2 as FileOutput
+  FilePlus2 as FileOutput,
+  LayoutDashboard,
+  Target
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -105,6 +107,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <Link href="/" className="flex items-center w-full">
             <BarChart3 className="mr-3 h-5 w-5 text-indigo-500" />
             Dashboard
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/team-leader-dashboard" 
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
+        >
+          <Link href="/team-leader-dashboard" className="flex items-center w-full">
+            <LayoutDashboard className="mr-3 h-5 w-5 text-purple-500" />
+            Team Leader Dashboard
           </Link>
         </div>
         
@@ -496,13 +512,17 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       {/* User Profile */}
       <div className="border-t border-border p-4 bg-muted/30">
         <div className="flex items-center">
-          <Avatar className="h-9 w-9 mr-3 border-2 border-primary/20">
-            <AvatarImage src="" alt="User profile" />
-            <AvatarFallback className="bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
-          </Avatar>
+          <Link href="/user-profile">
+            <Avatar className="h-9 w-9 mr-3 border-2 border-primary/20 hover:border-primary transition-colors">
+              <AvatarImage src="" alt="User profile" />
+              <AvatarFallback className="bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div>
-            <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-            <p className="text-xs text-muted-foreground">{user?.role}</p>
+            <Link href="/user-profile" className="hover:text-primary transition-colors">
+              <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs text-muted-foreground">{user?.role}</p>
+            </Link>
           </div>
           <div className="ml-auto">
             <Button 
