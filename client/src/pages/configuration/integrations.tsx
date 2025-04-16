@@ -270,7 +270,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Microsoft Outlook"
               description="Schedule check-ins and meetings with Outlook Calendar"
-              icon={<SiMicrosoftoutlook className="h-6 w-6 text-[#0078D4]" />}
+              icon={<Mail className="h-6 w-6 text-[#0078D4]" />}
               isConnected={integrations.outlook}
               onConnect={() => handleToggleIntegration("outlook")}
               onDisconnect={() => handleToggleIntegration("outlook")}
@@ -279,7 +279,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Google Calendar"
               description="Sync OKR events with Google Calendar"
-              icon={<SiGooglecalendar className="h-6 w-6 text-[#4285F4]" />}
+              icon={<Calendar className="h-6 w-6 text-[#4285F4]" />}
               isConnected={integrations.gcalendar}
               onConnect={() => handleToggleIntegration("gcalendar")}
               onDisconnect={() => handleToggleIntegration("gcalendar")}
@@ -422,7 +422,7 @@ const Integrations = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-gray-100 rounded-md">
-                      <Calendar className="h-6 w-6 text-[#4285F4]" />
+                      <SiGoogle className="h-6 w-6 text-[#4285F4]" />
                     </div>
                     <div>
                       <h3 className="text-sm font-medium">Google Workspace</h3>
