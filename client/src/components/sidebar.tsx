@@ -70,7 +70,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-5 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
+      <div className="p-5 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
         <h1 className="text-xl font-semibold flex items-center">
           <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
@@ -79,7 +79,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
-        <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Main
         </div>
         
