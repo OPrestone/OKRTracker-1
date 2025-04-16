@@ -36,7 +36,14 @@ export function SearchDialog() {
         setLocation(`/key-results/${id}`);
         break;
       case "team":
-        setLocation(`/teams/${id}`);
+        // Teams are handled in the teams page with a dialog
+        setLocation('/teams');
+        // We could use a URL parameter or state management to automatically open the team details
+        // For now, direct to the teams page where the user can select the team
+        toast({
+          title: "Navigating to Teams",
+          description: `Navigate to team #${id} on the Teams page`,
+        });
         break;
       case "user":
         setLocation(`/users/${id}`);
