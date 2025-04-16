@@ -29,6 +29,9 @@ const Header = ({ title, sidebarOpen, setSidebarOpen }: HeaderProps) => {
           >
             <Menu className="h-6 w-6" />
           </Button>
+          <div className="hidden md:flex items-center mr-4">
+            <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
+          </div>
           <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
         </div>
         

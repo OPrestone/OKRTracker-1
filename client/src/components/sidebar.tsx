@@ -63,7 +63,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     <div className="flex flex-col h-full">
       <div className="p-5 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
         <h1 className="text-xl font-semibold flex items-center">
-          <BarChart3 className="h-7 w-7 mr-2 text-primary" />
+          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
         </h1>
       </div>
