@@ -39,6 +39,25 @@ export const teams = pgTable("teams", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Highfive Recognition
+export const highfives = pgTable("highfives", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  objectiveId: integer("objective_id").references(() => objectives.id),
+  keyResultId: integer("key_result_id").references(() => keyResults.id),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const highfiveRecipients = pgTable("highfive_recipients", {
+  id: serial("id").primaryKey(),
+  highfiveId: integer("highfive_id").notNull().references(() => highfives.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Add relations after all tables are defined
 // These will be added at the end of the file
 
@@ -210,6 +229,21 @@ export const insertCheckInSchema = createInsertSchema(checkIns).pick({
   notes: true,
 });
 
+// Highfive schemas
+export const insertHighfiveSchema = createInsertSchema(highfives).pick({
+  senderId: true,
+  message: true,
+  objectiveId: true,
+  keyResultId: true,
+  isPublic: true,
+});
+
+export const insertHighfiveRecipientSchema = createInsertSchema(highfiveRecipients).pick({
+  highfiveId: true,
+  recipientId: true,
+  isRead: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -296,6 +330,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   checkIns: many(checkIns, {
     relationName: "check_in_user",
+  }),
+  sentHighfives: many(highfives, {
+    relationName: "sent_highfives",
+  }),
+  receivedHighfives: many(highfiveRecipients, {
+    relationName: "received_highfives",
   }),
 }));
 
@@ -387,6 +427,9 @@ export const objectivesRelations = relations(objectives, ({ one, many }) => ({
   checkIns: many(checkIns, {
     relationName: "objective_check_ins",
   }),
+  highfives: many(highfives, {
+    relationName: "objective_highfives",
+  }),
 }));
 
 export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
@@ -436,6 +479,41 @@ export const checkInsRelations = relations(checkIns, ({ one }) => ({
     fields: [checkIns.keyResultId],
     references: [keyResults.id],
     relationName: "key_result_check_ins",
+  }),
+}));
+
+// Highfive relations
+export const highfivesRelations = relations(highfives, ({ one, many }) => ({
+  sender: one(users, {
+    fields: [highfives.senderId],
+    references: [users.id],
+    relationName: "sent_highfives",
+  }),
+  objective: one(objectives, {
+    fields: [highfives.objectiveId],
+    references: [objectives.id],
+    relationName: "objective_highfives",
+  }),
+  keyResult: one(keyResults, {
+    fields: [highfives.keyResultId],
+    references: [keyResults.id],
+    relationName: "key_result_highfives",
+  }),
+  recipients: many(highfiveRecipients, {
+    relationName: "highfive_recipients",
+  }),
+}));
+
+export const highfiveRecipientsRelations = relations(highfiveRecipients, ({ one }) => ({
+  highfive: one(highfives, {
+    fields: [highfiveRecipients.highfiveId],
+    references: [highfives.id],
+    relationName: "highfive_recipients",
+  }),
+  recipient: one(users, {
+    fields: [highfiveRecipients.recipientId],
+    references: [users.id],
+    relationName: "received_highfives",
   }),
 }));
 
