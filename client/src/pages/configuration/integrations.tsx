@@ -28,8 +28,7 @@ import {
   SiJira, 
   SiAsana, 
   SiGitlab, 
-  SiGithub, 
-  SiMicrosoft, 
+  SiGithub,
   SiGoogle 
 } from "react-icons/si";
 
