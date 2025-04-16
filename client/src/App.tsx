@@ -21,6 +21,7 @@ import CompanyOKRs from "@/pages/company-okrs";
 import Reports from "@/pages/reports";
 import OKRReports from "@/pages/okr-reports";
 import TeamPerformance from "@/pages/team-performance";
+import AIRecommendations from "@/pages/ai-recommendations";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -63,6 +64,7 @@ function AppRoutes() {
       <PublicRoute path="/reports" component={Reports} />
       <PublicRoute path="/okr-reports" component={OKRReports} />
       <PublicRoute path="/team-performance" component={TeamPerformance} />
+      <PublicRoute path="/ai-recommendations" component={AIRecommendations} />
       
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />

@@ -12,7 +12,9 @@ import {
   MoreHorizontal,
   PieChart,
   LineChart,
-  AreaChart
+  AreaChart,
+  Lightbulb,
+  Brain
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -241,7 +243,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           onClick={() => setReportsExpanded(!reportsExpanded)}
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
-            (location === "/reports" || location === "/okr-reports" || location === "/team-performance")
+            (location === "/reports" || location === "/okr-reports" || location === "/team-performance" || location === "/ai-recommendations")
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
           )}
@@ -287,6 +289,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             )}>
               <Link href="/team-performance" className="w-full">
                 Team Performance
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/ai-recommendations" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/ai-recommendations" className="w-full flex items-center">
+                <Brain className="mr-2 h-4 w-4 text-amber-500" />
+                Smart Recommendations
               </Link>
             </div>
           </div>
