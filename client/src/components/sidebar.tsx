@@ -31,6 +31,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const [configExpanded, setConfigExpanded] = useState(false);
+  const [okrsExpanded, setOkrsExpanded] = useState(false);
+  const [userManagementExpanded, setUserManagementExpanded] = useState(false);
 
   const initials = user?.firstName && user?.lastName 
     ? `${user.firstName[0]}${user.lastName[0]}` 
@@ -97,33 +99,117 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
-        <div
+        {/* Manage OKRs Menu */}
+        <button 
+          onClick={() => setOkrsExpanded(!okrsExpanded)}
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
-            location === "/teams" 
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            (location === "/my-okrs" || location === "/draft-okrs" || location === "/approved-okrs" || location === "/company-okrs")
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
           )}
         >
-          <Link href="/teams" className="flex items-center w-full">
-            <Users className="mr-3 h-5 w-5" />
-            Teams
-          </Link>
-        </div>
+          <Flag className="mr-3 h-5 w-5" />
+          Manage OKRs
+          {okrsExpanded ? (
+            <ChevronUp className="ml-auto h-5 w-5" />
+          ) : (
+            <ChevronDown className="ml-auto h-5 w-5" />
+          )}
+        </button>
         
-        <div
+        {okrsExpanded && (
+          <div className="pl-10">
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/my-okrs" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/my-okrs" className="w-full">
+                My OKRs
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/draft-okrs" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/draft-okrs" className="w-full">
+                Draft OKRs
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/approved-okrs" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/approved-okrs" className="w-full">
+                Approved OKRs
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/company-okrs" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/company-okrs" className="w-full">
+                Company OKRs
+              </Link>
+            </div>
+          </div>
+        )}
+        
+        {/* User Management Menu */}
+        <button 
+          onClick={() => setUserManagementExpanded(!userManagementExpanded)}
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
-            location === "/users" 
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            (location === "/teams" || location === "/users" || location === "/all-users")
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
           )}
         >
-          <Link href="/users" className="flex items-center w-full">
-            <User className="mr-3 h-5 w-5" />
-            Users
-          </Link>
-        </div>
+          <Users className="mr-3 h-5 w-5" />
+          User Management
+          {userManagementExpanded ? (
+            <ChevronUp className="ml-auto h-5 w-5" />
+          ) : (
+            <ChevronDown className="ml-auto h-5 w-5" />
+          )}
+        </button>
+        
+        {userManagementExpanded && (
+          <div className="pl-10">
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/teams" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/teams" className="w-full">
+                Teams
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/all-users" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/all-users" className="w-full">
+                Users
+              </Link>
+            </div>
+          </div>
+        )}
         
         <div
           className={cn(

@@ -5,6 +5,7 @@ import Home from "@/pages/home";
 import CompanyStrategy from "@/pages/company-strategy";
 import Teams from "@/pages/teams";
 import UsersPage from "@/pages/users";
+import AllUsers from "@/pages/all-users";
 import Checkins from "@/pages/checkins";
 import General from "@/pages/configuration/general";
 import TeamsConfig from "@/pages/configuration/teams-config";
@@ -13,6 +14,10 @@ import Integrations from "@/pages/configuration/integrations";
 import Cadences from "@/pages/configuration/cadences";
 import Timeframes from "@/pages/configuration/timeframes";
 import AuthPage from "@/pages/auth-page";
+import MyOKRs from "@/pages/my-okrs";
+import DraftOKRs from "@/pages/draft-okrs";
+import ApprovedOKRs from "@/pages/approved-okrs";
+import CompanyOKRs from "@/pages/company-okrs";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -37,8 +42,18 @@ function AppRoutes() {
       <PublicRoute path="/" component={Dashboard} />
       <PublicRoute path="/home" component={Home} />
       <PublicRoute path="/company-strategy" component={CompanyStrategy} />
+      
+      {/* Manage OKRs Section */}
+      <PublicRoute path="/my-okrs" component={MyOKRs} />
+      <PublicRoute path="/draft-okrs" component={DraftOKRs} />
+      <PublicRoute path="/approved-okrs" component={ApprovedOKRs} />
+      <PublicRoute path="/company-okrs" component={CompanyOKRs} />
+      
+      {/* User Management Section */}
       <PublicRoute path="/teams" component={Teams} />
       <PublicRoute path="/users" component={UsersPage} />
+      <PublicRoute path="/all-users" component={AllUsers} />
+      
       <PublicRoute path="/checkins" component={Checkins} />
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />
