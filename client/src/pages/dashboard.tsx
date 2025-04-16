@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import StatsCard from "@/components/dashboard/stats-card";
 import ObjectiveCard from "@/components/dashboard/objective-card";
@@ -14,6 +14,7 @@ import {
   checkInsHelp,
   newObjectiveHelp
 } from "@/components/help/help-content";
+import { CreateObjectiveForm } from "@/components/objectives/create-objective-form";
 
 import { 
   Target, 
@@ -442,24 +443,11 @@ const Dashboard = () => {
                   </DialogHeader>
                   
                   <div className="space-y-6 py-4">
-                    {/* Form content would go here */}
-                    <p>Objective creation form will be implemented here.</p>
+                    <CreateObjectiveForm 
+                      onSuccess={() => setIsNewObjectiveOpen(false)}
+                      onCancel={() => setIsNewObjectiveOpen(false)}
+                    />
                   </div>
-                  
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsNewObjectiveOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={() => {
-                      toast({
-                        title: "Objective Created",
-                        description: "Your new objective has been created successfully.",
-                      });
-                      setIsNewObjectiveOpen(false);
-                    }}>
-                      Create Objective
-                    </Button>
-                  </DialogFooter>
                 </DialogContent>
               </Dialog>
               
