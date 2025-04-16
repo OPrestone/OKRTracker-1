@@ -62,6 +62,9 @@ import {
 import { Timeframe, Cadence } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ContextualTooltip } from "@/components/help/contextual-tooltip";
+import { timeframesContextualHelp } from "@/components/help/contextual-help-content";
+import { useHelp } from "@/hooks/use-help-context";
 
 export default function Timeframes() {
   const { toast } = useToast();
