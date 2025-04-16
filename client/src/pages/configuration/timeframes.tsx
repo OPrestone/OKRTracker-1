@@ -257,13 +257,23 @@ export default function Timeframes() {
   return (
     <DashboardLayout title="Configuration - Timeframes">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
+        <div className="flex items-center">
           <h1 className="text-2xl font-bold text-gray-900">Timeframes</h1>
+          <div className="ml-2">
+            <ContextualTooltip
+              id={timeframesContextualHelp["timeframes-overview"].id}
+              title={timeframesContextualHelp["timeframes-overview"].title}
+              description={timeframesContextualHelp["timeframes-overview"].description}
+              helpfulTips={timeframesContextualHelp["timeframes-overview"].helpfulTips}
+              priority={timeframesContextualHelp["timeframes-overview"].priority}
+              placement={timeframesContextualHelp["timeframes-overview"].placement}
+            />
+          </div>
           <p className="text-gray-600">Manage timeframes for your OKR cycles</p>
         </div>
         
         <div className="flex gap-3">
-          <div className="w-48">
+          <div className="w-48 flex items-center">
             <Select 
               value={filterCadenceId || "all"} 
               onValueChange={(value) => setFilterCadenceId(value !== "all" ? value : null)}
@@ -280,14 +290,35 @@ export default function Timeframes() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="ml-1">
+              <ContextualTooltip
+                id={timeframesContextualHelp["timeframe-filter"].id}
+                title={timeframesContextualHelp["timeframe-filter"].title}
+                description={timeframesContextualHelp["timeframe-filter"].description}
+                helpfulTips={timeframesContextualHelp["timeframe-filter"].helpfulTips}
+                priority={timeframesContextualHelp["timeframe-filter"].priority}
+                placement={timeframesContextualHelp["timeframe-filter"].placement}
+              />
+            </div>
           </div>
           
           <Dialog open={isNewTimeframeDialogOpen} onOpenChange={setIsNewTimeframeDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Timeframe
-              </Button>
+              <div className="flex items-center">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Timeframe
+                </Button>
+                <div className="ml-1">
+                  <ContextualTooltip
+                    id={timeframesContextualHelp["new-timeframe"].id}
+                    title={timeframesContextualHelp["new-timeframe"].title}
+                    description={timeframesContextualHelp["new-timeframe"].description}
+                    helpfulTips={timeframesContextualHelp["new-timeframe"].helpfulTips}
+                    priority={timeframesContextualHelp["new-timeframe"].priority}
+                  />
+                </div>
+              </div>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -600,7 +631,17 @@ export default function Timeframes() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <div className="flex items-center px-2 pt-1 pb-2">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <ContextualTooltip
+                              id={timeframesContextualHelp["timeframe-actions"].id}
+                              title={timeframesContextualHelp["timeframe-actions"].title}
+                              description={timeframesContextualHelp["timeframe-actions"].description}
+                              helpfulTips={timeframesContextualHelp["timeframe-actions"].helpfulTips}
+                              priority={timeframesContextualHelp["timeframe-actions"].priority}
+                              placement={timeframesContextualHelp["timeframe-actions"].placement}
+                            />
+                          </div>
                           <DropdownMenuItem 
                             onClick={() => {
                               setSelectedTimeframe(timeframe);

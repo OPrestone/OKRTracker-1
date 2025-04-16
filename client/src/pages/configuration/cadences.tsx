@@ -48,6 +48,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, Pencil, Trash2, Calendar } from "lucide-react";
+import { ContextualTooltip } from "@/components/help/contextual-tooltip";
+import { cadencesContextualHelp } from "@/components/help/contextual-help-content";
+import { useHelp } from "@/hooks/use-help-context";
 import { Cadence } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
