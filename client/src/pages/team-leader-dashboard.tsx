@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -204,6 +205,7 @@ const activeTasks: Task[] = [
 
 export default function TeamLeaderDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [_, setLocation] = useLocation();
 
   // Helper function to determine progress color based on value
   const getProgressColorClass = (progress: number): string => {
@@ -307,7 +309,12 @@ export default function TeamLeaderDashboard() {
                   {pendingTasks.filter(task => task.priority === "high").length} high priority
                 </p>
                 <div className="mt-4 flex items-center">
-                  <Button variant="ghost" size="sm" className="text-xs p-0 h-auto">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="text-xs text-muted-foreground hover:text-primary px-0 h-auto flex items-center"
+                    onClick={() => setActiveTab("tasks")}
+                  >
                     <Clock className="h-3 w-3 mr-1 text-amber-500" />
                     View all tasks
                     <ChevronRight className="h-3 w-3 ml-1" />
@@ -328,7 +335,12 @@ export default function TeamLeaderDashboard() {
                   Last check-in: {recentCheckIns[0].date}
                 </p>
                 <div className="mt-4 flex items-center">
-                  <Button variant="ghost" size="sm" className="text-xs p-0 h-auto">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="text-xs text-muted-foreground hover:text-primary px-0 h-auto flex items-center"
+                    onClick={() => setActiveTab("checkins")}
+                  >
                     <MessageSquare className="h-3 w-3 mr-1 text-blue-500" />
                     View all check-ins
                     <ChevronRight className="h-3 w-3 ml-1" />
@@ -349,7 +361,12 @@ export default function TeamLeaderDashboard() {
                   6 active this week
                 </p>
                 <div className="mt-4 flex items-center">
-                  <Button variant="ghost" size="sm" className="text-xs p-0 h-auto">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="text-xs text-muted-foreground hover:text-primary px-0 h-auto flex items-center"
+                    onClick={() => navigate("/teams")}
+                  >
                     <Users className="h-3 w-3 mr-1 text-indigo-500" />
                     View team
                     <ChevronRight className="h-3 w-3 ml-1" />
