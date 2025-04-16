@@ -238,6 +238,8 @@ export type Initiative = typeof initiatives.$inferSelect;
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
 export type CheckIn = typeof checkIns.$inferSelect;
 
+// Chat feature schema and types are defined at the end of this file
+
 // For Authentication
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -420,3 +422,171 @@ export const checkInsRelations = relations(checkIns, ({ one }) => ({
     relationName: "key_result_check_ins",
   }),
 }));
+
+// Chat Feature Schema
+
+// Chat Rooms Table
+export const chatRooms = pgTable("chat_rooms", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: text("type").notNull().default("direct"), // direct, group, team
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdBy: integer("created_by").notNull().references(() => users.id)
+});
+
+// Chat Room Members Table
+export const chatRoomMembers = pgTable("chat_room_members", {
+  id: serial("id").primaryKey(),
+  chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull().default("member"), // member, admin
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+  lastRead: timestamp("last_read").notNull().defaultNow()
+});
+
+// Messages Table
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  type: text("type").notNull().default("text"), // text, image, file, system
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+  isEdited: boolean("is_edited").notNull().default(false),
+  replyToId: integer("reply_to_id").references(() => messages.id)
+});
+
+// Attachments Table
+export const attachments = pgTable("attachments", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(), // mime type
+  fileSize: integer("file_size").notNull(), // size in bytes
+  fileUrl: text("file_url").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+// Reactions Table
+export const reactions = pgTable("reactions", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  emoji: text("emoji").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+// Define Relations for chat
+export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
+  creator: one(users, { 
+    fields: [chatRooms.createdBy], 
+    references: [users.id],
+    relationName: "created_chat_rooms"
+  }),
+  members: many(chatRoomMembers, { relationName: "room_members" }),
+  messages: many(messages, { relationName: "room_messages" })
+}));
+
+export const chatRoomMembersRelations = relations(chatRoomMembers, ({ one }) => ({
+  chatRoom: one(chatRooms, { 
+    fields: [chatRoomMembers.chatRoomId], 
+    references: [chatRooms.id],
+    relationName: "room_members"
+  }),
+  user: one(users, { 
+    fields: [chatRoomMembers.userId], 
+    references: [users.id],
+    relationName: "user_chat_memberships"
+  })
+}));
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  chatRoom: one(chatRooms, { 
+    fields: [messages.chatRoomId], 
+    references: [chatRooms.id],
+    relationName: "room_messages"
+  }),
+  user: one(users, { 
+    fields: [messages.userId], 
+    references: [users.id],
+    relationName: "user_messages"
+  }),
+  replyTo: one(messages, { 
+    fields: [messages.replyToId], 
+    references: [messages.id],
+    relationName: "message_replies"
+  }),
+  attachments: many(attachments, { relationName: "message_attachments" }),
+  reactions: many(reactions, { relationName: "message_reactions" })
+}));
+
+export const attachmentsRelations = relations(attachments, ({ one }) => ({
+  message: one(messages, { 
+    fields: [attachments.messageId], 
+    references: [messages.id],
+    relationName: "message_attachments"
+  })
+}));
+
+export const reactionsRelations = relations(reactions, ({ one }) => ({
+  message: one(messages, { 
+    fields: [reactions.messageId], 
+    references: [messages.id],
+    relationName: "message_reactions"
+  }),
+  user: one(users, { 
+    fields: [reactions.userId], 
+    references: [users.id],
+    relationName: "user_reactions"
+  })
+}));
+
+// Update user relations to include chat-related relations
+// Include chat relations for users
+export const usersRelationsWithChat = relations(users, ({ one, many }) => ({
+  // Keep existing user relations
+  createdChatRooms: many(chatRooms, { relationName: "created_chat_rooms" }),
+  chatMemberships: many(chatRoomMembers, { relationName: "user_chat_memberships" }),
+  messages: many(messages, { relationName: "user_messages" }),
+  reactions: many(reactions, { relationName: "user_reactions" })
+}));
+
+// Add chat feature insert schemas
+export const insertChatRoomSchema = createInsertSchema(chatRooms).pick({
+  name: true,
+  description: true,
+  type: true,
+  createdBy: true
+});
+
+export const insertChatRoomMemberSchema = createInsertSchema(chatRoomMembers).pick({
+  chatRoomId: true,
+  userId: true,
+  role: true
+});
+
+export const insertMessageSchema = createInsertSchema(messages).pick({
+  chatRoomId: true,
+  userId: true,
+  content: true,
+  type: true,
+  replyToId: true
+});
+
+export const insertAttachmentSchema = createInsertSchema(attachments).pick({
+  messageId: true,
+  fileName: true,
+  fileType: true,
+  fileSize: true,
+  fileUrl: true
+});
+
+export const insertReactionSchema = createInsertSchema(reactions).pick({
+  messageId: true,
+  userId: true,
+  emoji: true
+});
