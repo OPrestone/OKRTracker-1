@@ -16,7 +16,8 @@ import {
   Lightbulb,
   Brain,
   BookOpen,
-  Rocket
+  Rocket,
+  Compass
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -111,6 +112,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <Link href="/home" className="flex items-center w-full">
             <Home className="mr-3 h-5 w-5" />
             Home
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/mission" 
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
+        >
+          <Link href="/mission" className="flex items-center w-full">
+            <Compass className="mr-3 h-5 w-5 text-blue-600" />
+            Mission & Values
           </Link>
         </div>
         

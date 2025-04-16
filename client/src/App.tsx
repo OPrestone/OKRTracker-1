@@ -23,6 +23,7 @@ import OKRReports from "@/pages/okr-reports";
 import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
+import MissionPage from "@/pages/mission";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -47,6 +48,7 @@ function AppRoutes() {
       <PublicRoute path="/" component={Dashboard} />
       <PublicRoute path="/home" component={Home} />
       <PublicRoute path="/quick-start-guide" component={QuickStartGuide} />
+      <PublicRoute path="/mission" component={MissionPage} />
       <PublicRoute path="/company-strategy" component={CompanyStrategy} />
       
       {/* Manage OKRs Section */}
