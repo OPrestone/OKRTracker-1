@@ -1,5 +1,4 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { 
   BarChart3, 
   Home, 
@@ -29,17 +28,25 @@ interface SidebarProps {
 
 const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
   const [configExpanded, setConfigExpanded] = useState(false);
   const [okrsExpanded, setOkrsExpanded] = useState(false);
   const [userManagementExpanded, setUserManagementExpanded] = useState(false);
 
+  // Temporary user info while auth is being fixed
+  const user = {
+    firstName: "Demo",
+    lastName: "User",
+    username: "demo",
+    role: "Admin"
+  };
+  
   const initials = user?.firstName && user?.lastName 
     ? `${user.firstName[0]}${user.lastName[0]}` 
     : user?.username?.[0] || '?';
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    // Will be implemented when auth is fixed
+    console.log("Logout clicked");
   };
 
   const sidebarContent = (
