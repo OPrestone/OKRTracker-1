@@ -119,6 +119,13 @@ export function LiveSearch({
     // Handle keyboard navigation for accessibility
     if (e.key === "Escape") {
       setIsFocused(false);
+    } else if (e.key === "ArrowDown" && isFocused) {
+      // Focus the first result item when pressing down arrow
+      e.preventDefault();
+      const firstResult = resultsRef.current?.querySelector('a[role="button"]') as HTMLElement;
+      if (firstResult) {
+        firstResult.focus();
+      }
     }
   };
 
@@ -228,28 +235,83 @@ interface SearchResultSectionProps {
 
 function SearchResultSection({ title, items, onSelect, icon }: SearchResultSectionProps) {
   const iconMap = {
-    target: <Target className="h-3 w-3 mr-1" />,
-    fileText: <FileText className="h-3 w-3 mr-1" />,
-    users: <Users className="h-3 w-3 mr-1" />,
-    user: <UserRound className="h-3 w-3 mr-1" />
+    target: <Target className="h-3 w-3 mr-1" aria-hidden="true" />,
+    fileText: <FileText className="h-3 w-3 mr-1" aria-hidden="true" />,
+    users: <Users className="h-3 w-3 mr-1" aria-hidden="true" />,
+    user: <UserRound className="h-3 w-3 mr-1" aria-hidden="true" />
   };
 
+  const categoryId = `search-category-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  
   return (
-    <div>
-      <h3 className="text-xs font-medium text-muted-foreground mb-1 flex items-center">
+    <div role="region" aria-labelledby={categoryId}>
+      <h3 
+        id={categoryId} 
+        className="text-xs font-medium text-muted-foreground mb-1 flex items-center"
+      >
         {iconMap[icon]} {title}
       </h3>
-      <div className="space-y-1">
+      <ul className="space-y-1 list-none p-0" role="list">
         {items.map((item) => (
-          <button
+          <li
             key={item.id}
-            className="w-full text-left px-2 py-1 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none"
-            onClick={() => onSelect(item.id)}
+            className="w-full text-left"
           >
-            <span className="truncate block">{item.title}</span>
-          </button>
+            <a
+              href="#"
+              className="block px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                onSelect(item.id);
+              }}
+              onKeyDown={(e) => {
+                // Handle keyboard navigation between search results
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelect(item.id);
+                } else if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const nextItem = e.currentTarget.closest('li')?.nextElementSibling?.querySelector('a');
+                  if (nextItem) {
+                    (nextItem as HTMLElement).focus();
+                  } else {
+                    // If at end of this section, try to find the first item in the next section
+                    const nextSection = e.currentTarget.closest('[role="region"]')?.nextElementSibling;
+                    const nextSectionFirstItem = nextSection?.querySelector('a[role="button"]');
+                    if (nextSectionFirstItem) {
+                      (nextSectionFirstItem as HTMLElement).focus();
+                    }
+                  }
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  const prevItem = e.currentTarget.closest('li')?.previousElementSibling?.querySelector('a');
+                  if (prevItem) {
+                    (prevItem as HTMLElement).focus();
+                  } else {
+                    // If at start of this section, try to find the last item in the previous section
+                    const prevSection = e.currentTarget.closest('[role="region"]')?.previousElementSibling;
+                    const prevSectionItems = prevSection?.querySelectorAll('a[role="button"]');
+                    if (prevSectionItems?.length) {
+                      (prevSectionItems[prevSectionItems.length - 1] as HTMLElement).focus();
+                    } else {
+                      // If there's no previous section, focus the search input
+                      const searchInput = document.querySelector('input[type="text"]');
+                      if (searchInput) {
+                        (searchInput as HTMLElement).focus();
+                      }
+                    }
+                  }
+                }
+              }}
+              role="button"
+              aria-label={`Select ${item.title}`}
+              tabIndex={0}
+            >
+              <span className="truncate block">{item.title}</span>
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

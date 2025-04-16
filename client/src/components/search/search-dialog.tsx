@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useSearch } from "@/hooks/use-search";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Search, HelpCircle, Target, FileText, Users, UserRound } from "lucide-react";
 import { useLocation } from "wouter";
@@ -115,6 +115,9 @@ export function SearchDialog() {
               </Button>
             </HelpTooltip>
           </div>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Search for objectives, key results, teams, and users across the platform.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSearchSubmit} className="space-y-4 py-4">
