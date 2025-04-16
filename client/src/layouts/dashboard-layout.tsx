@@ -7,11 +7,13 @@ import { dashboardHelp } from "@/components/help/help-content";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
+  subtitle?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
   children, 
-  title = "Dashboard" 
+  title = "Dashboard",
+  subtitle
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

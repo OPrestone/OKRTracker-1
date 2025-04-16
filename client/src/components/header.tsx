@@ -12,11 +12,12 @@ import { dashboardHelp } from "@/components/help/help-content";
 
 interface HeaderProps {
   title: string;
+  subtitle?: string;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 }
 
-const Header = ({ title, sidebarOpen, setSidebarOpen }: HeaderProps) => {
+const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) => {
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
       <div className="flex items-center justify-between px-4 py-4">

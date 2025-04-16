@@ -4,6 +4,7 @@ import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
 import CompanyStrategy from "@/pages/company-strategy";
 import Teams from "@/pages/teams";
+import TeamDetail from "@/pages/team-detail";
 import UsersPage from "@/pages/users";
 import AllUsers from "@/pages/all-users";
 import Checkins from "@/pages/checkins";
@@ -67,6 +68,7 @@ function AppRoutes() {
       
       {/* User Management Section */}
       <PublicRoute path="/teams" component={Teams} />
+      <PublicRoute path="/teams/:id" component={TeamDetail} />
       <PublicRoute path="/users" component={UsersPage} />
       <PublicRoute path="/all-users" component={AllUsers} />
       <PublicRoute path="/user-profile" component={UserProfile} />
