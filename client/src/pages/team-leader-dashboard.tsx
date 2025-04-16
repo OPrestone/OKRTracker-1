@@ -365,7 +365,7 @@ export default function TeamLeaderDashboard() {
                     variant="link" 
                     size="sm" 
                     className="text-xs text-muted-foreground hover:text-primary px-0 h-auto flex items-center"
-                    onClick={() => navigate("/teams")}
+                    onClick={() => setLocation("/teams")}
                   >
                     <Users className="h-3 w-3 mr-1 text-indigo-500" />
                     View team
@@ -382,7 +382,13 @@ export default function TeamLeaderDashboard() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle>My Objectives</CardTitle>
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation("/objectives")}
+                  >
+                    View All
+                  </Button>
                 </div>
                 <CardDescription>Track your current objectives and their progress</CardDescription>
               </CardHeader>
@@ -449,7 +455,13 @@ export default function TeamLeaderDashboard() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle>Pending Tasks</CardTitle>
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation("/tasks")}
+                  >
+                    View All
+                  </Button>
                 </div>
                 <CardDescription>Your upcoming tasks and deadlines</CardDescription>
               </CardHeader>
@@ -476,7 +488,13 @@ export default function TeamLeaderDashboard() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle>Active Tasks</CardTitle>
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation("/tasks")}
+                  >
+                    View All
+                  </Button>
                 </div>
                 <CardDescription>Tasks currently in progress</CardDescription>
               </CardHeader>
