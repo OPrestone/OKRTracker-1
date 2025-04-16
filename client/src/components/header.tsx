@@ -2,12 +2,16 @@ import {
   Bell, 
   HelpCircle, 
   Menu,
-  ChevronRight
+  ChevronRight,
+  Moon,
+  Sun,
+  Laptop
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { HelpTooltip } from "@/components/help/tooltip";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { dashboardHelp } from "@/components/help/help-content";
 
 interface HeaderProps {
@@ -43,6 +47,8 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
             <Bell className="h-5 w-5" />
             <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
           </Button>
+          
+          <ThemeToggle />
           
           <HelpTooltip
             id={dashboardHelp.id}

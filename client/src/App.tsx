@@ -34,6 +34,7 @@ import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { FeatureTour } from "@/components/help/feature-tour";
 import { Loader2 } from "lucide-react";
 
@@ -103,10 +104,12 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <HelpProvider>
-        <FeatureTour />
-        <AppRoutes />
-      </HelpProvider>
+      <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
+        <HelpProvider>
+          <FeatureTour />
+          <AppRoutes />
+        </HelpProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
