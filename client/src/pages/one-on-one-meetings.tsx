@@ -230,6 +230,8 @@ export default function OneOnOneMeetings() {
     setMeetingDuration("30 min");
     setMeetingAgenda("");
     setSelectedAttendees([]);
+    setMeetingPlatform("");
+    setMeetingLink("");
   };
 
   // Format meeting date
@@ -646,6 +648,26 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         </div>
 
         <div className="space-y-2">
+          {meeting.platform && (
+            <div className="flex items-center">
+              {getPlatformInfo(meeting.platform).icon}
+              <span className={cn("text-sm ml-2", getPlatformInfo(meeting.platform).color)}>
+                {getPlatformInfo(meeting.platform).label}
+              </span>
+              {meeting.meeting_link && (
+                <a 
+                  href={meeting.meeting_link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-auto text-sm text-primary/80 hover:text-primary flex items-center"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Join
+                </a>
+              )}
+            </div>
+          )}
+          
           <div className="flex items-start">
             <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 mr-2 flex-shrink-0" />
             <p className="text-sm line-clamp-2">{meeting.agenda}</p>
@@ -704,7 +726,48 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                     <span>{meeting.duration}</span>
                   </div>
                 </div>
+                
+                {meeting.platform && (
+                  <div className="flex items-center">
+                    <div className="text-sm flex items-center">
+                      <span className="block text-muted-foreground mr-2">Platform</span>
+                      <div className="flex items-center gap-1">
+                        {getPlatformInfo(meeting.platform).icon}
+                        <span className={getPlatformInfo(meeting.platform).color}>
+                          {getPlatformInfo(meeting.platform).label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
+              
+              {meeting.platform && meeting.meeting_link && meeting.status === "upcoming" && (
+                <div className="mt-2 bg-primary/5 p-3 rounded-md border border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className={cn("mr-2", getPlatformInfo(meeting.platform).color)}>
+                        {getPlatformInfo(meeting.platform).icon}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium">Meeting Link</h4>
+                        <p className="text-xs text-muted-foreground truncate max-w-[250px]">
+                          {meeting.meeting_link}
+                        </p>
+                      </div>
+                    </div>
+                    <a 
+                      href={meeting.meeting_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-primary text-white text-xs py-1 px-3 rounded-md hover:bg-primary/90 transition-colors flex items-center"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Join Meeting
+                    </a>
+                  </div>
+                </div>
+              )}
               
               <div className="mt-2">
                 <h4 className="text-sm font-medium mb-2 flex items-center">
@@ -814,10 +877,23 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                     <Edit className="h-4 w-4" />
                     Edit
                   </Button>
-                  <Button className="gap-1">
-                    <UserCircle2 className="h-4 w-4" />
-                    Join Meeting
-                  </Button>
+                  {meeting.meeting_link ? (
+                    <a 
+                      href={meeting.meeting_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-white py-2 px-4 rounded-md flex items-center gap-1 transition-colors"
+                    >
+                      {meeting.platform && getPlatformInfo(meeting.platform).icon}
+                      <span>Join Meeting</span>
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  ) : (
+                    <Button className="gap-1">
+                      <UserCircle2 className="h-4 w-4" />
+                      Join Meeting
+                    </Button>
+                  )}
                 </>
               )}
               {meeting.status === "completed" && (
