@@ -1392,6 +1392,279 @@ async function initializeData() {
         confidence: 5,
         date: new Date() // Today
       });
+      
+      // Create chat rooms
+      console.log("Creating sample chat data...");
+      
+      // Create team chat rooms
+      const marketingTeamChat = await storage.createChatRoom({
+        name: "Marketing Team",
+        type: "group",
+        createdBy: 1, // Admin
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+        updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      });
+      
+      const productTeamChat = await storage.createChatRoom({
+        name: "Product Team",
+        type: "group",
+        createdBy: 1, // Admin
+        createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000), // 9 days ago
+        updatedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000)
+      });
+      
+      const execTeamChat = await storage.createChatRoom({
+        name: "Executive Team",
+        type: "group",
+        createdBy: 1, // Admin
+        createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+        updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      });
+      
+      // Create direct message chats
+      const adminJohnChat = await storage.createChatRoom({
+        name: "John Smith",
+        type: "direct",
+        createdBy: 1, // Admin
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      });
+      
+      const adminMichelleChat = await storage.createChatRoom({
+        name: "Michelle Williams",
+        type: "direct",
+        createdBy: 1, // Admin
+        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+        updatedAt: new Date()
+      });
+      
+      // Add members to chat rooms
+      await storage.addUserToChatRoom({
+        chatRoomId: marketingTeamChat.id,
+        userId: 1, // Admin
+        role: "admin",
+        joinedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: marketingTeamChat.id,
+        userId: 2, // John Smith
+        role: "admin",
+        joinedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: marketingTeamChat.id,
+        userId: 4, // Alex Garcia
+        role: "member",
+        joinedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: productTeamChat.id,
+        userId: 1, // Admin
+        role: "admin",
+        joinedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: productTeamChat.id,
+        userId: 3, // Michelle Williams
+        role: "admin",
+        joinedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: productTeamChat.id,
+        userId: 5, // Li Chen
+        role: "member",
+        joinedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: execTeamChat.id,
+        userId: 1, // Admin
+        role: "admin",
+        joinedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: execTeamChat.id,
+        userId: 2, // John Smith
+        role: "member",
+        joinedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: execTeamChat.id,
+        userId: 3, // Michelle Williams
+        role: "member",
+        joinedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      });
+      
+      // Add members to direct chats
+      await storage.addUserToChatRoom({
+        chatRoomId: adminJohnChat.id,
+        userId: 1, // Admin
+        role: "admin",
+        joinedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: adminJohnChat.id,
+        userId: 2, // John Smith
+        role: "member",
+        joinedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: adminMichelleChat.id,
+        userId: 1, // Admin
+        role: "admin",
+        joinedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addUserToChatRoom({
+        chatRoomId: adminMichelleChat.id,
+        userId: 3, // Michelle Williams
+        role: "member",
+        joinedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+      });
+      
+      // Create messages
+      // Marketing Team chat messages
+      const marketingMsg1 = await storage.createMessage({
+        chatRoomId: marketingTeamChat.id,
+        userId: 2, // John Smith
+        content: "Team, let's discuss our Q2 marketing strategy. We need to increase social media presence by 30%.",
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      });
+      
+      const marketingMsg2 = await storage.createMessage({
+        chatRoomId: marketingTeamChat.id,
+        userId: 4, // Alex Garcia
+        content: "I've been working on a new content calendar that focuses on videos. Our analysis shows they get 2x more engagement.",
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+      });
+      
+      const marketingMsg3 = await storage.createMessage({
+        chatRoomId: marketingTeamChat.id,
+        userId: 1, // Admin
+        content: "Great work Alex! Can you share the calendar with everyone by Friday?",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      });
+      
+      // Product Team chat messages
+      const productMsg1 = await storage.createMessage({
+        chatRoomId: productTeamChat.id,
+        userId: 3, // Michelle Williams
+        content: "We need to prioritize the mobile experience improvements. The latest usability tests show 30% of users struggle with the checkout process.",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      });
+      
+      const productMsg2 = await storage.createMessage({
+        chatRoomId: productTeamChat.id,
+        userId: 5, // Li Chen
+        content: "I've already fixed two critical friction points. Working on the user onboarding improvements next.",
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        replyToId: productMsg1.id
+      });
+      
+      // Executive Team chat messages
+      const execMsg1 = await storage.createMessage({
+        chatRoomId: execTeamChat.id,
+        userId: 1, // Admin
+        content: "The quarterly review is scheduled for next Friday. Please prepare your team updates.",
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      });
+      
+      const execMsg2 = await storage.createMessage({
+        chatRoomId: execTeamChat.id,
+        userId: 2, // John Smith
+        content: "Marketing is on track to exceed our Q2 goals. I'll have the full report ready by Wednesday.",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        replyToId: execMsg1.id
+      });
+      
+      const execMsg3 = await storage.createMessage({
+        chatRoomId: execTeamChat.id,
+        userId: 3, // Michelle Williams
+        content: "Product team is making progress but slower than expected. We need to discuss allocating more resources to the mobile experience improvements.",
+        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+        updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+        replyToId: execMsg1.id
+      });
+      
+      // Direct message chats
+      await storage.createMessage({
+        chatRoomId: adminJohnChat.id,
+        userId: 1, // Admin
+        content: "Hey John, how's the marketing team doing with the new social media strategy?",
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.createMessage({
+        chatRoomId: adminJohnChat.id,
+        userId: 2, // John Smith
+        content: "It's going well! We've seen a 25% increase in engagement already. Alex has been doing a great job with the new content calendar.",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.createMessage({
+        chatRoomId: adminMichelleChat.id,
+        userId: 1, // Admin
+        content: "Michelle, I noticed the product team is behind schedule. What resources do you need to get back on track?",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.createMessage({
+        chatRoomId: adminMichelleChat.id,
+        userId: 3, // Michelle Williams
+        content: "We need another developer to focus on the mobile experience. Li is doing great work but there's too much for one person to handle.",
+        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+        updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
+      });
+      
+      // Add reactions
+      await storage.addReaction({
+        messageId: marketingMsg2.id,
+        userId: 2, // John Smith
+        emoji: "👍",
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addReaction({
+        messageId: marketingMsg2.id,
+        userId: 1, // Admin
+        emoji: "🚀",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addReaction({
+        messageId: productMsg2.id,
+        userId: 3, // Michelle Williams
+        emoji: "👏",
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      });
+      
+      await storage.addReaction({
+        messageId: execMsg2.id,
+        userId: 1, // Admin
+        emoji: "👍",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      });
+      
+      console.log("Sample chat data created successfully!");
     }
   } catch (error) {
     console.error("Error initializing data:", error);
