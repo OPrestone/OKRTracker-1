@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useHelp } from "@/hooks/use-help-context";
-import { HelpTooltip } from "@/components/help/tooltip";
+import { HelpItemTooltip } from "@/components/help/help-item-tooltip";
 import { usersHelp } from "@/components/help/help-content";
 import { 
   Table,
@@ -173,7 +173,18 @@ const UsersPage = () => {
     <DashboardLayout title="Users">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <div className="flex items-center mb-1">
+            <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+            {isNewUser && (
+              <span className="ml-2">
+                <HelpTooltip 
+                  id={usersHelp.id}
+                  title={usersHelp.title}
+                  description={usersHelp.description}
+                />
+              </span>
+            )}
+          </div>
           <p className="text-gray-600">Manage users and their access to the system</p>
         </div>
         
