@@ -119,6 +119,8 @@ export default function DraftOKRs() {
   const [selectedObjective, setSelectedObjective] = useState<DraftObjective | null>(null);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [editFormData, setEditFormData] = useState<{
@@ -204,6 +206,29 @@ export default function DraftOKRs() {
     setAiReviewOpen(false);
   };
 
+  const handleSubmit = (objective: DraftObjective) => {
+    setSelectedObjective(objective);
+    setSubmitDialogOpen(true);
+  };
+
+  const handleSubmitConfirm = () => {
+    if (!selectedObjective) return;
+
+    setSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitDialogOpen(false);
+      
+      // In a real app, this would update the status in the database
+      toast({
+        title: "OKR Submitted",
+        description: "Your objective has been submitted for approval.",
+      });
+    }, 1500);
+  };
+
   return (
     <DashboardLayout title="Draft OKRs">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -264,7 +289,7 @@ export default function DraftOKRs() {
                   <Sparkles className="h-4 w-4 mr-1 text-purple-500" />
                   AI Review
                 </Button>
-                <Button size="sm">
+                <Button size="sm" onClick={() => handleSubmit(objective)}>
                   Submit
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -496,6 +521,91 @@ export default function DraftOKRs() {
             </Button>
             <Button onClick={handleEditSubmit}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Submit Dialog */}
+      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Submit Draft OKR</DialogTitle>
+            <DialogDescription>
+              This will submit your draft objective for review and approval.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="space-y-4">
+              <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+                <h4 className="font-medium text-amber-800 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5 mr-2"
+                  >
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  Before you submit
+                </h4>
+                <p className="text-sm text-amber-700 mt-2">
+                  Once submitted, this OKR will be reviewed by your manager or OKR administrator.
+                  You won't be able to edit it further until it's approved or sent back for revisions.
+                </p>
+              </div>
+              
+              {selectedObjective && (
+                <div className="rounded-md border p-4">
+                  <h4 className="font-medium">{selectedObjective.title}</h4>
+                  <p className="text-sm text-gray-500 mt-1 mb-3">{selectedObjective.description}</p>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2 text-gray-700">Key Results:</h5>
+                    <ul className="space-y-1">
+                      {selectedObjective.keyResults.map((kr) => (
+                        <li key={kr.id} className="text-sm flex items-start">
+                          <span className="mr-2">•</span>
+                          <span>{kr.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSubmitDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleSubmitConfirm}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Confirm & Submit
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
