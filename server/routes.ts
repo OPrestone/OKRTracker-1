@@ -687,6 +687,117 @@ async function initializeData() {
       
       // Raj Patel is in Sales Team
       await storage.updateUser(6, { teamId: salesTeam.id });
+      
+      // Create sample objectives and key results
+      const marketingObjective = await storage.createObjective({
+        title: "Increase brand awareness",
+        description: "Increase overall brand awareness among target demographics",
+        teamId: marketingTeam.id,
+        ownerId: 2, // John Smith
+        timeframeId: q3Timeframe.id,
+        progress: 65,
+        status: objectiveStatusEnum.enumValues[0], // on_track
+        priority: "high"
+      });
+      
+      const marketingKR1 = await storage.createKeyResult({
+        title: "Increase social media followers",
+        description: "Increase social media followers by 30% across all platforms",
+        objectiveId: marketingObjective.id,
+        ownerId: 4, // Alex Garcia
+        targetValue: 30,
+        currentValue: 18,
+        startValue: 0,
+        format: "percentage",
+        progress: 60
+      });
+      
+      const marketingKR2 = await storage.createKeyResult({
+        title: "Launch content marketing campaign",
+        description: "Create and publish 12 high-quality blog posts",
+        objectiveId: marketingObjective.id,
+        ownerId: 2, // John Smith
+        targetValue: 12,
+        currentValue: 8,
+        startValue: 0,
+        format: "number",
+        progress: 67
+      });
+      
+      // Product team objective
+      const productObjective = await storage.createObjective({
+        title: "Improve product usability",
+        description: "Enhance user experience across our product platform",
+        teamId: productTeam.id,
+        ownerId: 3, // Michelle Williams
+        timeframeId: q3Timeframe.id,
+        progress: 40,
+        status: objectiveStatusEnum.enumValues[1], // at_risk
+        priority: "medium"
+      });
+      
+      const productKR1 = await storage.createKeyResult({
+        title: "Reduce UI friction points",
+        description: "Identify and fix the top 10 user friction points",
+        objectiveId: productObjective.id,
+        ownerId: 5, // Li Chen
+        targetValue: 10,
+        currentValue: 4,
+        startValue: 0,
+        format: "number",
+        progress: 40
+      });
+      
+      const productKR2 = await storage.createKeyResult({
+        title: "Improve user satisfaction score",
+        description: "Increase user satisfaction score from 7.5 to 8.5",
+        objectiveId: productObjective.id,
+        ownerId: 3, // Michelle Williams
+        targetValue: 8.5,
+        currentValue: 7.8,
+        startValue: 7.5,
+        format: "decimal",
+        progress: 30
+      });
+      
+      // Create sample check-ins
+      await storage.createCheckIn({
+        userId: 4, // Alex Garcia
+        keyResultId: marketingKR1.id,
+        comment: "We've seen a significant increase in followers on Instagram after our latest campaign. Twitter growth is slower than expected.",
+        confidence: 7,
+        previousValue: 15,
+        newValue: 18,
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+      });
+      
+      await storage.createCheckIn({
+        userId: 2, // John Smith
+        keyResultId: marketingKR2.id,
+        comment: "Published our 8th blog post today on industry trends. Engagement is above average.",
+        confidence: 8,
+        previousValue: 7,
+        newValue: 8,
+        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+      });
+      
+      await storage.createCheckIn({
+        userId: 5, // Li Chen
+        keyResultId: productKR1.id,
+        comment: "Fixed 2 critical friction points in the checkout process. Working on user onboarding improvements next.",
+        confidence: 6,
+        previousValue: 2,
+        newValue: 4,
+        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+      });
+      
+      await storage.createCheckIn({
+        userId: 3, // Michelle Williams
+        objectiveId: productObjective.id,
+        comment: "We're making progress but slower than expected. Need to focus more resources on improving the mobile experience.",
+        confidence: 5,
+        date: new Date() // Today
+      });
     }
   } catch (error) {
     console.error("Error initializing data:", error);
