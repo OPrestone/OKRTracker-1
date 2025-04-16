@@ -69,8 +69,15 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
   interface TeamObjective {
     id: number;
     title: string;
-    progress: number;
+    description: string;
+    level: string;
+    ownerId: number;
+    teamId: number;
+    timeframeId: number;
     status: "on_track" | "at_risk" | "behind" | "completed";
+    progress: number;
+    parentId: number | null;
+    createdAt: string;
   }
 
   // Get objectives for the team
