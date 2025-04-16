@@ -485,17 +485,22 @@ async function initializeData() {
     // Create admin user if no users exist
     const users = await storage.getAllUsers();
     if (users.length === 0) {
-      const adminPassword = await new Promise<string>((resolve, reject) => {
-        import('crypto').then(crypto => {
-          const salt = crypto.randomBytes(16).toString('hex');
-          crypto.scrypt('admin123', salt, 64, (err, derivedKey) => {
-            if (err) reject(err);
-            resolve(`${derivedKey.toString('hex')}.${salt}`);
+      const createPassword = async (password: string) => {
+        return await new Promise<string>((resolve, reject) => {
+          import('crypto').then(crypto => {
+            const salt = crypto.randomBytes(16).toString('hex');
+            crypto.scrypt(password, salt, 64, (err, derivedKey) => {
+              if (err) reject(err);
+              resolve(`${derivedKey.toString('hex')}.${salt}`);
+            });
           });
         });
-      });
+      };
+      
+      const adminPassword = await createPassword('admin123');
+      const defaultPassword = await createPassword('password123');
 
-      await storage.createUser({
+      const admin = await storage.createUser({
         username: 'admin',
         password: adminPassword,
         firstName: 'Admin',
@@ -504,16 +509,72 @@ async function initializeData() {
         role: 'admin',
         language: 'en'
       });
+      
+      // Create manager users for testing
+      await storage.createUser({
+        username: 'jsmith',
+        password: defaultPassword,
+        firstName: 'John',
+        lastName: 'Smith',
+        email: 'john.smith@example.com',
+        role: 'manager',
+        language: 'en'
+      });
+      
+      await storage.createUser({
+        username: 'mwilliams',
+        password: defaultPassword,
+        firstName: 'Michelle',
+        lastName: 'Williams',
+        email: 'michelle.williams@example.com',
+        role: 'manager',
+        language: 'en'
+      });
+      
+      // Create regular users for testing
+      await storage.createUser({
+        username: 'agarcia',
+        password: defaultPassword,
+        firstName: 'Alex',
+        lastName: 'Garcia',
+        email: 'alex.garcia@example.com',
+        role: 'user',
+        language: 'es'
+      });
+      
+      await storage.createUser({
+        username: 'lchen',
+        password: defaultPassword,
+        firstName: 'Li',
+        lastName: 'Chen',
+        email: 'li.chen@example.com',
+        role: 'user',
+        language: 'en'
+      });
+      
+      await storage.createUser({
+        username: 'rpatel',
+        password: defaultPassword,
+        firstName: 'Raj',
+        lastName: 'Patel',
+        email: 'raj.patel@example.com',
+        role: 'user',
+        language: 'en'
+      });
 
       // Create sample cadence
       const quarterlyCadence = await storage.createCadence({
         name: 'Quarterly',
-        description: 'Quarterly cadence for tracking OKRs on a 3-month basis'
+        description: 'Quarterly cadence for tracking OKRs on a 3-month basis',
+        period: 'quarterly',
+        startMonth: 1
       });
 
       const annualCadence = await storage.createCadence({
         name: 'Annual',
-        description: 'Annual cadence for tracking yearly goals'
+        description: 'Annual cadence for tracking yearly goals',
+        period: 'annual',
+        startMonth: 1
       });
 
       // Create sample timeframes
@@ -605,6 +666,22 @@ async function initializeData() {
 
       // Assign admin to admin group
       await storage.assignUserToAccessGroup(1, adminGroup.id);
+      
+      // Assign users to teams
+      // John Smith is manager of Marketing Team
+      await storage.updateUser(2, { teamId: marketingTeam.id }); 
+      
+      // Michelle Williams is manager of Product Team
+      await storage.updateUser(3, { teamId: productTeam.id });
+      
+      // Alex Garcia is in Marketing Team
+      await storage.updateUser(4, { teamId: marketingTeam.id, managerId: 2 });
+      
+      // Li Chen is in Product Team
+      await storage.updateUser(5, { teamId: productTeam.id, managerId: 3 });
+      
+      // Raj Patel is in Sales Team
+      await storage.updateUser(6, { teamId: salesTeam.id });
     }
   } catch (error) {
     console.error("Error initializing data:", error);
