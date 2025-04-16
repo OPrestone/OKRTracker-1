@@ -12,7 +12,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
 import { openAIService } from "./services/openai-service";
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -667,7 +667,409 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat API Routes
+  // Chat Rooms
+  app.get("/api/chat/rooms", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const chatRooms = await storage.getUserChatRooms(req.user.id);
+      res.json(chatRooms);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/chat/rooms", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const validatedData = insertChatRoomSchema.parse({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      
+      const chatRoom = await storage.createChatRoom(validatedData);
+      
+      // Add the creator as a member and admin
+      await storage.addUserToChatRoom({
+        chatRoomId: chatRoom.id,
+        userId: req.user.id,
+        role: "admin"
+      });
+      
+      // Add other members if specified
+      if (req.body.memberIds && Array.isArray(req.body.memberIds)) {
+        await Promise.all(
+          req.body.memberIds.map(async (userId: number) => {
+            if (userId !== req.user.id) { // Skip creator as they're already added
+              await storage.addUserToChatRoom({
+                chatRoomId: chatRoom.id,
+                userId,
+                role: "member"
+              });
+            }
+          })
+        );
+      }
+      
+      res.status(201).json(chatRoom);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.get("/api/chat/rooms/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const roomId = parseInt(req.params.id);
+      const room = await storage.getChatRoom(roomId);
+      
+      if (!room) {
+        return res.status(404).send("Chat room not found");
+      }
+      
+      // Check if user is a member of this room
+      const members = await storage.getChatRoomMembers(roomId);
+      const isMember = members.some(member => member.userId === req.user.id);
+      
+      if (!isMember) {
+        return res.status(403).send("You don't have access to this chat room");
+      }
+      
+      res.json({
+        ...room,
+        members: members
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Chat Room Members
+  app.post("/api/chat/rooms/:roomId/members", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const roomId = parseInt(req.params.roomId);
+      const room = await storage.getChatRoom(roomId);
+      
+      if (!room) {
+        return res.status(404).send("Chat room not found");
+      }
+      
+      // Check if user is an admin of this room
+      const members = await storage.getChatRoomMembers(roomId);
+      const currentUserMembership = members.find(member => member.userId === req.user.id);
+      
+      if (!currentUserMembership || currentUserMembership.role !== "admin") {
+        return res.status(403).send("Only admins can add members to chat rooms");
+      }
+      
+      const validatedData = insertChatRoomMemberSchema.parse({
+        ...req.body,
+        chatRoomId: roomId
+      });
+      
+      // Check if user is already a member
+      const existingMember = members.find(member => member.userId === validatedData.userId);
+      if (existingMember) {
+        return res.status(400).send("User is already a member of this chat room");
+      }
+      
+      const member = await storage.addUserToChatRoom(validatedData);
+      res.status(201).json(member);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/chat/rooms/:roomId/members/:userId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const roomId = parseInt(req.params.roomId);
+      const userId = parseInt(req.params.userId);
+      
+      // Check if user is an admin or removing themselves
+      const members = await storage.getChatRoomMembers(roomId);
+      const currentUserMembership = members.find(member => member.userId === req.user.id);
+      
+      if (!currentUserMembership) {
+        return res.status(403).send("You don't have access to this chat room");
+      }
+      
+      // Users can remove themselves or admins can remove anyone
+      if (req.user.id !== userId && currentUserMembership.role !== "admin") {
+        return res.status(403).send("Only admins can remove other members");
+      }
+      
+      await storage.removeUserFromChatRoom(userId, roomId);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Messages
+  app.get("/api/chat/rooms/:roomId/messages", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const roomId = parseInt(req.params.roomId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const before = req.query.before ? parseInt(req.query.before as string) : undefined;
+      
+      // Check if user is a member of this room
+      const members = await storage.getChatRoomMembers(roomId);
+      const isMember = members.some(member => member.userId === req.user.id);
+      
+      if (!isMember) {
+        return res.status(403).send("You don't have access to this chat room");
+      }
+      
+      // Mark messages as read
+      await storage.updateLastRead(req.user.id, roomId);
+      
+      const messages = await storage.getMessagesByChatRoom(roomId, limit, before);
+      res.json(messages);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/chat/rooms/:roomId/messages", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const roomId = parseInt(req.params.roomId);
+      
+      // Check if user is a member of this room
+      const members = await storage.getChatRoomMembers(roomId);
+      const isMember = members.some(member => member.userId === req.user.id);
+      
+      if (!isMember) {
+        return res.status(403).send("You don't have access to this chat room");
+      }
+      
+      const validatedData = insertMessageSchema.parse({
+        ...req.body,
+        chatRoomId: roomId,
+        userId: req.user.id
+      });
+      
+      const message = await storage.createMessage(validatedData);
+      
+      // Handle attachments if provided
+      if (req.body.attachments && Array.isArray(req.body.attachments)) {
+        await Promise.all(
+          req.body.attachments.map(async (attachment: any) => {
+            await storage.createAttachment({
+              ...attachment,
+              messageId: message.id
+            });
+          })
+        );
+      }
+      
+      // Mark messages as read for the sender
+      await storage.updateLastRead(req.user.id, roomId);
+      
+      // Return the full message with user, attachments and reactions
+      const fullMessage = await storage.getMessage(message.id);
+      const user = await storage.getUser(req.user.id);
+      const attachments = await storage.getAttachmentsByMessage(message.id);
+      
+      res.status(201).json({
+        ...fullMessage,
+        user: user || null,
+        attachments,
+        reactions: []
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.patch("/api/chat/messages/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getMessage(messageId);
+      
+      if (!message) {
+        return res.status(404).send("Message not found");
+      }
+      
+      // Only the author can edit their message
+      if (message.userId !== req.user.id) {
+        return res.status(403).send("You can only edit your own messages");
+      }
+      
+      // Cannot edit deleted messages
+      if (message.deletedAt) {
+        return res.status(400).send("Cannot edit deleted messages");
+      }
+      
+      const validatedData = insertMessageSchema.partial().parse(req.body);
+      const updatedMessage = await storage.updateMessage(messageId, validatedData);
+      
+      // Return the full message with user, attachments and reactions
+      const user = await storage.getUser(req.user.id);
+      const attachments = await storage.getAttachmentsByMessage(messageId);
+      const reactions = await storage.getReactionsByMessage(messageId);
+      
+      res.json({
+        ...updatedMessage,
+        user: user || null,
+        attachments,
+        reactions
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/chat/messages/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getMessage(messageId);
+      
+      if (!message) {
+        return res.status(404).send("Message not found");
+      }
+      
+      // Only the author can delete their message
+      if (message.userId !== req.user.id) {
+        return res.status(403).send("You can only delete your own messages");
+      }
+      
+      await storage.deleteMessage(messageId);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Reactions
+  app.post("/api/chat/messages/:messageId/reactions", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const messageId = parseInt(req.params.messageId);
+      const message = await storage.getMessage(messageId);
+      
+      if (!message) {
+        return res.status(404).send("Message not found");
+      }
+      
+      // Check if user is a member of this room
+      const members = await storage.getChatRoomMembers(message.chatRoomId);
+      const isMember = members.some(member => member.userId === req.user.id);
+      
+      if (!isMember) {
+        return res.status(403).send("You don't have access to this chat room");
+      }
+      
+      const validatedData = insertReactionSchema.parse({
+        ...req.body,
+        messageId,
+        userId: req.user.id
+      });
+      
+      const reaction = await storage.addReaction(validatedData);
+      res.status(201).json(reaction);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/chat/messages/:messageId/reactions/:emoji", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).send("Unauthorized");
+      }
+      
+      const messageId = parseInt(req.params.messageId);
+      const emoji = req.params.emoji;
+      
+      await storage.removeReaction(req.user.id, messageId, emoji);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'join_room') {
+          // Store the room ID in the WebSocket connection
+          (ws as any).roomId = data.roomId;
+        } else if (data.type === 'new_message' && data.message) {
+          // Broadcast the message to all clients in the same room
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN && (client as any).roomId === (ws as any).roomId) {
+              client.send(JSON.stringify({
+                type: 'new_message',
+                message: data.message
+              }));
+            }
+          });
+        } else if (data.type === 'typing') {
+          // Broadcast typing status to all clients in the same room
+          wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN && (client as any).roomId === (ws as any).roomId) {
+              client.send(JSON.stringify({
+                type: 'typing',
+                userId: data.userId
+              }));
+            }
+          });
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
+
   return httpServer;
 }
 
