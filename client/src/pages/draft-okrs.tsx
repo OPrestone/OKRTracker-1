@@ -14,6 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 interface DraftObjective {
@@ -115,8 +118,66 @@ export default function DraftOKRs() {
   const { toast } = useToast();
   const [selectedObjective, setSelectedObjective] = useState<DraftObjective | null>(null);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    title: string;
+    description: string;
+    keyResults: { id: number; title: string }[];
+  }>({
+    title: "",
+    description: "",
+    keyResults: []
+  });
+
+  const handleEdit = (objective: DraftObjective) => {
+    setSelectedObjective(objective);
+    setEditFormData({
+      title: objective.title,
+      description: objective.description,
+      keyResults: [...objective.keyResults] // Create a copy to avoid mutation
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!selectedObjective) return;
+    
+    // In a real app, this would update the data in the database
+    // For now, we'll just show a toast notification
+    toast({
+      title: "Draft OKR Updated",
+      description: "Your changes have been saved successfully.",
+    });
+    setEditDialogOpen(false);
+  };
+
+  const handleKeyResultChange = (id: number, newTitle: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      keyResults: prev.keyResults.map(kr => 
+        kr.id === id ? { ...kr, title: newTitle } : kr
+      )
+    }));
+  };
+
+  const addKeyResult = () => {
+    // Generate a unique ID for the new key result
+    const newId = Math.max(0, ...editFormData.keyResults.map(kr => kr.id)) + 1;
+    
+    setEditFormData(prev => ({
+      ...prev,
+      keyResults: [...prev.keyResults, { id: newId, title: "" }]
+    }));
+  };
+
+  const removeKeyResult = (id: number) => {
+    setEditFormData(prev => ({
+      ...prev,
+      keyResults: prev.keyResults.filter(kr => kr.id !== id)
+    }));
+  };
 
   const handleAIReview = (objective: DraftObjective) => {
     setSelectedObjective(objective);
@@ -132,6 +193,10 @@ export default function DraftOKRs() {
   };
 
   const applyAISuggestions = () => {
+    if (!aiAnalysis || !selectedObjective) return;
+    
+    // In a real app, this would update the data in the database
+    // For now, we'll just show a toast notification
     toast({
       title: "AI Suggestions Applied",
       description: "The suggested improvements have been applied to your draft OKR.",
@@ -191,7 +256,7 @@ export default function DraftOKRs() {
                 </div>
               </CardContent>
               <CardFooter className="grid grid-cols-3 gap-2 pt-0">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(objective)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
@@ -328,6 +393,109 @@ export default function DraftOKRs() {
               onClick={applyAISuggestions}
             >
               Apply AI Suggestions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center">
+                <Edit className="h-5 w-5 mr-2" />
+                Edit Draft OKR
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Make changes to your draft objective and key results
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Objective Title</Label>
+              <Input 
+                id="title" 
+                value={editFormData.title}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter the main objective"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                value={editFormData.description}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe what you want to achieve"
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Key Results</Label>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline"
+                  onClick={addKeyResult}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Key Result
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {editFormData.keyResults.map((kr, index) => (
+                  <div key={kr.id} className="flex gap-2 items-start">
+                    <Input 
+                      value={kr.title}
+                      onChange={(e) => handleKeyResultChange(kr.id, e.target.value)}
+                      placeholder={`Key Result ${index + 1}`}
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeKeyResult(kr.id)}
+                      className="h-10 w-10 shrink-0"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="24" 
+                        height="24" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="h-4 w-4 text-red-500"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSubmit}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
