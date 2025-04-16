@@ -210,6 +210,23 @@ export class DatabaseStorage implements IStorage {
   async getAllCadences(): Promise<Cadence[]> {
     return db.select().from(cadences);
   }
+  
+  async updateCadence(id: number, cadence: Partial<InsertCadence>): Promise<Cadence> {
+    const [updatedCadence] = await db.update(cadences)
+      .set(cadence)
+      .where(eq(cadences.id, id))
+      .returning();
+    
+    if (!updatedCadence) {
+      throw new Error(`Cadence with id ${id} not found`);
+    }
+    
+    return updatedCadence;
+  }
+  
+  async deleteCadence(id: number): Promise<void> {
+    await db.delete(cadences).where(eq(cadences.id, id));
+  }
 
   // Timeframes
   async createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe> {
@@ -228,6 +245,23 @@ export class DatabaseStorage implements IStorage {
 
   async getTimeframesByCadence(cadenceId: number): Promise<Timeframe[]> {
     return db.select().from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
+  }
+  
+  async updateTimeframe(id: number, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
+    const [updatedTimeframe] = await db.update(timeframes)
+      .set(timeframe)
+      .where(eq(timeframes.id, id))
+      .returning();
+    
+    if (!updatedTimeframe) {
+      throw new Error(`Timeframe with id ${id} not found`);
+    }
+    
+    return updatedTimeframe;
+  }
+  
+  async deleteTimeframe(id: number): Promise<void> {
+    await db.delete(timeframes).where(eq(timeframes.id, id));
   }
 
   // Objectives

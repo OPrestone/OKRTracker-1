@@ -470,7 +470,8 @@ export default function Cadences() {
                     "January", "February", "March", "April", "May", "June",
                     "July", "August", "September", "October", "November", "December"
                   ];
-                  const monthName = monthNames[(cadence.startMonth - 1) % 12];
+                  const startMonth = cadence.startMonth || 1; // Default to January if null
+                  const monthName = monthNames[(startMonth - 1) % 12];
                   
                   return (
                     <TableRow key={cadence.id}>
