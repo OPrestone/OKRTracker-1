@@ -502,7 +502,7 @@ export default function Cadences() {
                                   name: cadence.name,
                                   description: cadence.description || "",
                                   period: cadence.period,
-                                  startMonth: cadence.startMonth.toString()
+                                  startMonth: (cadence.startMonth || 1).toString()
                                 });
                                 
                                 setIsEditCadenceDialogOpen(true);
