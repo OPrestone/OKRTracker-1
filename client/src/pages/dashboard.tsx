@@ -368,6 +368,20 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Dashboard">
+      {/* Welcome Tooltip */}
+      <div className="mb-6 flex items-center">
+        <h1 className="text-2xl font-bold">Welcome to Your Dashboard</h1>
+        <div className="ml-2">
+          <HelpTooltip 
+            id="dashboard-welcome"
+            title="Welcome to Your Dashboard"
+            description="This is your central command center for OKRs. Here you can see a snapshot of your objectives, key results, and overall progress. Use the tooltips throughout the application to learn more about each feature."
+            feature="overview"
+            persistent={true}
+          />
+        </div>
+      </div>
+    
       {/* Quick Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => (
