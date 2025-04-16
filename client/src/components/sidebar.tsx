@@ -72,10 +72,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/" 
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Link href="/" className="flex items-center w-full">
@@ -86,10 +86,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/home" 
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Link href="/home" className="flex items-center w-full">
@@ -100,10 +100,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/company-strategy" 
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Link href="/company-strategy" className="flex items-center w-full">
@@ -116,10 +116,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button 
           onClick={() => setOkrsExpanded(!okrsExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/my-okrs" || location === "/draft-okrs" || location === "/approved-okrs" || location === "/company-okrs")
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Flag className="mr-3 h-5 w-5" />
@@ -134,7 +134,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {okrsExpanded && (
           <div className="pl-10">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/my-okrs" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -145,7 +145,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/draft-okrs" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -156,7 +156,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/approved-okrs" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -167,7 +167,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/company-okrs" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -183,10 +183,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button 
           onClick={() => setUserManagementExpanded(!userManagementExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/teams" || location === "/users" || location === "/all-users")
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Users className="mr-3 h-5 w-5" />
@@ -201,7 +201,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {userManagementExpanded && (
           <div className="pl-10">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/teams" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -212,7 +212,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/all-users" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -226,10 +226,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/checkins" 
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <Link href="/checkins" className="flex items-center w-full">
@@ -242,10 +242,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button 
           onClick={() => setReportsExpanded(!reportsExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/reports" || location === "/okr-reports" || location === "/team-performance" || location === "/ai-recommendations")
-              ? "bg-blue-50 text-primary border-l-3 border-primary" 
-              : "text-gray-600 hover:bg-gray-50"
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
           )}
         >
           <PieChart className="mr-3 h-5 w-5" />
@@ -260,7 +260,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {reportsExpanded && (
           <div className="pl-10">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/reports" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -271,7 +271,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/okr-reports" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -282,7 +282,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/team-performance" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -293,7 +293,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/ai-recommendations" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -312,7 +312,12 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <button 
           onClick={() => setConfigExpanded(!configExpanded)}
-          className="w-full flex items-center pl-4 pr-4 py-3 text-sm text-gray-600 font-medium hover:bg-gray-50"
+          className={cn(
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
+            (location.includes("/configuration/"))
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
         >
           <Settings className="mr-3 h-5 w-5" />
           Configure
@@ -326,7 +331,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {configExpanded && (
           <div className="pl-10">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/general" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -337,7 +342,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/teams" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -348,7 +353,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/users-permissions" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -359,7 +364,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/integrations" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -370,7 +375,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/cadences" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
@@ -381,7 +386,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/timeframes" 
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
