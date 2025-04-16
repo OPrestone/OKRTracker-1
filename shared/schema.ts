@@ -449,6 +449,9 @@ export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
   checkIns: many(checkIns, {
     relationName: "key_result_check_ins",
   }),
+  highfives: many(highfives, {
+    relationName: "key_result_highfives",
+  }),
 }));
 
 export const initiativesRelations = relations(initiatives, ({ one }) => ({

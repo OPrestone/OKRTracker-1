@@ -12,18 +12,26 @@ import {
   Link,
   PlugZap,
   Globe,
-  Mail,
-  MessageSquare,
-  Calendar,
   Database,
   Shield,
   AlertCircle,
   Check,
   X,
-  RefreshCw
+  RefreshCw,
+  Mail,
+  MessageSquare,
+  Calendar
 } from "lucide-react";
-// Using Lucide icons instead of react-icons/si to avoid compatibility issues
-// import { SiSlack, SiMicrosoft, SiGoogle, SiJira, SiAsana, SiGitlab, SiGithub } from "react-icons/si";
+// Brand icons for specific services
+import { 
+  SiSlack, 
+  SiJira, 
+  SiAsana, 
+  SiGitlab, 
+  SiGithub, 
+  SiMicrosoft, 
+  SiGoogle 
+} from "react-icons/si";
 
 const IntegrationCard = ({
   title,
@@ -217,7 +225,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Slack"
               description="Receive OKR updates and notifications in your Slack channels"
-              icon={<MessageSquare className="h-6 w-6 text-[#4A154B]" />}
+              icon={<SiSlack className="h-6 w-6 text-[#4A154B]" />}
               isConnected={integrations.slack}
               onConnect={() => handleToggleIntegration("slack")}
               onDisconnect={() => handleToggleIntegration("slack")}
@@ -226,7 +234,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Jira"
               description="Link Jira issues to key results and track progress"
-              icon={<Link className="h-6 w-6 text-[#0052CC]" />}
+              icon={<SiJira className="h-6 w-6 text-[#0052CC]" />}
               isConnected={integrations.jira}
               onConnect={() => handleToggleIntegration("jira")}
               onDisconnect={() => handleToggleIntegration("jira")}
@@ -235,7 +243,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Asana"
               description="Sync Asana tasks with OKR initiatives and key results"
-              icon={<Link className="h-6 w-6 text-[#F06A6A]" />}
+              icon={<SiAsana className="h-6 w-6 text-[#F06A6A]" />}
               isConnected={integrations.asana}
               onConnect={() => handleToggleIntegration("asana")}
               onDisconnect={() => handleToggleIntegration("asana")}
@@ -244,7 +252,7 @@ const Integrations = () => {
             <IntegrationCard
               title="GitLab"
               description="Connect GitLab issues and merge requests to key results"
-              icon={<Link className="h-6 w-6 text-[#FC6D26]" />}
+              icon={<SiGitlab className="h-6 w-6 text-[#FC6D26]" />}
               isConnected={integrations.gitlab}
               onConnect={() => handleToggleIntegration("gitlab")}
               onDisconnect={() => handleToggleIntegration("gitlab")}
@@ -253,7 +261,7 @@ const Integrations = () => {
             <IntegrationCard
               title="GitHub"
               description="Link GitHub issues and pull requests to key results"
-              icon={<Link className="h-6 w-6 text-[#24292F]" />}
+              icon={<SiGithub className="h-6 w-6 text-[#24292F]" />}
               isConnected={integrations.github}
               onConnect={() => handleToggleIntegration("github")}
               onDisconnect={() => handleToggleIntegration("github")}
@@ -262,7 +270,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Microsoft Outlook"
               description="Schedule check-ins and meetings with Outlook Calendar"
-              icon={<Mail className="h-6 w-6 text-[#0078D4]" />}
+              icon={<SiMicrosoftoutlook className="h-6 w-6 text-[#0078D4]" />}
               isConnected={integrations.outlook}
               onConnect={() => handleToggleIntegration("outlook")}
               onDisconnect={() => handleToggleIntegration("outlook")}
@@ -271,7 +279,7 @@ const Integrations = () => {
             <IntegrationCard
               title="Google Calendar"
               description="Sync OKR events with Google Calendar"
-              icon={<Calendar className="h-6 w-6 text-[#4285F4]" />}
+              icon={<SiGooglecalendar className="h-6 w-6 text-[#4285F4]" />}
               isConnected={integrations.gcalendar}
               onConnect={() => handleToggleIntegration("gcalendar")}
               onDisconnect={() => handleToggleIntegration("gcalendar")}
