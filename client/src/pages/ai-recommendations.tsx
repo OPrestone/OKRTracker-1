@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Brain, Check, HelpCircle, Lightbulb, Loader2, Target, Zap } from "lucide-react";
+import { AlertCircle, Brain, Check, ChevronRight, HelpCircle, Lightbulb, Loader2, Settings, Sparkles, SparklesIcon, Target, Wand2, Zap } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -303,19 +303,19 @@ const AIRecommendations = () => {
       <Tabs defaultValue="objectives" className="mt-6">
         <TabsList className="grid grid-cols-4 mb-8">
           <TabsTrigger value="objectives">
-            <Lightbulb className="mr-2 h-4 w-4" />
+            <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
             Objective Ideas
           </TabsTrigger>
           <TabsTrigger value="keyresults">
-            <Target className="mr-2 h-4 w-4" />
+            <Target className="mr-2 h-4 w-4 text-blue-500" />
             Key Result Ideas
           </TabsTrigger>
           <TabsTrigger value="improve">
-            <Zap className="mr-2 h-4 w-4" />
+            <Wand2 className="mr-2 h-4 w-4 text-purple-500" />
             Improve OKRs
           </TabsTrigger>
           <TabsTrigger value="alignment">
-            <Brain className="mr-2 h-4 w-4" />
+            <Brain className="mr-2 h-4 w-4 text-green-500" />
             Alignment Analysis
           </TabsTrigger>
         </TabsList>
@@ -365,7 +365,7 @@ const AIRecommendations = () => {
                         </>
                       ) : (
                         <>
-                          <Brain className="mr-2 h-4 w-4" />
+                          <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
                           Generate Ideas
                         </>
                       )}
@@ -382,7 +382,7 @@ const AIRecommendations = () => {
                   </div>
                 ) : !selectedTeam ? (
                   <div className="text-center p-6 text-muted-foreground">
-                    <Lightbulb className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <Sparkles className="h-10 w-10 mx-auto mb-2 opacity-20 text-amber-200" />
                     <p>Select a team to generate objective recommendations</p>
                   </div>
                 ) : isLoadingObjectiveRecs ? (
@@ -508,7 +508,7 @@ const AIRecommendations = () => {
                         </>
                       ) : (
                         <>
-                          <Target className="mr-2 h-4 w-4" />
+                          <Target className="mr-2 h-4 w-4 text-blue-500" />
                           Generate Key Results
                         </>
                       )}
@@ -525,7 +525,7 @@ const AIRecommendations = () => {
                   </div>
                 ) : !selectedObjective ? (
                   <div className="text-center p-6 text-muted-foreground">
-                    <Target className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <Target className="h-10 w-10 mx-auto mb-2 opacity-20 text-blue-200" />
                     <p>Select an objective to generate key result recommendations</p>
                   </div>
                 ) : isLoadingKeyResultRecs ? (
@@ -633,7 +633,7 @@ const AIRecommendations = () => {
                         </>
                       ) : (
                         <>
-                          <Zap className="mr-2 h-4 w-4" />
+                          <Wand2 className="mr-2 h-4 w-4 text-purple-500" />
                           Analyze & Improve
                         </>
                       )}
@@ -650,7 +650,7 @@ const AIRecommendations = () => {
                   </div>
                 ) : !selectedObjective ? (
                   <div className="text-center p-6 text-muted-foreground">
-                    <Zap className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <Wand2 className="h-10 w-10 mx-auto mb-2 opacity-20 text-purple-200" />
                     <p>Select an objective to get improvement suggestions</p>
                   </div>
                 ) : isLoadingImprovement ? (
@@ -807,7 +807,7 @@ const AIRecommendations = () => {
                         </>
                       ) : (
                         <>
-                          <Brain className="mr-2 h-4 w-4" />
+                          <Brain className="mr-2 h-4 w-4 text-green-500" />
                           Analyze Alignment
                         </>
                       )}
@@ -824,7 +824,7 @@ const AIRecommendations = () => {
                   </div>
                 ) : !selectedTeam ? (
                   <div className="text-center p-6 text-muted-foreground">
-                    <Brain className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                    <Brain className="h-10 w-10 mx-auto mb-2 opacity-20 text-green-200" />
                     <p>Select a team to analyze alignment with company objectives</p>
                   </div>
                 ) : isLoadingAlignment ? (
