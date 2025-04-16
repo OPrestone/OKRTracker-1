@@ -56,10 +56,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 3000 instead of 5000 (which seems to be in use)
+  // Serve the app on port 5000 for compatibility with Replit workflows
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 3000;
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",

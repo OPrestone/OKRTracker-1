@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
+import { HelpTooltip } from "@/components/help/tooltip";
+import { dashboardHelp } from "@/components/help/help-content";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

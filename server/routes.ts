@@ -3,8 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
-         insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema } from "@shared/schema";
+         insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
+         users, teams, objectives as objectivesTable, keyResults as keyResultsTable } from "@shared/schema";
 import { z } from "zod";
+import { db } from "./db";
+import { or, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -385,6 +388,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const keyResultId = parseInt(req.params.keyResultId);
       const checkIns = await storage.getCheckInsByKeyResult(keyResultId);
       res.json(checkIns);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Search API
+  app.get("/api/search", async (req, res, next) => {
+    try {
+      const query = req.query.q as string;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      if (!query || query.length < 2) {
+        return res.json({
+          objectives: [],
+          keyResults: [],
+          teams: [],
+          users: []
+        });
+      }
+      
+      const searchTerm = query.toLowerCase();
+      
+      // Search objectives
+      const objectivesResult = await db.select()
+        .from(objectivesTable)
+        .where(
+          or(
+            sql`LOWER(${objectivesTable.title}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${objectivesTable.description}) LIKE ${'%' + searchTerm + '%'}`
+          )
+        )
+        .limit(limit);
+      
+      // Search key results
+      const keyResultsResult = await db.select()
+        .from(keyResultsTable)
+        .where(
+          or(
+            sql`LOWER(${keyResultsTable.title}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${keyResultsTable.description}) LIKE ${'%' + searchTerm + '%'}`
+          )
+        )
+        .limit(limit);
+      
+      // Search teams
+      const teamsResult = await db.select()
+        .from(teams)
+        .where(
+          or(
+            sql`LOWER(${teams.name}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${teams.description}) LIKE ${'%' + searchTerm + '%'}`
+          )
+        )
+        .limit(limit);
+      
+      // Search users
+      const usersResult = await db.select({
+        id: users.id,
+        username: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        teamId: users.teamId
+      })
+        .from(users)
+        .where(
+          or(
+            sql`LOWER(${users.firstName}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${users.lastName}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${users.username}) LIKE ${'%' + searchTerm + '%'}`,
+            sql`LOWER(${users.email}) LIKE ${'%' + searchTerm + '%'}`
+          )
+        )
+        .limit(limit);
+      
+      res.json({
+        objectives: objectivesResult,
+        keyResults: keyResultsResult,
+        teams: teamsResult,
+        users: usersResult
+      });
     } catch (error) {
       next(error);
     }

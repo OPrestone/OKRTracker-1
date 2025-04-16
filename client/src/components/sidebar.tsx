@@ -55,77 +55,89 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           Main
         </div>
         
-        <Link href="/">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/" className="flex items-center w-full">
             <BarChart3 className="mr-3 h-5 w-5" />
             Dashboard
-          </a>
-        </Link>
+          </Link>
+        </div>
         
-        <Link href="/home">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/home" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/home" className="flex items-center w-full">
             <Home className="mr-3 h-5 w-5" />
             Home
-          </a>
-        </Link>
+          </Link>
+        </div>
         
-        <Link href="/company-strategy">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/company-strategy" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/company-strategy" className="flex items-center w-full">
             <Flag className="mr-3 h-5 w-5" />
             Company Strategy
-          </a>
-        </Link>
+          </Link>
+        </div>
         
-        <Link href="/teams">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/teams" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/teams" className="flex items-center w-full">
             <Users className="mr-3 h-5 w-5" />
             Teams
-          </a>
-        </Link>
+          </Link>
+        </div>
         
-        <Link href="/users">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/users" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/users" className="flex items-center w-full">
             <User className="mr-3 h-5 w-5" />
             Users
-          </a>
-        </Link>
+          </Link>
+        </div>
         
-        <Link href="/checkins">
-          <a className={cn(
+        <div
+          className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium", 
             location === "/checkins" 
               ? "bg-blue-50 text-primary border-l-3 border-primary" 
               : "text-gray-600 hover:bg-gray-50"
-          )}>
+          )}
+        >
+          <Link href="/checkins" className="flex items-center w-full">
             <CalendarCheck className="mr-3 h-5 w-5" />
             Check-ins
-          </a>
-        </Link>
+          </Link>
+        </div>
         
         <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Administration
@@ -146,66 +158,71 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         {configExpanded && (
           <div className="pl-10">
-            <Link href="/configuration/general">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/general" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/general" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/general" className="w-full">
                 General
-              </a>
-            </Link>
-            <Link href="/configuration/teams">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/teams" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/teams" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/teams" className="w-full">
                 Teams
-              </a>
-            </Link>
-            <Link href="/configuration/users-permissions">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/users-permissions" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/users-permissions" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/users-permissions" className="w-full">
                 Users & Permissions
-              </a>
-            </Link>
-            <Link href="/configuration/integrations">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/integrations" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/integrations" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/integrations" className="w-full">
                 Integrations
-              </a>
-            </Link>
-            <Link href="/configuration/cadences">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/cadences" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/cadences" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/cadences" className="w-full">
                 Cadences
-              </a>
-            </Link>
-            <Link href="/configuration/timeframes">
-              <a className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm", 
-                location === "/configuration/timeframes" 
-                  ? "text-primary font-medium" 
-                  : "text-gray-600 hover:text-gray-900"
-              )}>
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/configuration/timeframes" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/timeframes" className="w-full">
                 Timeframes
-              </a>
-            </Link>
+              </Link>
+            </div>
           </div>
         )}
       </nav>

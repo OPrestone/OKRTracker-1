@@ -1,6 +1,16 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Statuses for Objectives and Key Results
+export const statusEnum = pgEnum("status", [
+  "not_started",
+  "on_track",
+  "at_risk",
+  "behind",
+  "completed",
+]);
 
 // User Management
 export const users = pgTable("users", {
@@ -12,8 +22,8 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   language: text("language").default("en"),
   role: text("role").default("user"),
-  managerId: integer("manager_id").references(() => users.id),
-  teamId: integer("team_id").references(() => teams.id),
+  managerId: integer("manager_id"),
+  teamId: integer("team_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -24,10 +34,13 @@ export const teams = pgTable("teams", {
   description: text("description"),
   color: text("color").default("#3B82F6"),
   icon: text("icon").default("building"),
-  parentId: integer("parent_id").references(() => teams.id),
-  ownerId: integer("owner_id").references(() => users.id),
+  parentId: integer("parent_id"),
+  ownerId: integer("owner_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Add relations after all tables are defined
+// These will be added at the end of the file
 
 // Access Groups
 export const accessGroups = pgTable("access_groups", {
@@ -50,6 +63,8 @@ export const cadences = pgTable("cadences", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  period: text("period").notNull(), // quarterly, annually, etc.
+  startMonth: integer("start_month"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -57,20 +72,12 @@ export const cadences = pgTable("cadences", {
 export const timeframes = pgTable("timeframes", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   cadenceId: integer("cadence_id").references(() => cadences.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// Statuses for Objectives and Key Results
-export const statusEnum = pgEnum("status", [
-  "not_started",
-  "on_track",
-  "at_risk",
-  "behind",
-  "completed",
-]);
 
 // Objectives
 export const objectives = pgTable("objectives", {
@@ -83,7 +90,7 @@ export const objectives = pgTable("objectives", {
   timeframeId: integer("timeframe_id").references(() => timeframes.id).notNull(),
   status: text("status").default("not_started"),
   progress: integer("progress").default(0),
-  parentId: integer("parent_id").references(() => objectives.id),
+  parentId: integer("parent_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -155,6 +162,8 @@ export const insertAccessGroupSchema = createInsertSchema(accessGroups).pick({
 export const insertCadenceSchema = createInsertSchema(cadences).pick({
   name: true,
   description: true,
+  period: true,
+  startMonth: true,
 });
 
 export const insertTimeframeSchema = createInsertSchema(timeframes).pick({
@@ -236,3 +245,178 @@ export const loginSchema = z.object({
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
+
+// Relations
+export const usersRelations = relations(users, ({ one, many }) => ({
+  manager: one(users, {
+    fields: [users.managerId],
+    references: [users.id],
+    relationName: "manager",
+  }),
+  team: one(teams, {
+    fields: [users.teamId],
+    references: [teams.id],
+    relationName: "team_members",
+  }),
+  managedUsers: many(users, {
+    relationName: "manager",
+  }),
+  ownedTeams: many(teams, {
+    relationName: "team_owner",
+  }),
+  objectives: many(objectives, {
+    relationName: "objective_owner",
+  }),
+  keyResultsAssigned: many(keyResults, {
+    relationName: "key_result_assignee",
+  }),
+  initiativesAssigned: many(initiatives, {
+    relationName: "initiative_assignee",
+  }),
+  userAccessGroups: many(userAccessGroups, {
+    relationName: "user_access",
+  }),
+  checkIns: many(checkIns, {
+    relationName: "check_in_user",
+  }),
+}));
+
+export const teamsRelations = relations(teams, ({ one, many }) => ({
+  parent: one(teams, {
+    fields: [teams.parentId],
+    references: [teams.id],
+    relationName: "parent_team",
+  }),
+  owner: one(users, {
+    fields: [teams.ownerId],
+    references: [users.id],
+    relationName: "team_owner",
+  }),
+  members: many(users, {
+    relationName: "team_members",
+  }),
+  children: many(teams, {
+    relationName: "parent_team",
+  }),
+  objectives: many(objectives, {
+    relationName: "team_objectives",
+  }),
+}));
+
+export const accessGroupsRelations = relations(accessGroups, ({ many }) => ({
+  userAccessGroups: many(userAccessGroups, {
+    relationName: "access_group_users",
+  }),
+}));
+
+export const userAccessGroupsRelations = relations(userAccessGroups, ({ one }) => ({
+  user: one(users, {
+    fields: [userAccessGroups.userId],
+    references: [users.id],
+    relationName: "user_access",
+  }),
+  accessGroup: one(accessGroups, {
+    fields: [userAccessGroups.accessGroupId],
+    references: [accessGroups.id],
+    relationName: "access_group_users",
+  }),
+}));
+
+export const cadencesRelations = relations(cadences, ({ many }) => ({
+  timeframes: many(timeframes, {
+    relationName: "cadence_timeframes",
+  }),
+}));
+
+export const timeframesRelations = relations(timeframes, ({ one, many }) => ({
+  cadence: one(cadences, {
+    fields: [timeframes.cadenceId],
+    references: [cadences.id],
+    relationName: "cadence_timeframes",
+  }),
+  objectives: many(objectives, {
+    relationName: "timeframe_objectives",
+  }),
+}));
+
+export const objectivesRelations = relations(objectives, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [objectives.ownerId],
+    references: [users.id],
+    relationName: "objective_owner",
+  }),
+  team: one(teams, {
+    fields: [objectives.teamId],
+    references: [teams.id],
+    relationName: "team_objectives",
+  }),
+  timeframe: one(timeframes, {
+    fields: [objectives.timeframeId],
+    references: [timeframes.id],
+    relationName: "timeframe_objectives",
+  }),
+  parent: one(objectives, {
+    fields: [objectives.parentId],
+    references: [objectives.id],
+    relationName: "parent_objective",
+  }),
+  children: many(objectives, {
+    relationName: "parent_objective",
+  }),
+  keyResults: many(keyResults, {
+    relationName: "objective_key_results",
+  }),
+  checkIns: many(checkIns, {
+    relationName: "objective_check_ins",
+  }),
+}));
+
+export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
+  objective: one(objectives, {
+    fields: [keyResults.objectiveId],
+    references: [objectives.id],
+    relationName: "objective_key_results",
+  }),
+  assignedTo: one(users, {
+    fields: [keyResults.assignedToId],
+    references: [users.id],
+    relationName: "key_result_assignee",
+  }),
+  initiatives: many(initiatives, {
+    relationName: "key_result_initiatives",
+  }),
+  checkIns: many(checkIns, {
+    relationName: "key_result_check_ins",
+  }),
+}));
+
+export const initiativesRelations = relations(initiatives, ({ one }) => ({
+  keyResult: one(keyResults, {
+    fields: [initiatives.keyResultId],
+    references: [keyResults.id],
+    relationName: "key_result_initiatives",
+  }),
+  assignedTo: one(users, {
+    fields: [initiatives.assignedToId],
+    references: [users.id],
+    relationName: "initiative_assignee",
+  }),
+}));
+
+export const checkInsRelations = relations(checkIns, ({ one }) => ({
+  user: one(users, {
+    fields: [checkIns.userId],
+    references: [users.id],
+    relationName: "check_in_user",
+  }),
+  objective: one(objectives, {
+    fields: [checkIns.objectiveId],
+    references: [objectives.id],
+    relationName: "objective_check_ins",
+  }),
+  keyResult: one(keyResults, {
+    fields: [checkIns.keyResultId],
+    references: [keyResults.id],
+    relationName: "key_result_check_ins",
+  }),
+}));

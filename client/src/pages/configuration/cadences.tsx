@@ -29,6 +29,15 @@ import { PlusCircle, Calendar, Edit, Trash2, AlertCircle } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Cadence } from "@shared/schema";
 
+// Define form type with number for startMonth
+type CadenceForm = {
+  id: number;
+  name: string;
+  description: string;
+  period: string;
+  startMonth: number;
+};
+
 const Cadences = () => {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -116,7 +125,7 @@ const Cadences = () => {
       name: cadence.name,
       description: cadence.description || "",
       period: cadence.period || "quarterly",
-      startMonth: cadence.startMonth || "january"
+      startMonth: typeof cadence.startMonth === 'number' ? cadence.startMonth : 1
     });
     setIsEditDialogOpen(true);
   };

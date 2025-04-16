@@ -24,7 +24,9 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect } from "react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, HelpCircle } from "lucide-react";
+import { HelpTooltip } from "@/components/help/tooltip";
+import { authenticationHelp } from "@/components/help/help-content";
 
 // Login form schema
 const loginSchema = z.object({
@@ -106,6 +108,15 @@ export default function AuthPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Account Access</h3>
+            <HelpTooltip
+              id={authenticationHelp.id}
+              title={authenticationHelp.title}
+              description={authenticationHelp.description}
+              showFor={3}
+            />
+          </div>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>

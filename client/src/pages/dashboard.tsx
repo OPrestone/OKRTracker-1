@@ -5,6 +5,15 @@ import StatsCard from "@/components/dashboard/stats-card";
 import ObjectiveCard from "@/components/dashboard/objective-card";
 import TeamCard from "@/components/dashboard/team-card";
 import CheckInTable from "@/components/dashboard/check-in-table";
+import { HelpTooltip } from "@/components/help/tooltip";
+import { useHelp } from "@/hooks/use-help-context";
+import { 
+  dashboardHelp,
+  objectivesHelp,
+  teamsHelp,
+  checkInsHelp,
+  newObjectiveHelp
+} from "@/components/help/help-content";
 
 import { 
   Target, 
@@ -51,6 +60,14 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [isNewObjectiveOpen, setIsNewObjectiveOpen] = useState(false);
+  
+  // Access the help context
+  const { markOverviewSeen } = useHelp();
+  
+  // Mark the dashboard overview as seen when the component mounts
+  useEffect(() => {
+    markOverviewSeen();
+  }, [markOverviewSeen]);
   
   // Stats data
   const stats = [
@@ -399,59 +416,73 @@ const Dashboard = () => {
             </Select>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <Button 
               variant="outline" 
               onClick={handleExport}
-              className="mr-3"
             >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
             
-            <Dialog open={isNewObjectiveOpen} onOpenChange={setIsNewObjectiveOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Objective
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Objective</DialogTitle>
-                  <DialogDescription>
-                    Create a new objective with key results to track your progress.
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-6 py-4">
-                  {/* Form content would go here */}
-                  <p>Objective creation form will be implemented here.</p>
-                </div>
-                
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsNewObjectiveOpen(false)}>
-                    Cancel
+            <div className="flex items-center gap-2">
+              <Dialog open={isNewObjectiveOpen} onOpenChange={setIsNewObjectiveOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Objective
                   </Button>
-                  <Button onClick={() => {
-                    toast({
-                      title: "Objective Created",
-                      description: "Your new objective has been created successfully.",
-                    });
-                    setIsNewObjectiveOpen(false);
-                  }}>
-                    Create Objective
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Create New Objective</DialogTitle>
+                    <DialogDescription>
+                      Create a new objective with key results to track your progress.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6 py-4">
+                    {/* Form content would go here */}
+                    <p>Objective creation form will be implemented here.</p>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsNewObjectiveOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={() => {
+                      toast({
+                        title: "Objective Created",
+                        description: "Your new objective has been created successfully.",
+                      });
+                      setIsNewObjectiveOpen(false);
+                    }}>
+                      Create Objective
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              <HelpTooltip
+                id={newObjectiveHelp.id}
+                title={newObjectiveHelp.title}
+                description={newObjectiveHelp.description}
+              />
+            </div>
           </div>
         </div>
       </div>
       
       {/* OKR Overview Section */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Company Objectives Overview</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-lg font-semibold">Company Objectives Overview</h2>
+          <HelpTooltip 
+            id={objectivesHelp.id}
+            title={objectivesHelp.title}
+            description={objectivesHelp.description}
+          />
+        </div>
         
         {objectives.map((objective) => (
           <ObjectiveCard
@@ -474,7 +505,14 @@ const Dashboard = () => {
       {/* Team Performance */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Team Performance</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Team Performance</h2>
+            <HelpTooltip 
+              id={teamsHelp.id}
+              title={teamsHelp.title}
+              description={teamsHelp.description}
+            />
+          </div>
           <Button variant="link" onClick={() => navigate("/teams")}>
             View All Teams
           </Button>
@@ -501,7 +539,14 @@ const Dashboard = () => {
       {/* Recent Check-ins */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Check-ins</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Recent Check-ins</h2>
+            <HelpTooltip 
+              id={checkInsHelp.id}
+              title={checkInsHelp.title}
+              description={checkInsHelp.description}
+            />
+          </div>
           <Button variant="link" onClick={() => navigate("/checkins")}>
             View All Check-ins
           </Button>
