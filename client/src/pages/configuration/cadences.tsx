@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
+import { Badge } from "@/components/ui/badge";
+import { 
   Table,
   TableBody,
   TableCell,
@@ -14,7 +13,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import {
+import { 
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,149 +22,197 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Calendar, Edit, Trash2, AlertCircle } from "lucide-react";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, MoreHorizontal, Pencil, Trash2, Calendar } from "lucide-react";
 import { Cadence } from "@shared/schema";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-// Define form type with number for startMonth
-type CadenceForm = {
-  id: number;
-  name: string;
-  description: string;
-  period: string;
-  startMonth: number;
-};
-
-const Cadences = () => {
+export default function Cadences() {
   const { toast } = useToast();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [cadenceForm, setCadenceForm] = useState<CadenceForm>({
-    id: 0,
+  const [isNewCadenceDialogOpen, setIsNewCadenceDialogOpen] = useState(false);
+  const [isEditCadenceDialogOpen, setIsEditCadenceDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCadence, setSelectedCadence] = useState<Cadence | null>(null);
+
+  // New cadence form state
+  const [newCadence, setNewCadence] = useState({
     name: "",
     description: "",
     period: "quarterly",
-    startMonth: 1 // Using numeric value for month
+    startMonth: "1"
   });
-  
-  // Selected cadence for editing
-  const [selectedCadence, setSelectedCadence] = useState<Cadence | null>(null);
-  
+
+  // Edit cadence form state
+  const [editCadence, setEditCadence] = useState({
+    name: "",
+    description: "",
+    period: "quarterly",
+    startMonth: "1" 
+  });
+
   // Fetch cadences
-  const { data: cadences, isLoading: cadencesLoading } = useQuery<Cadence[]>({
+  const { data: cadences, isLoading } = useQuery<Cadence[]>({
     queryKey: ["/api/cadences"]
   });
-  
+
   // Create cadence mutation
   const createCadenceMutation = useMutation({
-    mutationFn: async (cadenceData: any) => {
-      const res = await apiRequest("POST", "/api/cadences", cadenceData);
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/cadences", data);
       return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cadences"] });
-      setIsCreateDialogOpen(false);
-      resetForm();
+      setIsNewCadenceDialogOpen(false);
+      resetNewCadenceForm();
       toast({
         title: "Cadence created",
-        description: "The cadence has been created successfully."
+        description: "The cadence has been created successfully.",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error creating cadence",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   });
-  
+
   // Update cadence mutation
   const updateCadenceMutation = useMutation({
-    mutationFn: async (cadenceData: any) => {
-      const { id, ...updateData } = cadenceData;
-      const res = await apiRequest("PATCH", `/api/cadences/${id}`, updateData);
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/cadences/${id}`, data);
       return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cadences"] });
-      setIsEditDialogOpen(false);
+      setIsEditCadenceDialogOpen(false);
       setSelectedCadence(null);
       toast({
         title: "Cadence updated",
-        description: "The cadence has been updated successfully."
+        description: "The cadence has been updated successfully.",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error updating cadence",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   });
-  
+
+  // Delete cadence mutation
+  const deleteCadenceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/cadences/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cadences"] });
+      setIsDeleteDialogOpen(false);
+      setSelectedCadence(null);
+      toast({
+        title: "Cadence deleted",
+        description: "The cadence has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting cadence",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleNewCadenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewCadence(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setNewCadence(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSelectChange = (name: string, value: string) => {
+    setEditCadence(prev => ({ ...prev, [name]: value }));
+  };
+
+  const resetNewCadenceForm = () => {
+    setNewCadence({
+      name: "",
+      description: "",
+      period: "quarterly",
+      startMonth: "1"
+    });
+  };
+
   const handleCreateCadence = () => {
     const cadenceData = {
-      name: cadenceForm.name,
-      description: cadenceForm.description,
-      period: cadenceForm.period,
-      startMonth: cadenceForm.startMonth
+      ...newCadence,
+      startMonth: parseInt(newCadence.startMonth)
     };
     
     createCadenceMutation.mutate(cadenceData);
   };
-  
-  const handleEditCadence = (cadence: Cadence) => {
-    setSelectedCadence(cadence);
-    setCadenceForm({
-      id: cadence.id,
-      name: cadence.name,
-      description: cadence.description || "",
-      period: cadence.period || "quarterly",
-      startMonth: typeof cadence.startMonth === 'number' ? cadence.startMonth : 1
-    });
-    setIsEditDialogOpen(true);
-  };
-  
+
   const handleUpdateCadence = () => {
     if (!selectedCadence) return;
     
     const cadenceData = {
-      id: selectedCadence.id,
-      name: cadenceForm.name,
-      description: cadenceForm.description,
-      period: cadenceForm.period,
-      startMonth: cadenceForm.startMonth
+      ...editCadence,
+      startMonth: parseInt(editCadence.startMonth)
     };
     
-    updateCadenceMutation.mutate(cadenceData);
-  };
-  
-  const resetForm = () => {
-    setCadenceForm({
-      id: 0,
-      name: "",
-      description: "",
-      period: "quarterly",
-      startMonth: 1
+    updateCadenceMutation.mutate({
+      id: selectedCadence.id,
+      data: cadenceData
     });
   };
-  
+
+  const handleDeleteCadence = () => {
+    if (!selectedCadence) return;
+    deleteCadenceMutation.mutate(selectedCadence.id);
+  };
+
   return (
-    <DashboardLayout title="Cadences Configuration">
+    <DashboardLayout title="Configuration - Cadences">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadences Configuration</h1>
-          <p className="text-gray-600">Manage OKR cadences and planning cycles</p>
+          <h1 className="text-2xl font-bold text-gray-900">Cadences</h1>
+          <p className="text-gray-600">Manage cadences for your OKR cycles</p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isNewCadenceDialogOpen} onOpenChange={setIsNewCadenceDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <PlusCircle className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" />
               New Cadence
             </Button>
           </DialogTrigger>
@@ -173,18 +220,19 @@ const Cadences = () => {
             <DialogHeader>
               <DialogTitle>Create New Cadence</DialogTitle>
               <DialogDescription>
-                Add a new cadence for OKR planning cycles.
+                Add a new cadence to structure your organization's OKR cycles.
               </DialogDescription>
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Cadence Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input 
                   id="name" 
-                  value={cadenceForm.name} 
-                  onChange={(e) => setCadenceForm({...cadenceForm, name: e.target.value})}
-                  placeholder="e.g., Quarterly OKRs"
+                  name="name"
+                  value={newCadence.name}
+                  onChange={handleNewCadenceChange}
+                  placeholder="e.g., Quarterly, Annual" 
                 />
               </div>
               
@@ -192,48 +240,55 @@ const Cadences = () => {
                 <Label htmlFor="description">Description</Label>
                 <Input 
                   id="description" 
-                  value={cadenceForm.description} 
-                  onChange={(e) => setCadenceForm({...cadenceForm, description: e.target.value})}
-                  placeholder="Brief description of this cadence"
+                  name="description"
+                  value={newCadence.description}
+                  onChange={handleNewCadenceChange}
+                  placeholder="e.g., Standard quarterly planning cycle" 
                 />
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="period">Period</Label>
-                <select 
-                  id="period"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={cadenceForm.period}
-                  onChange={(e) => setCadenceForm({...cadenceForm, period: e.target.value})}
+                <Select 
+                  value={newCadence.period} 
+                  onValueChange={(value) => handleSelectChange("period", value)}
                 >
-                  <option value="quarterly">Quarterly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="annual">Annual</option>
-                  <option value="biannual">Bi-Annual</option>
-                </select>
+                  <SelectTrigger id="period">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="biannual">Biannual</SelectItem>
+                    <SelectItem value="annual">Annual</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="startMonth">Start Month</Label>
-                <select 
-                  id="startMonth"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={cadenceForm.startMonth}
-                  onChange={(e) => setCadenceForm({...cadenceForm, startMonth: parseInt(e.target.value, 10)})}
+                <Select 
+                  value={newCadence.startMonth} 
+                  onValueChange={(value) => handleSelectChange("startMonth", value)}
                 >
-                  <option value="1">January</option>
-                  <option value="2">February</option>
-                  <option value="3">March</option>
-                  <option value="4">April</option>
-                  <option value="5">May</option>
-                  <option value="6">June</option>
-                  <option value="7">July</option>
-                  <option value="8">August</option>
-                  <option value="9">September</option>
-                  <option value="10">October</option>
-                  <option value="11">November</option>
-                  <option value="12">December</option>
-                </select>
+                  <SelectTrigger id="startMonth">
+                    <SelectValue placeholder="Select start month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">January</SelectItem>
+                    <SelectItem value="2">February</SelectItem>
+                    <SelectItem value="3">March</SelectItem>
+                    <SelectItem value="4">April</SelectItem>
+                    <SelectItem value="5">May</SelectItem>
+                    <SelectItem value="6">June</SelectItem>
+                    <SelectItem value="7">July</SelectItem>
+                    <SelectItem value="8">August</SelectItem>
+                    <SelectItem value="9">September</SelectItem>
+                    <SelectItem value="10">October</SelectItem>
+                    <SelectItem value="11">November</SelectItem>
+                    <SelectItem value="12">December</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
@@ -241,15 +296,19 @@ const Cadences = () => {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  resetForm();
-                  setIsCreateDialogOpen(false);
+                  resetNewCadenceForm();
+                  setIsNewCadenceDialogOpen(false);
                 }}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleCreateCadence}
-                disabled={!cadenceForm.name || createCadenceMutation.isPending}
+                disabled={
+                  !newCadence.name || 
+                  !newCadence.period ||
+                  createCadenceMutation.isPending
+                }
               >
                 {createCadenceMutation.isPending ? "Creating..." : "Create Cadence"}
               </Button>
@@ -257,9 +316,9 @@ const Cadences = () => {
           </DialogContent>
         </Dialog>
       </div>
-      
+
       {/* Edit Cadence Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditCadenceDialogOpen} onOpenChange={setIsEditCadenceDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Cadence</DialogTitle>
@@ -270,75 +329,82 @@ const Cadences = () => {
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Cadence Name</Label>
+              <Label htmlFor="editName">Name</Label>
               <Input 
-                id="edit-name" 
-                value={cadenceForm.name} 
-                onChange={(e) => setCadenceForm({...cadenceForm, name: e.target.value})}
+                id="editName" 
+                value={editCadence.name}
+                onChange={(e) => setEditCadence(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="editDescription">Description</Label>
               <Input 
-                id="edit-description" 
-                value={cadenceForm.description} 
-                onChange={(e) => setCadenceForm({...cadenceForm, description: e.target.value})}
+                id="editDescription" 
+                value={editCadence.description}
+                onChange={(e) => setEditCadence(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="edit-period">Period</Label>
-              <select 
-                id="edit-period"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={cadenceForm.period}
-                onChange={(e) => setCadenceForm({...cadenceForm, period: e.target.value})}
+              <Label htmlFor="editPeriod">Period</Label>
+              <Select 
+                value={editCadence.period} 
+                onValueChange={(value) => handleEditSelectChange("period", value)}
               >
-                <option value="quarterly">Quarterly</option>
-                <option value="monthly">Monthly</option>
-                <option value="annual">Annual</option>
-                <option value="biannual">Bi-Annual</option>
-              </select>
+                <SelectTrigger id="editPeriod">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="biannual">Biannual</SelectItem>
+                  <SelectItem value="annual">Annual</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="edit-startMonth">Start Month</Label>
-              <select 
-                id="edit-startMonth"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={cadenceForm.startMonth}
-                onChange={(e) => setCadenceForm({...cadenceForm, startMonth: parseInt(e.target.value, 10)})}
+              <Label htmlFor="editStartMonth">Start Month</Label>
+              <Select 
+                value={editCadence.startMonth} 
+                onValueChange={(value) => handleEditSelectChange("startMonth", value)}
               >
-                <option value="1">January</option>
-                <option value="2">February</option>
-                <option value="3">March</option>
-                <option value="4">April</option>
-                <option value="5">May</option>
-                <option value="6">June</option>
-                <option value="7">July</option>
-                <option value="8">August</option>
-                <option value="9">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
+                <SelectTrigger id="editStartMonth">
+                  <SelectValue placeholder="Select start month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">January</SelectItem>
+                  <SelectItem value="2">February</SelectItem>
+                  <SelectItem value="3">March</SelectItem>
+                  <SelectItem value="4">April</SelectItem>
+                  <SelectItem value="5">May</SelectItem>
+                  <SelectItem value="6">June</SelectItem>
+                  <SelectItem value="7">July</SelectItem>
+                  <SelectItem value="8">August</SelectItem>
+                  <SelectItem value="9">September</SelectItem>
+                  <SelectItem value="10">October</SelectItem>
+                  <SelectItem value="11">November</SelectItem>
+                  <SelectItem value="12">December</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => {
-                resetForm();
-                setIsEditDialogOpen(false);
-              }}
+              onClick={() => setIsEditCadenceDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button 
               onClick={handleUpdateCadence}
-              disabled={!cadenceForm.name || updateCadenceMutation.isPending}
+              disabled={
+                !editCadence.name || 
+                !editCadence.period ||
+                updateCadenceMutation.isPending
+              }
             >
               {updateCadenceMutation.isPending ? "Updating..." : "Update Cadence"}
             </Button>
@@ -346,19 +412,47 @@ const Cadences = () => {
         </DialogContent>
       </Dialog>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>OKR Cadences</CardTitle>
-          <CardDescription>
-            Manage the cycles and schedules for OKR planning
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {cadencesLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      {/* Delete Cadence Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Cadence</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this cadence? 
+              This action cannot be undone and will remove all associated timeframes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCadence}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteCadenceMutation.isPending}
+            >
+              {deleteCadenceMutation.isPending ? "Deleting..." : "Delete Cadence"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 flex justify-center">
+            <div className="animate-pulse flex space-x-4">
+              <div className="flex-1 space-y-6 py-1">
+                <div className="h-2 bg-slate-200 rounded"></div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                    <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded"></div>
+                </div>
+              </div>
             </div>
-          ) : cadences && cadences.length > 0 ? (
+          </div>
+        ) : cadences && cadences.length > 0 ? (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -370,34 +464,98 @@ const Cadences = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cadences.map(cadence => (
-                  <TableRow key={cadence.id}>
-                    <TableCell className="font-medium">{cadence.name}</TableCell>
-                    <TableCell>{cadence.description}</TableCell>
-                    <TableCell className="capitalize">{cadence.period}</TableCell>
-                    <TableCell className="capitalize">{cadence.startMonth}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditCadence(cadence)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {cadences.map(cadence => {
+                  // Convert numeric month to name
+                  const monthNames = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                  ];
+                  const monthName = monthNames[(cadence.startMonth - 1) % 12];
+                  
+                  return (
+                    <TableRow key={cadence.id}>
+                      <TableCell className="font-medium">{cadence.name}</TableCell>
+                      <TableCell>{cadence.description}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {cadence.period.charAt(0).toUpperCase() + cadence.period.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{monthName}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedCadence(cadence);
+                                
+                                // Initialize edit form with current values
+                                setEditCadence({
+                                  name: cadence.name,
+                                  description: cadence.description || "",
+                                  period: cadence.period,
+                                  startMonth: cadence.startMonth.toString()
+                                });
+                                
+                                setIsEditCadenceDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit Cadence
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                // Navigate to timeframes page filtered by this cadence
+                                window.location.href = `/configuration/timeframes?cadence=${cadence.id}`;
+                              }}
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              View Timeframes
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => {
+                                setSelectedCadence(cadence);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Cadence
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No cadences found</AlertTitle>
-              <AlertDescription>
-                You haven't created any cadences yet. Create a new cadence to get started.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ) : (
+          <div className="p-6 text-center">
+            <h3 className="text-lg font-medium text-gray-900">No cadences found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Create a cadence to begin structuring your OKR cycles.
+            </p>
+            <Button 
+              onClick={() => setIsNewCadenceDialogOpen(true)}
+              className="mt-4"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create First Cadence
+            </Button>
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
-};
-
-export default Cadences;
+}

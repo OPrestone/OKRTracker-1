@@ -150,6 +150,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  app.patch("/api/cadences/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertCadenceSchema.partial().parse(req.body);
+      const updatedCadence = await storage.updateCadence(id, validatedData);
+      res.json(updatedCadence);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/cadences/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if cadence has timeframes
+      const timeframes = await storage.getTimeframesByCadence(id);
+      if (timeframes.length > 0) {
+        return res.status(400).json({ 
+          error: "Cannot delete cadence with associated timeframes"
+        });
+      }
+      
+      await storage.deleteCadence(id);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Timeframes API
   app.get("/api/timeframes", async (req, res, next) => {
@@ -166,6 +196,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertTimeframeSchema.parse(req.body);
       const timeframe = await storage.createTimeframe(validatedData);
       res.status(201).json(timeframe);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.patch("/api/timeframes/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertTimeframeSchema.partial().parse(req.body);
+      const updatedTimeframe = await storage.updateTimeframe(id, validatedData);
+      res.json(updatedTimeframe);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/timeframes/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if timeframe has objectives
+      const objectives = await storage.getObjectivesByTimeframe(id);
+      if (objectives.length > 0) {
+        return res.status(400).json({ 
+          error: "Cannot delete timeframe with associated objectives" 
+        });
+      }
+      
+      await storage.deleteTimeframe(id);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }

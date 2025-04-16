@@ -28,6 +28,16 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -49,7 +59,11 @@ import {
   MoreHorizontal, 
   UserPlus, 
   ShieldCheck, 
-  Users 
+  Users,
+  Pencil,
+  UserCog,
+  UserX,
+  UserCheck
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User, Team, AccessGroup } from "@shared/schema";
@@ -63,6 +77,10 @@ const UsersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isTeamAssignDialogOpen, setIsTeamAssignDialogOpen] = useState(false);
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Form state for new user
   const [newUser, setNewUser] = useState({
@@ -75,6 +93,21 @@ const UsersPage = () => {
     language: "en",
     teamId: "",
     managerId: ""
+  });
+  
+  // Form state for editing user
+  const [editUser, setEditUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "",
+    language: "",
+    managerId: ""
+  });
+  
+  // Form state for team assignment
+  const [teamAssignment, setTeamAssignment] = useState({
+    teamId: ""
   });
 
   // Fetch users, teams, and access groups
@@ -108,6 +141,81 @@ const UsersPage = () => {
     onError: (error: Error) => {
       toast({
         title: "Error creating user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsEditUserDialogOpen(false);
+      setSelectedUser(null);
+      toast({
+        title: "User updated",
+        description: "The user has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error updating user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Assign team mutation
+  const assignTeamMutation = useMutation({
+    mutationFn: async ({ id, teamId }: { id: number, teamId: number | null }) => {
+      const res = await apiRequest("PATCH", `/api/users/${id}`, { teamId });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsTeamAssignDialogOpen(false);
+      setSelectedUser(null);
+      setTeamAssignment({ teamId: "" });
+      toast({
+        title: "Team assigned",
+        description: "The user has been assigned to a new team.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error assigning team",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Deactivate user mutation (we'll simulate this by changing the role to "inactive")
+  const deactivateUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      // In a real application, you might want to implement a proper deactivation
+      // Here we're just updating the role to indicate the user is inactive
+      const res = await apiRequest("PATCH", `/api/users/${id}`, { role: "inactive" });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsDeactivateDialogOpen(false);
+      setSelectedUser(null);
+      toast({
+        title: "User deactivated",
+        description: "The user has been deactivated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deactivating user",
         description: error.message,
         variant: "destructive",
       });
@@ -399,6 +507,240 @@ const UsersPage = () => {
         </div>
       </div>
 
+      {/* Edit User Dialog */}
+      <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label htmlFor="editFirstName" className="text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <Input 
+                  id="editFirstName" 
+                  value={editUser.firstName}
+                  onChange={(e) => setEditUser(prev => ({ ...prev, firstName: e.target.value }))}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="editLastName" className="text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <Input 
+                  id="editLastName" 
+                  value={editUser.lastName}
+                  onChange={(e) => setEditUser(prev => ({ ...prev, lastName: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="editEmail" className="text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <Input 
+                id="editEmail" 
+                type="email"
+                value={editUser.email}
+                onChange={(e) => setEditUser(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label htmlFor="editRole" className="text-sm font-medium text-gray-700">
+                  Role
+                </label>
+                <Select 
+                  value={editUser.role} 
+                  onValueChange={(value) => setEditUser(prev => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger id="editRole">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="manager">Team Lead</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="editLanguage" className="text-sm font-medium text-gray-700">
+                  Language
+                </label>
+                <Select 
+                  value={editUser.language} 
+                  onValueChange={(value) => setEditUser(prev => ({ ...prev, language: value }))}
+                >
+                  <SelectTrigger id="editLanguage">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="editManager" className="text-sm font-medium text-gray-700">
+                Manager
+              </label>
+              <Select 
+                value={editUser.managerId} 
+                onValueChange={(value) => setEditUser(prev => ({ ...prev, managerId: value }))}
+              >
+                <SelectTrigger id="editManager">
+                  <SelectValue placeholder="Assign a manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {users?.filter(u => 
+                    (u.role === "manager" || u.role === "admin") && 
+                    u.id !== selectedUser?.id // Don't show current user as an option
+                  ).map(user => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.firstName} {user.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditUserDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (!selectedUser) return;
+                
+                updateUserMutation.mutate({
+                  id: selectedUser.id,
+                  data: {
+                    firstName: editUser.firstName,
+                    lastName: editUser.lastName,
+                    email: editUser.email,
+                    role: editUser.role,
+                    language: editUser.language,
+                    managerId: editUser.managerId ? parseInt(editUser.managerId) : null
+                  }
+                });
+              }}
+              disabled={
+                !editUser.firstName || 
+                !editUser.lastName || 
+                !editUser.email ||
+                updateUserMutation.isPending
+              }
+            >
+              {updateUserMutation.isPending ? "Updating..." : "Update User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Team Assignment Dialog */}
+      <Dialog open={isTeamAssignDialogOpen} onOpenChange={setIsTeamAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign to Team</DialogTitle>
+            <DialogDescription>
+              Update team assignment for {selectedUser?.firstName} {selectedUser?.lastName}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="grid gap-2">
+              <label htmlFor="assignTeam" className="text-sm font-medium text-gray-700">
+                Team
+              </label>
+              <Select 
+                value={teamAssignment.teamId} 
+                onValueChange={(value) => setTeamAssignment({ teamId: value })}
+              >
+                <SelectTrigger id="assignTeam">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {teams?.map(team => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsTeamAssignDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (!selectedUser) return;
+                
+                assignTeamMutation.mutate({
+                  id: selectedUser.id,
+                  teamId: teamAssignment.teamId ? parseInt(teamAssignment.teamId) : null
+                });
+              }}
+              disabled={assignTeamMutation.isPending}
+            >
+              {assignTeamMutation.isPending ? "Assigning..." : "Assign Team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Deactivate User Dialog */}
+      <AlertDialog open={isDeactivateDialogOpen} onOpenChange={setIsDeactivateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate {selectedUser?.firstName} {selectedUser?.lastName}? 
+              This will prevent them from accessing the system, but their data will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!selectedUser) return;
+                deactivateUserMutation.mutate(selectedUser.id);
+              }}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deactivateUserMutation.isPending}
+            >
+              {deactivateUserMutation.isPending ? "Deactivating..." : "Deactivate User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">All Users</TabsTrigger>
@@ -480,11 +822,47 @@ const UsersPage = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Edit User</DropdownMenuItem>
-                                <DropdownMenuItem>Assign to Team</DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    
+                                    // Initialize edit form with current values
+                                    setEditUser({
+                                      firstName: user.firstName,
+                                      lastName: user.lastName,
+                                      email: user.email,
+                                      role: user.role || "user",
+                                      language: user.language || "en",
+                                      managerId: user.managerId ? user.managerId.toString() : ""
+                                    });
+                                    
+                                    setIsEditUserDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit User
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setTeamAssignment({
+                                      teamId: user.teamId ? user.teamId.toString() : ""
+                                    });
+                                    setIsTeamAssignDialogOpen(true);
+                                  }}
+                                >
+                                  <UserCog className="h-4 w-4 mr-2" />
+                                  Assign to Team
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600">
+                                <DropdownMenuItem 
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setIsDeactivateDialogOpen(true);
+                                  }}
+                                >
+                                  <UserX className="h-4 w-4 mr-2" />
                                   Deactivate User
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
