@@ -87,8 +87,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/quick-start-guide" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/quick-start-guide" className="flex items-center w-full">
@@ -101,8 +101,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/" className="flex items-center w-full">
@@ -401,7 +401,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
         
-        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Administration
         </div>
         
