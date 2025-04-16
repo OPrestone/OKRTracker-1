@@ -115,8 +115,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/team-leader-dashboard" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/team-leader-dashboard" className="flex items-center w-full">
@@ -129,8 +129,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/home" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/home" className="flex items-center w-full">

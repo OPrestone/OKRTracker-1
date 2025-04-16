@@ -15,7 +15,7 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-gray-500">
+        <Button variant="ghost" size="icon">
           {theme === "light" && <Sun className="h-5 w-5" />}
           {theme === "dark" && <Moon className="h-5 w-5" />}
           {theme === "system" && <Laptop className="h-5 w-5" />}

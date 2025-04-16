@@ -1,0 +1,29 @@
+Collaboration and Engagement (Check-ins and 1:1 meetings)
+a) Check-ins 
+Weekly and Daily Check-ins feature helps teams stay aligned, accountable, and engaged by encouraging regular updates on key results and objectives. These check-ins ensure that progress is tracked consistently, challenges are identified early, and teams remain focused on their priorities.
+Key Features:
+1. Daily Check-ins (Quick Progress Updates & Prioritization)
+Short, structured updates: Employees can quickly log what they worked on, what’s next, and any blockers.
+Real-time visibility: Managers and team members stay informed about daily progress without unnecessary meetings.
+Integration with collaboration tools: Sync with Slack, Microsoft Teams, or email for seamless reporting.
+2. Weekly Check-ins (Deeper Reflection & Alignment)
+Comprehensive status updates: Employees provide a summary of their weekly progress on OKRs.
+Highlight achievements & challenges: Teams can flag roadblocks early and seek support.
+Automated reminders & templates: Encourages consistency and ensures meaningful check-ins.
+Manager feedback & comments: Enables continuous support, coaching, and course correction.
+3. Engagement & Accountability
+Encourages team-wide participation: Everyone stays involved in tracking progress and adjusting priorities.
+Increases goal transparency: Helps align individual contributions with team and company objectives.
+Fosters a culture of continuous improvement: Encourages proactive problem-solving and course correction.
+
+
+
+-Provide a feature for weekly and daily check-ins add the menus on left side bar of the home screen
+a)Creating Check-ins templates 
+Provide a feature to create different check-in templates as demonstrated below 
+
+-Above feature will be used to define different check in templates 
+-To create a new template, click New and enter below fields
+Name: Name of the check-in template
+Team: Select the team to be assigned the check-in template
+Check-in Type: Select the check-in type i.e OKR Check-in, OKR Retrospective, and OKR Review  
