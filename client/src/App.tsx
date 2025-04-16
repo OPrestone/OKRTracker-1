@@ -13,6 +13,7 @@ import UsersPermissions from "@/pages/configuration/users-permissions";
 import Integrations from "@/pages/configuration/integrations";
 import Cadences from "@/pages/configuration/cadences";
 import Timeframes from "@/pages/configuration/timeframes";
+import StatusSettings from "@/pages/configuration/status-settings";
 import AuthPage from "@/pages/auth-page";
 import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
@@ -76,6 +77,7 @@ function AppRoutes() {
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />
       <PublicRoute path="/configuration/users-permissions" component={UsersPermissions} />
       <PublicRoute path="/configuration/integrations" component={Integrations} />
+      <PublicRoute path="/configuration/status-settings" component={StatusSettings} />
       <PublicRoute path="/configuration/cadences" component={Cadences} />
       <PublicRoute path="/configuration/timeframes" component={Timeframes} />
       <Route component={NotFound} />
