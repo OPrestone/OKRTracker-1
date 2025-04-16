@@ -1,6 +1,6 @@
 import { ChatLayout } from "@/components/chat/chat-layout";
 import { ChatProvider } from "@/hooks/use-chat";
-import { DashboardLayout } from "@/layouts/dashboard-layout";
+import DashboardLayout from "@/layouts/dashboard-layout";
 
 export default function ChatPage() {
   return (

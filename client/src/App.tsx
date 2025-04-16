@@ -30,6 +30,7 @@ import OneOnOneMeetings from "@/pages/one-on-one-meetings";
 import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
 import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
+import ChatPage from "@/pages/chat";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -81,6 +82,9 @@ function AppRoutes() {
       <PublicRoute path="/export-reports" component={ExportReports} />
       <PublicRoute path="/team-performance" component={TeamPerformance} />
       <PublicRoute path="/ai-recommendations" component={AIRecommendations} />
+      
+      {/* Communication */}
+      <PublicRoute path="/chat" component={ChatPage} />
       
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />

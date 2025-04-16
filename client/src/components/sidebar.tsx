@@ -18,6 +18,7 @@ import {
   BookOpen,
   Rocket,
   Compass,
+  MessageSquare,
   UserCog,
   Shield,
   PanelLeftOpen,
