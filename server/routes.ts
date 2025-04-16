@@ -4,12 +4,15 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
+         insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
+         insertAttachmentSchema, insertReactionSchema,
          users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
          statusEnum } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
 import { openAIService } from "./services/openai-service";
+import { WebSocketServer } from "ws";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
