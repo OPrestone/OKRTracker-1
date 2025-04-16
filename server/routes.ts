@@ -664,8 +664,13 @@ async function initializeData() {
         }
       });
 
-      // Assign admin to admin group
-      await storage.assignUserToAccessGroup(1, adminGroup.id);
+      // Assign users to access groups
+      await storage.assignUserToAccessGroup(1, adminGroup.id); // Admin
+      await storage.assignUserToAccessGroup(2, managerGroup.id); // John Smith
+      await storage.assignUserToAccessGroup(3, managerGroup.id); // Michelle Williams
+      await storage.assignUserToAccessGroup(4, userGroup.id); // Alex Garcia
+      await storage.assignUserToAccessGroup(5, userGroup.id); // Li Chen
+      await storage.assignUserToAccessGroup(6, userGroup.id); // Raj Patel
       
       // Assign users to teams
       // John Smith is manager of Marketing Team
