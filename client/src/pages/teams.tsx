@@ -65,15 +65,23 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
     enabled: !!team.id,
   });
 
+  // Define type for Objectives
+  interface TeamObjective {
+    id: number;
+    title: string;
+    progress: number;
+    status: "on_track" | "at_risk" | "behind" | "completed";
+  }
+
   // Get objectives for the team
-  const { data: objectives } = useQuery({
+  const { data: objectives } = useQuery<TeamObjective[]>({
     queryKey: ["/api/teams", team.id, "objectives"],
     enabled: !!team.id,
   });
 
   // Calculate progress as average of objectives or default to 0
-  const progress = objectives?.length 
-    ? objectives.reduce((sum: number, obj: any) => sum + obj.progress, 0) / objectives.length
+  const progress = objectives && objectives.length > 0
+    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + obj.progress, 0) / objectives.length
     : 0;
 
   // Get team color or default
@@ -121,7 +129,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
           
           {objectives && objectives.length > 0 ? (
             <div className="text-sm">
-              {objectives.slice(0, 3).map((objective: any, index: number) => (
+              {objectives.slice(0, 3).map((objective: TeamObjective, index: number) => (
                 <div 
                   key={objective.id}
                   className={`flex items-center justify-between mb-2 pb-2 ${
