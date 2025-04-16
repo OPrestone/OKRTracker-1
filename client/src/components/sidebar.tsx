@@ -17,7 +17,12 @@ import {
   Brain,
   BookOpen,
   Rocket,
-  Compass
+  Compass,
+  UserCog,
+  Shield,
+  PanelLeftOpen,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -382,8 +387,9 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/general" className="w-full">
-                General
+              <Link href="/configuration/general" className="w-full flex items-center">
+                <Settings className="h-4 w-4 mr-2 text-gray-500" />
+                General Settings
               </Link>
             </div>
             
@@ -393,8 +399,9 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/teams" className="w-full">
-                Teams
+              <Link href="/configuration/teams" className="w-full flex items-center">
+                <Users className="h-4 w-4 mr-2 text-blue-500" />
+                Team Management
               </Link>
             </div>
             
@@ -404,8 +411,21 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/users-permissions" className="w-full">
-                Users & Permissions
+              <Link href="/configuration/users-permissions" className="w-full flex items-center">
+                <UserCog className="h-4 w-4 mr-2 text-indigo-500" />
+                Users Management
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              location === "/configuration/access-groups" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/access-groups" className="w-full flex items-center">
+                <Shield className="h-4 w-4 mr-2 text-green-500" />
+                Access Groups
               </Link>
             </div>
             
@@ -415,8 +435,21 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/integrations" className="w-full">
+              <Link href="/configuration/integrations" className="w-full flex items-center">
+                <PanelLeftOpen className="h-4 w-4 mr-2 text-purple-500" />
                 Integrations
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              location === "/configuration/status-settings" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/configuration/status-settings" className="w-full flex items-center">
+                <CheckCircle className="h-4 w-4 mr-2 text-orange-500" />
+                Status Settings
               </Link>
             </div>
             
@@ -426,7 +459,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/cadences" className="w-full">
+              <Link href="/configuration/cadences" className="w-full flex items-center">
+                <CalendarCheck className="h-4 w-4 mr-2 text-teal-500" />
                 Cadences
               </Link>
             </div>
@@ -437,7 +471,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 ? "text-primary font-medium" 
                 : "text-gray-600 hover:text-gray-900"
             )}>
-              <Link href="/configuration/timeframes" className="w-full">
+              <Link href="/configuration/timeframes" className="w-full flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-red-500" />
                 Timeframes
               </Link>
             </div>
