@@ -30,7 +30,10 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          </div>
         </div>
         
         <div className="flex items-center space-x-4">

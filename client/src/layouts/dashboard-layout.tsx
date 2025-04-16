@@ -25,7 +25,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         <Header 
-          title={title} 
+          title={title}
+          subtitle={subtitle}
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
