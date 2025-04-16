@@ -238,6 +238,22 @@ export type Initiative = typeof initiatives.$inferSelect;
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
 export type CheckIn = typeof checkIns.$inferSelect;
 
+// Chat types
+export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
+export type ChatRoom = typeof chatRooms.$inferSelect;
+
+export type InsertChatRoomMember = z.infer<typeof insertChatRoomMemberSchema>;
+export type ChatRoomMember = typeof chatRoomMembers.$inferSelect;
+
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;
+
+export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type Attachment = typeof attachments.$inferSelect;
+
+export type InsertReaction = z.infer<typeof insertReactionSchema>;
+export type Reaction = typeof reactions.$inferSelect;
+
 // Chat feature schema and types are defined at the end of this file
 
 // For Authentication
@@ -446,7 +462,11 @@ export const chatRoomMembers = pgTable("chat_room_members", {
   lastRead: timestamp("last_read").notNull().defaultNow()
 });
 
-// Messages Table
+// Messages Table with circular reference type fix
+type MessageCircularReference = {
+  id: number;
+};
+
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
@@ -457,7 +477,7 @@ export const messages = pgTable("messages", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   isEdited: boolean("is_edited").notNull().default(false),
-  replyToId: integer("reply_to_id").references(() => messages.id)
+  replyToId: integer("reply_to_id").references((): MessageCircularReference => messages.id)
 });
 
 // Attachments Table

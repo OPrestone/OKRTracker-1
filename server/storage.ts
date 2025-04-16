@@ -1,12 +1,15 @@
 import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessGroup, InsertAccessGroup, 
          cadences, Cadence, InsertCadence, timeframes, Timeframe, InsertTimeframe,
          objectives, Objective, InsertObjective, keyResults, KeyResult, InsertKeyResult,
-         initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups } from "@shared/schema";
+         initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
+         chatRooms, ChatRoom, InsertChatRoom, chatRoomMembers, ChatRoomMember, InsertChatRoomMember,
+         messages, Message, InsertMessage, attachments, Attachment, InsertAttachment,
+         reactions, Reaction, InsertReaction } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count, inArray, isNull, gt, lt, ne } from "drizzle-orm";
 import { pool } from "./db";
 
 const MemoryStore = createMemoryStore(session);
@@ -76,6 +79,38 @@ export interface IStorage {
   getCheckInsByObjective(objectiveId: number): Promise<CheckIn[]>;
   getCheckInsByKeyResult(keyResultId: number): Promise<CheckIn[]>;
   getRecentCheckIns(limit: number): Promise<CheckIn[]>;
+  
+  // Chat Rooms
+  createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom>;
+  getChatRoom(id: number): Promise<ChatRoom | undefined>;
+  updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom>;
+  getAllChatRooms(): Promise<ChatRoom[]>;
+  getChatRoomsByUser(userId: number): Promise<ChatRoom[]>;
+  getUserChatRooms(userId: number): Promise<(ChatRoom & { unreadCount: number })[]>;
+  getChatRoomsByType(type: string): Promise<ChatRoom[]>;
+  
+  // Chat Room Members
+  addUserToChatRoom(chatRoomMember: InsertChatRoomMember): Promise<ChatRoomMember>;
+  removeUserFromChatRoom(userId: number, chatRoomId: number): Promise<void>;
+  getChatRoomMembers(chatRoomId: number): Promise<(ChatRoomMember & { user: User })[]>;
+  updateLastRead(userId: number, chatRoomId: number): Promise<void>;
+  
+  // Messages
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessage(id: number): Promise<Message | undefined>;
+  updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message>;
+  deleteMessage(id: number): Promise<void>;
+  getMessagesByChatRoom(chatRoomId: number, limit?: number, before?: number): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]>;
+  
+  // Attachments
+  createAttachment(attachment: InsertAttachment): Promise<Attachment>;
+  getAttachment(id: number): Promise<Attachment | undefined>;
+  getAttachmentsByMessage(messageId: number): Promise<Attachment[]>;
+  
+  // Reactions
+  addReaction(reaction: InsertReaction): Promise<Reaction>;
+  removeReaction(userId: number, messageId: number, emoji: string): Promise<void>;
+  getReactionsByMessage(messageId: number): Promise<(Reaction & { user: User })[]>;
   
   // Session Store
   sessionStore: any; // Using any for session store type compatibility
@@ -443,6 +478,296 @@ export class DatabaseStorage implements IStorage {
       .from(checkIns)
       .orderBy(desc(checkIns.createdAt))
       .limit(limit);
+  }
+
+  // Chat Rooms
+  async createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom> {
+    const [newChatRoom] = await db.insert(chatRooms).values(chatRoom).returning();
+    return newChatRoom;
+  }
+
+  async getChatRoom(id: number): Promise<ChatRoom | undefined> {
+    const [room] = await db.select().from(chatRooms).where(eq(chatRooms.id, id));
+    return room;
+  }
+
+  async updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
+    const [updatedRoom] = await db.update(chatRooms)
+      .set({
+        ...chatRoom,
+        updatedAt: new Date()
+      })
+      .where(eq(chatRooms.id, id))
+      .returning();
+    
+    if (!updatedRoom) {
+      throw new Error(`Chat room with id ${id} not found`);
+    }
+    
+    return updatedRoom;
+  }
+
+  async getAllChatRooms(): Promise<ChatRoom[]> {
+    return db.select().from(chatRooms);
+  }
+
+  async getChatRoomsByUser(userId: number): Promise<ChatRoom[]> {
+    // Get all chat rooms where the user is a member
+    const memberRooms = await db.select({
+      chatRoomId: chatRoomMembers.chatRoomId
+    })
+    .from(chatRoomMembers)
+    .where(eq(chatRoomMembers.userId, userId));
+    
+    const roomIds = memberRooms.map(r => r.chatRoomId);
+    
+    if (roomIds.length === 0) {
+      return [];
+    }
+    
+    return db.select()
+      .from(chatRooms)
+      .where(inArray(chatRooms.id, roomIds));
+  }
+
+  async getUserChatRooms(userId: number): Promise<(ChatRoom & { unreadCount: number })[]> {
+    // Get all chat rooms where the user is a member
+    const members = await db.select()
+      .from(chatRoomMembers)
+      .where(eq(chatRoomMembers.userId, userId));
+    
+    if (members.length === 0) {
+      return [];
+    }
+    
+    const roomIds = members.map(m => m.chatRoomId);
+    const rooms = await db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
+    
+    // Get unread counts for each room
+    const results = await Promise.all(rooms.map(async (room) => {
+      const member = members.find(m => m.chatRoomId === room.id);
+      if (!member) {
+        return { ...room, unreadCount: 0 };
+      }
+      
+      // Count messages newer than user's last read timestamp
+      const unreadMessages = await db.select({ count: count() })
+        .from(messages)
+        .where(
+          and(
+            eq(messages.chatRoomId, room.id),
+            gt(messages.createdAt, member.lastRead),
+            ne(messages.userId, userId) // Don't count user's own messages
+          )
+        );
+      
+      return { ...room, unreadCount: unreadMessages[0]?.count || 0 };
+    }));
+    
+    return results;
+  }
+
+  async getChatRoomsByType(type: string): Promise<ChatRoom[]> {
+    return db.select().from(chatRooms).where(eq(chatRooms.type, type));
+  }
+  
+  // Chat Room Members
+  async addUserToChatRoom(chatRoomMember: InsertChatRoomMember): Promise<ChatRoomMember> {
+    const [member] = await db.insert(chatRoomMembers).values(chatRoomMember).returning();
+    return member;
+  }
+
+  async removeUserFromChatRoom(userId: number, chatRoomId: number): Promise<void> {
+    await db.delete(chatRoomMembers)
+      .where(
+        and(
+          eq(chatRoomMembers.userId, userId),
+          eq(chatRoomMembers.chatRoomId, chatRoomId)
+        )
+      );
+  }
+
+  async getChatRoomMembers(chatRoomId: number): Promise<(ChatRoomMember & { user: User })[]> {
+    // Using JOIN to get user details with each chat room member
+    const members = await db.select({
+      id: chatRoomMembers.id,
+      chatRoomId: chatRoomMembers.chatRoomId,
+      userId: chatRoomMembers.userId,
+      role: chatRoomMembers.role,
+      joinedAt: chatRoomMembers.joinedAt,
+      lastRead: chatRoomMembers.lastRead,
+      user: users
+    })
+    .from(chatRoomMembers)
+    .innerJoin(users, eq(chatRoomMembers.userId, users.id))
+    .where(eq(chatRoomMembers.chatRoomId, chatRoomId));
+    
+    return members;
+  }
+
+  async updateLastRead(userId: number, chatRoomId: number): Promise<void> {
+    await db.update(chatRoomMembers)
+      .set({ lastRead: new Date() })
+      .where(
+        and(
+          eq(chatRoomMembers.userId, userId),
+          eq(chatRoomMembers.chatRoomId, chatRoomId)
+        )
+      );
+  }
+  
+  // Messages
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    return newMessage;
+  }
+
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    return message;
+  }
+
+  async updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message> {
+    const [updatedMessage] = await db.update(messages)
+      .set({
+        ...message,
+        updatedAt: new Date(),
+        isEdited: true
+      })
+      .where(eq(messages.id, id))
+      .returning();
+    
+    if (!updatedMessage) {
+      throw new Error(`Message with id ${id} not found`);
+    }
+    
+    return updatedMessage;
+  }
+
+  async deleteMessage(id: number): Promise<void> {
+    // Soft delete - just mark as deleted
+    await db.update(messages)
+      .set({
+        deletedAt: new Date(),
+        content: "[This message was deleted]"
+      })
+      .where(eq(messages.id, id));
+  }
+
+  async getMessagesByChatRoom(
+    chatRoomId: number, 
+    limit: number = 50, 
+    before?: number
+  ): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]> {
+    // Define the base query
+    let query = db.select({
+      id: messages.id,
+      chatRoomId: messages.chatRoomId,
+      userId: messages.userId,
+      content: messages.content,
+      type: messages.type,
+      createdAt: messages.createdAt,
+      updatedAt: messages.updatedAt,
+      deletedAt: messages.deletedAt,
+      isEdited: messages.isEdited,
+      replyToId: messages.replyToId,
+      user: users
+    })
+    .from(messages)
+    .innerJoin(users, eq(messages.userId, users.id))
+    .where(
+      and(
+        eq(messages.chatRoomId, chatRoomId),
+        isNull(messages.deletedAt)
+      )
+    )
+    .orderBy(desc(messages.createdAt))
+    .limit(limit);
+    
+    // Add before filter if provided
+    if (before !== undefined) {
+      query = query.where(lt(messages.id, before));
+    }
+    
+    const messageResults = await query;
+    
+    // Get attachments and reactions for each message
+    const messagesWithDetails = await Promise.all(messageResults.map(async (message) => {
+      const attachments = await this.getAttachmentsByMessage(message.id);
+      const reactions = await this.getReactionsByMessage(message.id);
+      
+      return {
+        ...message,
+        attachments,
+        reactions
+      };
+    }));
+    
+    return messagesWithDetails;
+  }
+  
+  // Attachments
+  async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
+    const [newAttachment] = await db.insert(attachments).values(attachment).returning();
+    return newAttachment;
+  }
+
+  async getAttachment(id: number): Promise<Attachment | undefined> {
+    const [attachment] = await db.select().from(attachments).where(eq(attachments.id, id));
+    return attachment;
+  }
+
+  async getAttachmentsByMessage(messageId: number): Promise<Attachment[]> {
+    return db.select()
+      .from(attachments)
+      .where(eq(attachments.messageId, messageId));
+  }
+  
+  // Reactions
+  async addReaction(reaction: InsertReaction): Promise<Reaction> {
+    // Check if reaction already exists
+    const [existingReaction] = await db.select()
+      .from(reactions)
+      .where(
+        and(
+          eq(reactions.messageId, reaction.messageId),
+          eq(reactions.userId, reaction.userId),
+          eq(reactions.emoji, reaction.emoji)
+        )
+      );
+    
+    if (existingReaction) {
+      return existingReaction;
+    }
+    
+    // Create new reaction
+    const [newReaction] = await db.insert(reactions).values(reaction).returning();
+    return newReaction;
+  }
+
+  async removeReaction(userId: number, messageId: number, emoji: string): Promise<void> {
+    await db.delete(reactions)
+      .where(
+        and(
+          eq(reactions.userId, userId),
+          eq(reactions.messageId, messageId),
+          eq(reactions.emoji, emoji)
+        )
+      );
+  }
+
+  async getReactionsByMessage(messageId: number): Promise<(Reaction & { user: User })[]> {
+    return db.select({
+      id: reactions.id,
+      messageId: reactions.messageId,
+      userId: reactions.userId,
+      emoji: reactions.emoji,
+      createdAt: reactions.createdAt,
+      user: users
+    })
+    .from(reactions)
+    .innerJoin(users, eq(reactions.userId, users.id))
+    .where(eq(reactions.messageId, messageId));
   }
 }
 
