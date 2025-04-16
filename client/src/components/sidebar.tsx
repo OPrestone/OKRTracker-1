@@ -307,6 +307,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/chat" 
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
+        >
+          <Link href="/chat" className="flex items-center w-full">
+            <MessageSquare className="mr-3 h-5 w-5 text-green-500" />
+            Chat
+          </Link>
+        </div>
+        
         {/* Reports Menu */}
         <button 
           onClick={() => setReportsExpanded(!reportsExpanded)}
