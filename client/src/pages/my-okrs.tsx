@@ -488,7 +488,14 @@ export default function MyOKRs() {
                           </div>
                           <Progress value={kr.progress} className="h-2 mb-3" />
                           <div className="flex justify-end mt-2">
-                            <Button size="sm" variant="outline" className="text-xs">Update Progress</Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs"
+                              onClick={() => handleOpenProgressModal(kr)}
+                            >
+                              Update Progress
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -724,6 +731,56 @@ export default function MyOKRs() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCheckInModalOpen(false)}>Cancel</Button>
             <Button type="submit" onClick={handleAddCheckIn}>Add Check-in</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Progress Update Modal */}
+      <Dialog open={progressUpdateModalOpen} onOpenChange={setProgressUpdateModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Update Progress</DialogTitle>
+            <DialogDescription>
+              {selectedKeyResult && (
+                <span>Update progress for: <strong>{selectedKeyResult.title}</strong></span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="progress-value" className="text-right">
+                Progress (%)
+              </Label>
+              <Input
+                id="progress-value"
+                name="progress"
+                value={progressForm.progress}
+                onChange={handleProgressInputChange}
+                className="col-span-3"
+                placeholder="Enter current progress (0-100)"
+                type="number"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="progress-comment" className="text-right">
+                Comment
+              </Label>
+              <Textarea
+                id="progress-comment"
+                name="comment"
+                value={progressForm.comment}
+                onChange={handleProgressInputChange}
+                className="col-span-3"
+                placeholder="Add an optional comment about this progress update"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProgressUpdateModalOpen(false)}>Cancel</Button>
+            <Button type="submit" onClick={handleUpdateProgress}>Update Progress</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
