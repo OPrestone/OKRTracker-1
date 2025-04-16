@@ -120,7 +120,9 @@ export default function DraftOKRs() {
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [editFormData, setEditFormData] = useState<{
@@ -131,6 +133,15 @@ export default function DraftOKRs() {
     title: "",
     description: "",
     keyResults: []
+  });
+  const [newDraftData, setNewDraftData] = useState<{
+    title: string;
+    description: string;
+    keyResults: { id: number; title: string }[];
+  }>({
+    title: "",
+    description: "",
+    keyResults: [{ id: 1, title: "" }]
   });
 
   const handleEdit = (objective: DraftObjective) => {
@@ -229,6 +240,77 @@ export default function DraftOKRs() {
     }, 1500);
   };
 
+  const handleNewDraft = () => {
+    // Reset the form data
+    setNewDraftData({
+      title: "",
+      description: "",
+      keyResults: [{ id: 1, title: "" }]
+    });
+    setCreateDialogOpen(true);
+  };
+
+  const handleNewDraftKeyResultChange = (id: number, newTitle: string) => {
+    setNewDraftData(prev => ({
+      ...prev,
+      keyResults: prev.keyResults.map(kr => 
+        kr.id === id ? { ...kr, title: newTitle } : kr
+      )
+    }));
+  };
+
+  const addNewDraftKeyResult = () => {
+    // Generate a unique ID for the new key result
+    const newId = Math.max(0, ...newDraftData.keyResults.map(kr => kr.id)) + 1;
+    
+    setNewDraftData(prev => ({
+      ...prev,
+      keyResults: [...prev.keyResults, { id: newId, title: "" }]
+    }));
+  };
+
+  const removeNewDraftKeyResult = (id: number) => {
+    setNewDraftData(prev => ({
+      ...prev,
+      keyResults: prev.keyResults.filter(kr => kr.id !== id)
+    }));
+  };
+
+  const handleCreateDraft = () => {
+    // Validate the form data
+    if (!newDraftData.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Objective title is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newDraftData.keyResults.some(kr => !kr.title.trim())) {
+      toast({
+        title: "Validation Error",
+        description: "All key results must have a title.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCreating(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setCreating(false);
+      setCreateDialogOpen(false);
+      
+      // In a real app, this would create a new draft objective in the database
+      toast({
+        title: "Draft Created",
+        description: "Your draft objective has been created successfully.",
+      });
+    }, 1000);
+  };
+
   return (
     <DashboardLayout title="Draft OKRs">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -237,7 +319,7 @@ export default function DraftOKRs() {
           <p className="text-gray-600">Manage objectives that are in draft state before approval</p>
         </div>
         
-        <Button>
+        <Button onClick={handleNewDraft}>
           <Plus className="h-4 w-4 mr-2" />
           New Draft
         </Button>
@@ -306,7 +388,7 @@ export default function DraftOKRs() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleNewDraft}>
               <Plus className="h-4 w-4 mr-2" />
               Create your first draft
             </Button>
@@ -606,6 +688,115 @@ export default function DraftOKRs() {
                   Confirm & Submit
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create New Draft Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center">
+                <Plus className="h-5 w-5 mr-2" />
+                Create New Draft OKR
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Create a new draft objective and key results for review before submission
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-title">Objective Title</Label>
+              <Input 
+                id="new-title" 
+                value={newDraftData.title}
+                onChange={(e) => setNewDraftData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter the main objective"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-description">Description</Label>
+              <Textarea 
+                id="new-description" 
+                value={newDraftData.description}
+                onChange={(e) => setNewDraftData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe what you want to achieve"
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Key Results</Label>
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline"
+                  onClick={addNewDraftKeyResult}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Key Result
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {newDraftData.keyResults.map((kr, index) => (
+                  <div key={kr.id} className="flex gap-2 items-start">
+                    <Input 
+                      value={kr.title}
+                      onChange={(e) => handleNewDraftKeyResultChange(kr.id, e.target.value)}
+                      placeholder={`Key Result ${index + 1}`}
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeNewDraftKeyResult(kr.id)}
+                      className="h-10 w-10 shrink-0"
+                      disabled={newDraftData.keyResults.length <= 1}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="24" 
+                        height="24" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="h-4 w-4 text-red-500"
+                      >
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateDraft} disabled={creating}>
+              {creating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : "Create Draft"}
             </Button>
           </DialogFooter>
         </DialogContent>
