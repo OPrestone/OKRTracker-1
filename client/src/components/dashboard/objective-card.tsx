@@ -13,6 +13,10 @@ import {
   Edit, 
   MoreHorizontal, 
   User, 
+  Target,
+  ListTodo,
+  CalendarCheck,
+  Archive,
   Calendar 
 } from "lucide-react";
 import {
@@ -173,7 +177,7 @@ const ObjectiveCard = ({
             onClick={handleView}
             className="text-primary hover:text-primary-focus hover:bg-primary-50"
           >
-            <Eye className="h-4 w-4 mr-1" />
+            <Eye className="h-4 w-4 mr-1 text-blue-500" />
             View Details
           </Button>
           <div>
@@ -183,7 +187,7 @@ const ObjectiveCard = ({
               onClick={handleEdit}
               className="text-gray-500 hover:text-gray-700 mr-3"
             >
-              <Edit className="h-4 w-4 mr-1" />
+              <Edit className="h-4 w-4 mr-1 text-green-500" />
               Edit
             </Button>
             <DropdownMenu>
@@ -193,14 +197,26 @@ const ObjectiveCard = ({
                   size="sm"
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="h-4 w-4 text-purple-500" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Add Key Result</DropdownMenuItem>
-                <DropdownMenuItem>Add Initiative</DropdownMenuItem>
-                <DropdownMenuItem>Create Check-in</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600">Archive</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Target className="h-4 w-4 mr-2 text-blue-500" />
+                  Add Key Result
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <ListTodo className="h-4 w-4 mr-2 text-amber-500" />
+                  Add Initiative
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <CalendarCheck className="h-4 w-4 mr-2 text-teal-600" />
+                  Create Check-in
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600">
+                  <Archive className="h-4 w-4 mr-2 text-red-500" />
+                  Archive
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
