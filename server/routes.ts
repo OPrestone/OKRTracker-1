@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
-         users, teams, objectives as objectivesTable, keyResults as keyResultsTable } from "@shared/schema";
+         users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
+         statusEnum } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
@@ -696,7 +697,7 @@ async function initializeData() {
         ownerId: 2, // John Smith
         timeframeId: q3Timeframe.id,
         progress: 65,
-        status: objectiveStatusEnum.enumValues[0], // on_track
+        status: statusEnum.enumValues[0], // on_track
         priority: "high"
       });
       
@@ -732,7 +733,7 @@ async function initializeData() {
         ownerId: 3, // Michelle Williams
         timeframeId: q3Timeframe.id,
         progress: 40,
-        status: objectiveStatusEnum.enumValues[1], // at_risk
+        status: statusEnum.enumValues[1], // at_risk
         priority: "medium"
       });
       
