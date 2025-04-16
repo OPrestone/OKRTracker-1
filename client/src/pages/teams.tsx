@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Users, Search, AlertCircle, Mail, MoreHorizontal, Eye, Target } from "lucide-react";
+import { PlusCircle, Users, Search, AlertCircle, Mail, MoreHorizontal, Eye, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -37,6 +37,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Team, User } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Define TeamObjective interface
+interface TeamObjective {
+  id: number;
+  title: string;
+  description: string;
+  level: string;
+  ownerId: number;
+  teamId: number;
+  timeframeId: number;
+  status: "on_track" | "at_risk" | "behind" | "completed";
+  progress: number;
+  parentId: number | null;
+  createdAt: string;
+}
 
 const TeamMember = ({ user }: { user: User }) => {
   const initials = user.firstName && user.lastName 
@@ -66,20 +81,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
     enabled: !!team.id,
   });
 
-  // Define type for Objectives
-  interface TeamObjective {
-    id: number;
-    title: string;
-    description: string;
-    level: string;
-    ownerId: number;
-    teamId: number;
-    timeframeId: number;
-    status: "on_track" | "at_risk" | "behind" | "completed";
-    progress: number;
-    parentId: number | null;
-    createdAt: string;
-  }
+  // Use the TeamObjective interface defined above
 
   // Get objectives for the team
   const { data: objectives } = useQuery<TeamObjective[]>({
@@ -194,6 +196,11 @@ const Teams = () => {
   const [newTeamIcon, setNewTeamIcon] = useState("building");
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [newTeamParent, setNewTeamParent] = useState("");
+  
+  // Pagination state
+  const [currentMembersPage, setCurrentMembersPage] = useState(1);
+  const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fetch all teams
   const { data: teams, isLoading: teamsLoading } = useQuery<Team[]>({
@@ -223,6 +230,20 @@ const Teams = () => {
 
   const handleCloseDetails = () => {
     setSelectedTeam(null);
+    setCurrentMembersPage(1);
+    setCurrentObjectivesPage(1);
+  };
+  
+  // Pagination logic
+  const getPaginatedData = <T extends object>(data: T[] | undefined, page: number): T[] => {
+    if (!data) return [];
+    const startIndex = (page - 1) * itemsPerPage;
+    return data.slice(startIndex, startIndex + itemsPerPage);
+  };
+  
+  // Calculate number of pages for pagination
+  const getTotalPages = (totalItems: number): number => {
+    return Math.ceil(totalItems / itemsPerPage);
   };
 
   const handleCreateTeam = async () => {
@@ -435,32 +456,59 @@ const Teams = () => {
                   ))}
                 </div>
               ) : teamMembers && teamMembers.length > 0 ? (
-                <div className="grid gap-3">
-                  {teamMembers.map(member => (
-                    <Card key={member.id} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <div className="flex items-center p-4">
-                          <div className="rounded-full bg-primary/10 h-12 w-12 flex items-center justify-center mr-4">
-                            <span className="text-lg font-semibold text-primary">
-                              {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
-                            </span>
+                <div className="space-y-4">
+                  <div className="grid gap-3">
+                    {getPaginatedData(teamMembers, currentMembersPage).map(member => (
+                      <Card key={member.id} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          <div className="flex items-center p-4">
+                            <div className="rounded-full bg-primary/10 h-12 w-12 flex items-center justify-center mr-4">
+                              <span className="text-lg font-semibold text-primary">
+                                {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
+                              </span>
+                            </div>
+                            <div className="flex-grow">
+                              <div className="font-medium">{member.firstName} {member.lastName}</div>
+                              <div className="text-sm text-muted-foreground">{member.email || member.username}</div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="icon">
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex-grow">
-                            <div className="font-medium">{member.firstName} {member.lastName}</div>
-                            <div className="text-sm text-muted-foreground">{member.email || member.username}</div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="icon">
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {teamMembers.length > itemsPerPage && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentMembersPage(p => Math.max(1, p - 1))}
+                        disabled={currentMembersPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm">
+                        Page {currentMembersPage} of {getTotalPages(teamMembers.length)}
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentMembersPage(p => Math.min(getTotalPages(teamMembers.length), p + 1))}
+                        disabled={currentMembersPage === getTotalPages(teamMembers.length)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Alert>
@@ -501,44 +549,71 @@ const Teams = () => {
                   ))}
                 </div>
               ) : teamObjectives && teamObjectives.length > 0 ? (
-                <div className="grid gap-4">
-                  {teamObjectives.map(objective => (
-                    <Card key={objective.id} className="overflow-hidden">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-base">{objective.title}</CardTitle>
-                          <Badge 
-                            variant="outline"
-                            className={
-                              objective.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100" :
-                              objective.status === "on_track" ? "bg-blue-100 text-blue-800 hover:bg-blue-100" :
-                              objective.status === "at_risk" ? "bg-amber-100 text-amber-800 hover:bg-amber-100" :
-                              "bg-red-100 text-red-800 hover:bg-red-100"
-                            }
-                          >
-                            {objective.status ? objective.status.replace('_', ' ') : 'Unknown'}
-                          </Badge>
-                        </div>
-                        <CardDescription>{objective.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium">Progress</span>
-                          <span className="text-sm font-medium">{objective.progress ?? 0}%</span>
-                        </div>
-                        <Progress value={objective.progress ?? 0} className="h-2" />
-                      </CardContent>
-                      <CardFooter className="pt-0 pb-3 flex justify-between">
-                        <div className="text-xs text-muted-foreground">
-                          Owner: {objective.ownerId}
-                        </div>
-                        <Button variant="ghost" size="sm" className="h-7">
-                          <Eye className="h-3.5 w-3.5 mr-1.5" />
-                          View Details
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
+                <div className="space-y-4">
+                  <div className="grid gap-4">
+                    {getPaginatedData(teamObjectives, currentObjectivesPage).map(objective => (
+                      <Card key={objective.id} className="overflow-hidden">
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="text-base">{objective.title}</CardTitle>
+                            <Badge 
+                              variant="outline"
+                              className={
+                                objective.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100" :
+                                objective.status === "on_track" ? "bg-blue-100 text-blue-800 hover:bg-blue-100" :
+                                objective.status === "at_risk" ? "bg-amber-100 text-amber-800 hover:bg-amber-100" :
+                                "bg-red-100 text-red-800 hover:bg-red-100"
+                              }
+                            >
+                              {objective.status ? objective.status.replace('_', ' ') : 'Unknown'}
+                            </Badge>
+                          </div>
+                          <CardDescription>{objective.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pb-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm font-medium">Progress</span>
+                            <span className="text-sm font-medium">{objective.progress ?? 0}%</span>
+                          </div>
+                          <Progress value={objective.progress ?? 0} className="h-2" />
+                        </CardContent>
+                        <CardFooter className="pt-0 pb-3 flex justify-between">
+                          <div className="text-xs text-muted-foreground">
+                            Owner: {objective.ownerId}
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-7">
+                            <Eye className="h-3.5 w-3.5 mr-1.5" />
+                            View Details
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {teamObjectives.length > itemsPerPage && (
+                    <div className="flex justify-center items-center gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentObjectivesPage(p => Math.max(1, p - 1))}
+                        disabled={currentObjectivesPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm">
+                        Page {currentObjectivesPage} of {getTotalPages(teamObjectives.length)}
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentObjectivesPage(p => Math.min(getTotalPages(teamObjectives.length), p + 1))}
+                        disabled={currentObjectivesPage === getTotalPages(teamObjectives.length)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Alert>
