@@ -294,7 +294,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           onClick={() => setReportsExpanded(!reportsExpanded)}
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
-            (location === "/reports" || location === "/okr-reports" || location === "/team-performance" || location === "/ai-recommendations")
+            (location === "/reports" || location === "/okr-reports" || location === "/export-reports" || location === "/team-performance" || location === "/ai-recommendations")
               ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
               : "text-gray-600 hover:bg-muted"
           )}
@@ -329,6 +329,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             )}>
               <Link href="/okr-reports" className="w-full">
                 OKR Performance
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              location === "/export-reports" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/export-reports" className="w-full flex items-center">
+                <FileOutput className="mr-2 h-4 w-4 text-green-600" />
+                Export Reports
               </Link>
             </div>
             

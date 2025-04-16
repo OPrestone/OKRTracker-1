@@ -21,6 +21,7 @@ import ApprovedOKRs from "@/pages/approved-okrs";
 import CompanyOKRs from "@/pages/company-okrs";
 import Reports from "@/pages/reports";
 import OKRReports from "@/pages/okr-reports";
+import ExportReports from "@/pages/export-reports";
 import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
@@ -70,6 +71,7 @@ function AppRoutes() {
       {/* Reports Section */}
       <PublicRoute path="/reports" component={Reports} />
       <PublicRoute path="/okr-reports" component={OKRReports} />
+      <PublicRoute path="/export-reports" component={ExportReports} />
       <PublicRoute path="/team-performance" component={TeamPerformance} />
       <PublicRoute path="/ai-recommendations" component={AIRecommendations} />
       
