@@ -18,6 +18,9 @@ import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
 import ApprovedOKRs from "@/pages/approved-okrs";
 import CompanyOKRs from "@/pages/company-okrs";
+import Reports from "@/pages/reports";
+import OKRReports from "@/pages/okr-reports";
+import TeamPerformance from "@/pages/team-performance";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -55,6 +58,12 @@ function AppRoutes() {
       <PublicRoute path="/all-users" component={AllUsers} />
       
       <PublicRoute path="/checkins" component={Checkins} />
+      
+      {/* Reports Section */}
+      <PublicRoute path="/reports" component={Reports} />
+      <PublicRoute path="/okr-reports" component={OKRReports} />
+      <PublicRoute path="/team-performance" component={TeamPerformance} />
+      
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />
       <PublicRoute path="/configuration/users-permissions" component={UsersPermissions} />

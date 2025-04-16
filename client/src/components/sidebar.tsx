@@ -34,6 +34,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [configExpanded, setConfigExpanded] = useState(false);
   const [okrsExpanded, setOkrsExpanded] = useState(false);
   const [userManagementExpanded, setUserManagementExpanded] = useState(false);
+  const [reportsExpanded, setReportsExpanded] = useState(false);
 
   // Temporary user info while auth is being fixed
   const user = {
@@ -234,6 +235,62 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             Check-ins
           </Link>
         </div>
+        
+        {/* Reports Menu */}
+        <button 
+          onClick={() => setReportsExpanded(!reportsExpanded)}
+          className={cn(
+            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium",
+            (location === "/reports" || location === "/okr-reports" || location === "/team-performance")
+              ? "bg-blue-50 text-primary border-l-3 border-primary" 
+              : "text-gray-600 hover:bg-gray-50"
+          )}
+        >
+          <PieChart className="mr-3 h-5 w-5" />
+          Reports & Analytics
+          {reportsExpanded ? (
+            <ChevronUp className="ml-auto h-5 w-5" />
+          ) : (
+            <ChevronDown className="ml-auto h-5 w-5" />
+          )}
+        </button>
+        
+        {reportsExpanded && (
+          <div className="pl-10">
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/reports" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/reports" className="w-full">
+                Overview Dashboard
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/okr-reports" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/okr-reports" className="w-full">
+                OKR Performance
+              </Link>
+            </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm", 
+              location === "/team-performance" 
+                ? "text-primary font-medium" 
+                : "text-gray-600 hover:text-gray-900"
+            )}>
+              <Link href="/team-performance" className="w-full">
+                Team Performance
+              </Link>
+            </div>
+          </div>
+        )}
         
         <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Administration
