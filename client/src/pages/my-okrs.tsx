@@ -87,6 +87,11 @@ export default function MyOKRs() {
   const isLoading = false;
   const [open, setOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [keyResultModalOpen, setKeyResultModalOpen] = useState(false);
+  const [initiativeModalOpen, setInitiativeModalOpen] = useState(false);
+  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
+  const [progressUpdateModalOpen, setProgressUpdateModalOpen] = useState(false);
+  const [selectedKeyResult, setSelectedKeyResult] = useState<any>(null);
   const [selectedObjective, setSelectedObjective] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -94,11 +99,55 @@ export default function MyOKRs() {
     level: "individual",
     status: "on_track"
   });
+  const [keyResultForm, setKeyResultForm] = useState({
+    title: "",
+    description: "",
+    targetValue: "100",
+    currentValue: "0"
+  });
+  
+  const [initiativeForm, setInitiativeForm] = useState({
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: ""
+  });
+  
+  const [checkInForm, setCheckInForm] = useState({
+    progress: "",
+    notes: ""
+  });
+  
+  const [progressForm, setProgressForm] = useState({
+    progress: "",
+    comment: ""
+  });
+  
   const { toast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleKeyResultInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setKeyResultForm(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleInitiativeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setInitiativeForm(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleCheckInInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCheckInForm(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleProgressInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProgressForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -128,6 +177,87 @@ export default function MyOKRs() {
   const handleViewDetails = (objective: any) => {
     setSelectedObjective(objective);
     setDetailsOpen(true);
+  };
+  
+  const handleAddKeyResult = () => {
+    console.log('Adding Key Result:', keyResultForm, 'to objective ID:', selectedObjective?.id);
+    
+    // Here you would typically call your API to create a new key result
+    toast({
+      title: "Key Result Added",
+      description: "New key result has been added to this objective.",
+    });
+    
+    // Close modal and reset form
+    setKeyResultModalOpen(false);
+    setKeyResultForm({
+      title: "",
+      description: "",
+      targetValue: "100",
+      currentValue: "0"
+    });
+  };
+  
+  const handleAddInitiative = () => {
+    console.log('Adding Initiative:', initiativeForm, 'to objective ID:', selectedObjective?.id);
+    
+    // Here you would typically call your API to create a new initiative
+    toast({
+      title: "Initiative Added",
+      description: "New initiative has been added to this objective.",
+    });
+    
+    // Close modal and reset form
+    setInitiativeModalOpen(false);
+    setInitiativeForm({
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: ""
+    });
+  };
+  
+  const handleAddCheckIn = () => {
+    console.log('Adding Check-in:', checkInForm, 'to objective ID:', selectedObjective?.id);
+    
+    // Here you would typically call your API to create a new check-in
+    toast({
+      title: "Check-in Recorded",
+      description: "Your check-in has been recorded successfully.",
+    });
+    
+    // Close modal and reset form
+    setCheckInModalOpen(false);
+    setCheckInForm({
+      progress: "",
+      notes: ""
+    });
+  };
+  
+  const handleOpenProgressModal = (keyResult: any) => {
+    setSelectedKeyResult(keyResult);
+    setProgressForm({
+      progress: keyResult.progress.toString(),
+      comment: ""
+    });
+    setProgressUpdateModalOpen(true);
+  };
+  
+  const handleUpdateProgress = () => {
+    console.log('Updating progress for key result ID:', selectedKeyResult?.id, 'to', progressForm.progress, '%');
+    
+    // Here you would typically call your API to update the key result progress
+    toast({
+      title: "Progress Updated",
+      description: `Key result progress has been updated to ${progressForm.progress}%.`,
+    });
+    
+    // Close modal and reset form
+    setProgressUpdateModalOpen(false);
+    setProgressForm({
+      progress: "",
+      comment: ""
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -368,15 +498,27 @@ export default function MyOKRs() {
                   <div>
                     <h3 className="text-lg font-medium mb-2">Actions</h3>
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setKeyResultModalOpen(true)}
+                      >
                         <Plus className="h-3.5 w-3.5 mr-1" />
                         Add Key Result
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setInitiativeModalOpen(true)}
+                      >
                         <Plus className="h-3.5 w-3.5 mr-1" />
                         Add Initiative
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setCheckInModalOpen(true)}
+                      >
                         <Plus className="h-3.5 w-3.5 mr-1" />
                         Add Check-in
                       </Button>
@@ -391,6 +533,198 @@ export default function MyOKRs() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Key Result Modal */}
+      <Dialog open={keyResultModalOpen} onOpenChange={setKeyResultModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Key Result</DialogTitle>
+            <DialogDescription>
+              Add a measurable outcome that defines success for this objective.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="kr-title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="kr-title"
+                name="title"
+                value={keyResultForm.title}
+                onChange={handleKeyResultInputChange}
+                className="col-span-3"
+                placeholder="Enter key result title"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="kr-description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="kr-description"
+                name="description"
+                value={keyResultForm.description}
+                onChange={handleKeyResultInputChange}
+                className="col-span-3"
+                placeholder="Enter detailed description of this key result"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="kr-target" className="text-right">
+                Target Value
+              </Label>
+              <Input
+                id="kr-target"
+                name="targetValue"
+                value={keyResultForm.targetValue}
+                onChange={handleKeyResultInputChange}
+                className="col-span-3"
+                placeholder="Enter target value (e.g. 100)"
+                type="number"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="kr-current" className="text-right">
+                Current Value
+              </Label>
+              <Input
+                id="kr-current"
+                name="currentValue"
+                value={keyResultForm.currentValue}
+                onChange={handleKeyResultInputChange}
+                className="col-span-3"
+                placeholder="Enter current value (e.g. 0)"
+                type="number"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setKeyResultModalOpen(false)}>Cancel</Button>
+            <Button type="submit" onClick={handleAddKeyResult}>Add Key Result</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Initiative Modal */}
+      <Dialog open={initiativeModalOpen} onOpenChange={setInitiativeModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Initiative</DialogTitle>
+            <DialogDescription>
+              Add a project or task that will help achieve this objective.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="initiative-title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="initiative-title"
+                name="title"
+                value={initiativeForm.title}
+                onChange={handleInitiativeInputChange}
+                className="col-span-3"
+                placeholder="Enter initiative title"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="initiative-description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="initiative-description"
+                name="description"
+                value={initiativeForm.description}
+                onChange={handleInitiativeInputChange}
+                className="col-span-3"
+                placeholder="Enter detailed description of this initiative"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="initiative-start" className="text-right">
+                Start Date
+              </Label>
+              <Input
+                id="initiative-start"
+                name="startDate"
+                value={initiativeForm.startDate}
+                onChange={handleInitiativeInputChange}
+                className="col-span-3"
+                type="date"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="initiative-end" className="text-right">
+                End Date
+              </Label>
+              <Input
+                id="initiative-end"
+                name="endDate"
+                value={initiativeForm.endDate}
+                onChange={handleInitiativeInputChange}
+                className="col-span-3"
+                type="date"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInitiativeModalOpen(false)}>Cancel</Button>
+            <Button type="submit" onClick={handleAddInitiative}>Add Initiative</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Check-in Modal */}
+      <Dialog open={checkInModalOpen} onOpenChange={setCheckInModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Check-in</DialogTitle>
+            <DialogDescription>
+              Record progress and notes for this objective.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="checkin-progress" className="text-right">
+                Progress (%)
+              </Label>
+              <Input
+                id="checkin-progress"
+                name="progress"
+                value={checkInForm.progress}
+                onChange={handleCheckInInputChange}
+                className="col-span-3"
+                placeholder="Enter current progress (0-100)"
+                type="number"
+                min="0"
+                max="100"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="checkin-notes" className="text-right">
+                Notes
+              </Label>
+              <Textarea
+                id="checkin-notes"
+                name="notes"
+                value={checkInForm.notes}
+                onChange={handleCheckInInputChange}
+                className="col-span-3"
+                placeholder="Enter detailed notes about current progress, challenges, etc."
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCheckInModalOpen(false)}>Cancel</Button>
+            <Button type="submit" onClick={handleAddCheckIn}>Add Check-in</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
