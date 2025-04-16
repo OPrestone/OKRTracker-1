@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useHelp } from "@/hooks/use-help-context";
-import { HelpItemTooltip } from "@/components/help/help-item-tooltip";
+import { HelpTooltip } from "@/components/help/tooltip";
 import { usersHelp } from "@/components/help/help-content";
 import { 
   Table,
