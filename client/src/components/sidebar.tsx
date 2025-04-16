@@ -38,6 +38,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
   const [configExpanded, setConfigExpanded] = useState(false);
   const [okrsExpanded, setOkrsExpanded] = useState(false);
+  const [companyObjectivesExpanded, setCompanyObjectivesExpanded] = useState(false);
   const [userManagementExpanded, setUserManagementExpanded] = useState(false);
   const [reportsExpanded, setReportsExpanded] = useState(false);
 
@@ -266,6 +267,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <Link href="/checkins" className="flex items-center w-full">
             <CalendarCheck className="mr-3 h-5 w-5" />
             Check-ins
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/one-on-one-meetings" 
+              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
+              : "text-gray-600 hover:bg-muted"
+          )}
+        >
+          <Link href="/one-on-one-meetings" className="flex items-center w-full">
+            <Users className="mr-3 h-5 w-5 text-indigo-500" />
+            1:1 Meetings
           </Link>
         </div>
         

@@ -24,6 +24,7 @@ import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
 import MissionPage from "@/pages/mission";
+import OneOnOneMeetings from "@/pages/one-on-one-meetings";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { FeatureTour } from "@/components/help/feature-tour";
@@ -63,6 +64,7 @@ function AppRoutes() {
       <PublicRoute path="/all-users" component={AllUsers} />
       
       <PublicRoute path="/checkins" component={Checkins} />
+      <PublicRoute path="/one-on-one-meetings" component={OneOnOneMeetings} />
       
       {/* Reports Section */}
       <PublicRoute path="/reports" component={Reports} />
