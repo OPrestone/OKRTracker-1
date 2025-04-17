@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
   Card, 
@@ -553,6 +554,7 @@ export default function OneOnOneMeetings() {
 // Meeting Card Component
 function MeetingCard({ meeting }: { meeting: Meeting }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const { toast } = useToast();
 
   // Status badge
   const getStatusBadge = (status: MeetingStatus) => {
@@ -907,7 +909,17 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
         </Dialog>
         
         {meeting.status === "upcoming" && (
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              toast({
+                title: "Reschedule requested",
+                description: `You've requested to reschedule "${meeting.title}" with ${meeting.attendees[0]?.name || 'attendees'}.`,
+              });
+              // In a real implementation, you'd open a scheduling dialog or redirect to a calendar page
+            }}
+          >
             Reschedule
           </Button>
         )}
