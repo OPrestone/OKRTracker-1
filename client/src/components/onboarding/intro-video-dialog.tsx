@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import getStartedVideoPath from "@assets/get started.mp4";
 
 export function IntroVideoDialog() {
   const {
@@ -71,15 +72,15 @@ export function IntroVideoDialog() {
         </DialogHeader>
 
         <div className="my-6">
-          {/* Real video component */}
+          {/* Real video component using the imported video file */}
           <video
             ref={videoRef}
             className="w-full rounded-md"
             onEnded={handleVideoEnded}
             controls
             autoPlay
+            src={getStartedVideoPath}
           >
-            <source src="/attached_assets/get%20started.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>

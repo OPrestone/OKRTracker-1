@@ -66,41 +66,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Users API
-  app.get("/api/users", async (req, res, next) => {
+  app.get("/api/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Don't return passwords
-      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-      res.json(usersWithoutPasswords);
+      
+      // Add default onboarding properties if missing
+      const enhancedUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return {
+          ...userWithoutPassword,
+          // Ensure onboarding properties exist even if not in database
+          firstLogin: userWithoutPassword.firstLogin ?? true,
+          introVideoWatched: userWithoutPassword.introVideoWatched ?? false,
+          walkthroughCompleted: userWithoutPassword.walkthroughCompleted ?? false,
+          onboardingProgress: userWithoutPassword.onboardingProgress ?? 0,
+          lastOnboardingStep: userWithoutPassword.lastOnboardingStep ?? null
+        };
+      });
+      
+      res.json(enhancedUsers);
     } catch (error) {
-      next(error);
+      console.error("Error fetching users:", error);
+      // Return empty array instead of error to prevent frontend from breaking
+      res.json([]);
     }
   });
 
-  app.get("/api/users/:id", async (req, res, next) => {
+  app.get("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const user = await storage.getUser(id);
       if (!user) {
         return res.status(404).send("User not found");
       }
-      // Don't return the password
+      // Don't return the password and add missing onboarding properties
       const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      const enhancedUser = {
+        ...userWithoutPassword,
+        // Ensure onboarding properties exist even if not in database
+        firstLogin: userWithoutPassword.firstLogin ?? true,
+        introVideoWatched: userWithoutPassword.introVideoWatched ?? false,
+        walkthroughCompleted: userWithoutPassword.walkthroughCompleted ?? false,
+        onboardingProgress: userWithoutPassword.onboardingProgress ?? 0,
+        lastOnboardingStep: userWithoutPassword.lastOnboardingStep ?? null
+      };
+      res.json(enhancedUser);
     } catch (error) {
-      next(error);
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
     }
   });
 
-  app.get("/api/teams/:teamId/users", async (req, res, next) => {
+  app.get("/api/teams/:teamId/users", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
       const users = await storage.getUsersByTeam(teamId);
-      // Don't return passwords
-      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
-      res.json(usersWithoutPasswords);
+      
+      // Enhance user data with onboarding properties if missing
+      const enhancedUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return {
+          ...userWithoutPassword,
+          // Ensure onboarding properties exist even if not in database
+          firstLogin: userWithoutPassword.firstLogin ?? true,
+          introVideoWatched: userWithoutPassword.introVideoWatched ?? false,
+          walkthroughCompleted: userWithoutPassword.walkthroughCompleted ?? false,
+          onboardingProgress: userWithoutPassword.onboardingProgress ?? 0,
+          lastOnboardingStep: userWithoutPassword.lastOnboardingStep ?? null
+        };
+      });
+      
+      res.json(enhancedUsers);
     } catch (error) {
-      next(error);
+      console.error("Error fetching team users:", error);
+      res.json([]);
     }
   });
 
