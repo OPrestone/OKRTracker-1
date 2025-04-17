@@ -401,7 +401,7 @@ export default function MyOKRs() {
                   {objective.description}
                 </CardDescription>
               </CardHeader>
-              <div className="px-6 py-2 bg-slate-50">
+              <div className="px-6 py-2 bg-muted/50 dark:bg-muted/30">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">Overall Progress</span>
                   <span className="text-sm font-medium">{objective.progress}%</span>
@@ -414,8 +414,8 @@ export default function MyOKRs() {
                   {objective.keyResults.map((kr) => (
                     <li key={kr.id} className="text-sm">
                       <div className="flex justify-between mb-1">
-                        <span className="text-gray-700">{kr.title}</span>
-                        <span className="text-gray-500">{kr.progress}%</span>
+                        <span className="text-foreground dark:text-foreground">{kr.title}</span>
+                        <span className="text-muted-foreground dark:text-muted-foreground">{kr.progress}%</span>
                       </div>
                       <Progress value={kr.progress} className="h-1.5" />
                     </li>
