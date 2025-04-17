@@ -32,24 +32,43 @@ Before you begin, ensure you have the following installed on your machine:
 
 ## Local Development Setup
 
-### 1. Clone the Repository
+### One-Step Setup (Recommended)
+
+We've created a comprehensive setup script that handles the entire local development setup process:
+
+```bash
+node scripts/setup.js
+```
+
+This script will:
+1. Check if all necessary prerequisites are installed
+2. Install project dependencies
+3. Guide you through setting up your `.env` file
+4. Create and configure the PostgreSQL database
+5. Run database migrations
+
+### Manual Setup
+
+If you prefer to set up the project step-by-step, follow these instructions:
+
+#### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd okr-management-platform
 ```
 
-### 2. Install Dependencies
+#### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Environment and Database Setup
+#### 3. Environment and Database Setup
 
-#### Option 1: Automated Setup (Recommended)
+You have two options for environment setup:
 
-For convenience, we've included a script that automates the database and environment setup:
+##### Option A: Database Initialization Script
 
 ```bash
 node scripts/init-db.js
@@ -60,7 +79,7 @@ This script will:
 2. Create a `.env` file with the proper configuration
 3. Generate a secure SESSION_SECRET
 
-#### Option 2: Manual Setup
+##### Option B: Manual Configuration
 
 1. Create a PostgreSQL database for the project
 2. Set up your environment variables by copying the `.env.example` file to `.env`:
@@ -91,7 +110,7 @@ SESSION_SECRET=your_secure_random_string
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-### 4. Database Migration
+#### 4. Database Migration
 
 After setting up the environment, run the database migrations to set up your schema:
 
@@ -157,7 +176,8 @@ You must have a valid OpenAI API key to use these features. If the API key is no
 ├── shared/                  # Shared code between frontend and backend
 │   └── schema.ts            # Database schema and types
 ├── scripts/                 # Utility scripts
-│   └── init-db.js           # Database initialization script
+│   ├── init-db.js           # Database initialization script
+│   └── setup.js             # One-step setup assistant
 ├── migrations/              # Database migrations
 ├── attached_assets/         # Project assets and documentation
 ├── drizzle.config.ts        # Drizzle ORM configuration
@@ -174,6 +194,15 @@ You must have a valid OpenAI API key to use these features. If the API key is no
 - `npm run check`: Run TypeScript type checking
 
 ## Troubleshooting
+
+### Environment Variables
+
+If the application isn't reading your `.env` file:
+
+1. Make sure the `.env` file is in the root directory of the project
+2. Check that the file format is correct (no spaces around equal signs, etc.)
+3. Verify that you've installed all dependencies with `npm install`
+4. The application uses the `dotenv` package to load environment variables at startup
 
 ### Database Errors
 

@@ -1,3 +1,10 @@
+// Load environment variables from .env file first
+import dotenv from 'dotenv';
+const result = dotenv.config();
+if (result.error) {
+  console.warn('Error loading .env file:', result.error);
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
