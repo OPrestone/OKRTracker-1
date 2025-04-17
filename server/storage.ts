@@ -139,8 +139,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    try {
+      // Filter out properties that might not exist in the database yet
+      const { firstLogin, introVideoWatched, walkthroughCompleted, onboardingProgress, lastOnboardingStep, ...safeInsertUser } = insertUser;
+      
+      // Insert the user with only the essential properties
+      const [user] = await db.insert(users).values(safeInsertUser).returning();
+      
+      // Return the user with default onboarding values (these will be handled by localStorage on client)
+      return {
+        ...user,
+        firstLogin: true,
+        introVideoWatched: false,
+        walkthroughCompleted: false,
+        onboardingProgress: 0,
+        lastOnboardingStep: null
+      };
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
   }
 
   async updateUser(id: number, user: Partial<InsertUser>): Promise<User> {
