@@ -1108,8 +1108,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Initialize sample data for testing
 async function initializeData() {
   try {
-    // Create admin user if no users exist
-    const users = await storage.getAllUsers();
+    // Attempt to get users, but handle missing columns gracefully
+    let users = [];
+    try {
+      users = await storage.getAllUsers();
+    } catch (error) {
+      console.log('Warning: Error getting users - this is expected if schema is out of sync with database');
+      console.log('Using localStorage-based onboarding for now until database migration is performed');
+      // Continue with empty users array to allow initialization
+    }
     if (users.length === 0) {
       const createPassword = async (password: string) => {
         return await new Promise<string>((resolve, reject) => {

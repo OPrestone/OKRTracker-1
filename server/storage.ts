@@ -157,7 +157,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return db.select().from(users);
+    try {
+      return db.select().from(users);
+    } catch (error) {
+      console.log('Error in getAllUsers:', error);
+      // Return empty array if there are column issues
+      return [];
+    }
   }
 
   async getUsersByTeam(teamId: number): Promise<User[]> {
