@@ -1,133 +1,282 @@
-// Types
-interface Objective {
+/**
+ * Utility functions for filtering and organizing objectives and other OKR data
+ */
+
+interface FilterableObjective {
   id: number;
   title: string;
   description?: string;
-  level: string;
   status: string;
   progress: number;
-  timeframeId: number;
+  owner?: {
+    id: number;
+    name: string;
+    role?: string;
+  };
+  level?: string;
   teamId?: number;
-  // Add other fields as needed
+  timeframeId?: number;
+}
+
+interface FilterOptions {
+  status?: string[];
+  progress?: {
+    min?: number;
+    max?: number;
+  };
+  owner?: number[];
+  team?: number[];
+  search?: string;
+  timeframe?: number[];
+  level?: string[];
 }
 
 /**
- * Filters objectives based on search query
- * @param objectives - Array of objectives to filter
- * @param searchQuery - Search query to filter by
- * @returns Filtered objectives
+ * Filter objectives based on provided filter criteria
+ * @param objectives Array of objectives to filter
+ * @param filters Filter criteria
+ * @returns Filtered objectives array
  */
-export const filterObjectivesBySearch = (
-  objectives: Objective[],
-  searchQuery: string
-): Objective[] => {
-  if (!searchQuery) return objectives;
+export function filterObjectives(
+  objectives: FilterableObjective[],
+  filters: FilterOptions
+): FilterableObjective[] {
+  return objectives.filter((objective) => {
+    // Filter by status
+    if (
+      filters.status &&
+      filters.status.length > 0 &&
+      !filters.status.includes(objective.status.toLowerCase())
+    ) {
+      return false;
+    }
 
-  const lowerCaseQuery = searchQuery.toLowerCase().trim();
-  
-  return objectives.filter((obj) => {
-    // Check if title or description contains the search query
-    const titleMatch = obj.title.toLowerCase().includes(lowerCaseQuery);
-    const descriptionMatch = obj.description
-      ? obj.description.toLowerCase().includes(lowerCaseQuery)
-      : false;
-    
-    return titleMatch || descriptionMatch;
+    // Filter by progress range
+    if (filters.progress) {
+      if (
+        filters.progress.min !== undefined &&
+        objective.progress < filters.progress.min
+      ) {
+        return false;
+      }
+      if (
+        filters.progress.max !== undefined &&
+        objective.progress > filters.progress.max
+      ) {
+        return false;
+      }
+    }
+
+    // Filter by owner
+    if (
+      filters.owner &&
+      filters.owner.length > 0 &&
+      objective.owner &&
+      !filters.owner.includes(objective.owner.id)
+    ) {
+      return false;
+    }
+
+    // Filter by team
+    if (
+      filters.team &&
+      filters.team.length > 0 &&
+      objective.teamId &&
+      !filters.team.includes(objective.teamId)
+    ) {
+      return false;
+    }
+
+    // Filter by timeframe
+    if (
+      filters.timeframe &&
+      filters.timeframe.length > 0 &&
+      objective.timeframeId &&
+      !filters.timeframe.includes(objective.timeframeId)
+    ) {
+      return false;
+    }
+
+    // Filter by level
+    if (
+      filters.level &&
+      filters.level.length > 0 &&
+      objective.level &&
+      !filters.level.includes(objective.level.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Filter by search text
+    if (filters.search && filters.search.trim() !== "") {
+      const searchText = filters.search.toLowerCase();
+      const titleMatch = objective.title.toLowerCase().includes(searchText);
+      const descriptionMatch = objective.description
+        ? objective.description.toLowerCase().includes(searchText)
+        : false;
+      if (!titleMatch && !descriptionMatch) {
+        return false;
+      }
+    }
+
+    return true;
   });
-};
+}
 
 /**
- * Filters objectives by level
- * @param objectives - Array of objectives to filter
- * @param level - Level to filter by
- * @returns Filtered objectives
+ * Filter objectives by a specific level
+ * @param objectives Array of objectives to filter
+ * @param level Level to filter by (e.g., "company", "team", "individual")
+ * @returns Filtered objectives array
  */
-export const filterObjectivesByLevel = (
-  objectives: Objective[],
-  level: string | null
-): Objective[] => {
-  if (!level) return objectives;
-  
-  return objectives.filter((obj) => 
-    obj.level.toLowerCase() === level.toLowerCase()
+export function filterObjectivesByLevel(
+  objectives: FilterableObjective[],
+  level: string
+): FilterableObjective[] {
+  return objectives.filter((objective) => 
+    objective.level && objective.level.toLowerCase() === level.toLowerCase()
   );
-};
+}
 
 /**
- * Filters objectives by status
- * @param objectives - Array of objectives to filter
- * @param status - Status to filter by
- * @returns Filtered objectives
+ * Group objectives by a specific property
+ * @param objectives Array of objectives to group
+ * @param groupBy Property to group by
+ * @returns Record with keys as group names and values as arrays of objectives
  */
-export const filterObjectivesByStatus = (
-  objectives: Objective[],
-  status: string | null
-): Objective[] => {
-  if (!status) return objectives;
-  
-  return objectives.filter((obj) => 
-    obj.status.toLowerCase() === status.toLowerCase()
-  );
-};
+export function groupObjectives(
+  objectives: FilterableObjective[],
+  groupBy: "status" | "owner" | "team" | "timeframe" | "level"
+): Record<string, FilterableObjective[]> {
+  const grouped: Record<string, FilterableObjective[]> = {};
+
+  objectives.forEach((objective) => {
+    let key = "";
+
+    switch (groupBy) {
+      case "status":
+        key = objective.status || "No Status";
+        break;
+      case "owner":
+        key = objective.owner ? `${objective.owner.id}` : "Unassigned";
+        break;
+      case "team":
+        key = objective.teamId ? `${objective.teamId}` : "No Team";
+        break;
+      case "timeframe":
+        key = objective.timeframeId ? `${objective.timeframeId}` : "No Timeframe";
+        break;
+      case "level":
+        key = objective.level || "No Level";
+        break;
+    }
+
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+    grouped[key].push(objective);
+  });
+
+  return grouped;
+}
 
 /**
- * Filters objectives by timeframe
- * @param objectives - Array of objectives to filter
- * @param timeframeId - Timeframe ID to filter by
- * @returns Filtered objectives
+ * Sort objectives by a specific property
+ * @param objectives Array of objectives to sort
+ * @param sortBy Property to sort by
+ * @param ascending Sort order (true for ascending, false for descending)
+ * @returns Sorted objectives array
  */
-export const filterObjectivesByTimeframe = (
-  objectives: Objective[],
-  timeframeId: number | null
-): Objective[] => {
-  if (!timeframeId) return objectives;
-  
-  return objectives.filter((obj) => obj.timeframeId === timeframeId);
-};
+export function sortObjectives(
+  objectives: FilterableObjective[],
+  sortBy: "title" | "progress" | "status",
+  ascending: boolean = true
+): FilterableObjective[] {
+  const sorted = [...objectives];
+
+  sorted.sort((a, b) => {
+    let comparison = 0;
+
+    switch (sortBy) {
+      case "title":
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case "progress":
+        comparison = a.progress - b.progress;
+        break;
+      case "status":
+        comparison = a.status.localeCompare(b.status);
+        break;
+    }
+
+    return ascending ? comparison : -comparison;
+  });
+
+  return sorted;
+}
 
 /**
- * Filters objectives by team
- * @param objectives - Array of objectives to filter
- * @param teamId - Team ID to filter by
- * @returns Filtered objectives
+ * Get status display details (color, background, etc.) for a given status
+ * @param status Status string to get details for
+ * @returns Object with status display details
  */
-export const filterObjectivesByTeam = (
-  objectives: Objective[],
-  teamId: number | null
-): Objective[] => {
-  if (!teamId) return objectives;
+export function getStatusDetails(status: string): {
+  color: string;
+  background: string;
+  borderColor: string;
+  textColor: string;
+} {
+  const normalizedStatus = status.toLowerCase();
   
-  return objectives.filter((obj) => obj.teamId === teamId);
-};
+  switch (normalizedStatus) {
+    case "on track":
+    case "on_track":
+      return {
+        color: "green",
+        background: "bg-green-100",
+        borderColor: "border-green-300",
+        textColor: "text-green-800",
+      };
+    case "at risk":
+    case "at_risk":
+      return {
+        color: "amber",
+        background: "bg-amber-100",
+        borderColor: "border-amber-300",
+        textColor: "text-amber-800",
+      };
+    case "behind":
+      return {
+        color: "red",
+        background: "bg-red-100",
+        borderColor: "border-red-300",
+        textColor: "text-red-800",
+      };
+    case "completed":
+      return {
+        color: "blue",
+        background: "bg-blue-100",
+        borderColor: "border-blue-300",
+        textColor: "text-blue-800",
+      };
+    default:
+      return {
+        color: "gray",
+        background: "bg-gray-100",
+        borderColor: "border-gray-300",
+        textColor: "text-gray-800",
+      };
+  }
+}
 
 /**
  * Get progress color based on percentage
- * @param progress - Progress percentage
- * @returns CSS class for the progress color
+ * @param progress Progress percentage value
+ * @returns Tailwind CSS color class for the progress
  */
-export const getProgressColor = (progress: number): string => {
+export function getProgressColor(progress: number): string {
   if (progress >= 75) return "bg-green-500";
   if (progress >= 50) return "bg-blue-500";
   if (progress >= 25) return "bg-amber-500";
   return "bg-red-500";
-};
-
-/**
- * Get status color based on status
- * @param status - Status string
- * @returns CSS class for the status color
- */
-export const getStatusColor = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case "on track":
-      return "bg-green-100 text-green-800 border-green-300";
-    case "at risk":
-      return "bg-amber-100 text-amber-800 border-amber-300";
-    case "behind":
-      return "bg-red-100 text-red-800 border-red-300";
-    case "completed":
-      return "bg-blue-100 text-blue-800 border-blue-300";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-300";
-  }
-};
+}

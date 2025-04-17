@@ -25,6 +25,12 @@ export const users = pgTable("users", {
   managerId: integer("manager_id"),
   teamId: integer("team_id"),
   createdAt: timestamp("created_at").defaultNow(),
+  // Onboarding fields
+  firstLogin: boolean("first_login").default(true),
+  introVideoWatched: boolean("intro_video_watched").default(false),
+  walkthroughCompleted: boolean("walkthrough_completed").default(false),
+  onboardingProgress: integer("onboarding_progress").default(0),
+  lastOnboardingStep: text("last_onboarding_step"),
 });
 
 // Teams
@@ -161,6 +167,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   managerId: true,
   teamId: true,
+  firstLogin: true,
+  introVideoWatched: true,
+  walkthroughCompleted: true,
+  onboardingProgress: true,
+  lastOnboardingStep: true,
 });
 
 export const insertTeamSchema = createInsertSchema(teams).pick({

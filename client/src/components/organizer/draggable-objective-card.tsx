@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { CustomProgress } from "@/components/ui/custom-progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GripVertical, MoreVertical, Target } from "lucide-react";
 
@@ -108,7 +108,7 @@ const ObjectiveCard = ({ objective, isDragging }: ObjectiveCardProps) => {
             <span className="text-muted-foreground">Progress</span>
             <span>{objective.progress}%</span>
           </div>
-          <Progress 
+          <CustomProgress 
             value={objective.progress} 
             className="h-1.5"
             indicatorClassName={getProgressColor(objective.progress)}
@@ -128,7 +128,7 @@ const ObjectiveCard = ({ objective, isDragging }: ObjectiveCardProps) => {
                     <span className="line-clamp-1">{kr.title}</span>
                     <span>{kr.progress}%</span>
                   </div>
-                  <Progress
+                  <CustomProgress
                     value={kr.progress}
                     className="h-1 mt-0.5"
                     indicatorClassName={getProgressColor(kr.progress)}

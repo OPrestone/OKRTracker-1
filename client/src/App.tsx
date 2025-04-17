@@ -41,6 +41,12 @@ import { HelpProvider } from "@/hooks/use-help-context";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { FeatureTour } from "@/components/help/feature-tour";
 import { Loader2 } from "lucide-react";
+// Import onboarding components
+import { OnboardingProvider, useOnboarding } from "@/hooks/use-onboarding";
+import { GetStartedMenu } from "@/components/onboarding/get-started-menu";
+import { IntroVideoDialog } from "@/components/onboarding/intro-video-dialog";
+import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
+import { useEffect } from "react";
 
 // Simple Public Route Component to replace ProtectedRoute temporarily
 interface PublicRouteProps {
@@ -110,13 +116,40 @@ function AppRoutes() {
   );
 }
 
+// Onboarding controller component
+function OnboardingController() {
+  const { firstLogin, toggleGetStartedMenu } = useOnboarding();
+  
+  // Show the get started menu when the app loads for first-time users
+  useEffect(() => {
+    if (firstLogin) {
+      const timer = setTimeout(() => {
+        toggleGetStartedMenu();
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [firstLogin, toggleGetStartedMenu]);
+  
+  return (
+    <>
+      <GetStartedMenu />
+      <IntroVideoDialog />
+      <WalkthroughGuides />
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
         <HelpProvider>
-          <FeatureTour />
-          <AppRoutes />
+          <OnboardingProvider>
+            <FeatureTour />
+            <OnboardingController />
+            <AppRoutes />
+          </OnboardingProvider>
         </HelpProvider>
       </ThemeProvider>
     </AuthProvider>

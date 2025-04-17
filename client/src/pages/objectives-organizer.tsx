@@ -29,10 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  filterObjectivesBySearch,
+  filterObjectives,
   filterObjectivesByLevel,
-  filterObjectivesByStatus,
-  filterObjectivesByTimeframe,
 } from "@/lib/filter-utils";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -191,14 +189,25 @@ const ObjectivesOrganizer = () => {
     let filteredObjectives = [...objectives];
     
     // Apply filters
-    filteredObjectives = filterObjectivesBySearch(filteredObjectives, searchQuery);
-    filteredObjectives = filterObjectivesByLevel(filteredObjectives, selectedLevel !== "All" ? selectedLevel : null);
-    filteredObjectives = filterObjectivesByStatus(filteredObjectives, selectedStatus !== "All" ? selectedStatus : null);
-    filteredObjectives = filterObjectivesByTimeframe(filteredObjectives, selectedTimeframe);
+    if (searchQuery) {
+      filteredObjectives = filterObjectives(filteredObjectives, { search: searchQuery });
+    }
+    
+    if (selectedLevel !== "All") {
+      filteredObjectives = filterObjectivesByLevel(filteredObjectives, selectedLevel);
+    }
+    
+    if (selectedStatus !== "All") {
+      filteredObjectives = filterObjectives(filteredObjectives, { status: [selectedStatus] });
+    }
+    
+    if (selectedTimeframe) {
+      filteredObjectives = filterObjectives(filteredObjectives, { timeframe: [selectedTimeframe] });
+    }
     
     // Filter by team if selected
     if (selectedTeam) {
-      filteredObjectives = filteredObjectives.filter(obj => obj.teamId === selectedTeam);
+      filteredObjectives = filterObjectives(filteredObjectives, { team: [selectedTeam] });
     }
     
     // Now filter by the requested level
