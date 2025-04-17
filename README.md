@@ -45,10 +45,31 @@ cd okr-management-platform
 npm install
 ```
 
-### 3. Database Setup
+### 3. Environment and Database Setup
+
+#### Option 1: Automated Setup (Recommended)
+
+For convenience, we've included a script that automates the database and environment setup:
+
+```bash
+node scripts/init-db.js
+```
+
+This script will:
+1. Guide you through setting up a PostgreSQL database
+2. Create a `.env` file with the proper configuration
+3. Generate a secure SESSION_SECRET
+
+#### Option 2: Manual Setup
 
 1. Create a PostgreSQL database for the project
-2. Set up your environment variables by creating a `.env` file in the root directory:
+2. Set up your environment variables by copying the `.env.example` file to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+3. Edit the `.env` file with your specific configuration:
 
 ```
 # Database Configuration
@@ -59,9 +80,20 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 # Environment
 NODE_ENV=development
+
+# Session secret (generate a random string)
+SESSION_SECRET=your_secure_random_string
 ```
 
-3. Run the database migrations to set up your schema:
+4. Generate a secure random string for the SESSION_SECRET (you can use any random string generator or run this command):
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### 4. Database Migration
+
+After setting up the environment, run the database migrations to set up your schema:
 
 ```bash
 npm run db:push
@@ -69,7 +101,7 @@ npm run db:push
 
 This will create all necessary tables defined in `shared/schema.ts`.
 
-### 4. Start the Development Server
+### 5. Start the Development Server
 
 ```bash
 npm run dev
@@ -124,9 +156,12 @@ You must have a valid OpenAI API key to use these features. If the API key is no
 │   └── vite.ts              # Vite configuration for server
 ├── shared/                  # Shared code between frontend and backend
 │   └── schema.ts            # Database schema and types
+├── scripts/                 # Utility scripts
+│   └── init-db.js           # Database initialization script
 ├── migrations/              # Database migrations
 ├── attached_assets/         # Project assets and documentation
 ├── drizzle.config.ts        # Drizzle ORM configuration
+├── .env.example             # Example environment variables
 └── package.json             # Project dependencies and scripts
 ```
 
