@@ -15,6 +15,7 @@ export function IntroVideoDialog() {
     startWalkthrough,
     skipWalkthrough,
     showIntroVideo,
+    resetIntroVideo,
   } = useOnboarding();
 
   const [open, setOpen] = React.useState(false);
@@ -48,6 +49,11 @@ export function IntroVideoDialog() {
   const handleSkip = () => {
     handleCloseDialog();
     skipWalkthrough();
+    
+    // Mark as watched in localStorage so it doesn't show again
+    localStorage.setItem("intro_video_watched", "true");
+    // Reset the introVideoWatched state in the context to prevent it from triggering again
+    resetIntroVideo();
   };
 
   const handleVideoEnded = () => {

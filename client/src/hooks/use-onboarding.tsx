@@ -30,6 +30,7 @@ export interface OnboardingState {
 
 interface OnboardingContextType extends OnboardingState {
   showIntroVideo: () => void;
+  resetIntroVideo: () => void;
   startWalkthrough: () => void;
   skipWalkthrough: () => void;
   nextStep: () => void;
@@ -125,6 +126,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const showIntroVideo = () => {
     setState(prev => ({ ...prev, introVideoWatched: true }));
   };
+  
+  const resetIntroVideo = () => {
+    setState(prev => ({ ...prev, introVideoWatched: false }));
+  };
 
   const startWalkthrough = () => {
     setState(prev => ({
@@ -192,6 +197,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const value: OnboardingContextType = {
     ...state,
     showIntroVideo,
+    resetIntroVideo,
     startWalkthrough,
     skipWalkthrough,
     nextStep,

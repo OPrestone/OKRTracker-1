@@ -7,6 +7,7 @@ import {
   Laptop,
   Rocket
 } from "lucide-react";
+import { useOnboarding } from "@/hooks/use-onboarding";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { SearchDialog } from "@/components/search/search-dialog";
@@ -54,8 +55,8 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
             size="sm" 
             className="hidden md:flex items-center gap-1"
             onClick={() => {
-              // Import dynamically to avoid circular dependency issues
-              const { useOnboarding } = require('@/hooks/use-onboarding');
+              // We've already imported useOnboarding at the top level
+              // but let's call it directly from the imported hook
               const { toggleGetStartedMenu } = useOnboarding();
               toggleGetStartedMenu();
             }}
