@@ -23,24 +23,17 @@ export function IntroVideoDialog() {
 
   // Control dialog open state
   React.useEffect(() => {
-    // When a user logs in for the first time, we should open the dialog automatically
-    // This is triggered by the firstLogin flag in onboarding context
-    const firstTimeUser = localStorage.getItem("first_time_user");
-    
-    if (!firstTimeUser) {
-      // This is a first-time user
-      localStorage.setItem("first_time_user", "false");
-      showIntroVideo(); // Mark intro video as being watched (which triggers the dialog)
+    // Only show the intro video when explicitly triggered via the Get Started menu
+    // or when manual showIntroVideo is called, not automatically on first login
+    if (introVideoWatched && !open) {
+      // Video was triggered by clicking "Watch Intro Video" in the Get Started menu
       setTimeout(() => {
         setOpen(true);
       }, 500);
-    } else if (introVideoWatched && !open) {
-      // This handles the manual triggering via the Get Started menu
-      setTimeout(() => {
-        setOpen(true);
-      }, 500);
+      // Mark as watched so it only shows once
+      localStorage.setItem("intro_video_watched", "true");
     }
-  }, [introVideoWatched, open, showIntroVideo]);
+  }, [introVideoWatched, open]);
 
   const handleCloseDialog = () => {
     setOpen(false);

@@ -4,7 +4,8 @@ import {
   ChevronRight,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -46,6 +47,22 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
           <NotificationDropdown />
           
           <ThemeToggle />
+          
+          {/* Get Started Trigger Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden md:flex items-center gap-1"
+            onClick={() => {
+              // Import dynamically to avoid circular dependency issues
+              const { useOnboarding } = require('@/hooks/use-onboarding');
+              const { toggleGetStartedMenu } = useOnboarding();
+              toggleGetStartedMenu();
+            }}
+          >
+            <Rocket className="h-4 w-4 text-emerald-500" />
+            <span>Get Started</span>
+          </Button>
           
           <HelpTooltip
             id={dashboardHelp.id}
