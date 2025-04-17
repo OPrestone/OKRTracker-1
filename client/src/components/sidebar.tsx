@@ -143,8 +143,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/mission" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/mission" className="flex items-center w-full">
@@ -157,8 +157,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/company-strategy" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/company-strategy" className="flex items-center w-full">
@@ -173,8 +173,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/my-okrs" || location === "/draft-okrs" || location === "/approved-okrs" || location === "/company-okrs")
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Flag className="mr-3 h-5 w-5 text-orange-500" />
@@ -192,7 +192,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/my-okrs" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
             )}>
               <Link href="/my-okrs" className="w-full">
                 My OKRs
@@ -203,7 +203,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/draft-okrs" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/draft-okrs" className="w-full">
                 Draft OKRs
@@ -214,7 +214,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/approved-okrs" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/approved-okrs" className="w-full">
                 Approved OKRs
@@ -225,7 +225,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/company-okrs" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/company-okrs" className="w-full">
                 Company OKRs
@@ -240,8 +240,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/teams" || location === "/users" || location === "/all-users")
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Users className="mr-3 h-5 w-5 text-blue-500" />
@@ -259,7 +259,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/teams" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/teams" className="w-full">
                 Teams
@@ -270,7 +270,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/all-users" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/all-users" className="w-full">
                 Users
@@ -283,8 +283,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/checkins" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/checkins" className="flex items-center w-full">
@@ -297,8 +297,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/one-on-one-meetings" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/one-on-one-meetings" className="flex items-center w-full">
@@ -311,8 +311,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
             location === "/chat" 
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <Link href="/chat" className="flex items-center w-full">
@@ -327,8 +327,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location === "/reports" || location === "/okr-reports" || location === "/export-reports" || location === "/team-performance" || location === "/ai-recommendations")
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
           <PieChart className="mr-3 h-5 w-5 text-purple-500" />
@@ -346,7 +346,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/reports" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/reports" className="w-full">
                 Overview Dashboard
@@ -357,7 +357,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/okr-reports" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/okr-reports" className="w-full">
                 OKR Performance
@@ -368,7 +368,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/export-reports" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/export-reports" className="w-full flex items-center">
                 <FileOutput className="mr-2 h-4 w-4 text-green-600" />
@@ -380,7 +380,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/team-performance" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/team-performance" className="w-full">
                 Team Performance
@@ -391,7 +391,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/ai-recommendations" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/ai-recommendations" className="w-full flex items-center">
                 <Brain className="mr-2 h-4 w-4 text-amber-500" />
@@ -410,11 +410,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
             (location.includes("/configuration/"))
-              ? "bg-sidebar-primary/10 text-primary border-l-2 border-primary" 
-              : "text-gray-600 hover:bg-muted"
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
-          <Settings className="mr-3 h-5 w-5 text-gray-500" />
+          <Settings className="mr-3 h-5 w-5 text-muted-foreground" />
           Configure
           {configExpanded ? (
             <ChevronUp className="ml-auto h-5 w-5" />
@@ -429,10 +429,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/general" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/general" className="w-full flex items-center">
-                <Settings className="h-4 w-4 mr-2 text-gray-500" />
+                <Settings className="h-4 w-4 mr-2 text-muted-foreground" />
                 General Settings
               </Link>
             </div>
@@ -441,7 +441,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/teams" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/teams" className="w-full flex items-center">
                 <Users className="h-4 w-4 mr-2 text-blue-500" />
@@ -453,7 +453,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/users-permissions" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/users-permissions" className="w-full flex items-center">
                 <UserCog className="h-4 w-4 mr-2 text-indigo-500" />
@@ -465,7 +465,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/access-groups" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/access-groups" className="w-full flex items-center">
                 <Shield className="h-4 w-4 mr-2 text-green-500" />
@@ -477,7 +477,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/integrations" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/integrations" className="w-full flex items-center">
                 <PanelLeftOpen className="h-4 w-4 mr-2 text-purple-500" />
@@ -489,7 +489,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/status-settings" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/status-settings" className="w-full flex items-center">
                 <CheckCircle className="h-4 w-4 mr-2 text-orange-500" />
@@ -501,7 +501,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/cadences" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/cadences" className="w-full flex items-center">
                 <CalendarCheck className="h-4 w-4 mr-2 text-teal-500" />
@@ -513,7 +513,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
               location === "/configuration/timeframes" 
                 ? "text-primary font-medium" 
-                : "text-gray-600 hover:text-gray-900"
+                : "text-muted-foreground hover:text-foreground"
             )}>
               <Link href="/configuration/timeframes" className="w-full flex items-center">
                 <Clock className="h-4 w-4 mr-2 text-red-500" />
@@ -544,7 +544,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               variant="ghost" 
               size="icon" 
               onClick={handleLogout} 
-              className="text-gray-400 hover:text-gray-500 hover:bg-muted transition-colors duration-200"
+              className="text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-colors duration-200"
             >
               <MoreHorizontal className="h-5 w-5" />
             </Button>

@@ -18,19 +18,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200">
+    <div className="flex h-screen overflow-hidden bg-background dark:bg-background text-foreground dark:text-foreground">
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+      <main className="flex-1 overflow-y-auto bg-background dark:bg-background">
         <Header 
           title={title}
           subtitle={subtitle}
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
-        <div className="p-6 bg-background dark:bg-background">
+        <div className="p-6 bg-background dark:bg-background border-t border-border dark:border-border">
           {children}
         </div>
       </main>
@@ -39,7 +39,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="md:hidden fixed bottom-4 right-4 z-50">
         <button 
           onClick={() => setSidebarOpen(true)}
-          className="bg-primary text-white rounded-full p-3 shadow-lg"
+          className="bg-primary dark:bg-primary text-primary-foreground dark:text-primary-foreground rounded-full p-3 shadow-lg"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
