@@ -18,19 +18,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 text-gray-800">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200">
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <Header 
           title={title}
           subtitle={subtitle}
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
-        <div className="p-6">
+        <div className="p-6 bg-background dark:bg-background">
           {children}
         </div>
       </main>
