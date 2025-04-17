@@ -574,7 +574,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recommendations);
     } catch (error) {
       console.error("Error generating objective recommendations:", error);
-      next(error);
+      // The OpenAI service now returns fallback recommendations instead of throwing an error,
+      // but in case of other errors we still need to handle them appropriately
+      if (error instanceof Error && error.message.includes("Failed to generate objective recommendations")) {
+        // Log the error but don't send a 500 response since the OpenAI service already handled it with fallbacks
+        next(error);
+      } else {
+        // For any other errors, like database issues
+        res.status(500).json({ error: "Failed to generate recommendations", message: error instanceof Error ? error.message : String(error) });
+      }
     }
   });
   
@@ -603,7 +611,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recommendations);
     } catch (error) {
       console.error("Error generating key result recommendations:", error);
-      next(error);
+      // The OpenAI service now returns fallback recommendations instead of throwing an error,
+      // but in case of other errors we still need to handle them appropriately
+      if (error instanceof Error && error.message.includes("Failed to generate key result recommendations")) {
+        // Log the error but don't send a 500 response since the OpenAI service already handled it with fallbacks
+        next(error);
+      } else {
+        // For any other errors, like database issues
+        res.status(500).json({ error: "Failed to generate recommendations", message: error instanceof Error ? error.message : String(error) });
+      }
     }
   });
   
@@ -630,7 +646,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(improvement);
     } catch (error) {
       console.error("Error analyzing OKR for improvements:", error);
-      next(error);
+      // The OpenAI service now returns fallback improvements instead of throwing an error,
+      // but in case of other errors we still need to handle them appropriately
+      if (error instanceof Error && error.message.includes("Failed to analyze and improve OKR")) {
+        // Log the error but don't send a 500 response since the OpenAI service already handled it with fallbacks
+        next(error);
+      } else {
+        // For any other errors, like database issues
+        res.status(500).json({ error: "Failed to analyze OKR", message: error instanceof Error ? error.message : String(error) });
+      }
     }
   });
   
@@ -663,7 +687,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(alignmentAnalysis);
     } catch (error) {
       console.error("Error analyzing team alignment:", error);
-      next(error);
+      // The OpenAI service now returns fallback team alignment analysis instead of throwing an error,
+      // but in case of other errors we still need to handle them appropriately
+      if (error instanceof Error && error.message.includes("Failed to analyze team alignment")) {
+        // Log the error but don't send a 500 response since the OpenAI service already handled it with fallbacks
+        next(error);
+      } else {
+        // For any other errors, like database issues
+        res.status(500).json({ error: "Failed to analyze team alignment", message: error instanceof Error ? error.message : String(error) });
+      }
     }
   });
 
