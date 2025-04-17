@@ -32,6 +32,10 @@ import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
 import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
+// Import new drag-and-drop pages
+import ObjectivesOrganizer from "@/pages/objectives-organizer";
+import TimelineEditor from "@/pages/timeline-editor";
+import CustomDashboard from "@/pages/custom-dashboard";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -88,6 +92,11 @@ function AppRoutes() {
       
       {/* Communication */}
       <PublicRoute path="/chat" component={ChatPage} />
+      
+      {/* Drag and Drop Interfaces */}
+      <PublicRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
+      <PublicRoute path="/timeline-editor" component={TimelineEditor} />
+      <PublicRoute path="/custom-dashboard" component={CustomDashboard} />
       
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />

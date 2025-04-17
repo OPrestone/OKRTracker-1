@@ -21,10 +21,7 @@ interface SortableObjectiveProps {
   objective: Objective;
 }
 
-export function SortableObjective({
-  id,
-  objective
-}: SortableObjectiveProps) {
+export function SortableObjective({ id, objective }: SortableObjectiveProps) {
   const {
     attributes,
     listeners,
@@ -37,8 +34,8 @@ export function SortableObjective({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
-    zIndex: isDragging ? 1 : 0,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
   };
 
   return (
@@ -47,8 +44,7 @@ export function SortableObjective({
       style={style}
       {...attributes}
       {...listeners}
-      className="touch-manipulation"
-      aria-roledescription="sortable"
+      className="touch-none"
     >
       <ObjectiveCard objective={objective} isDragging={isDragging} />
     </div>

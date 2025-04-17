@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
-  ArrowsOut,
+  MoveHorizontal,
   GripHorizontal,
   Maximize2,
   Minimize2,
@@ -95,7 +95,7 @@ export function ResizableWidget({
             <Popover onOpenChange={setResizing}>
               <PopoverTrigger asChild>
                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                  <ArrowsOut className="h-4 w-4" />
+                  <MoveHorizontal className="h-4 w-4" />
                   <span className="sr-only">Resize</span>
                 </Button>
               </PopoverTrigger>

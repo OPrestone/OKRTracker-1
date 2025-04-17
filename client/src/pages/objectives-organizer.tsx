@@ -1,65 +1,71 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RotateCcw, ArrowUpDown, Layers, Filter } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Import DnD Kit components
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-
-// Import our custom DnD components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  filterObjectivesBySearch,
+  filterObjectivesByLevel,
+  filterObjectivesByStatus,
+  filterObjectivesByTimeframe,
+} from "@/lib/filter-utils";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Search, 
+  Filter, 
+  Layers, 
+  CheckCircle2, 
+  RefreshCw, 
+  ListFilter,
+  X,
+} from "lucide-react";
 import ObjectiveCard from "@/components/organizer/draggable-objective-card";
-import ObjectiveGroup from "@/components/organizer/objective-group";
+import { ObjectiveGroup } from "@/components/organizer/objective-group";
 import { SortableObjective } from "@/components/organizer/sortable-objective";
 
 // Types
 interface Objective {
   id: number;
   title: string;
-  description: string;
+  description?: string;
   level: string;
   status: string;
   progress: number;
-  owner: {
+  owner?: {
     id: number;
     name: string;
     role?: string;
   };
-  timeframe: string;
+  keyResults?: any[];
   timeframeId: number;
   teamId?: number;
-  keyResults: any[];
-  sequence?: number;
-}
-
-interface Team {
-  id: number;
-  name: string;
-  description: string;
 }
 
 interface Timeframe {
@@ -70,30 +76,55 @@ interface Timeframe {
   cadenceId: number;
 }
 
+interface Team {
+  id: number;
+  name: string;
+}
+
+const ObjecitveStatusOptions = [
+  "All",
+  "On Track",
+  "At Risk",
+  "Behind",
+  "Completed",
+];
+
+const ObjectiveGroups = {
+  organization: { id: "organization", title: "Organization Objectives" },
+  department: { id: "department", title: "Department Objectives" },
+  team: { id: "team", title: "Team Objectives" },
+  individual: { id: "individual", title: "Individual Objectives" },
+  completed: { id: "completed", title: "Completed Objectives" },
+};
+
 const ObjectivesOrganizer = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // State
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [objectivesByTeam, setObjectivesByTeam] = useState<Record<string, Objective[]>>({});
-  const [objectivesByTimeframe, setObjectivesByTimeframe] = useState<Record<string, Objective[]>>({});
-  const [groupBy, setGroupBy] = useState<"team" | "timeframe">("team");
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<string | null>(null);
-
-  // Setup sensors for drag and drop
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // States
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedTimeframe, setSelectedTimeframe] = useState<number | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+  
+  // Sensors
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
       },
     }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
     })
   );
-
+  
   // Fetch objectives data
   const { data: objectives = [], isLoading: isLoadingObjectives, isError: isObjectivesError } = useQuery({
     queryKey: ["/api/objectives"],
@@ -102,82 +133,36 @@ const ObjectivesOrganizer = () => {
       return response.json();
     },
   });
-
-  // Fetch teams data
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
-    queryKey: ["/api/teams"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/teams");
-      return response.json();
-    },
-  });
-
+  
   // Fetch timeframes data
-  const { data: timeframes = [], isLoading: isLoadingTimeframes } = useQuery({
+  const { data: timeframes = [] } = useQuery({
     queryKey: ["/api/timeframes"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/timeframes");
       return response.json();
     },
   });
-
-  // Group objectives by team and timeframe
-  useEffect(() => {
-    if (objectives.length) {
-      const byTeam: Record<string, Objective[]> = {};
-      const byTimeframe: Record<string, Objective[]> = {};
-      
-      objectives.forEach((obj: Objective) => {
-        // Group by team
-        const teamId = obj.teamId?.toString() || "unassigned";
-        if (!byTeam[teamId]) {
-          byTeam[teamId] = [];
-        }
-        byTeam[teamId].push(obj);
-        
-        // Group by timeframe
-        const timeframeId = obj.timeframeId?.toString() || "unassigned";
-        if (!byTimeframe[timeframeId]) {
-          byTimeframe[timeframeId] = [];
-        }
-        byTimeframe[timeframeId].push(obj);
-      });
-      
-      // Sort objectives by sequence if available
-      Object.keys(byTeam).forEach(teamId => {
-        byTeam[teamId].sort((a, b) => {
-          if (a.sequence !== undefined && b.sequence !== undefined) {
-            return a.sequence - b.sequence;
-          }
-          return a.id - b.id;
-        });
-      });
-      
-      Object.keys(byTimeframe).forEach(timeframeId => {
-        byTimeframe[timeframeId].sort((a, b) => {
-          if (a.sequence !== undefined && b.sequence !== undefined) {
-            return a.sequence - b.sequence;
-          }
-          return a.id - b.id;
-        });
-      });
-      
-      setObjectivesByTeam(byTeam);
-      setObjectivesByTimeframe(byTimeframe);
-    }
-  }, [objectives]);
-
-  // Define mutation to update objective group or sequence
-  const updateObjectiveMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Objective> }) => {
-      const response = await apiRequest("PATCH", `/api/objectives/${id}`, data);
+  
+  // Fetch teams data
+  const { data: teams = [] } = useQuery({
+    queryKey: ["/api/teams"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/teams");
+      return response.json();
+    },
+  });
+  
+  // Update objective level mutation
+  const updateObjectiveLevelMutation = useMutation({
+    mutationFn: async ({ id, level }: { id: number; level: string }) => {
+      const response = await apiRequest("PATCH", `/api/objectives/${id}`, { level });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       toast({
-        title: "Objective updated",
-        description: "The objective has been successfully rearranged.",
+        title: "Objective Updated",
+        description: "The objective has been successfully moved to a new level.",
       });
     },
     onError: (error: Error) => {
@@ -188,229 +173,149 @@ const ObjectivesOrganizer = () => {
       });
     },
   });
-
+  
+  // Utility function to get container ID from combined ID
+  const getContainerFromId = (id: string) => {
+    if (typeof id !== "string") return null;
+    return id.split("-")[0];
+  };
+  
+  // Utility function to get objective ID from combined ID
+  const getObjectiveFromId = (id: string) => {
+    if (typeof id !== "string") return null;
+    return parseInt(id.split("-")[1]);
+  };
+  
+  // Get objectives by level
+  const getObjectivesByLevel = (level: string) => {
+    let filteredObjectives = [...objectives];
+    
+    // Apply filters
+    filteredObjectives = filterObjectivesBySearch(filteredObjectives, searchQuery);
+    filteredObjectives = filterObjectivesByLevel(filteredObjectives, selectedLevel !== "All" ? selectedLevel : null);
+    filteredObjectives = filterObjectivesByStatus(filteredObjectives, selectedStatus !== "All" ? selectedStatus : null);
+    filteredObjectives = filterObjectivesByTimeframe(filteredObjectives, selectedTimeframe);
+    
+    // Filter by team if selected
+    if (selectedTeam) {
+      filteredObjectives = filteredObjectives.filter(obj => obj.teamId === selectedTeam);
+    }
+    
+    // Now filter by the requested level
+    if (level === "completed") {
+      return filteredObjectives.filter(obj => obj.status.toLowerCase() === "completed");
+    } else {
+      return filteredObjectives.filter(obj => 
+        obj.level.toLowerCase() === level.toLowerCase() && 
+        obj.status.toLowerCase() !== "completed"
+      );
+    }
+  };
+  
   // Handle drag start
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as string);
-  }
-
-  // Handle drag end
-  function handleDragEnd(event: DragEndEvent) {
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id);
+  };
+  
+  // Handle drag over
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     
     if (!over) return;
     
-    if (active.id !== over.id) {
-      const activeIdStr = active.id as string;
-      const overIdStr = over.id as string;
+    const activeContainer = getContainerFromId(active.id as string);
+    const overContainer = getContainerFromId(over.id as string);
+    
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
+    }
+    
+    // Handle moving objectives between containers in the UI
+    // The actual update happens in handleDragEnd
+  };
+  
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    const activeContainer = getContainerFromId(activeId);
+    const overContainer = getContainerFromId(overId);
+    
+    if (!activeContainer || !overContainer) {
+      setActiveId(null);
+      return;
+    }
+    
+    if (activeContainer !== overContainer) {
+      // Item moved to a different container (level)
+      const objectiveId = getObjectiveFromId(activeId);
       
-      // Extract group ID and objective ID from the composite ID
-      const [activeGroupId, activeObjectiveId] = activeIdStr.split('-');
-      const [overGroupId, overObjectiveId] = overIdStr.split('-');
-      
-      if (groupBy === "team") {
-        const activeTeamId = activeGroupId;
-        const overTeamId = overGroupId;
-        
-        // Get the active objective
-        const objectiveId = parseInt(activeObjectiveId);
-        
-        if (activeTeamId === overTeamId) {
-          // If same team, just reorder
-          setObjectivesByTeam(prevObjectivesByTeam => {
-            const teamObjectives = [...prevObjectivesByTeam[activeTeamId]];
-            const oldIndex = teamObjectives.findIndex(obj => obj.id === objectiveId);
-            const newIndex = teamObjectives.findIndex(obj => obj.id === parseInt(overObjectiveId));
-            
-            const newTeamObjectives = arrayMove(teamObjectives, oldIndex, newIndex);
-            
-            // Update sequence numbers
-            newTeamObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              // Update in database
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            return {
-              ...prevObjectivesByTeam,
-              [activeTeamId]: newTeamObjectives
-            };
-          });
-        } else {
-          // Moving to different team
-          setObjectivesByTeam(prevObjectivesByTeam => {
-            const sourceTeamObjectives = [...prevObjectivesByTeam[activeTeamId]];
-            const targetTeamObjectives = [...(prevObjectivesByTeam[overTeamId] || [])];
-            
-            const objectiveIndex = sourceTeamObjectives.findIndex(obj => obj.id === objectiveId);
-            const objective = sourceTeamObjectives[objectiveIndex];
-            
-            // Remove from source team
-            sourceTeamObjectives.splice(objectiveIndex, 1);
-            
-            // Add to target team
-            const targetIndex = overObjectiveId ? 
-              targetTeamObjectives.findIndex(obj => obj.id === parseInt(overObjectiveId)) :
-              targetTeamObjectives.length;
-            
-            targetTeamObjectives.splice(targetIndex, 0, objective);
-            
-            // Update team ID and sequence
-            objective.teamId = overTeamId === "unassigned" ? undefined : parseInt(overTeamId);
-            
-            // Update in database
-            updateObjectiveMutation.mutate({ 
-              id: objective.id, 
-              data: { 
-                teamId: objective.teamId,
-                sequence: targetIndex
-              } 
-            });
-            
-            // Update sequences for both teams
-            sourceTeamObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            targetTeamObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            return {
-              ...prevObjectivesByTeam,
-              [activeTeamId]: sourceTeamObjectives,
-              [overTeamId]: targetTeamObjectives
-            };
-          });
-        }
-      } else if (groupBy === "timeframe") {
-        // Similar logic for timeframe grouping
-        const activeTimeframeId = activeGroupId;
-        const overTimeframeId = overGroupId;
-        
-        // Get the active objective
-        const objectiveId = parseInt(activeObjectiveId);
-        
-        if (activeTimeframeId === overTimeframeId) {
-          // If same timeframe, just reorder
-          setObjectivesByTimeframe(prevObjectivesByTimeframe => {
-            const timeframeObjectives = [...prevObjectivesByTimeframe[activeTimeframeId]];
-            const oldIndex = timeframeObjectives.findIndex(obj => obj.id === objectiveId);
-            const newIndex = timeframeObjectives.findIndex(obj => obj.id === parseInt(overObjectiveId));
-            
-            const newTimeframeObjectives = arrayMove(timeframeObjectives, oldIndex, newIndex);
-            
-            // Update sequence numbers
-            newTimeframeObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              // Update in database
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            return {
-              ...prevObjectivesByTimeframe,
-              [activeTimeframeId]: newTimeframeObjectives
-            };
-          });
-        } else {
-          // Moving to different timeframe
-          setObjectivesByTimeframe(prevObjectivesByTimeframe => {
-            const sourceTimeframeObjectives = [...prevObjectivesByTimeframe[activeTimeframeId]];
-            const targetTimeframeObjectives = [...(prevObjectivesByTimeframe[overTimeframeId] || [])];
-            
-            const objectiveIndex = sourceTimeframeObjectives.findIndex(obj => obj.id === objectiveId);
-            const objective = sourceTimeframeObjectives[objectiveIndex];
-            
-            // Remove from source timeframe
-            sourceTimeframeObjectives.splice(objectiveIndex, 1);
-            
-            // Add to target timeframe
-            const targetIndex = overObjectiveId ? 
-              targetTimeframeObjectives.findIndex(obj => obj.id === parseInt(overObjectiveId)) :
-              targetTimeframeObjectives.length;
-            
-            targetTimeframeObjectives.splice(targetIndex, 0, objective);
-            
-            // Update timeframe ID and sequence
-            objective.timeframeId = overTimeframeId === "unassigned" ? 0 : parseInt(overTimeframeId);
-            
-            // Update in database
-            updateObjectiveMutation.mutate({ 
-              id: objective.id, 
-              data: { 
-                timeframeId: objective.timeframeId,
-                sequence: targetIndex
-              } 
-            });
-            
-            // Update sequences for both timeframes
-            sourceTimeframeObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            targetTimeframeObjectives.forEach((obj, index) => {
-              obj.sequence = index;
-              updateObjectiveMutation.mutate({ id: obj.id, data: { sequence: index } });
-            });
-            
-            return {
-              ...prevObjectivesByTimeframe,
-              [activeTimeframeId]: sourceTimeframeObjectives,
-              [overTimeframeId]: targetTimeframeObjectives
-            };
-          });
-        }
+      if (objectiveId) {
+        // Update the objective's level in the database
+        updateObjectiveLevelMutation.mutate({ 
+          id: objectiveId, 
+          level: overContainer === "organization" ? "Organization" :
+                overContainer === "department" ? "Department" :
+                overContainer === "team" ? "Team" :
+                overContainer === "individual" ? "Individual" :
+                "Completed" 
+        });
       }
+    } else if (activeId !== overId) {
+      // Items rearranged within the same container
+      // This would be implemented if you add position/order to objectives
     }
     
     setActiveId(null);
-  }
-
-  // Get the name of a team by ID
-  function getTeamName(teamId: string) {
-    if (teamId === "unassigned") return "Unassigned";
-    const team = teams.find((t: Team) => t.id.toString() === teamId);
-    return team ? team.name : `Team ${teamId}`;
-  }
-
-  // Get the name of a timeframe by ID
-  function getTimeframeName(timeframeId: string) {
-    if (timeframeId === "unassigned") return "Unassigned";
-    const timeframe = timeframes.find((t: Timeframe) => t.id.toString() === timeframeId);
-    return timeframe ? timeframe.name : `Timeframe ${timeframeId}`;
-  }
-
-  // Reset to default order
-  function resetOrder() {
-    // This would reset all sequence numbers to default based on ID or creation date
-    toast({
-      title: "Order reset",
-      description: "The objectives have been reset to their default order.",
-    });
+  };
+  
+  // Handle search
+  const handleSearch = () => {
+    if (searchInputRef.current) {
+      setSearchQuery(searchInputRef.current.value);
+    }
+  };
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedLevel("All");
+    setSelectedStatus("All");
+    setSelectedTimeframe(null);
+    setSelectedTeam(null);
     
-    // Refetch data from the server
-    queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-  }
-
-  // Get the active objective for drag overlay
-  function getActiveObjective() {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+    }
+  };
+  
+  // Get timeframe name
+  const getTimeframeName = (id: number) => {
+    const timeframe = timeframes.find((t: Timeframe) => t.id === id);
+    return timeframe ? timeframe.name : "Unknown";
+  };
+  
+  // Get active objective
+  const getActiveObjective = (): Objective | null => {
     if (!activeId) return null;
     
-    const [groupId, objectiveId] = activeId.split('-');
-    const objId = parseInt(objectiveId);
+    const container = getContainerFromId(activeId as string);
+    const objectiveId = getObjectiveFromId(activeId as string);
     
-    if (groupBy === "team") {
-      const group = objectivesByTeam[groupId];
-      return group?.find(obj => obj.id === objId) || null;
-    } else {
-      const group = objectivesByTimeframe[groupId];
-      return group?.find(obj => obj.id === objId) || null;
-    }
-  }
-
+    if (!container || !objectiveId) return null;
+    
+    const objective = objectives.find((obj: Objective) => obj.id === objectiveId);
+    return objective || null;
+  };
+  
   return (
     <DashboardLayout title="Objectives Organizer">
       <div className="space-y-4">
@@ -423,174 +328,312 @@ const ObjectivesOrganizer = () => {
         )}
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0 pb-4">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold">Objectives Organizer</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold mr-2">Objectives Organizer</h1>
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={resetOrder}
-              title="Reset to default order"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/objectives"] })}
+              title="Refresh data"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
           
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            <Select 
-              value={groupBy} 
-              onValueChange={(value) => setGroupBy(value as "team" | "timeframe")}
-            >
-              <SelectTrigger className="w-[180px]">
-                <Layers className="h-4 w-4 mr-2" />
-                <span>Group By</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="team">Team</SelectItem>
-                <SelectItem value="timeframe">Timeframe</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {groupBy === "team" && (
-              <Select 
-                value={selectedTeam || "all"}
-                onValueChange={(value) => setSelectedTeam(value === "all" ? null : value)}
+          <div className="relative w-full md:w-auto">
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Search objectives..."
+                  className="pl-9"
+                  onChange={handleSearch}
+                />
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearFilters}
+                disabled={!searchQuery && selectedLevel === "All" && selectedStatus === "All" && !selectedTimeframe && !selectedTeam}
               >
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <span>Filter Teams</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Teams</SelectItem>
-                  {Object.keys(objectivesByTeam).map(teamId => (
-                    <SelectItem key={teamId} value={teamId}>
-                      {getTeamName(teamId)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            
-            {groupBy === "timeframe" && (
-              <Select 
-                value={selectedTimeframe || "all"}
-                onValueChange={(value) => setSelectedTimeframe(value === "all" ? null : value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <span>Filter Timeframes</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Timeframes</SelectItem>
-                  {Object.keys(objectivesByTimeframe).map(timeframeId => (
-                    <SelectItem key={timeframeId} value={timeframeId}>
-                      {getTimeframeName(timeframeId)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                <X className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Clear</span>
+              </Button>
+            </div>
           </div>
         </div>
         
-        <Separator />
-        
-        {(isLoadingObjectives || isLoadingTeams || isLoadingTimeframes) ? (
-          <div className="flex justify-center p-8">
-            <div className="animate-pulse flex space-x-4">
-              <div className="h-12 w-12 rounded-full bg-slate-200"></div>
-              <div className="flex-1 space-y-4 py-1">
-                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="col-span-1 space-y-4">
+            <div className="bg-card rounded-lg border p-4">
+              <div className="font-medium flex items-center mb-3">
+                <Filter className="h-4 w-4 mr-2" />
+                <span>Filters</span>
+              </div>
+              
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded"></div>
-                  <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                  <Label htmlFor="level-filter">Level</Label>
+                  <Select 
+                    value={selectedLevel} 
+                    onValueChange={setSelectedLevel}
+                  >
+                    <SelectTrigger id="level-filter">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Levels</SelectItem>
+                      <SelectItem value="Organization">Organization</SelectItem>
+                      <SelectItem value="Department">Department</SelectItem>
+                      <SelectItem value="Team">Team</SelectItem>
+                      <SelectItem value="Individual">Individual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="status-filter">Status</Label>
+                  <Select 
+                    value={selectedStatus} 
+                    onValueChange={setSelectedStatus}
+                  >
+                    <SelectTrigger id="status-filter">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ObjecitveStatusOptions.map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="timeframe-filter">Timeframe</Label>
+                  <Select 
+                    value={selectedTimeframe?.toString() || ""} 
+                    onValueChange={(value) => setSelectedTimeframe(value ? parseInt(value) : null)}
+                  >
+                    <SelectTrigger id="timeframe-filter">
+                      <SelectValue placeholder="Select timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Timeframes</SelectItem>
+                      {timeframes.map((timeframe: Timeframe) => (
+                        <SelectItem 
+                          key={timeframe.id} 
+                          value={timeframe.id.toString()}
+                        >
+                          {timeframe.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="team-filter">Team</Label>
+                  <Select 
+                    value={selectedTeam?.toString() || ""} 
+                    onValueChange={(value) => setSelectedTeam(value ? parseInt(value) : null)}
+                  >
+                    <SelectTrigger id="team-filter">
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Teams</SelectItem>
+                      {teams.map((team: Team) => (
+                        <SelectItem 
+                          key={team.id} 
+                          value={team.id.toString()}
+                        >
+                          {team.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Active Filters</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearFilters}
+                      disabled={!searchQuery && selectedLevel === "All" && selectedStatus === "All" && !selectedTimeframe && !selectedTeam}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear All
+                    </Button>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-1.5">
+                    {searchQuery && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Search className="h-3 w-3" />
+                        <span className="truncate max-w-[120px]">{searchQuery}</span>
+                        <button 
+                          className="ml-1" 
+                          onClick={() => {
+                            setSearchQuery("");
+                            if (searchInputRef.current) {
+                              searchInputRef.current.value = "";
+                            }
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )}
+                    
+                    {selectedLevel !== "All" && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Layers className="h-3 w-3" />
+                        {selectedLevel}
+                        <button 
+                          className="ml-1" 
+                          onClick={() => setSelectedLevel("All")}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )}
+                    
+                    {selectedStatus !== "All" && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {selectedStatus}
+                        <button 
+                          className="ml-1" 
+                          onClick={() => setSelectedStatus("All")}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )}
+                    
+                    {selectedTimeframe && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <ListFilter className="h-3 w-3" />
+                        {getTimeframeName(selectedTimeframe)}
+                        <button 
+                          className="ml-1" 
+                          onClick={() => setSelectedTimeframe(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )}
+                    
+                    {selectedTeam && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <ListFilter className="h-3 w-3" />
+                        {teams.find(t => t.id === selectedTeam)?.name}
+                        <button 
+                          className="ml-1" 
+                          onClick={() => setSelectedTeam(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToWindowEdges]}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groupBy === "team" && 
-                Object.entries(objectivesByTeam)
-                  .filter(([teamId]) => !selectedTeam || teamId === selectedTeam)
-                  .map(([teamId, teamObjectives]) => (
-                    <ObjectiveGroup
-                      key={teamId}
-                      id={teamId}
-                      title={getTeamName(teamId)}
-                      color={teamId === "unassigned" ? "gray" : undefined}
-                    >
-                      <SortableContext 
-                        items={teamObjectives.map(obj => `${teamId}-${obj.id}`)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {teamObjectives.map(objective => (
-                            <SortableObjective
-                              key={`${teamId}-${objective.id}`}
-                              id={`${teamId}-${objective.id}`}
-                              objective={objective}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </ObjectiveGroup>
-                ))}
-                
-              {groupBy === "timeframe" && 
-                Object.entries(objectivesByTimeframe)
-                  .filter(([timeframeId]) => !selectedTimeframe || timeframeId === selectedTimeframe)
-                  .map(([timeframeId, timeframeObjectives]) => (
-                    <ObjectiveGroup
-                      key={timeframeId}
-                      id={timeframeId}
-                      title={getTimeframeName(timeframeId)}
-                      color={timeframeId === "unassigned" ? "gray" : undefined}
-                    >
-                      <SortableContext 
-                        items={timeframeObjectives.map(obj => `${timeframeId}-${obj.id}`)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {timeframeObjectives.map(objective => (
-                            <SortableObjective
-                              key={`${timeframeId}-${objective.id}`}
-                              id={`${timeframeId}-${objective.id}`}
-                              objective={objective}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </ObjectiveGroup>
-                ))}
-            </div>
             
-            <DragOverlay>
-              {activeId && (
-                <div className="opacity-80">
-                  <ObjectiveCard objective={getActiveObjective()!} />
+            <div className="bg-card rounded-lg border p-4">
+              <h2 className="font-medium mb-2">How to Use</h2>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Drag objectives between levels</li>
+                <li>• Filter and search to find specific objectives</li>
+                <li>• Changes are saved automatically</li>
+                <li>• Use filters to narrow down objectives</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="col-span-1 md:col-span-3">
+            {isLoadingObjectives ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div 
+                    key={i} 
+                    className="border rounded-lg p-4 animate-pulse space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+                      <div className="h-6 bg-gray-200 rounded-full w-12"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-24 bg-gray-100 rounded"></div>
+                      <div className="h-24 bg-gray-100 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="space-y-4">
+                  <ObjectiveGroup
+                    id="organization"
+                    title="Organization Objectives"
+                    description="High-level strategic objectives for the entire organization"
+                    objectives={getObjectivesByLevel("organization")}
+                  />
+                  
+                  <ObjectiveGroup
+                    id="department"
+                    title="Department Objectives"
+                    description="Departmental objectives supporting organization goals"
+                    objectives={getObjectivesByLevel("department")}
+                  />
+                  
+                  <ObjectiveGroup
+                    id="team"
+                    title="Team Objectives"
+                    description="Team-level objectives supporting department goals"
+                    objectives={getObjectivesByLevel("team")}
+                  />
+                  
+                  <ObjectiveGroup
+                    id="individual"
+                    title="Individual Objectives"
+                    description="Individual objectives for personal development and contribution"
+                    objectives={getObjectivesByLevel("individual")}
+                  />
+                  
+                  <ObjectiveGroup
+                    id="completed"
+                    title="Completed Objectives"
+                    description="Objectives that have been successfully completed"
+                    objectives={getObjectivesByLevel("completed")}
+                  />
                 </div>
-              )}
-            </DragOverlay>
-          </DndContext>
-        )}
-        
-        <div className="bg-muted rounded-lg p-4 mt-8">
-          <h3 className="font-medium mb-2">How to use the Objectives Organizer</h3>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li>Drag and drop objectives to reorder them within a group</li>
-            <li>Drag an objective to another group to move it</li>
-            <li>Changes are automatically saved when you drop an objective</li>
-            <li>Use the "Group By" selector to organize by team or timeframe</li>
-            <li>Filter to focus on specific teams or timeframes</li>
-            <li>Click the reset button to restore the default order</li>
-          </ul>
+                
+                <DragOverlay>
+                  {activeId ? (
+                    <div className="transform-gpu scale-105">
+                      <ObjectiveCard 
+                        objective={getActiveObjective() as Objective}
+                        isDragging={true} 
+                      />
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
