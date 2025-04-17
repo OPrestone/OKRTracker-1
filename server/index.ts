@@ -1,8 +1,45 @@
 // Load environment variables from .env file first
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+
+// Try to load from .env file
 const result = dotenv.config();
 if (result.error) {
-  console.warn('Error loading .env file:', result.error);
+  // If .env file doesn't exist but .env.example does, provide a helpful message
+  const envPath = path.join(process.cwd(), '.env');
+  const envExamplePath = path.join(process.cwd(), '.env.example');
+  
+  // Check if .env file doesn't exist but .env.example does
+  let isFileNotFound = false;
+  try {
+    isFileNotFound = result.error.message.includes('ENOENT') && fs.existsSync(envExamplePath);
+  } catch (e) {
+    // Silently handle any error in the check
+  }
+  
+  if (isFileNotFound) {
+    console.warn('\x1b[33m%s\x1b[0m', 'No .env file found. You should create one based on .env.example.');
+    console.warn('\x1b[33m%s\x1b[0m', 'Run: cp .env.example .env');
+    console.warn('\x1b[33m%s\x1b[0m', 'Then edit the .env file with your configuration.');
+    console.warn('\x1b[33m%s\x1b[0m', 'Or run: node scripts/setup.js for guided setup.');
+  } else {
+    console.warn('\x1b[33m%s\x1b[0m', 'Error loading .env file:', result.error);
+  }
+}
+
+// Extra safety - allow .env to be loaded from the parent directory as well
+// This helps when running from subdirectories
+if (!process.env.DATABASE_URL) {
+  try {
+    const parentEnvPath = path.join(process.cwd(), '..', '.env');
+    if (fs.existsSync(parentEnvPath)) {
+      dotenv.config({ path: parentEnvPath });
+      console.log('Loaded .env file from parent directory');
+    }
+  } catch (error) {
+    // Silently continue if parent .env can't be loaded
+  }
 }
 
 import express, { type Request, Response, NextFunction } from "express";

@@ -197,12 +197,39 @@ You must have a valid OpenAI API key to use these features. If the API key is no
 
 ### Environment Variables
 
-If the application isn't reading your `.env` file:
+If you see an error like `DATABASE_URL must be set` or the application isn't reading your `.env` file:
 
-1. Make sure the `.env` file is in the root directory of the project
-2. Check that the file format is correct (no spaces around equal signs, etc.)
-3. Verify that you've installed all dependencies with `npm install`
-4. The application uses the `dotenv` package to load environment variables at startup
+1. **Check if the `.env` file exists**: Make sure the `.env` file is in the root directory of the project
+   ```bash
+   ls -la .env  # Should show the file
+   ```
+
+2. **Create the `.env` file if missing**: Copy from example and customize
+   ```bash
+   cp .env.example .env
+   nano .env  # or use your preferred editor
+   ```
+
+3. **Check file format**: Ensure there are no spaces around equal signs and values are properly formatted
+   ```
+   # Correct
+   DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+   
+   # Incorrect (spaces around equals sign)
+   DATABASE_URL = postgresql://username:password@localhost:5432/database_name
+   ```
+
+4. **Run the automated setup**: Use our setup script for a guided process
+   ```bash
+   node scripts/setup.js
+   ```
+
+5. **Manually check environment loading**: You can verify environment variables are loaded with:
+   ```bash
+   node -e "require('dotenv').config(); console.log(process.env.DATABASE_URL)"
+   ```
+
+6. **Node.js version**: Make sure you're using Node.js version 18 or higher, as required by the application
 
 ### Database Errors
 
