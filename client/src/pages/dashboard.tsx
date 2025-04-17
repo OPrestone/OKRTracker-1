@@ -15,6 +15,7 @@ import {
   newObjectiveHelp
 } from "@/components/help/help-content";
 import { CreateObjectiveForm } from "@/components/objectives/create-objective-form";
+import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 
 import { 
   Target, 
@@ -535,37 +536,45 @@ const Dashboard = () => {
         ))}
       </div>
       
-      {/* Team Performance */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Team Performance</h2>
-            <HelpTooltip 
-              id={teamsHelp.id}
-              title={teamsHelp.title}
-              description={teamsHelp.description}
-            />
+      {/* Team Performance & Onboarding Section */}
+      <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Team Performance - Takes 3 columns on large screens */}
+        <div className="lg:col-span-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Team Performance</h2>
+              <HelpTooltip 
+                id={teamsHelp.id}
+                title={teamsHelp.title}
+                description={teamsHelp.description}
+              />
+            </div>
+            <Button variant="link" onClick={() => navigate("/teams")}>
+              View All Teams
+            </Button>
           </div>
-          <Button variant="link" onClick={() => navigate("/teams")}>
-            View All Teams
-          </Button>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {teams.map((team) => (
+              <TeamCard
+                key={team.id}
+                id={team.id}
+                name={team.name}
+                memberCount={team.memberCount}
+                progress={team.progress}
+                icon={team.icon}
+                iconBgColor={team.iconBgColor}
+                iconColor={team.iconColor}
+                objectives={team.objectives}
+                onViewDetails={handleViewTeam}
+              />
+            ))}
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teams.map((team) => (
-            <TeamCard
-              key={team.id}
-              id={team.id}
-              name={team.name}
-              memberCount={team.memberCount}
-              progress={team.progress}
-              icon={team.icon}
-              iconBgColor={team.iconBgColor}
-              iconColor={team.iconColor}
-              objectives={team.objectives}
-              onViewDetails={handleViewTeam}
-            />
-          ))}
+        {/* Onboarding Progress - Takes 1 column on large screens */}
+        <div className="lg:col-span-1">
+          <OnboardingProgress />
         </div>
       </div>
       

@@ -54,7 +54,7 @@ export function OnboardingProgress() {
           <ChecklistItem
             icon={<CheckSquare className="h-5 w-5" />}
             title="Set up your first Objective"
-            completed={walkthroughCompleted || (currentStep && currentStep > OnboardingStep.OBJECTIVES_KEYS)}
+            completed={!!walkthroughCompleted || (!!currentStep && currentStep > OnboardingStep.OBJECTIVES_KEYS)}
             onClick={() => {}}
             url="/objectives/create"
           />
@@ -62,7 +62,7 @@ export function OnboardingProgress() {
           <ChecklistItem
             icon={<BarChart4 className="h-5 w-5" />}
             title="Explore your Dashboard"
-            completed={walkthroughCompleted || (currentStep && currentStep > OnboardingStep.DASHBOARD_OVERVIEW)}
+            completed={!!walkthroughCompleted || (!!currentStep && currentStep > OnboardingStep.DASHBOARD_OVERVIEW)}
             onClick={() => {}}
             url="/dashboard"
           />
@@ -70,7 +70,7 @@ export function OnboardingProgress() {
           <ChecklistItem
             icon={<FileText className="h-5 w-5" />}
             title="Complete your first Check-in"
-            completed={walkthroughCompleted || (currentStep && currentStep > OnboardingStep.CHECKINS)}
+            completed={!!walkthroughCompleted || (!!currentStep && currentStep > OnboardingStep.CHECKINS)}
             onClick={() => {}}
             url="/checkins"
           />
@@ -78,7 +78,7 @@ export function OnboardingProgress() {
           <ChecklistItem
             icon={<Award className="h-5 w-5" />}
             title="Send a High-Five"
-            completed={walkthroughCompleted || (currentStep && currentStep > OnboardingStep.HIGHFIVES)}
+            completed={!!walkthroughCompleted || (!!currentStep && currentStep > OnboardingStep.HIGHFIVES)}
             onClick={() => {}}
             url="/highfives/create"
           />
