@@ -497,7 +497,10 @@ const TimelineEditor = () => {
                       </div>
                       
                       <div 
-                        className="col-span-full absolute h-6 mt-3 rounded-md border-2 cursor-move"
+                        className={`col-span-full absolute h-6 mt-3 rounded-md border-2 cursor-move
+                          ${getStatusColor(objective.status)}
+                          flex items-center px-2 text-xs font-medium truncate
+                        `}
                         style={{ 
                           left: `calc(200px + ${left}px)`, 
                           width: `${width}px`,
@@ -507,10 +510,6 @@ const TimelineEditor = () => {
                         role="button"
                         aria-label={`Drag to move ${objective.title}`}
                         tabIndex={0}
-                        className={`
-                          ${getStatusColor(objective.status)}
-                          flex items-center px-2 text-xs font-medium truncate
-                        `}
                       >
                         <div className="truncate text-sm">
                           {objective.title}

@@ -24,6 +24,9 @@ interface HeaderProps {
 }
 
 const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) => {
+  // Get the onboarding context at the component level
+  const onboarding = useOnboarding();
+  
   return (
     <header className="bg-background border-b border-border shadow-sm sticky top-0 z-10">
       <div className="flex items-center justify-between px-4 py-4">
@@ -54,12 +57,7 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
             variant="outline" 
             size="sm" 
             className="hidden md:flex items-center gap-1"
-            onClick={() => {
-              // We've already imported useOnboarding at the top level
-              // but let's call it directly from the imported hook
-              const { toggleGetStartedMenu } = useOnboarding();
-              toggleGetStartedMenu();
-            }}
+            onClick={() => onboarding.toggleGetStartedMenu()}
           >
             <Rocket className="h-4 w-4 text-emerald-500" />
             <span>Get Started</span>
