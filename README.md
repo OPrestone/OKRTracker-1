@@ -1,256 +1,251 @@
 # OKR Management Platform
 
-A comprehensive OKR (Objectives and Key Results) management platform that leverages AI-powered insights to help teams strategically set, track, and optimize their performance.
+<div align="center">
+  <h3>A comprehensive OKR platform with AI-powered insights</h3>
+  <p>Track, manage, and optimize team performance with objectives and key results</p>
+</div>
 
-## Features
+---
 
-- **Strategic OKR Management**: Create, track, and manage objectives and key results at company, department, team, and individual levels
-- **Real-time Updates**: WebSocket-based communication for instant updates
-- **AI-enhanced Insights**: Get AI-powered analysis and recommendations
-- **Team Collaboration**: In-app chat with advanced communication features
-- **Progress Tracking**: Visual dashboards and reporting
+## 📋 Table of Contents
 
-## Tech Stack
+- [Overview](#-overview)
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+  - [Quick Setup (Recommended)](#quick-setup-recommended)
+  - [Step-by-Step Setup](#step-by-step-setup)
+- [Common Setup Issues](#-common-setup-issues)
+- [Database Schema](#-database-schema)
+- [Project Structure](#-project-structure)
+- [Available Commands](#-available-commands)
+- [Deployment](#-deployment)
+- [License](#-license)
+
+## 🔍 Overview
+
+This OKR (Objectives and Key Results) Management Platform helps organizations track and align strategic goals across company, department, team, and individual levels. The platform leverages AI to provide insights and recommendations for better goal setting and tracking.
+
+## ✨ Features
+
+- **Strategic OKR Management**: Create, track, and manage objectives at all organizational levels
+- **Real-time Updates**: Instant updates via WebSockets
+- **AI-enhanced Insights**: GPT-4o powered analysis and recommendations
+- **Team Collaboration**: In-app chat with messaging and reactions
+- **Progress Tracking**: Visual dashboards and comprehensive reporting
+
+## 🛠️ Tech Stack
 
 - **Frontend**: React.js with TypeScript
 - **Backend**: Node.js/Express
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL (via Neon Database)
 - **Styling**: Tailwind CSS with Shadcn/UI components
-- **Real-time Communication**: WebSockets
-- **AI Integration**: OpenAI API (GPT-4o)
-- **Form Handling**: React Hook Form with Zod validation
-- **Data Fetching**: TanStack Query
+- **Real-time**: WebSockets
+- **AI**: OpenAI API (GPT-4o)
+- **Data Layer**: Drizzle ORM, TanStack Query
 
-## Prerequisites
+## 📋 Prerequisites
 
-Before you begin, ensure you have the following installed on your machine:
+Before starting, make sure you have:
 
-- **Node.js** (v20 or later)
-- **npm** (v9 or later)
-- **PostgreSQL** (v16 or later)
-- **OpenAI API Key** (for AI-powered features)
+- **Node.js** (v18 or later)
+- **npm** (v8 or later)
+- **PostgreSQL** database (local or cloud-hosted)
+- **OpenAI API Key** (for AI features)
 
-## Local Development Setup
+## 🚀 Getting Started
 
-### One-Step Setup (Recommended)
+### Quick Setup (Recommended)
 
-We've created a comprehensive setup script that handles the entire local development setup process:
+Our automated setup script handles everything for you:
 
 ```bash
 node scripts/setup.js
 ```
 
-This script will:
-1. Check if all necessary prerequisites are installed
-2. Install project dependencies
-3. Guide you through setting up your `.env` file
-4. Create and configure the PostgreSQL database
-5. Run database migrations
+This interactive script will:
+- ✅ Check prerequisites
+- ✅ Install dependencies 
+- ✅ Configure environment variables
+- ✅ Set up database connection
+- ✅ Run database migrations
 
-### Manual Setup
+### Step-by-Step Setup
 
-If you prefer to set up the project step-by-step, follow these instructions:
+If you prefer manual setup:
 
-#### 1. Clone the Repository
+#### 1️⃣ Clone and Install Dependencies
 
 ```bash
 git clone <repository-url>
 cd okr-management-platform
-```
-
-#### 2. Install Dependencies
-
-```bash
 npm install
 ```
 
-#### 3. Environment and Database Setup
+#### 2️⃣ Configure Environment
 
-You have two options for environment setup:
-
-##### Option A: Database Initialization Script
+Create and configure your `.env` file:
 
 ```bash
-node scripts/init-db.js
-```
-
-This script will:
-1. Guide you through setting up a PostgreSQL database
-2. Create a `.env` file with the proper configuration
-3. Generate a secure SESSION_SECRET
-
-##### Option B: Manual Configuration
-
-1. Create a PostgreSQL database for the project
-2. Set up your environment variables by copying the `.env.example` file to `.env`:
-
-```bash
+# Copy example environment file
 cp .env.example .env
+
+# Edit with your specific details
+nano .env  # or use your preferred editor
 ```
 
-3. Edit the `.env` file with your specific configuration:
+Your `.env` file should contain:
 
 ```
 # Database Configuration
 DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>
 
-# API Keys for AI Features
-OPENAI_API_KEY=your_openai_api_key_here
+# API Keys for AI Features  
+OPENAI_API_KEY=your_openai_api_key
 
 # Environment
 NODE_ENV=development
 
-# Session secret (generate a random string)
-SESSION_SECRET=your_secure_random_string
+# Session Secret (security)
+SESSION_SECRET=generate_a_random_string_here
 ```
 
-4. Generate a secure random string for the SESSION_SECRET (you can use any random string generator or run this command):
+For the SESSION_SECRET, generate a secure random string:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-#### 4. Database Migration
+#### 3️⃣ Initialize Database
 
-After setting up the environment, run the database migrations to set up your schema:
+For interactive database setup:
+
+```bash
+node scripts/init-db.js
+```
+
+#### 4️⃣ Run Migrations
+
+Apply the database schema:
 
 ```bash
 npm run db:push
 ```
 
-This will create all necessary tables defined in `shared/schema.ts`.
+This creates all tables defined in `shared/schema.ts`.
 
-### 5. Start the Development Server
+#### 5️⃣ Start Development Server
 
 ```bash
 npm run dev
 ```
 
-This will start both the backend server and the React frontend development server. The application will be available at http://localhost:5000.
+The application will be available at http://localhost:5000
 
-## Database Schema
+## ⚠️ Common Setup Issues
 
-The application uses a comprehensive database schema to manage:
+### Environment Variables Not Loading
 
-- Users and authentication
-- Teams and organizational hierarchy
-- OKRs (Objectives and Key Results)
-- Timeframes and cadences
-- Initiatives and check-ins
-- Chat and communication
+If you see error: `DATABASE_URL must be set` or similar:
 
-The schema is defined in `shared/schema.ts` using Drizzle ORM.
-
-## API and Services
-
-### OpenAI Integration
-
-The application uses OpenAI's GPT-4o model to provide AI-powered recommendations for:
-
-- Generating objective recommendations based on team and existing objectives
-- Creating key result recommendations for specific objectives
-- Suggesting improvements to existing OKRs
-
-You must have a valid OpenAI API key to use these features. If the API key is not available, the system will fall back to predefined recommendations.
-
-## Project Structure
-
-```
-├── client/                  # Frontend code
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── contexts/        # React contexts
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── lib/             # Utility functions
-│   │   ├── pages/           # Page components
-│   │   └── App.tsx          # Main app component
-├── server/                  # Backend code
-│   ├── auth.ts              # Authentication setup
-│   ├── db.ts                # Database connection
-│   ├── index.ts             # Server entry point
-│   ├── routes.ts            # API routes
-│   ├── storage.ts           # Data storage interface
-│   ├── services/            # Service implementations
-│   ├── sample-data/         # Sample data for testing
-│   └── vite.ts              # Vite configuration for server
-├── shared/                  # Shared code between frontend and backend
-│   └── schema.ts            # Database schema and types
-├── scripts/                 # Utility scripts
-│   ├── init-db.js           # Database initialization script
-│   └── setup.js             # One-step setup assistant
-├── migrations/              # Database migrations
-├── attached_assets/         # Project assets and documentation
-├── drizzle.config.ts        # Drizzle ORM configuration
-├── .env.example             # Example environment variables
-└── package.json             # Project dependencies and scripts
-```
-
-## Available Scripts
-
-- `npm run dev`: Start the development server
-- `npm run build`: Build the application for production
-- `npm run start`: Start the production server
-- `npm run db:push`: Apply schema changes to the database
-- `npm run check`: Run TypeScript type checking
-
-## Troubleshooting
-
-### Environment Variables
-
-If you see an error like `DATABASE_URL must be set` or the application isn't reading your `.env` file:
-
-1. **Check if the `.env` file exists**: Make sure the `.env` file is in the root directory of the project
+1. **Verify .env file location**: It must be in the project root directory
    ```bash
-   ls -la .env  # Should show the file
+   ls -la | grep .env
    ```
 
-2. **Create the `.env` file if missing**: Copy from example and customize
-   ```bash
-   cp .env.example .env
-   nano .env  # or use your preferred editor
-   ```
-
-3. **Check file format**: Ensure there are no spaces around equal signs and values are properly formatted
+2. **Check .env format**: No spaces around equal signs
    ```
    # Correct
-   DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+   DATABASE_URL=postgresql://username:password@localhost:5432/database
    
-   # Incorrect (spaces around equals sign)
-   DATABASE_URL = postgresql://username:password@localhost:5432/database_name
+   # Incorrect
+   DATABASE_URL = postgresql://username:password@localhost:5432/database
    ```
 
-4. **Run the automated setup**: Use our setup script for a guided process
+3. **Test environment loading**:
    ```bash
-   node scripts/setup.js
+   node -e "require('dotenv').config(); console.log('DB URL:', !!process.env.DATABASE_URL)"
    ```
 
-5. **Manually check environment loading**: You can verify environment variables are loaded with:
-   ```bash
-   node -e "require('dotenv').config(); console.log(process.env.DATABASE_URL)"
-   ```
+### Database Connection Issues
 
-6. **Node.js version**: Make sure you're using Node.js version 18 or higher, as required by the application
+If you see errors like:
 
-### Database Errors
+- **Certificate expired**: Add SSL parameters to your connection string
+  ```
+  DATABASE_URL=postgresql://user:pass@host:port/db?sslmode=require&sslaccept=accept_invalid_certs
+  ```
 
-If you encounter errors like `column "X" of relation "Y" does not exist`:
+- **Column does not exist**: Run migrations to update schema
+  ```bash
+  npm run db:push
+  ```
 
-1. Check that your database schema matches what's defined in `shared/schema.ts`
-2. Run `npm run db:push` to update your database schema
-3. If you encounter data loss warnings, carefully consider the implications before proceeding
+- **Connection refused**: Check database credentials and firewall settings
 
-### API Key Issues
+### OpenAI API Issues
 
-If AI features are not working:
+If AI features aren't working:
 
-1. Verify that your OpenAI API key is correctly set in the `.env` file
-2. Check that the API key has sufficient permissions and credits
-3. The system will use fallback recommendations if the API is unavailable
+1. **Verify API key**: Make sure it's correctly formatted in .env file
+2. **Check API limits**: Ensure your account has available credits
+3. **Network connectivity**: Check if your network allows API calls
 
-## Deployment
+## 📊 Database Schema
 
-The application is configured for deployment on Replit and can be easily adapted for other hosting platforms.
+The application uses Drizzle ORM with the following main entities:
 
-## License
+- **Users**: Authentication and user profiles
+- **Teams**: Organizational structure
+- **Objectives**: Main strategic goals
+- **Key Results**: Measurable outcomes for objectives
+- **Initiatives**: Actionable tasks for key results
+- **Check-ins**: Progress updates and status reports
+- **Chat**: Communication between team members
 
-MIT
+Schema details are in `shared/schema.ts`.
+
+## 📁 Project Structure
+
+```
+├── client/                  # Frontend React application
+│   └── src/                 # Source files for frontend
+│       ├── components/      # UI components
+│       ├── hooks/           # React hooks
+│       ├── pages/           # Page components
+│       └── ...
+├── server/                  # Backend Node.js/Express
+│   ├── auth.ts              # Authentication
+│   ├── db.ts                # Database connection
+│   ├── routes.ts            # API endpoints
+│   ├── storage.ts           # Data access layer
+│   └── ...
+├── shared/                  # Shared code
+│   └── schema.ts            # Database schema
+├── scripts/                 # Utility scripts
+│   ├── setup.js             # Setup assistant
+│   └── init-db.js           # Database initialization
+├── .env.example             # Example environment variables
+└── ...
+```
+
+## 📝 Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Run production server |
+| `npm run db:push` | Update database schema |
+| `npm run check` | Run TypeScript checks |
+
+## 🌐 Deployment
+
+The application is configured for:
+
+- **Replit**: Ready to deploy from Replit's interface
+- **Other platforms**: Can be adapted for Heroku, Vercel, etc.
+
+## 📄 License
+
+MIT License
