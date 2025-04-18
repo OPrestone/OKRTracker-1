@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
@@ -6,10 +9,11 @@ import fs from 'fs';
 import path from 'path';
 
 neonConfig.webSocketConstructor = ws;
+console.log('Loaded DATABASE_URL:', process.env.DATABASE_URL); 
 
 if (!process.env.DATABASE_URL) {
   // Check if .env file exists
-  const envPath = path.join(process.cwd(), '.env');
+  const envPath = path.join(process.cwd(), '/.env');
   const envExamplePath = path.join(process.cwd(), '.env.example');
   const setupScriptPath = path.join(process.cwd(), 'scripts', 'setup.js');
   
