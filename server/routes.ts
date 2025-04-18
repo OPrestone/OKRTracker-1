@@ -1098,7 +1098,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time chat
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // Ensure WebSocket server is properly configured to work with custom ports
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    // Add additional WebSocket options for better connection handling
+    perMessageDeflate: false, // Disable compression for better compatibility
+    clientTracking: true // Track connected clients
+  });
   
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');
