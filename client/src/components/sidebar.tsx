@@ -402,6 +402,24 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         )}
         
         <div className="px-4 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Development
+        </div>
+
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            location === "/confetti-demo" 
+              ? "bg-primary/10 text-primary border-l-2 border-primary" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <Link href="/confetti-demo" className="flex items-center w-full">
+            <Target className="mr-3 h-5 w-5 text-yellow-500" />
+            Milestone Celebrations
+          </Link>
+        </div>
+
+        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Administration
         </div>
         
