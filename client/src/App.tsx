@@ -47,6 +47,10 @@ import { GetStartedMenu } from "@/components/onboarding/get-started-menu";
 import { IntroVideoDialog } from "@/components/onboarding/intro-video-dialog";
 import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
 import { useEffect } from "react";
+// Import confetti and milestone components
+import { MilestoneProvider } from "@/contexts/milestone-context";
+import { MilestoneToast } from "@/components/milestone-toast";
+import { ConfettiDemo } from "@/components/confetti-demo";
 
 // Simple Public Route Component to replace ProtectedRoute temporarily
 interface PublicRouteProps {
@@ -103,6 +107,9 @@ function AppRoutes() {
       <PublicRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
       <PublicRoute path="/timeline-editor" component={TimelineEditor} />
       <PublicRoute path="/custom-dashboard" component={CustomDashboard} />
+      
+      {/* Confetti Demo */}
+      <PublicRoute path="/confetti-demo" component={ConfettiDemo} />
       
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />
