@@ -103,9 +103,14 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 5000 for compatibility with Replit workflows
-  const port = 5000;
-  server.listen(5000, 'localhost', () => {
-    console.log('Server is running');
+  // Use environment variable PORT if set, otherwise default to 5000
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+  
+  // For local development, use 0.0.0.0 to make the server accessible from other devices
+  // In production or Replit, this ensures the app is available on the specified port
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+  
+  server.listen(port, host, () => {
+    console.log(`Server is running on http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
   });
 })();

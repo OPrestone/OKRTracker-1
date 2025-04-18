@@ -140,7 +140,12 @@ This creates all tables defined in `shared/schema.ts`.
 npm run dev
 ```
 
-The application will be available at http://localhost:5000
+The application will be available at http://localhost:5000 by default. If port 5000 is already in use on your machine, you can specify a different port:
+
+```bash
+# Using a different port
+PORT=3000 npm run dev
+```
 
 ## ⚠️ Common Setup Issues
 
@@ -182,6 +187,29 @@ If you see errors like:
   ```
 
 - **Connection refused**: Check database credentials and firewall settings
+
+### Port Conflicts
+
+If you see an error like `EADDRINUSE: address already in use ::1:5000`:
+
+1. **Use a different port**: Specify an alternate port 
+   ```bash
+   PORT=3000 npm run dev
+   ```
+
+2. **Find and kill the process using port 5000**:
+   
+   On macOS/Linux:
+   ```bash
+   lsof -i :5000
+   kill -9 <PID>
+   ```
+   
+   On Windows:
+   ```bash
+   netstat -ano | findstr :5000
+   taskkill /PID <PID> /F
+   ```
 
 ### OpenAI API Issues
 
