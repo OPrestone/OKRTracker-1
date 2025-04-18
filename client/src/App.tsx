@@ -136,22 +136,29 @@ function OnboardingController() {
   );
 }
 
+// Import ErrorBoundary
+import ErrorBoundary from "@/components/error-boundary";
+
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
-        <HelpProvider>
-          <OnboardingProvider>
-            <MilestoneProvider>
-              <FeatureTour />
-              <OnboardingController />
-              <MilestoneToast />
-              <AppRoutes />
-            </MilestoneProvider>
-          </OnboardingProvider>
-        </HelpProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
+          <HelpProvider>
+            <OnboardingProvider>
+              <ErrorBoundary>
+                <MilestoneProvider>
+                  <FeatureTour />
+                  <OnboardingController />
+                  <MilestoneToast />
+                  <AppRoutes />
+                </MilestoneProvider>
+              </ErrorBoundary>
+            </OnboardingProvider>
+          </HelpProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

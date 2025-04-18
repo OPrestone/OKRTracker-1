@@ -5,7 +5,15 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Slider } from '@/components/ui/slider';
 import { Confetti } from '@/components/ui/confetti';
 import { useMilestone, MilestoneType } from '@/contexts/milestone-context';
-import { LucideTarget, LucideCheck, LucideBarChart3, LucideUsers, LucideAward } from 'lucide-react';
+import { 
+  CircleCheck, 
+  CircleDot, 
+  BarChart, 
+  Users, 
+  Star 
+} from 'lucide-react';
+
+import ErrorBoundary from "@/components/error-boundary";
 
 export function ConfettiDemo() {
   const [confettiType, setConfettiType] = useState<'achievement' | 'milestone' | 'completion' | 'celebration'>('celebration');
@@ -25,7 +33,7 @@ export function ConfettiDemo() {
       case 'objective_completion':
         milestoneData = {
           type,
-          title: '🎯 Objective Complete!',
+          title: 'Objective Complete',
           description: 'You have completed an important objective',
           entityId: 1,
         };
@@ -34,7 +42,7 @@ export function ConfettiDemo() {
       case 'key_result_completion':
         milestoneData = {
           type,
-          title: '🚀 Key Result Achieved!',
+          title: 'Key Result Achieved',
           description: 'You have achieved a key result',
           entityId: 1,
         };
@@ -43,7 +51,7 @@ export function ConfettiDemo() {
       case 'objective_progress':
         milestoneData = {
           type,
-          title: `📈 Milestone Reached: ${progress}%`,
+          title: `Progress: ${progress}%`,
           description: `You've reached ${progress}% progress on your objective`,
           entityId: 1,
           threshold: progress,
@@ -53,7 +61,7 @@ export function ConfettiDemo() {
       case 'team_achievement':
         milestoneData = {
           type,
-          title: '🏆 Team Achievement!',
+          title: 'Team Achievement',
           description: 'Your team has reached an important milestone',
           entityId: 1,
         };
@@ -62,7 +70,7 @@ export function ConfettiDemo() {
       case 'personal_achievement':
         milestoneData = {
           type,
-          title: '⭐ Personal Achievement!',
+          title: 'Personal Achievement',
           description: 'You have reached a personal achievement',
           entityId: 1,
         };
@@ -73,31 +81,32 @@ export function ConfettiDemo() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">Milestone Celebration Demo</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Manual Confetti Testing */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Confetti Animation</CardTitle>
-            <CardDescription>
-              Manually test different confetti animation styles
+    <ErrorBoundary>
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-medium mb-8 text-center">Milestone Celebration Demo</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Manual Confetti Testing */}
+        <Card className="border-muted/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium">Test Confetti Animation</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Select a confetti style and trigger a celebration
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-2">
             <div>
               <label className="text-sm font-medium mb-2 block">Confetti Type</label>
               <Select
                 value={confettiType}
                 onValueChange={(value) => setConfettiType(value as any)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select confetti type" />
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Confetti Types</SelectLabel>
+                    <SelectLabel>Animation Types</SelectLabel>
                     <SelectItem value="achievement">Achievement</SelectItem>
                     <SelectItem value="milestone">Milestone</SelectItem>
                     <SelectItem value="completion">Completion</SelectItem>
@@ -112,6 +121,7 @@ export function ConfettiDemo() {
               onClick={handleTriggerConfetti}
               className="w-full"
               variant="default"
+              size="sm"
             >
               Trigger Confetti
             </Button>
@@ -119,16 +129,16 @@ export function ConfettiDemo() {
         </Card>
 
         {/* Milestone Testing */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Milestone Celebration</CardTitle>
-            <CardDescription>
-              Test the full milestone celebration with toast notification
+        <Card className="border-muted/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium">Test Milestone Notifications</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Trigger milestone celebrations with toast notifications
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-2">
             <div>
-              <label className="text-sm font-medium mb-2 block">Progress Value (for Objective Progress)</label>
+              <label className="text-sm font-medium mb-2 block">Progress Value</label>
               <div className="flex items-center gap-4">
                 <Slider
                   value={[progress]}
@@ -137,7 +147,7 @@ export function ConfettiDemo() {
                   step={5}
                   className="flex-1"
                 />
-                <span className="w-12 text-right">{progress}%</span>
+                <span className="w-12 text-right text-sm">{progress}%</span>
               </div>
             </div>
           </CardContent>
@@ -145,44 +155,49 @@ export function ConfettiDemo() {
             <div className="grid grid-cols-2 gap-2 w-full">
               <Button
                 onClick={() => handleCreateMilestone('objective_completion')}
-                className="w-full"
+                className="w-full h-8 text-xs"
                 variant="outline"
+                size="sm"
               >
-                <LucideTarget className="mr-2 h-4 w-4" />
+                <CircleDot className="mr-2 h-3.5 w-3.5 stroke-[1.5]" />
                 Objective
               </Button>
               <Button
                 onClick={() => handleCreateMilestone('key_result_completion')}
-                className="w-full"
+                className="w-full h-8 text-xs"
                 variant="outline"
+                size="sm"
               >
-                <LucideCheck className="mr-2 h-4 w-4" />
+                <CircleCheck className="mr-2 h-3.5 w-3.5 stroke-[1.5]" />
                 Key Result
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-2 w-full">
               <Button
                 onClick={() => handleCreateMilestone('objective_progress')}
-                className="w-full"
+                className="w-full h-8 text-xs"
                 variant="outline"
+                size="sm"
               >
-                <LucideBarChart3 className="mr-2 h-4 w-4" />
+                <BarChart className="mr-2 h-3.5 w-3.5 stroke-[1.5]" />
                 Progress
               </Button>
               <Button
                 onClick={() => handleCreateMilestone('team_achievement')}
-                className="w-full"
+                className="w-full h-8 text-xs"
                 variant="outline"
+                size="sm"
               >
-                <LucideUsers className="mr-2 h-4 w-4" />
+                <Users className="mr-2 h-3.5 w-3.5 stroke-[1.5]" />
                 Team
               </Button>
               <Button
                 onClick={() => handleCreateMilestone('personal_achievement')}
-                className="w-full"
+                className="w-full h-8 text-xs"
                 variant="outline"
+                size="sm"
               >
-                <LucideAward className="mr-2 h-4 w-4" />
+                <Star className="mr-2 h-3.5 w-3.5 stroke-[1.5]" />
                 Personal
               </Button>
             </div>
@@ -190,8 +205,23 @@ export function ConfettiDemo() {
         </Card>
       </div>
       
+      {/* Explanation */}
+      <div className="mt-8 p-5 rounded-lg border border-muted bg-muted/20">
+        <h2 className="text-lg font-medium mb-3">How to Use Celebrations</h2>
+        <p className="text-sm text-muted-foreground mb-2">
+          The confetti celebration system provides visual feedback when users complete important milestones:
+        </p>
+        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+          <li>Different celebration styles based on achievement type</li>
+          <li>Customizable animation patterns and colors</li>
+          <li>Toast notifications with acknowledgment option</li>
+          <li>Auto-dismissal to prevent notification overload</li>
+        </ul>
+      </div>
+      
       {/* Confetti component with controlled trigger */}
       <Confetti trigger={showConfetti} type={confettiType} />
     </div>
+    </ErrorBoundary>
   );
 }

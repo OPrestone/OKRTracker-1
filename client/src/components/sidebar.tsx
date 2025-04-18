@@ -72,8 +72,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     <div className="flex flex-col h-full">
       <div className="p-5 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
         <h1 className="text-xl font-semibold flex items-center">
-          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
+          <img src="/src/assets/logo.png" alt="Pinnacle OKR" className="h-8 w-8 mr-2" />
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pinnacle OKR</span>
         </h1>
       </div>
       

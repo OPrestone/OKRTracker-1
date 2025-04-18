@@ -3,28 +3,34 @@ import { useMilestone } from '@/contexts/milestone-context';
 import { useToast } from '@/hooks/use-toast';
 import { Confetti } from '@/components/ui/confetti';
 import { ToastAction } from '@/components/ui/toast';
-import { LucideAward, LucideCheck, LucideTarget, LucideBarChart3, LucideUsers } from 'lucide-react';
+import { 
+  CircleCheck, 
+  CircleDot, 
+  BarChart, 
+  Users, 
+  Star 
+} from 'lucide-react';
 
 interface MilestoneIconProps {
   type: 'objective_completion' | 'key_result_completion' | 'objective_progress' | 'team_achievement' | 'personal_achievement';
   className?: string;
 }
 
-// Component to render the appropriate icon based on milestone type
-const MilestoneIcon = ({ type, className = "h-6 w-6" }: MilestoneIconProps) => {
+// Component to render the appropriate icon based on milestone type - with minimal design
+const MilestoneIcon = ({ type, className = "h-5 w-5" }: MilestoneIconProps) => {
   switch (type) {
     case 'objective_completion':
-      return <LucideTarget className={`${className} text-primary`} />;
+      return <CircleDot className={`${className} text-primary stroke-[1.5]`} />;
     case 'key_result_completion':
-      return <LucideCheck className={`${className} text-green-500`} />;
+      return <CircleCheck className={`${className} text-green-500 stroke-[1.5]`} />;
     case 'objective_progress':
-      return <LucideBarChart3 className={`${className} text-blue-500`} />;
+      return <BarChart className={`${className} text-blue-500 stroke-[1.5]`} />;
     case 'team_achievement':
-      return <LucideUsers className={`${className} text-yellow-500`} />;
+      return <Users className={`${className} text-yellow-500 stroke-[1.5]`} />;
     case 'personal_achievement':
-      return <LucideAward className={`${className} text-purple-500`} />;
+      return <Star className={`${className} text-purple-500 stroke-[1.5]`} />;
     default:
-      return <LucideTarget className={`${className} text-primary`} />;
+      return <CircleDot className={`${className} text-primary stroke-[1.5]`} />;
   }
 };
 
