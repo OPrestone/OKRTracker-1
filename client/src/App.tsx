@@ -142,9 +142,12 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
         <HelpProvider>
           <OnboardingProvider>
-            <FeatureTour />
-            <OnboardingController />
-            <AppRoutes />
+            <MilestoneProvider>
+              <FeatureTour />
+              <OnboardingController />
+              <MilestoneToast />
+              <AppRoutes />
+            </MilestoneProvider>
           </OnboardingProvider>
         </HelpProvider>
       </ThemeProvider>

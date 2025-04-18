@@ -1,5 +1,37 @@
 import { useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
+import canvasConfetti from 'canvas-confetti';
+
+// Type definitions for canvas-confetti
+type ConfettiInstance = {
+  (options?: ConfettiOptions): void;
+  reset: () => void;
+};
+
+interface ConfettiOptions {
+  particleCount?: number;
+  angle?: number;
+  spread?: number;
+  startVelocity?: number;
+  decay?: number;
+  gravity?: number;
+  drift?: number;
+  ticks?: number;
+  origin?: {
+    x: number;
+    y: number;
+  };
+  colors?: string[];
+  shapes?: ('square' | 'circle')[];
+  scalar?: number;
+  zIndex?: number;
+  disableForReducedMotion?: boolean;
+}
+
+// Fix for TypeScript
+const confetti = canvasConfetti as unknown as {
+  (options?: ConfettiOptions): void;
+  create: (canvas: HTMLCanvasElement, options?: { resize?: boolean, useWorker?: boolean }) => ConfettiInstance;
+};
 
 type ConfettiType = 'achievement' | 'milestone' | 'completion' | 'celebration';
 
@@ -51,7 +83,7 @@ export function Confetti({
   trigger = false
 }: ConfettiProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const confettiInstanceRef = useRef<confetti.CreateTypes | null>(null);
+  const confettiInstanceRef = useRef<ConfettiInstance | null>(null);
 
   useEffect(() => {
     // Create a confetti canvas instance if it doesn't exist
@@ -141,7 +173,7 @@ export function Confetti({
 // Hook for imperatively triggering confetti without needing to manage state
 export function useConfetti() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const confettiRef = useRef<confetti.CreateTypes | null>(null);
+  const confettiRef = useRef<ConfettiInstance | null>(null);
   
   useEffect(() => {
     if (!canvasRef.current) {

@@ -5,13 +5,27 @@ import { Confetti } from '@/components/ui/confetti';
 import { ToastAction } from '@/components/ui/toast';
 import { LucideAward, LucideCheck, LucideTarget, LucideBarChart3, LucideUsers } from 'lucide-react';
 
-// Icon mapping based on milestone type
-const milestoneIcons = {
-  objective_completion: <LucideTarget className="h-6 w-6 text-primary" />,
-  key_result_completion: <LucideCheck className="h-6 w-6 text-green-500" />,
-  objective_progress: <LucideBarChart3 className="h-6 w-6 text-blue-500" />,
-  team_achievement: <LucideUsers className="h-6 w-6 text-yellow-500" />,
-  personal_achievement: <LucideAward className="h-6 w-6 text-purple-500" />,
+interface MilestoneIconProps {
+  type: 'objective_completion' | 'key_result_completion' | 'objective_progress' | 'team_achievement' | 'personal_achievement';
+  className?: string;
+}
+
+// Component to render the appropriate icon based on milestone type
+const MilestoneIcon = ({ type, className = "h-6 w-6" }: MilestoneIconProps) => {
+  switch (type) {
+    case 'objective_completion':
+      return <LucideTarget className={`${className} text-primary`} />;
+    case 'key_result_completion':
+      return <LucideCheck className={`${className} text-green-500`} />;
+    case 'objective_progress':
+      return <LucideBarChart3 className={`${className} text-blue-500`} />;
+    case 'team_achievement':
+      return <LucideUsers className={`${className} text-yellow-500`} />;
+    case 'personal_achievement':
+      return <LucideAward className={`${className} text-purple-500`} />;
+    default:
+      return <LucideTarget className={`${className} text-primary`} />;
+  }
 };
 
 export function MilestoneToast() {
@@ -20,12 +34,16 @@ export function MilestoneToast() {
 
   useEffect(() => {
     if (recentMilestone && !recentMilestone.acknowledged) {
-      // Show a toast notification for the milestone
+      // Show a toast notification for the milestone with icon in the description
       toast({
         title: recentMilestone.title,
-        description: recentMilestone.description,
+        description: (
+          <div className="flex items-center gap-3">
+            <MilestoneIcon type={recentMilestone.type} />
+            <span>{recentMilestone.description}</span>
+          </div>
+        ),
         duration: 8000, // Longer duration to allow user to read and celebrate
-        icon: milestoneIcons[recentMilestone.type],
         action: (
           <ToastAction 
             altText="Acknowledge" 
