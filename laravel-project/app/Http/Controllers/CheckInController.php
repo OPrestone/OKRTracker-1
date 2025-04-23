@@ -2,54 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CheckIn;
 use App\Models\KeyResult;
-use App\Models\Objective;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
-class KeyResultController extends Controller
+class CheckInController extends Controller
 {
     /**
-     * Display a listing of key results.
+     * Display a listing of check-ins.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
-        $query = KeyResult::with(['objective', 'objective.owner', 'objective.team', 'initiatives']);
+        $query = CheckIn::with(['user', 'keyResult', 'keyResult.objective']);
         
-        // Filter by objective if provided
-        if ($request->has('objective_id') && $request->objective_id) {
-            $query->where('objective_id', $request->objective_id);
+        // Filter by key result if provided
+        if ($request->has('key_result_id') && $request->key_result_id) {
+            $query->where('key_result_id', $request->key_result_id);
         }
         
-        // Filter by status if provided
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
+        // Filter by user if provided
+        if ($request->has('user_id') && $request->user_id) {
+            $query->where('user_id', $request->user_id);
         }
         
-        // Filter by search term if provided
-        if ($request->has('search') && $request->search) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
+        // Filter by date range if provided
+        if ($request->has('start_date') && $request->start_date) {
+            $query->where('created_at', '>=', $request->start_date);
         }
         
-        $keyResults = $query->orderBy('created_at', 'desc')->paginate(20);
+        if ($request->has('end_date') && $request->end_date) {
+            $query->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+        
+        $checkIns = $query->orderBy('created_at', 'desc')->paginate(20);
         
         return response()->json([
             'success' => true,
-            'data' => $keyResults
+            'data' => $checkIns
         ]);
     }
 
     /**
-     * Store a newly created key result.
+     * Store a newly created check-in.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -57,178 +57,8 @@ class KeyResultController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'objective_id' => 'required|exists:objectives,id',
-            'target_value' => 'required|numeric',
+            'key_result_id' => 'required|exists:key_results,id',
             'current_value' => 'required|numeric',
-            'format' => 'required|in:number,percentage,currency,boolean',
-            'status' => 'required|in:not_started,in_progress,at_risk,completed,canceled',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        try {
-            $keyResult = KeyResult::create($request->all());
-            
-            // Calculate and update progress
-            $this->calculateAndUpdateProgress($keyResult);
-            
-            // Update objective progress
-            $this->updateObjectiveProgress($keyResult->objective_id);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Key result created successfully',
-                'data' => $keyResult->load(['objective'])
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Error creating key result', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create key result',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Display the specified key result.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        try {
-            $keyResult = KeyResult::with([
-                'objective',
-                'objective.owner',
-                'objective.team',
-                'initiatives',
-                'checkIns' => function($query) {
-                    $query->orderBy('created_at', 'desc');
-                }
-            ])->findOrFail($id);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $keyResult
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Key result not found',
-                'error' => $e->getMessage()
-            ], 404);
-        }
-    }
-
-    /**
-     * Update the specified key result.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'title' => 'string|max:255',
-            'description' => 'nullable|string',
-            'target_value' => 'numeric',
-            'current_value' => 'numeric',
-            'format' => 'in:number,percentage,currency,boolean',
-            'status' => 'in:not_started,in_progress,at_risk,completed,canceled',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        try {
-            $keyResult = KeyResult::findOrFail($id);
-            $keyResult->update($request->all());
-            
-            // Calculate and update progress
-            $this->calculateAndUpdateProgress($keyResult);
-            
-            // Update objective progress
-            $this->updateObjectiveProgress($keyResult->objective_id);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Key result updated successfully',
-                'data' => $keyResult->load(['objective'])
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error updating key result', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update key result',
-                'error' => $e->getMessage()
-            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
-        }
-    }
-
-    /**
-     * Remove the specified key result.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        try {
-            $keyResult = KeyResult::findOrFail($id);
-            $objectiveId = $keyResult->objective_id;
-            
-            $keyResult->delete();
-            
-            // Update objective progress
-            $this->updateObjectiveProgress($objectiveId);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Key result deleted successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete key result',
-                'error' => $e->getMessage()
-            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
-        }
-    }
-    
-    /**
-     * Update key result progress.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function updateProgress(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'current_value' => 'required|numeric',
-            'status' => 'required|in:not_started,in_progress,at_risk,completed,canceled',
             'note' => 'nullable|string',
         ]);
         
@@ -240,22 +70,20 @@ class KeyResultController extends Controller
         }
         
         try {
-            $keyResult = KeyResult::findOrFail($id);
+            // Get the key result to get the previous value
+            $keyResult = KeyResult::findOrFail($request->key_result_id);
             
-            // Create a check-in record if note is provided
-            if ($request->has('note') && $request->note) {
-                $keyResult->checkIns()->create([
-                    'previous_value' => $keyResult->current_value,
-                    'current_value' => $request->current_value,
-                    'note' => $request->note,
-                    'user_id' => Auth::id(),
-                    'key_result_id' => $id
-                ]);
-            }
+            // Create the check-in
+            $checkIn = CheckIn::create([
+                'key_result_id' => $request->key_result_id,
+                'user_id' => Auth::id(),
+                'previous_value' => $keyResult->current_value,
+                'current_value' => $request->current_value,
+                'note' => $request->note,
+            ]);
             
-            // Update key result
+            // Update the key result's current value
             $keyResult->current_value = $request->current_value;
-            $keyResult->status = $request->status;
             
             // Calculate and update progress
             $this->calculateAndUpdateProgress($keyResult);
@@ -265,21 +93,207 @@ class KeyResultController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Key result progress updated successfully',
-                'data' => $keyResult
-            ]);
+                'message' => 'Check-in created successfully',
+                'data' => $checkIn->load(['user', 'keyResult'])
+            ], 201);
         } catch (\Exception $e) {
-            Log::error('Error updating key result progress', [
+            Log::error('Error creating check-in', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update key result progress',
+                'message' => 'Failed to create check-in',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified check-in.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        try {
+            $checkIn = CheckIn::with(['user', 'keyResult', 'keyResult.objective'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $checkIn
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Check-in not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Update the specified check-in.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'note' => 'nullable|string',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        try {
+            $checkIn = CheckIn::findOrFail($id);
+            
+            // Only allow updating the note
+            $checkIn->update([
+                'note' => $request->note,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Check-in updated successfully',
+                'data' => $checkIn->load(['user', 'keyResult'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating check-in', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update check-in',
                 'error' => $e->getMessage()
             ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
+    }
+
+    /**
+     * Remove the specified check-in.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        try {
+            $checkIn = CheckIn::findOrFail($id);
+            $keyResultId = $checkIn->key_result_id;
+            
+            // Get the key result
+            $keyResult = KeyResult::findOrFail($keyResultId);
+            
+            // Check if this is the most recent check-in
+            $latestCheckIn = CheckIn::where('key_result_id', $keyResultId)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            if ($latestCheckIn->id == $id) {
+                // Find the previous check-in
+                $previousCheckIn = CheckIn::where('key_result_id', $keyResultId)
+                    ->where('id', '!=', $id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                
+                // Revert the key result's current value to the previous check-in value
+                if ($previousCheckIn) {
+                    $keyResult->current_value = $previousCheckIn->current_value;
+                    $keyResult->save();
+                    
+                    // Calculate and update progress
+                    $this->calculateAndUpdateProgress($keyResult);
+                    
+                    // Update objective progress
+                    $this->updateObjectiveProgress($keyResult->objective_id);
+                }
+            }
+            
+            $checkIn->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Check-in deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete check-in',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
+        }
+    }
+    
+    /**
+     * Get the most recent check-ins.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getRecent(Request $request)
+    {
+        $limit = $request->limit ?? 10;
+        
+        $checkIns = CheckIn::with(['user', 'keyResult', 'keyResult.objective'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $checkIns
+        ]);
+    }
+    
+    /**
+     * Get check-ins for a specific objective.
+     *
+     * @param  int  $objectiveId
+     * @return \Illuminate\Http\Response
+     */
+    public function getByObjective($objectiveId)
+    {
+        $checkIns = CheckIn::with(['user', 'keyResult'])
+            ->whereHas('keyResult', function($query) use ($objectiveId) {
+                $query->where('objective_id', $objectiveId);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $checkIns
+        ]);
+    }
+    
+    /**
+     * Get check-ins for a specific key result.
+     *
+     * @param  int  $keyResultId
+     * @return \Illuminate\Http\Response
+     */
+    public function getByKeyResult($keyResultId)
+    {
+        $checkIns = CheckIn::with(['user'])
+            ->where('key_result_id', $keyResultId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $checkIns
+        ]);
     }
     
     /**
@@ -288,7 +302,7 @@ class KeyResultController extends Controller
      * @param  \App\Models\KeyResult  $keyResult
      * @return void
      */
-    private function calculateAndUpdateProgress(KeyResult $keyResult)
+    private function calculateAndUpdateProgress($keyResult)
     {
         $startValue = $keyResult->start_value ?? 0;
         $targetValue = $keyResult->target_value;
@@ -334,6 +348,8 @@ class KeyResultController extends Controller
         // If progress is 100%, set status to completed
         if ($progress == 100 && $keyResult->status != 'completed') {
             $keyResult->status = 'completed';
+        } elseif ($progress > 0 && $keyResult->status == 'not_started') {
+            $keyResult->status = 'in_progress';
         }
         
         $keyResult->save();
@@ -347,26 +363,26 @@ class KeyResultController extends Controller
      */
     private function updateObjectiveProgress($objectiveId)
     {
-        $objective = Objective::findOrFail($objectiveId);
-        $keyResults = $objective->keyResults;
+        // Get the objective with its key results
+        $objective = \App\Models\Objective::with('keyResults')->findOrFail($objectiveId);
         
-        if ($keyResults->isEmpty()) {
+        if ($objective->keyResults->isEmpty()) {
             return;
         }
         
         // Calculate average progress
-        $totalProgress = $keyResults->sum('progress');
-        $averageProgress = $totalProgress / $keyResults->count();
+        $totalProgress = $objective->keyResults->sum('progress');
+        $averageProgress = $totalProgress / $objective->keyResults->count();
         
         // Update objective progress
         $objective->progress = $averageProgress;
         
         // Update status based on key results
-        $allCompleted = $keyResults->every(function ($kr) {
+        $allCompleted = $objective->keyResults->every(function ($kr) {
             return $kr->status === 'completed';
         });
         
-        $anyAtRisk = $keyResults->contains(function ($kr) {
+        $anyAtRisk = $objective->keyResults->contains(function ($kr) {
             return $kr->status === 'at_risk';
         });
         

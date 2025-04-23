@@ -3,23 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Objective;
-use App\Models\KeyResult;
+use App\Models\Team;
+use App\Models\Timeframe;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ObjectiveController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Display a listing of objectives.
      *
@@ -30,47 +23,41 @@ class ObjectiveController extends Controller
     {
         $query = Objective::with(['owner', 'team', 'timeframe', 'keyResults']);
         
-        // Filter by owner
-        if ($request->has('owner_id')) {
+        // Filter by owner if provided
+        if ($request->has('owner_id') && $request->owner_id) {
             $query->where('owner_id', $request->owner_id);
         }
         
-        // Filter by team
-        if ($request->has('team_id')) {
+        // Filter by team if provided
+        if ($request->has('team_id') && $request->team_id) {
             $query->where('team_id', $request->team_id);
         }
         
-        // Filter by timeframe
-        if ($request->has('timeframe_id')) {
+        // Filter by timeframe if provided
+        if ($request->has('timeframe_id') && $request->timeframe_id) {
             $query->where('timeframe_id', $request->timeframe_id);
         }
         
-        // Filter by status
-        if ($request->has('status')) {
+        // Filter by status if provided
+        if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
         }
         
-        // Filter by level
-        if ($request->has('level')) {
-            $query->where('level', $request->level);
+        // Filter by search term if provided
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
         
-        // Filter by parent objective
-        if ($request->has('parent_id')) {
-            $query->where('parent_id', $request->parent_id);
-        }
+        $objectives = $query->orderBy('created_at', 'desc')->paginate(10);
         
-        // Include only top-level objectives
-        if ($request->has('top_level') && $request->top_level) {
-            $query->whereNull('parent_id');
-        }
-        
-        // Order by created date (newest first by default)
-        $query->orderBy('created_at', $request->order ?? 'desc');
-        
-        $objectives = $query->get();
-        
-        return response()->json($objectives);
+        return response()->json([
+            'success' => true,
+            'data' => $objectives
+        ]);
     }
 
     /**
@@ -84,36 +71,40 @@ class ObjectiveController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'level' => 'required|string|in:company,department,team,individual',
-            'team_id' => 'nullable|exists:teams,id',
+            'owner_id' => 'required|exists:users,id',
+            'team_id' => 'required|exists:teams,id',
             'timeframe_id' => 'required|exists:timeframes,id',
-            'parent_id' => 'nullable|exists:objectives,id',
-            'status' => 'nullable|string|in:not_started,on_track,at_risk,behind,completed',
+            'status' => 'required|in:not_started,in_progress,at_risk,completed,canceled',
+            'level' => 'required|in:company,department,team,individual',
         ]);
         
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
         
-        // Set owner to current authenticated user if not provided
-        if (!$request->has('owner_id')) {
-            $request->merge(['owner_id' => Auth::id()]);
-        }
-        
-        $objective = Objective::create($request->all());
-        
-        // Create key results if provided
-        if ($request->has('key_results') && is_array($request->key_results)) {
-            foreach ($request->key_results as $krData) {
-                $krData['objective_id'] = $objective->id;
-                KeyResult::create($krData);
-            }
+        try {
+            $objective = Objective::create($request->all());
             
-            // Reload objective with key results
-            $objective->load('keyResults');
+            return response()->json([
+                'success' => true,
+                'message' => 'Objective created successfully',
+                'data' => $objective->load(['owner', 'team', 'timeframe'])
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating objective', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create objective',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json($objective->load(['owner', 'team', 'timeframe', 'parent']), 201);
     }
 
     /**
@@ -124,18 +115,26 @@ class ObjectiveController extends Controller
      */
     public function show($id)
     {
-        $objective = Objective::with([
-            'owner', 
-            'team', 
-            'timeframe', 
-            'parent',
-            'children',
-            'keyResults.assignedTo',
-            'keyResults.initiatives',
-            'checkIns.user'
-        ])->findOrFail($id);
-        
-        return response()->json($objective);
+        try {
+            $objective = Objective::with([
+                'owner', 
+                'team', 
+                'timeframe', 
+                'keyResults.checkIns', 
+                'keyResults.initiatives'
+            ])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $objective
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Objective not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
@@ -147,33 +146,44 @@ class ObjectiveController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $objective = Objective::findOrFail($id);
-        
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
+            'title' => 'string|max:255',
             'description' => 'nullable|string',
-            'level' => 'sometimes|required|string|in:company,department,team,individual',
-            'owner_id' => 'sometimes|required|exists:users,id',
-            'team_id' => 'nullable|exists:teams,id',
-            'timeframe_id' => 'sometimes|required|exists:timeframes,id',
-            'parent_id' => 'nullable|exists:objectives,id',
-            'status' => 'nullable|string|in:not_started,on_track,at_risk,behind,completed',
+            'owner_id' => 'exists:users,id',
+            'team_id' => 'exists:teams,id',
+            'timeframe_id' => 'exists:timeframes,id',
+            'status' => 'in:not_started,in_progress,at_risk,completed,canceled',
+            'level' => 'in:company,department,team,individual',
         ]);
         
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        
-        // Prevent circular reference
-        if ($request->has('parent_id') && $request->parent_id == $id) {
             return response()->json([
-                'errors' => ['parent_id' => ['An objective cannot be its own parent.']]
+                'success' => false,
+                'errors' => $validator->errors()
             ], 422);
         }
         
-        $objective->update($request->all());
-        
-        return response()->json($objective->fresh(['owner', 'team', 'timeframe', 'parent', 'keyResults']));
+        try {
+            $objective = Objective::findOrFail($id);
+            $objective->update($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Objective updated successfully',
+                'data' => $objective->load(['owner', 'team', 'timeframe'])
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating objective', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update objective',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
+        }
     }
 
     /**
@@ -184,22 +194,25 @@ class ObjectiveController extends Controller
      */
     public function destroy($id)
     {
-        $objective = Objective::findOrFail($id);
-        
-        // Check if the objective has children
-        if ($objective->children()->exists()) {
+        try {
+            $objective = Objective::findOrFail($id);
+            $objective->delete();
+            
             return response()->json([
-                'errors' => ['objective' => ['Cannot delete an objective that has child objectives.']]
-            ], 422);
+                'success' => true,
+                'message' => 'Objective deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete objective',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
-        
-        $objective->delete();
-        
-        return response()->json(null, 204);
     }
-
+    
     /**
-     * Update the progress of an objective.
+     * Update objective progress.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -207,30 +220,89 @@ class ObjectiveController extends Controller
      */
     public function updateProgress(Request $request, $id)
     {
-        $objective = Objective::findOrFail($id);
-        
         $validator = Validator::make($request->all(), [
-            'progress' => 'required|integer|min:0|max:100',
-            'notes' => 'nullable|string',
+            'progress' => 'required|numeric|min:0|max:100',
+            'status' => 'required|in:not_started,in_progress,at_risk,completed,canceled',
         ]);
         
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
         
-        $objective->progress = $request->progress;
-        $objective->updateStatus();
-        $objective->save();
-        
-        // Create a check-in record if notes are provided
-        if ($request->has('notes')) {
-            $objective->checkIns()->create([
-                'user_id' => Auth::id(),
-                'progress' => $request->progress,
-                'notes' => $request->notes,
+        try {
+            $objective = Objective::findOrFail($id);
+            
+            // Update progress and status
+            $objective->progress = $request->progress;
+            $objective->status = $request->status;
+            $objective->save();
+            
+            // If progress is 100%, set status to completed
+            if ($request->progress == 100 && $request->status != 'completed') {
+                $objective->status = 'completed';
+                $objective->save();
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Objective progress updated successfully',
+                'data' => $objective
             ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating objective progress', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update objective progress',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
+    }
+    
+    /**
+     * Get the objectives for the current user.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function myObjectives()
+    {
+        $userId = Auth::id();
         
-        return response()->json($objective->fresh());
+        $objectives = Objective::with(['team', 'timeframe', 'keyResults'])
+            ->where('owner_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $objectives
+        ]);
+    }
+    
+    /**
+     * Get the objectives for the user's team.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function teamObjectives()
+    {
+        $userId = Auth::id();
+        $teamIds = User::findOrFail($userId)->teams()->pluck('teams.id');
+        
+        $objectives = Objective::with(['owner', 'team', 'timeframe', 'keyResults'])
+            ->whereIn('team_id', $teamIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $objectives
+        ]);
     }
 }
