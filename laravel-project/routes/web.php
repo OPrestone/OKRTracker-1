@@ -23,4 +23,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/templates/{id}', function ($id) {
         return view('templates.show', ['template_id' => $id]);
     })->name('templates.show');
+    
+    Route::get('/templates/{id}/edit', function ($id) {
+        return view('templates.edit', ['template_id' => $id]);
+    })->name('templates.edit');
 });
