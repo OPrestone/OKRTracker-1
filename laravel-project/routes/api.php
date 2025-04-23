@@ -62,6 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // OKR Templates
     Route::apiResource('okr-templates', OkrTemplateController::class);
+    Route::post('okr-templates/ai-generate', [OkrTemplateController::class, 'generateWithAi']);
+    Route::get('okr-templates/categories', [OkrTemplateController::class, 'getCategories']);
+    Route::get('okr-templates/departments', [OkrTemplateController::class, 'getDepartments']);
     Route::post('okr-templates/{id}/generate', [OkrTemplateController::class, 'generate']);
     Route::post('okr-templates/clone-from-objective', [OkrTemplateController::class, 'cloneFromObjective']);
 });
