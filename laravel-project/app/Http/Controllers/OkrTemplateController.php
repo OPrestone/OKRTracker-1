@@ -3,63 +3,54 @@
 namespace App\Http\Controllers;
 
 use App\Models\OkrTemplate;
-use App\Models\Objective;
-use App\Models\Team;
-use App\Models\Timeframe;
+use App\Services\AiTemplateGenerator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class OkrTemplateController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    protected $aiTemplateGenerator;
+
+    public function __construct(AiTemplateGenerator $aiTemplateGenerator)
     {
-        $this->middleware('auth');
+        $this->aiTemplateGenerator = $aiTemplateGenerator;
     }
 
     /**
      * Display a listing of templates.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
-        $query = OkrTemplate::with('creator');
+        $query = OkrTemplate::query();
         
-        // Filter by category
-        if ($request->has('category')) {
-            $query->byCategory($request->category);
+        // Filter by category if provided
+        if ($request->has('category') && $request->category) {
+            $query->where('category', $request->category);
         }
         
-        // Filter by department
-        if ($request->has('department')) {
-            $query->byDepartment($request->department);
+        // Filter by department if provided
+        if ($request->has('department') && $request->department) {
+            $query->where('department', $request->department);
         }
         
-        // Filter by type (system or user-created)
-        if ($request->has('type')) {
-            if ($request->type === 'system') {
-                $query->system();
-            } elseif ($request->type === 'user') {
-                $query->userCreated();
-            }
+        // Filter by search term if provided
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
         
-        // Filter by creator
-        if ($request->has('created_by')) {
-            $query->where('created_by', $request->created_by);
-        }
+        $templates = $query->orderBy('created_at', 'desc')->paginate(12);
         
-        // Sort by name by default
-        $templates = $query->orderBy('name')->get();
-        
-        return response()->json($templates);
+        return response()->json([
+            'success' => true,
+            'data' => $templates
+        ]);
     }
 
     /**
@@ -72,31 +63,39 @@ class OkrTemplateController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'nullable|string|max:100',
-            'department' => 'nullable|string|max:100',
+            'description' => 'required|string',
+            'category' => 'required|string|max:100',
+            'department' => 'required|string|max:100',
             'template_data' => 'required|array',
-            'template_data.objective' => 'required|array',
-            'template_data.objective.title' => 'required|string|max:255',
-            'template_data.objective.level' => 'required|string|in:company,department,team,individual',
-            'template_data.key_results' => 'required|array',
-            'template_data.key_results.*.title' => 'required|string|max:255',
-            'template_data.initiatives' => 'nullable|array',
         ]);
-        
+
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
-        
-        // Set created_by to current user
-        $request->merge(['created_by' => Auth::id()]);
-        
-        // Set is_system to false for user-created templates
-        $request->merge(['is_system' => false]);
-        
-        $template = OkrTemplate::create($request->all());
-        
-        return response()->json($template->load('creator'), 201);
+
+        try {
+            $template = OkrTemplate::create($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Template created successfully',
+                'data' => $template
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating template', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create template',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -107,9 +106,20 @@ class OkrTemplateController extends Controller
      */
     public function show($id)
     {
-        $template = OkrTemplate::with('creator')->findOrFail($id);
-        
-        return response()->json($template);
+        try {
+            $template = OkrTemplate::findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $template
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Template not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
@@ -121,40 +131,42 @@ class OkrTemplateController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $template = OkrTemplate::findOrFail($id);
-        
-        // Only allow users to edit their own templates unless they're admins
-        if (!$template->is_system && $template->created_by !== Auth::id() && Auth::user()->role !== 'admin') {
-            return response()->json([
-                'errors' => ['unauthorized' => ['You do not have permission to edit this template.']]
-            ], 403);
-        }
-        
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'nullable|string|max:100',
-            'department' => 'nullable|string|max:100',
-            'template_data' => 'sometimes|required|array',
-            'template_data.objective' => 'sometimes|required|array',
-            'template_data.objective.title' => 'sometimes|required|string|max:255',
-            'template_data.key_results' => 'sometimes|required|array',
-            'template_data.key_results.*.title' => 'sometimes|required|string|max:255',
-            'template_data.initiatives' => 'nullable|array',
+            'name' => 'string|max:255',
+            'description' => 'string',
+            'category' => 'string|max:100',
+            'department' => 'string|max:100',
+            'template_data' => 'array',
         ]);
-        
+
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
-        
-        // Don't allow changing is_system by regular users
-        if (Auth::user()->role !== 'admin') {
-            $request->request->remove('is_system');
+
+        try {
+            $template = OkrTemplate::findOrFail($id);
+            $template->update($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Template updated successfully',
+                'data' => $template
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating template', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update template',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
-        
-        $template->update($request->all());
-        
-        return response()->json($template->fresh(['creator']));
     }
 
     /**
@@ -165,179 +177,122 @@ class OkrTemplateController extends Controller
      */
     public function destroy($id)
     {
-        $template = OkrTemplate::findOrFail($id);
-        
-        // Only allow users to delete their own templates unless they're admins
-        if (!$template->is_system && $template->created_by !== Auth::id() && Auth::user()->role !== 'admin') {
+        try {
+            $template = OkrTemplate::findOrFail($id);
+            $template->delete();
+            
             return response()->json([
-                'errors' => ['unauthorized' => ['You do not have permission to delete this template.']]
-            ], 403);
-        }
-        
-        // System templates can only be deleted by admins
-        if ($template->is_system && Auth::user()->role !== 'admin') {
+                'success' => true,
+                'message' => 'Template deleted successfully'
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
-                'errors' => ['unauthorized' => ['You do not have permission to delete system templates.']]
-            ], 403);
+                'success' => false,
+                'message' => 'Failed to delete template',
+                'error' => $e->getMessage()
+            ], $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ? 404 : 500);
         }
-        
-        $template->delete();
-        
-        return response()->json(null, 204);
     }
-
+    
     /**
-     * Generate OKRs from a template.
+     * Generate a template using AI based on the provided description.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function generate(Request $request, $id)
+    public function generateWithAi(Request $request)
     {
-        $template = OkrTemplate::findOrFail($id);
-        
         $validator = Validator::make($request->all(), [
-            'timeframe_id' => 'required|exists:timeframes,id',
-            'team_id' => 'nullable|exists:teams,id',
-            'owner_id' => 'nullable|exists:users,id',
-            'parent_id' => 'nullable|exists:objectives,id',
-            'custom_title' => 'nullable|string|max:255',
-            'custom_description' => 'nullable|string',
+            'description' => 'required|string|min:10',
+            'department' => 'required|string|max:100',
+            'level' => 'required|string|in:company,department,team,individual',
+            'save' => 'boolean'
         ]);
-        
+
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
-        
-        // Set owner to current user if not provided
-        $ownerId = $request->owner_id ?? Auth::id();
-        
-        // Check if timeframe exists and is active
-        $timeframe = Timeframe::findOrFail($request->timeframe_id);
-        
-        // Handle team association if provided
-        $teamId = null;
-        if ($request->has('team_id')) {
-            $team = Team::findOrFail($request->team_id);
-            $teamId = $team->id;
-        }
-        
+
         try {
-            // Create the OKR set from the template
-            $objective = $template->createOkrSet($ownerId, $timeframe->id, $teamId);
+            $templateData = $this->aiTemplateGenerator->generateTemplate(
+                $request->description,
+                $request->department,
+                $request->level
+            );
             
-            // Apply custom title/description if provided
-            if ($request->has('custom_title')) {
-                $objective->title = $request->custom_title;
-                $objective->save();
+            // Save the template if requested
+            if ($request->save === true) {
+                $template = OkrTemplate::create([
+                    'name' => $templateData['name'],
+                    'description' => $templateData['description'],
+                    'category' => $templateData['category'] ?? 'AI Generated',
+                    'department' => $templateData['department'] ?? $request->department,
+                    'template_data' => $templateData['template_data'],
+                    'is_ai_generated' => true
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'AI template generated and saved successfully',
+                    'data' => $template
+                ]);
             }
             
-            if ($request->has('custom_description')) {
-                $objective->description = $request->custom_description;
-                $objective->save();
-            }
-            
-            // Set parent objective if provided
-            if ($request->has('parent_id')) {
-                $objective->parent_id = $request->parent_id;
-                $objective->save();
-            }
-            
-            // Reload with relationships
-            $objective->load([
-                'owner', 
-                'team', 
-                'timeframe', 
-                'parent',
-                'keyResults.assignedTo',
-                'keyResults.initiatives.assignedTo'
+            return response()->json([
+                'success' => true,
+                'message' => 'AI template generated successfully',
+                'data' => $templateData
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error generating AI template', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             
             return response()->json([
-                'message' => 'OKR set created successfully from template',
-                'objective' => $objective
-            ], 201);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'errors' => ['template' => [$e->getMessage()]]
-            ], 422);
+                'success' => false,
+                'message' => 'Failed to generate AI template',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
-
+    
     /**
-     * Clone an existing OKR set into a template.
+     * Get unique categories from existing templates.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function cloneFromObjective(Request $request)
+    public function getCategories()
     {
-        $validator = Validator::make($request->all(), [
-            'objective_id' => 'required|exists:objectives,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'nullable|string|max:100',
-            'department' => 'nullable|string|max:100',
+        $categories = OkrTemplate::select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+        
+        return response()->json([
+            'success' => true,
+            'data' => $categories
         ]);
+    }
+    
+    /**
+     * Get unique departments from existing templates.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getDepartments()
+    {
+        $departments = OkrTemplate::select('department')
+            ->distinct()
+            ->orderBy('department')
+            ->pluck('department');
         
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-        
-        // Get the objective with key results and initiatives
-        $objective = Objective::with(['keyResults.initiatives'])->findOrFail($request->objective_id);
-        
-        // Build template data
-        $templateData = [
-            'objective' => [
-                'title' => $objective->title,
-                'description' => $objective->description,
-                'level' => $objective->level,
-                'status' => 'not_started',
-                'progress' => 0
-            ],
-            'key_results' => []
-        ];
-        
-        // Add key results
-        foreach ($objective->keyResults as $keyResult) {
-            $krData = [
-                'title' => $keyResult->title,
-                'description' => $keyResult->description,
-                'status' => 'not_started',
-                'progress' => 0
-            ];
-            
-            // Add initiatives for this key result
-            if ($keyResult->initiatives->isNotEmpty()) {
-                $krData['initiatives'] = [];
-                
-                foreach ($keyResult->initiatives as $initiative) {
-                    $krData['initiatives'][] = [
-                        'title' => $initiative->title,
-                        'description' => $initiative->description,
-                        'status' => 'not_started',
-                        'completed' => false
-                    ];
-                }
-            }
-            
-            $templateData['key_results'][] = $krData;
-        }
-        
-        // Create the template
-        $template = OkrTemplate::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'category' => $request->category,
-            'department' => $request->department,
-            'created_by' => Auth::id(),
-            'is_system' => false,
-            'template_data' => $templateData
+        return response()->json([
+            'success' => true,
+            'data' => $departments
         ]);
-        
-        return response()->json($template->load('creator'), 201);
     }
 }
