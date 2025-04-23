@@ -13,30 +13,26 @@ class Initiative extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'title',
         'description',
         'key_result_id',
-        'user_id',
+        'assigned_to_id',
         'status',
-        'start_date',
-        'due_date',
-        'completed_at',
-        'priority',
+        'completed',
+        'completed_at'
     ];
 
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
-        'start_date' => 'date',
-        'due_date' => 'date',
+        'completed' => 'boolean',
         'completed_at' => 'datetime',
-        'priority' => 'integer',
     ];
 
     /**
@@ -48,60 +44,92 @@ class Initiative extends Model
     }
 
     /**
-     * Get the user that owns the initiative.
+     * Get the user assigned to the initiative.
      */
-    public function user(): BelongsTo
+    public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'assigned_to_id');
     }
 
     /**
      * Mark the initiative as complete.
+     *
+     * @return void
      */
-    public function complete(): void
+    public function markComplete(): void
     {
-        $this->status = 'completed';
+        $this->completed = true;
         $this->completed_at = now();
+        $this->status = 'completed';
         $this->save();
+        
+        // Check if this should update the key result progress
+        $this->updateKeyResultProgress();
     }
 
     /**
-     * Check if the initiative is overdue.
+     * Mark the initiative as incomplete.
+     *
+     * @return void
      */
-    public function isOverdue(): bool
+    public function markIncomplete(): void
     {
-        return $this->status !== 'completed' 
-            && $this->due_date 
-            && $this->due_date->isPast();
+        $this->completed = false;
+        $this->completed_at = null;
+        $this->status = 'in_progress';
+        $this->save();
+        
+        // Check if this should update the key result progress
+        $this->updateKeyResultProgress();
     }
 
     /**
-     * Get the estimated completion percentage.
+     * Update the key result progress based on completed initiatives.
+     *
+     * @return void
      */
-    public function getCompletionPercentage(): int
+    private function updateKeyResultProgress(): void
     {
-        if ($this->status === 'completed') {
-            return 100;
+        $keyResult = $this->keyResult;
+        
+        if (!$keyResult) {
+            return;
         }
         
-        if ($this->status === 'not_started') {
-            return 0;
+        // If the key result has numeric values, don't update based on initiatives
+        if ($keyResult->target_value !== null && $keyResult->current_value !== null) {
+            return;
         }
         
-        // For in-progress initiatives, calculate based on dates
-        if ($this->start_date && $this->due_date) {
-            $totalDuration = $this->start_date->diffInDays($this->due_date);
-            
-            if ($totalDuration === 0) {
-                return 50; // Same day task
-            }
-            
-            $elapsedDuration = $this->start_date->diffInDays(now());
-            $percentage = min(95, max(5, ($elapsedDuration / $totalDuration) * 100));
-            
-            return intval($percentage);
-        }
+        // Count total and completed initiatives for this key result
+        $totalInitiatives = $keyResult->initiatives()->count();
+        $completedInitiatives = $keyResult->initiatives()->where('completed', true)->count();
         
-        return 50; // Default for in-progress with no dates
+        if ($totalInitiatives > 0) {
+            $progress = round(($completedInitiatives / $totalInitiatives) * 100);
+            $keyResult->updateProgress($progress);
+        }
+    }
+
+    /**
+     * Scope a query to only include completed initiatives.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('completed', true);
+    }
+
+    /**
+     * Scope a query to only include incomplete initiatives.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIncomplete($query)
+    {
+        return $query->where('completed', false);
     }
 }

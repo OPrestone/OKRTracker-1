@@ -13,31 +13,23 @@ class CheckIn extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
-        'user_id',
         'objective_id',
         'key_result_id',
-        'previous_value',
-        'new_value',
-        'progress_change',
-        'note',
-        'mood',
-        'confidence',
-        'status',
+        'user_id',
+        'progress',
+        'notes'
     ];
 
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
-        'previous_value' => 'float',
-        'new_value' => 'float',
-        'progress_change' => 'float',
-        'confidence' => 'integer',
+        'progress' => 'integer',
     ];
 
     /**
@@ -65,45 +57,85 @@ class CheckIn extends Model
     }
 
     /**
-     * Calculate progress change percentage.
+     * Scope a query to only include check-ins for a specific user.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $userId
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function calculateProgressChange(): void
+    public function scopeByUser($query, $userId)
     {
-        if ($this->key_result_id) {
-            $keyResult = $this->keyResult;
-            
-            if ($keyResult && $keyResult->target_value !== null && $keyResult->target_value != $keyResult->start_value) {
-                $totalRange = abs($keyResult->target_value - $keyResult->start_value);
-                $valueChange = abs($this->new_value - $this->previous_value);
-                $this->progress_change = ($valueChange / $totalRange) * 100;
-            } else {
-                $this->progress_change = 0;
-            }
-        } else {
-            $this->progress_change = $this->new_value - $this->previous_value;
-        }
-        
-        $this->save();
+        return $query->where('user_id', $userId);
     }
 
     /**
-     * Update the associated entity with the new value.
+     * Scope a query to only include check-ins for a specific objective.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $objectiveId
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function updateEntity(): void
+    public function scopeByObjective($query, $objectiveId)
     {
-        if ($this->key_result_id) {
-            $keyResult = $this->keyResult;
-            if ($keyResult) {
-                $keyResult->current_value = $this->new_value;
-                $keyResult->save();
-                $keyResult->calculateProgress();
-            }
-        } elseif ($this->objective_id) {
-            $objective = $this->objective;
-            if ($objective) {
-                $objective->progress = $this->new_value;
-                $objective->save();
+        return $query->where('objective_id', $objectiveId);
+    }
+
+    /**
+     * Scope a query to only include check-ins for a specific key result.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $keyResultId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByKeyResult($query, $keyResultId)
+    {
+        return $query->where('key_result_id', $keyResultId);
+    }
+
+    /**
+     * Scope a query to recent check-ins.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeRecent($query, $limit = 10)
+    {
+        return $query->orderBy('created_at', 'desc')->limit($limit);
+    }
+
+    /**
+     * Create a check-in and update related progress.
+     *
+     * @param array $attributes
+     * @return static
+     */
+    public static function createWithProgressUpdate(array $attributes)
+    {
+        $checkIn = self::create($attributes);
+        
+        // Update progress if provided
+        if (isset($attributes['progress'])) {
+            $progress = (int) $attributes['progress'];
+            
+            // If this is for a key result, update its progress
+            if ($checkIn->key_result_id) {
+                $keyResult = $checkIn->keyResult;
+                if ($keyResult) {
+                    $keyResult->updateProgress($progress);
+                }
+            } 
+            // If this is for an objective directly, update its progress
+            elseif ($checkIn->objective_id) {
+                $objective = $checkIn->objective;
+                if ($objective) {
+                    $objective->progress = $progress;
+                    $objective->updateStatus();
+                    $objective->save();
+                }
             }
         }
+        
+        return $checkIn;
     }
 }

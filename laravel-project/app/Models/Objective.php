@@ -14,37 +14,42 @@ class Objective extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'title',
         'description',
+        'level',
+        'owner_id',
         'team_id',
-        'user_id',
         'timeframe_id',
+        'parent_id',
         'status',
-        'progress',
-        'due_date',
-        'priority',
+        'progress'
     ];
+
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['keyResults'];
 
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
-        'progress' => 'float',
-        'due_date' => 'date',
-        'priority' => 'integer',
+        'progress' => 'integer',
     ];
 
     /**
-     * Get the user that owns the objective.
+     * Get the owner of the objective.
      */
-    public function user(): BelongsTo
+    public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     /**
@@ -56,7 +61,7 @@ class Objective extends Model
     }
 
     /**
-     * Get the timeframe that owns the objective.
+     * Get the timeframe for this objective.
      */
     public function timeframe(): BelongsTo
     {
@@ -64,7 +69,23 @@ class Objective extends Model
     }
 
     /**
-     * Get the key results for the objective.
+     * Get the parent objective.
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Objective::class, 'parent_id');
+    }
+
+    /**
+     * Get the child objectives.
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Objective::class, 'parent_id');
+    }
+
+    /**
+     * Get the key results for this objective.
      */
     public function keyResults(): HasMany
     {
@@ -72,7 +93,7 @@ class Objective extends Model
     }
 
     /**
-     * Get the check-ins for the objective.
+     * Get the check-ins for this objective.
      */
     public function checkIns(): HasMany
     {
@@ -80,19 +101,91 @@ class Objective extends Model
     }
 
     /**
-     * Calculate progress based on key results.
+     * Calculate and update progress based on key results.
+     *
+     * @return int
      */
-    public function calculateProgress(): void
+    public function calculateProgress(): int
     {
         $keyResults = $this->keyResults;
         
         if ($keyResults->isEmpty()) {
-            $this->progress = 0;
-            return;
+            return $this->progress;
         }
         
         $totalProgress = $keyResults->sum('progress');
-        $this->progress = $totalProgress / $keyResults->count();
+        $count = $keyResults->count();
+        $averageProgress = round($totalProgress / $count);
+        
+        $this->progress = $averageProgress;
+        $this->updateStatus();
         $this->save();
+        
+        return $this->progress;
+    }
+
+    /**
+     * Update status based on progress.
+     *
+     * @return void
+     */
+    public function updateStatus(): void
+    {
+        if ($this->progress >= 100) {
+            $this->status = 'completed';
+        } elseif ($this->progress >= 70) {
+            $this->status = 'on_track';
+        } elseif ($this->progress >= 30) {
+            $this->status = 'at_risk';
+        } elseif ($this->progress > 0) {
+            $this->status = 'behind';
+        } else {
+            $this->status = 'not_started';
+        }
+    }
+
+    /**
+     * Check if this objective is completed.
+     *
+     * @return bool
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed' || $this->progress >= 100;
+    }
+
+    /**
+     * Get all ancestors of this objective.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function ancestors()
+    {
+        $ancestors = collect();
+        $parent = $this->parent;
+
+        while ($parent) {
+            $ancestors->push($parent);
+            $parent = $parent->parent;
+        }
+
+        return $ancestors;
+    }
+
+    /**
+     * Get all descendants of this objective.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function descendants()
+    {
+        $descendants = collect();
+        
+        foreach ($this->children as $child) {
+            $descendants->push($child);
+            $descendants = $descendants->merge($child->descendants());
+        }
+        
+        return $descendants;
     }
 }

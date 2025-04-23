@@ -9,6 +9,7 @@ use App\Http\Controllers\TimeframeController;
 use App\Http\Controllers\CadenceController;
 use App\Http\Controllers\InitiativeController;
 use App\Http\Controllers\CheckInController;
+use App\Http\Controllers\OkrTemplateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,4 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('check-ins/recent', [CheckInController::class, 'getRecent']);
     Route::get('check-ins/by-objective/{objectiveId}', [CheckInController::class, 'getByObjective']);
     Route::get('check-ins/by-key-result/{keyResultId}', [CheckInController::class, 'getByKeyResult']);
+    
+    // OKR Templates
+    Route::apiResource('okr-templates', OkrTemplateController::class);
+    Route::post('okr-templates/{id}/generate', [OkrTemplateController::class, 'generate']);
+    Route::post('okr-templates/clone-from-objective', [OkrTemplateController::class, 'cloneFromObjective']);
 });

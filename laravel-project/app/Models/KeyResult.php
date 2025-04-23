@@ -14,34 +14,27 @@ class KeyResult extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'title',
         'description',
         'objective_id',
-        'user_id',
-        'type',
+        'assigned_to_id',
         'target_value',
         'current_value',
         'start_value',
-        'format',
         'progress',
-        'due_date',
-        'status',
+        'status'
     ];
 
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
-        'target_value' => 'float',
-        'current_value' => 'float',
-        'start_value' => 'float',
-        'progress' => 'float',
-        'due_date' => 'date',
+        'progress' => 'integer',
     ];
 
     /**
@@ -53,15 +46,15 @@ class KeyResult extends Model
     }
 
     /**
-     * Get the user that owns the key result.
+     * Get the user assigned to the key result.
      */
-    public function user(): BelongsTo
+    public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'assigned_to_id');
     }
 
     /**
-     * Get the initiatives for the key result.
+     * Get the initiatives for this key result.
      */
     public function initiatives(): HasMany
     {
@@ -69,7 +62,7 @@ class KeyResult extends Model
     }
 
     /**
-     * Get the check-ins for the key result.
+     * Get the check-ins for this key result.
      */
     public function checkIns(): HasMany
     {
@@ -77,27 +70,110 @@ class KeyResult extends Model
     }
 
     /**
-     * Calculate progress based on current value compared to target.
+     * Calculate the progress of this key result.
+     * This method is for key results with numerical target values.
+     *
+     * @return int
      */
-    public function calculateProgress(): void
+    public function calculateProgress(): int
     {
-        // If no target value is set, progress remains 0
-        if ($this->target_value === null || $this->target_value == $this->start_value) {
-            $this->progress = 0;
-            $this->save();
-            return;
+        if ($this->current_value === null || $this->target_value === null || $this->start_value === null) {
+            return $this->progress;
         }
-
-        $totalRange = abs($this->target_value - $this->start_value);
-        $currentProgress = abs($this->current_value - $this->start_value);
         
-        // Calculate percentage progress (0-100%)
-        $progress = min(100, max(0, ($currentProgress / $totalRange) * 100));
+        // Convert to numerical values if needed
+        $start = floatval($this->start_value);
+        $current = floatval($this->current_value);
+        $target = floatval($this->target_value);
+        
+        // Ensure the target is different from the start
+        if ($target == $start) {
+            return $current >= $target ? 100 : 0;
+        }
+        
+        // Handle ascending or descending targets (where lower is better)
+        $isAscending = $target > $start;
+        
+        if ($isAscending) {
+            // For ascending targets (higher is better)
+            if ($current >= $target) {
+                $progress = 100;
+            } elseif ($current <= $start) {
+                $progress = 0;
+            } else {
+                $progress = round(($current - $start) / ($target - $start) * 100);
+            }
+        } else {
+            // For descending targets (lower is better)
+            if ($current <= $target) {
+                $progress = 100;
+            } elseif ($current >= $start) {
+                $progress = 0;
+            } else {
+                $progress = round(($start - $current) / ($start - $target) * 100);
+            }
+        }
+        
+        // Ensure progress is between 0 and 100
+        $progress = max(0, min(100, $progress));
         
         $this->progress = $progress;
+        $this->updateStatus();
         $this->save();
         
-        // Update parent objective progress
-        $this->objective->calculateProgress();
+        // If the objective exists, recalculate its progress
+        if ($this->objective) {
+            $this->objective->calculateProgress();
+        }
+        
+        return $progress;
+    }
+
+    /**
+     * Update the status based on the progress.
+     *
+     * @return void
+     */
+    public function updateStatus(): void
+    {
+        if ($this->progress >= 100) {
+            $this->status = 'completed';
+        } elseif ($this->progress >= 70) {
+            $this->status = 'on_track';
+        } elseif ($this->progress >= 30) {
+            $this->status = 'at_risk';
+        } elseif ($this->progress > 0) {
+            $this->status = 'behind';
+        } else {
+            $this->status = 'not_started';
+        }
+    }
+
+    /**
+     * Check if this key result is completed.
+     *
+     * @return bool
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed' || $this->progress >= 100;
+    }
+
+    /**
+     * Update the progress based on a set value.
+     *
+     * @param int $progress
+     * @return void
+     */
+    public function updateProgress(int $progress): void
+    {
+        $this->progress = max(0, min(100, $progress));
+        $this->updateStatus();
+        $this->save();
+        
+        // If the objective exists, recalculate its progress
+        if ($this->objective) {
+            $this->objective->calculateProgress();
+        }
     }
 }
