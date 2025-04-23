@@ -17,6 +17,9 @@
               <router-link class="nav-link" :to="{ name: 'dashboard' }">Dashboard</router-link>
             </li>
             <li class="nav-item">
+              <router-link class="nav-link" :to="{ name: 'templates' }">OKR Templates</router-link>
+            </li>
+            <li class="nav-item">
               <router-link class="nav-link" :to="{ name: 'confetti-demo' }">Confetti Demo</router-link>
             </li>
           </ul>

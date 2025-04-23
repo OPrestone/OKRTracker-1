@@ -11,6 +11,7 @@ import ConfettiDemo from './components/ConfettiDemo.vue';
 import Dashboard from './pages/Dashboard.vue';
 import Login from './pages/Login.vue';
 import Register from './pages/Register.vue';
+import TemplateGenerator from './pages/TemplateGenerator.vue';
 import NotFound from './pages/NotFound.vue';
 
 // Create the router
@@ -40,6 +41,12 @@ const router = createRouter({
             name: 'register',
             component: Register,
             meta: { guest: true }
+        },
+        {
+            path: '/templates',
+            name: 'templates',
+            component: TemplateGenerator,
+            meta: { requiresAuth: true }
         },
         {
             path: '/:pathMatch(.*)*',
