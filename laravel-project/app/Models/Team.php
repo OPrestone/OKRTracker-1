@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Team extends Model
 {
@@ -15,7 +15,7 @@ class Team extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array
      */
     protected $fillable = [
         'name',
@@ -27,7 +27,7 @@ class Team extends Model
     ];
 
     /**
-     * Get the parent team.
+     * Get the parent team that this team belongs to.
      */
     public function parent(): BelongsTo
     {
@@ -35,7 +35,7 @@ class Team extends Model
     }
 
     /**
-     * Get the child teams.
+     * Get the child teams for this team.
      */
     public function children(): HasMany
     {
@@ -51,43 +51,77 @@ class Team extends Model
     }
 
     /**
-     * Get the team members.
+     * Get the members of this team.
      */
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'team_user')
-            ->withPivot('role')
-            ->withTimestamps();
+                    ->withPivot('role')
+                    ->withTimestamps();
     }
 
     /**
-     * Get the objectives for the team.
+     * Get the objectives for this team.
      */
     public function objectives(): HasMany
     {
-        return $this->hasMany(Objective::class);
+        return $this->hasMany(Objective::class, 'team_id');
     }
 
     /**
-     * Get the active objectives for the team.
+     * Get all ancestors of this team.
+     *
+     * @return \Illuminate\Support\Collection
      */
-    public function activeObjectives()
+    public function ancestors()
     {
-        return $this->objectives()->where('status', 'active');
+        $ancestors = collect();
+        $parent = $this->parent;
+
+        while ($parent) {
+            $ancestors->push($parent);
+            $parent = $parent->parent;
+        }
+
+        return $ancestors;
     }
 
     /**
-     * Get the team's overall progress.
+     * Check if this team is a descendant of the given team.
+     *
+     * @param Team $team
+     * @return bool
      */
-    public function calculateProgress(): float
+    public function isDescendantOf(Team $team)
     {
-        $objectives = $this->activeObjectives;
+        return $this->ancestors()->contains('id', $team->id);
+    }
+
+    /**
+     * Get all descendants of this team.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function descendants()
+    {
+        $descendants = collect();
         
-        if ($objectives->isEmpty()) {
-            return 0;
+        foreach ($this->children as $child) {
+            $descendants->push($child);
+            $descendants = $descendants->merge($child->descendants());
         }
         
-        $totalProgress = $objectives->sum('progress');
-        return $totalProgress / $objectives->count();
+        return $descendants;
+    }
+
+    /**
+     * Check if this team is an ancestor of the given team.
+     *
+     * @param Team $team
+     * @return bool
+     */
+    public function isAncestorOf(Team $team)
+    {
+        return $this->descendants()->contains('id', $team->id);
     }
 }
