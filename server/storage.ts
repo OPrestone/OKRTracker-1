@@ -4,7 +4,7 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
          chatRooms, ChatRoom, InsertChatRoom, chatRoomMembers, ChatRoomMember, InsertChatRoomMember,
          messages, Message, InsertMessage, attachments, Attachment, InsertAttachment,
-         reactions, Reaction, InsertReaction } from "@shared/schema";
+         reactions, Reaction, InsertReaction, okrTemplates, OkrTemplate, InsertOkrTemplate } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -79,6 +79,16 @@ export interface IStorage {
   getCheckInsByObjective(objectiveId: number): Promise<CheckIn[]>;
   getCheckInsByKeyResult(keyResultId: number): Promise<CheckIn[]>;
   getRecentCheckIns(limit: number): Promise<CheckIn[]>;
+
+  // OKR Templates
+  createOkrTemplate(template: InsertOkrTemplate): Promise<OkrTemplate>;
+  getOkrTemplate(id: number): Promise<OkrTemplate | undefined>;
+  updateOkrTemplate(id: number, template: Partial<InsertOkrTemplate>): Promise<OkrTemplate>;
+  deleteOkrTemplate(id: number): Promise<void>;
+  getAllOkrTemplates(options?: { category?: string, department?: string, search?: string, page?: number, pageSize?: number }): Promise<{ templates: OkrTemplate[], totalCount: number, totalPages: number }>;
+  getOkrTemplatesByCreator(createdById: number): Promise<OkrTemplate[]>;
+  getOkrTemplateCategories(): Promise<string[]>;
+  getOkrTemplateDepartments(): Promise<string[]>;
   
   // Chat Rooms
   createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom>;
