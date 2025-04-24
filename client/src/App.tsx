@@ -49,6 +49,23 @@ import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
 import { useEffect } from "react";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AuthGuard } from "@/lib/auth-guard";
+import { saveRedirectPath } from "@/lib/redirect-service";
+import { useAuth } from "@/hooks/use-auth";
+
+// Location tracker component to monitor navigation for proper redirects
+function LocationTracker() {
+  const [location] = useLocation();
+  const { user } = useAuth();
+  
+  // When navigation occurs and user is not logged in, save the path for post-login redirect
+  useEffect(() => {
+    if (!user && !location.startsWith('/auth')) {
+      saveRedirectPath(location);
+    }
+  }, [location, user]);
+  
+  return null;
+}
 
 function AppRoutes() {
   return (
@@ -125,6 +142,7 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
         <HelpProvider>
           <OnboardingProvider>
+            <LocationTracker />
             <FeatureTour />
             <OnboardingController />
             <AppRoutes />

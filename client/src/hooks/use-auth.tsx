@@ -8,6 +8,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getRedirectPath, clearRedirectPath } from "@/lib/redirect-service";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -54,8 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${user.firstName} ${user.lastName}!`,
       });
-      // Redirect to home page after successful login
-      navigate("/");
+      
+      // Get the saved redirect path or default to homepage
+      const redirectPath = getRedirectPath("/");
+      
+      // Navigate to the intended destination or home page
+      navigate(redirectPath);
     },
     onError: (error: Error) => {
       toast({
@@ -77,7 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome, ${user.firstName} ${user.lastName}!`,
       });
-      // Redirect to home page after successful registration
+      
+      // Clear any existing redirect paths - new users should always go to the dashboard
+      clearRedirectPath();
+      
+      // Redirect to dashboard after successful registration for onboarding
       navigate("/");
     },
     onError: (error: Error) => {
@@ -96,12 +105,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       // First invalidate the query cache to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
       // Then set the user to null
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Clear any redirect paths
+      clearRedirectPath();
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
+      
       // Redirect to auth page after successful logout
       navigate("/auth");
     },

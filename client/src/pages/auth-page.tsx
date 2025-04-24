@@ -162,7 +162,7 @@ export default function AuthPage() {
               <BarChart3 className="h-10 w-10 text-primary" />
             </div>
             <h2 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
-              Dashkit OKR
+              Pinnacle OKR
             </h2>
             <p className="mt-2 text-sm text-slate-600">
               Align your teams, measure what matters, and achieve remarkable results
@@ -174,7 +174,7 @@ export default function AuthPage() {
               <CardTitle className="text-xl flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-primary rounded-full"></div>
-                  <span>Welcome to Dashkit OKR</span>
+                  <span>Welcome to Pinnacle OKR</span>
                 </div>
                 <HelpTooltip
                   id={authenticationHelp.id}

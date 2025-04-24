@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { getRedirectPath } from "./redirect-service";
 
 /**
  * AuthGuard prevents authenticated users from accessing a route 
@@ -15,25 +16,28 @@ export function AuthGuard({
 }) {
   const { user, isLoading } = useAuth();
 
+  // Show loading indicator while checking authentication
   if (isLoading) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-border" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Checking session status...</span>
         </div>
       </Route>
     );
   }
 
-  // If user is authenticated, redirect to home
+  // If user is authenticated, redirect to the saved path or home
   if (user) {
+    const redirectPath = getRedirectPath("/");
     return (
       <Route path={path}>
-        <Redirect to="/" />
+        <Redirect to={redirectPath} />
       </Route>
     );
   }
 
-  // If not authenticated, render the component
+  // If not authenticated, render the component (like the login page)
   return <Route path={path} component={Component} />;
 }
