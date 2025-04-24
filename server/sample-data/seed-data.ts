@@ -43,8 +43,7 @@ async function seedUsers() {
       email: "admin@company.com",
       password: await hashPassword("admin123"),
       role: "admin",
-      language: "en",
-      status: "active"
+      language: "en"
     });
     console.log("Created admin user");
   } else {
@@ -62,8 +61,7 @@ async function seedUsers() {
       role: "manager",
       teamId: 1, // Marketing Team
       onboardingProgress: 100,
-      language: "en",
-      status: "active"
+      language: "en"
     },
     {
       username: "agarcia",
@@ -74,8 +72,7 @@ async function seedUsers() {
       role: "manager",
       teamId: 2, // Product Team
       onboardingProgress: 100,
-      language: "es",
-      status: "active"
+      language: "es"
     },
     {
       username: "lchen",
@@ -86,8 +83,7 @@ async function seedUsers() {
       role: "manager",
       teamId: 3, // Sales Team
       onboardingProgress: 100,
-      language: "zh",
-      status: "active"
+      language: "zh"
     },
     {
       username: "mwilliams",
@@ -99,8 +95,7 @@ async function seedUsers() {
       teamId: 1,
       managerId: 1,
       onboardingProgress: 75,
-      language: "en",
-      status: "active"
+      language: "en"
     },
     {
       username: "sjohnson",
@@ -112,8 +107,7 @@ async function seedUsers() {
       teamId: 1,
       managerId: 1,
       onboardingProgress: 90,
-      language: "en",
-      status: "active"
+      language: "en"
     },
     {
       username: "rpatel",
@@ -125,8 +119,7 @@ async function seedUsers() {
       teamId: 2,
       managerId: 2,
       onboardingProgress: 60,
-      language: "en",
-      status: "active"
+      language: "en"
     },
     {
       username: "ykim",
@@ -138,8 +131,7 @@ async function seedUsers() {
       teamId: 2,
       managerId: 2,
       onboardingProgress: 85,
-      language: "ko",
-      status: "active"
+      language: "ko"
     },
     {
       username: "dmiller",
@@ -151,8 +143,7 @@ async function seedUsers() {
       teamId: 3,
       managerId: 3,
       onboardingProgress: 100,
-      language: "en",
-      status: "active"
+      language: "en"
     },
     {
       username: "tanderson",
@@ -164,8 +155,7 @@ async function seedUsers() {
       teamId: 3,
       managerId: 3,
       onboardingProgress: 50,
-      language: "en",
-      status: "active"
+      language: "en"
     }
   ];
   
@@ -232,9 +222,9 @@ async function seedCadencesAndTimeframes() {
   
   // Create cadences
   const cadenceData = [
-    { name: "Annual", description: "Yearly planning cycle" },
-    { name: "Quarterly", description: "Quarterly planning cycle" },
-    { name: "Monthly", description: "Monthly planning cycle" }
+    { name: "Annual", description: "Yearly planning cycle", period: "annual" },
+    { name: "Quarterly", description: "Quarterly planning cycle", period: "quarterly" },
+    { name: "Monthly", description: "Monthly planning cycle", period: "monthly" }
   ];
   
   const cadenceIds: Record<string, number> = {};
@@ -797,23 +787,28 @@ async function seedAccessGroups() {
   const accessGroupsData = [
     {
       name: "Leadership Team",
-      description: "C-level executives and department heads"
+      description: "C-level executives and department heads",
+      permissions: { admin: true, viewAll: true, editAll: true }
     },
     {
       name: "Management",
-      description: "Team managers and project leads"
+      description: "Team managers and project leads",
+      permissions: { manageTeam: true, assignObjectives: true, viewDepartmentData: true }
     },
     {
       name: "Product Development",
-      description: "Product managers, engineers, and designers"
+      description: "Product managers, engineers, and designers",
+      permissions: { viewProductData: true, updateProgress: true }
     },
     {
       name: "Marketing",
-      description: "Marketing specialists and content creators"
+      description: "Marketing specialists and content creators",
+      permissions: { viewMarketingData: true, updateProgress: true }
     },
     {
       name: "Sales",
-      description: "Sales representatives and account managers"
+      description: "Sales representatives and account managers",
+      permissions: { viewSalesData: true, updateProgress: true }
     }
   ];
   
