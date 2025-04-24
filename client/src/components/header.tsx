@@ -171,15 +171,24 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
                 </div>
               </DropdownMenuLabel>
               <div className="py-2">
-                <DropdownMenuItem className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                <DropdownMenuItem 
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => window.location.href = '/user-profile'}
+                >
                   <User className="mr-3 h-4 w-4 text-gray-500" />
                   <span>My Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                <DropdownMenuItem 
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => window.location.href = '/chat'}
+                >
                   <MessageSquare className="mr-3 h-4 w-4 text-gray-500" />
                   <span>Messages</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                <DropdownMenuItem 
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => window.location.href = '/settings'}
+                >
                   <Settings className="mr-3 h-4 w-4 text-gray-500" />
                   <span>Settings</span>
                 </DropdownMenuItem>

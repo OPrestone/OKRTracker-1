@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 import { useToast } from '@/hooks/use-toast';
 import { 
   PlusCircle, 
@@ -171,6 +172,80 @@ const mockUsers = [
   { id: 3, name: "Alice Johnson" },
   { id: 4, name: "Bob Brown" },
   { id: 5, name: "Charlie Davis" }
+];
+
+// Column definitions for DataTable
+import { ColumnDef } from "@tanstack/react-table";
+
+const scheduleColumns: ColumnDef<CheckInSchedule>[] = [
+  {
+    accessorKey: "name",
+    header: "Schedule Name",
+    cell: ({ row }) => (
+      <div className="font-medium">{row.original.name}</div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <Badge 
+        variant={row.original.status === 'active' ? 'default' : 'secondary'}
+        className={row.original.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
+      >
+        {row.original.status === 'active' ? 'Active' : 'Paused'}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "cadence",
+    header: "Cadence",
+    cell: ({ row }) => formatCadence(row.original.cadence),
+  },
+  {
+    accessorKey: "participants",
+    header: "Participants",
+    cell: ({ row }) => formatParticipants(row.original.participants),
+  },
+  {
+    accessorKey: "templateName",
+    header: "Template",
+    cell: ({ row }) => row.original.templateName,
+  },
+  {
+    accessorKey: "nextRunAt",
+    header: "Next Run",
+    cell: ({ row }) => {
+      const nextRunDate = new Date(row.original.nextRunAt);
+      return nextRunDate.toLocaleDateString() + ' ' + formatTime(nextRunDate.toTimeString().split(' ')[0]);
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const schedule = row.original;
+      return (
+        <div className="flex items-center space-x-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => toggleScheduleStatus(schedule.id, schedule.status)}
+          >
+            {schedule.status === 'active' ? (
+              <XCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle className="h-4 w-4" />
+            )}
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      );
+    },
+  },
 ];
 
 const SchedulesPage = () => {
