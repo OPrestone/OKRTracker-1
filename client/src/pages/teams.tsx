@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
   Card, 
@@ -12,7 +13,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Users, Search, AlertCircle, Mail, MoreHorizontal, Eye, Target, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  PlusCircle, 
+  Users, 
+  Search, 
+  AlertCircle, 
+  Mail, 
+  MoreHorizontal, 
+  Eye, 
+  Target, 
+  ChevronLeft, 
+  ChevronRight, 
+  Building, 
+  Edit, 
+  Trash2, 
+  UserPlus 
+} from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -34,14 +50,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Team, User } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DataTable } from "@/components/ui/data-table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Define TeamObjective interface
 interface TeamObjective {
   id: number;
-  title: string;
+  title: string;  // Primary title field
+  name: string;   // Alternative name field (some components may use this)
   description: string;
   level: string;
   ownerId: number;
@@ -197,6 +223,9 @@ const Teams = () => {
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [newTeamParent, setNewTeamParent] = useState("");
   
+  // View state (table or cards)
+  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
+  
   // Pagination state
   const [currentMembersPage, setCurrentMembersPage] = useState(1);
   const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
@@ -245,6 +274,132 @@ const Teams = () => {
   const getTotalPages = (totalItems: number): number => {
     return Math.ceil(totalItems / itemsPerPage);
   };
+  
+  // DataTable column definitions
+  const columns: ColumnDef<Team>[] = [
+    {
+      accessorKey: "icon",
+      header: "",
+      cell: ({ row }) => {
+        const team = row.original;
+        const teamColor = team.color || "#3B82F6";
+        return (
+          <div 
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: `${teamColor}20` }}
+          >
+            <Building size={18} style={{ color: teamColor }} />
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "name",
+      header: "Team Name",
+      cell: ({ row }) => {
+        const team = row.original;
+        return <div className="font-medium">{team.name}</div>;
+      },
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: ({ row }) => {
+        const description = row.getValue("description") as string;
+        return (
+          <div className="max-w-[300px] truncate">
+            {description || "No description provided"}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "ownerId",
+      header: "Owner",
+      cell: ({ row }) => {
+        const ownerId = row.getValue("ownerId") as number;
+        return (
+          <div className="flex items-center">
+            <Avatar className="h-8 w-8 mr-2">
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {ownerId ? `U${ownerId}` : "?"}
+              </AvatarFallback>
+            </Avatar>
+            <span>{ownerId || "Unassigned"}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "members",
+      header: "Members",
+      cell: ({ row }) => {
+        const team = row.original;
+        return (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Users size={14} />
+            <span>0 members</span>
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const team = row.original;
+        
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => handleTeamClick(team)}
+              >
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => {
+                  // Open edit dialog
+                  console.log("Edit team:", team.id);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit team
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => {
+                  // Open add members dialog
+                  console.log("Add members to team:", team.id);
+                }}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add members
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer text-destructive"
+                onClick={() => {
+                  // Open delete confirmation
+                  console.log("Delete team:", team.id);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete team
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const handleCreateTeam = async () => {
     try {
@@ -292,6 +447,34 @@ const Teams = () => {
         </div>
         
         <div className="flex gap-3">
+          <div className="flex border rounded-md overflow-hidden">
+            <Button 
+              variant={viewMode === "table" ? "default" : "ghost"}
+              className="rounded-none px-3"
+              onClick={() => setViewMode("table")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+              Table
+            </Button>
+            <Button 
+              variant={viewMode === "cards" ? "default" : "ghost"}
+              className="rounded-none px-3"
+              onClick={() => setViewMode("cards")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+              </svg>
+              Cards
+            </Button>
+          </div>
+        
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input 
@@ -411,6 +594,38 @@ const Teams = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Main content - Cards or Table view */}
+      {teamsLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      ) : (
+        <>
+          {viewMode === "table" ? (
+            <DataTable
+              columns={columns}
+              data={filteredTeams || []}
+              searchColumn="name"
+              searchPlaceholder="Search teams..."
+              tableTitle="All Teams"
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {filteredTeams?.map(team => (
+                <TeamCard key={team.id} team={team} onClick={handleTeamClick} />
+              ))}
+              {filteredTeams?.length === 0 && (
+                <div className="col-span-full text-center p-8">
+                  <h3 className="text-lg font-medium">No teams found</h3>
+                  <p className="text-muted-foreground mt-1">Try adjusting your search criteria.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Team details dialog */}
       <Dialog open={!!selectedTeam} onOpenChange={(open) => !open && handleCloseDetails()}>
