@@ -47,70 +47,59 @@ import { GetStartedMenu } from "@/components/onboarding/get-started-menu";
 import { IntroVideoDialog } from "@/components/onboarding/intro-video-dialog";
 import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
 import { useEffect } from "react";
-
-// Simple Public Route Component to replace ProtectedRoute temporarily
-interface PublicRouteProps {
-  path: string;
-  component: React.ComponentType;
-}
-
-const PublicRoute = ({ path, component: Component }: PublicRouteProps) => (
-  <Route path={path}>
-    <Component />
-  </Route>
-);
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function AppRoutes() {
   return (
     <Switch>
-      <PublicRoute path="/auth" component={AuthPage} />
-      <PublicRoute path="/" component={Dashboard} />
-      <PublicRoute path="/home" component={Home} />
-      <PublicRoute path="/quick-start-guide" component={QuickStartGuide} />
-      <PublicRoute path="/mission" component={MissionPage} />
-      <PublicRoute path="/company-strategy" component={CompanyStrategy} />
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/" component={Dashboard} />
+      <ProtectedRoute path="/home" component={Home} />
+      <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />
+      <ProtectedRoute path="/mission" component={MissionPage} />
+      <ProtectedRoute path="/company-strategy" component={CompanyStrategy} />
       
       {/* Manage OKRs Section */}
-      <PublicRoute path="/my-okrs" component={MyOKRs} />
-      <PublicRoute path="/draft-okrs" component={DraftOKRs} />
-      <PublicRoute path="/approved-okrs" component={ApprovedOKRs} />
-      <PublicRoute path="/company-okrs" component={CompanyOKRs} />
-      <PublicRoute path="/objective-detail/:id" component={ObjectiveDetail} />
+      <ProtectedRoute path="/my-okrs" component={MyOKRs} />
+      <ProtectedRoute path="/draft-okrs" component={DraftOKRs} />
+      <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
+      <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       
       {/* User Management Section */}
-      <PublicRoute path="/teams" component={Teams} />
-      <PublicRoute path="/teams/:id" component={TeamDetail} />
-      <PublicRoute path="/users" component={UsersPage} />
-      <PublicRoute path="/all-users" component={AllUsers} />
-      <PublicRoute path="/user-profile" component={UserProfile} />
+      <ProtectedRoute path="/teams" component={Teams} />
+      <ProtectedRoute path="/teams/:id" component={TeamDetail} />
+      <ProtectedRoute path="/users" component={UsersPage} />
+      <ProtectedRoute path="/all-users" component={AllUsers} />
+      <ProtectedRoute path="/user-profile" component={UserProfile} />
       
       {/* Dashboards */}
-      <PublicRoute path="/team-leader-dashboard" component={TeamLeaderDashboard} />
-      <PublicRoute path="/checkins" component={Checkins} />
-      <PublicRoute path="/one-on-one-meetings" component={OneOnOneMeetings} />
+      <ProtectedRoute path="/team-leader-dashboard" component={TeamLeaderDashboard} />
+      <ProtectedRoute path="/checkins" component={Checkins} />
+      <ProtectedRoute path="/one-on-one-meetings" component={OneOnOneMeetings} />
       
       {/* Reports Section */}
-      <PublicRoute path="/reports" component={Reports} />
-      <PublicRoute path="/okr-reports" component={OKRReports} />
-      <PublicRoute path="/export-reports" component={ExportReports} />
-      <PublicRoute path="/team-performance" component={TeamPerformance} />
-      <PublicRoute path="/ai-recommendations" component={AIRecommendations} />
+      <ProtectedRoute path="/reports" component={Reports} />
+      <ProtectedRoute path="/okr-reports" component={OKRReports} />
+      <ProtectedRoute path="/export-reports" component={ExportReports} />
+      <ProtectedRoute path="/team-performance" component={TeamPerformance} />
+      <ProtectedRoute path="/ai-recommendations" component={AIRecommendations} />
       
       {/* Communication */}
-      <PublicRoute path="/chat" component={ChatPage} />
+      <ProtectedRoute path="/chat" component={ChatPage} />
       
       {/* Drag and Drop Interfaces */}
-      <PublicRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
-      <PublicRoute path="/timeline-editor" component={TimelineEditor} />
-      <PublicRoute path="/custom-dashboard" component={CustomDashboard} />
+      <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
+      <ProtectedRoute path="/timeline-editor" component={TimelineEditor} />
+      <ProtectedRoute path="/custom-dashboard" component={CustomDashboard} />
       
-      <PublicRoute path="/configuration/general" component={General} />
-      <PublicRoute path="/configuration/teams" component={TeamsConfig} />
-      <PublicRoute path="/configuration/users-permissions" component={UsersPermissions} />
-      <PublicRoute path="/configuration/integrations" component={Integrations} />
-      <PublicRoute path="/configuration/status-settings" component={StatusSettings} />
-      <PublicRoute path="/configuration/cadences" component={Cadences} />
-      <PublicRoute path="/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/configuration/general" component={General} />
+      <ProtectedRoute path="/configuration/teams" component={TeamsConfig} />
+      <ProtectedRoute path="/configuration/users-permissions" component={UsersPermissions} />
+      <ProtectedRoute path="/configuration/integrations" component={Integrations} />
+      <ProtectedRoute path="/configuration/status-settings" component={StatusSettings} />
+      <ProtectedRoute path="/configuration/cadences" component={Cadences} />
+      <ProtectedRoute path="/configuration/timeframes" component={Timeframes} />
       <Route component={NotFound} />
     </Switch>
   );
