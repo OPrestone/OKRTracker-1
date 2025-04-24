@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   User, 
   Mail, 
@@ -18,132 +20,105 @@ import {
   CheckCircle, 
   AlertCircle,
   BarChart3,
-  Clock
+  Clock,
+  MapPin,
+  Phone,
+  Briefcase,
+  Medal,
+  Activity,
+  Edit,
+  Settings,
+  FileText,
+  AtSign,
+  Shield,
+  Users,
+  Star,
+  TrendingUp,
+  PlusCircle
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Objective, KeyResult, User as UserType, CheckIn, Team } from "@shared/schema";
 
 // Types for the profile
-interface KeyResult {
-  id: number;
+interface KeyResultWithDetails extends KeyResult {
   title: string;
   progress: number;
 }
 
-interface Objective {
-  id: number;
-  title: string;
-  description: string;
-  timeframe: string;
-  progress: number;
-  status: string;
-  keyResults: KeyResult[];
+interface ObjectiveWithKeyResults extends Objective {
+  keyResults: KeyResultWithDetails[];
 }
-
-// Sample data for profile
-const userProfile = {
-  name: "Alex Johnson",
-  position: "Product Manager",
-  email: "alex.johnson@company.com",
-  department: "Product Development",
-  joinDate: "March 2020",
-  avatarUrl: "",
-  avatarInitials: "AJ",
-  bio: "Experienced product manager focused on user-centered design and agile methodologies. Passionate about creating products that solve real user problems."
-};
-
-const userObjectives: Objective[] = [
-  {
-    id: 1,
-    title: "Launch mobile app redesign",
-    description: "Complete redesign and release of our mobile application with improved user experience",
-    timeframe: "Q3 2023",
-    progress: 85,
-    status: "on_track",
-    keyResults: [
-      { id: 101, title: "Complete UI design revisions", progress: 100 },
-      { id: 102, title: "Implement backend API changes", progress: 90 },
-      { id: 103, title: "Reach 95% test coverage", progress: 80 },
-      { id: 104, title: "Execute beta testing program", progress: 70 }
-    ]
-  },
-  {
-    id: 2,
-    title: "Improve user retention metrics",
-    description: "Increase user retention through targeted improvements to the core user experience",
-    timeframe: "Q3 2023",
-    progress: 60,
-    status: "at_risk",
-    keyResults: [
-      { id: 201, title: "Increase 30-day retention from 25% to 40%", progress: 50 },
-      { id: 202, title: "Reduce first-week churn by 15%", progress: 40 },
-      { id: 203, title: "Increase daily active users by 25%", progress: 90 }
-    ]
-  },
-  {
-    id: 3,
-    title: "Establish customer feedback program",
-    description: "Create structured process for collecting and acting on customer feedback",
-    timeframe: "Q3 2023",
-    progress: 35,
-    status: "behind",
-    keyResults: [
-      { id: 301, title: "Implement in-app feedback mechanism", progress: 80 },
-      { id: 302, title: "Conduct 20 customer interviews", progress: 25 },
-      { id: 303, title: "Create feedback analysis dashboard", progress: 10 }
-    ]
-  },
-  {
-    id: 4,
-    title: "Optimize feature development process",
-    description: "Streamline the process from feature ideation to delivery",
-    timeframe: "Q4 2023",
-    progress: 15,
-    status: "behind",
-    keyResults: [
-      { id: 401, title: "Reduce average development cycle by 20%", progress: 10 },
-      { id: 402, title: "Implement automated testing for all new features", progress: 30 },
-      { id: 403, title: "Document and standardize feature implementation process", progress: 5 }
-    ]
-  }
-];
-
-// Statistics for the profile
-const userStats = [
-  { name: "Objectives", value: userObjectives.length },
-  { name: "On Track", value: userObjectives.filter(obj => obj.progress >= 70).length },
-  { name: "At Risk", value: userObjectives.filter(obj => obj.progress >= 40 && obj.progress < 70).length },
-  { name: "Behind", value: userObjectives.filter(obj => obj.progress < 40).length }
-];
 
 export default function UserProfile() {
   const [, navigate] = useLocation();
-
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // Fetch user details if needed
+  const { data: userDetails, isLoading: userLoading } = useQuery<UserType>({
+    queryKey: ["/api/users", user?.id],
+    enabled: !!user
+  });
+  
+  // Fetch user's objectives
+  const { data: userObjectives, isLoading: objectivesLoading } = useQuery<Objective[]>({
+    queryKey: ["/api/users", user?.id, "objectives"],
+    enabled: !!user
+  });
+  
+  // Fetch user's team
+  const { data: userTeam, isLoading: teamLoading } = useQuery<Team>({
+    queryKey: ["/api/teams", user?.teamId],
+    enabled: !!user?.teamId
+  });
+  
+  // Fetch check-ins
+  const { data: checkIns, isLoading: checkInsLoading } = useQuery<CheckIn[]>({
+    queryKey: ["/api/check-ins", "user", user?.id],
+    enabled: !!user
+  });
+  
   // Helper function to determine progress color class based on value
-  const getProgressColorClass = (progress: number): string => {
+  const getProgressColorClass = (progress: number | null | undefined): string => {
+    if (!progress) return "text-gray-400";
     if (progress >= 76) return "text-green-600";
     if (progress >= 51) return "text-yellow-600";
     if (progress >= 26) return "text-orange-600";
     return "text-red-600";
   };
 
-  // Helper function to get status color
-  const getStatusColor = (status: string): string => {
-    switch(status) {
-      case "on_track": return "bg-green-100 text-green-800";
-      case "at_risk": return "bg-amber-100 text-amber-800";
-      case "behind": return "bg-red-100 text-red-800";
-      case "completed": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+  // Helper function to get badge variant based on status
+  const getStatusBadgeVariant = (status: string | null | undefined): "default" | "destructive" | "outline" | "secondary" => {
+    if (!status) return "outline";
+    
+    switch(status.toLowerCase()) {
+      case "on track": 
+      case "on_track": 
+        return "default";
+      case "at risk":
+      case "at_risk":
+        return "outline";
+      case "behind":
+        return "destructive";
+      case "completed":
+        return "secondary";
+      default: 
+        return "outline";
     }
   };
 
   // Helper function to get status text
-  const getStatusText = (status: string): string => {
-    switch(status) {
+  const getStatusText = (status: string | null | undefined): string => {
+    if (!status) return "Not Started";
+    
+    switch(status.toLowerCase()) {
       case "on_track": return "On Track";
       case "at_risk": return "At Risk";
       case "behind": return "Behind";
       case "completed": return "Completed";
-      default: return "Unknown";
+      default: return status;
     }
   };
 
@@ -151,195 +126,665 @@ export default function UserProfile() {
   const handleViewObjective = (id: number) => {
     navigate(`/objective-detail/${id}`);
   };
+  
+  // Get user initials for avatar
+  const getUserInitials = (): string => {
+    if (!user) return "?";
+    
+    const firstInitial = user.firstName ? user.firstName.charAt(0) : "";
+    const lastInitial = user.lastName ? user.lastName.charAt(0) : "";
+    
+    return (firstInitial + lastInitial).toUpperCase();
+  };
+  
+  // Format date helper
+  const formatDate = (date: Date | string | null | undefined): string => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
+  // Prepare stats from actual data
+  const stats = [
+    { 
+      name: "Objectives", 
+      value: userObjectives?.length || 0,
+      icon: <Target className="h-4 w-4 text-primary" /> 
+    },
+    { 
+      name: "On Track", 
+      value: userObjectives?.filter(obj => obj.progress && obj.progress >= 70).length || 0,
+      icon: <CheckCircle className="h-4 w-4 text-green-500" /> 
+    },
+    { 
+      name: "At Risk", 
+      value: userObjectives?.filter(obj => obj.progress && obj.progress >= 40 && obj.progress < 70).length || 0,
+      icon: <AlertCircle className="h-4 w-4 text-amber-500" /> 
+    },
+    { 
+      name: "Behind", 
+      value: userObjectives?.filter(obj => obj.progress && obj.progress < 40).length || 0,
+      icon: <Activity className="h-4 w-4 text-red-500" /> 
+    }
+  ];
 
   return (
     <DashboardLayout title="My Profile">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Profile Card */}
-          <Card className="md:col-span-1">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4">
-                <Avatar className="h-24 w-24">
-                  {userProfile.avatarUrl ? (
-                    <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-9">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+            <Button size="sm" className="h-9">
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Overview</span>
+            <span className="sm:hidden">Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="objectives" className="gap-2">
+            <Target className="h-4 w-4" />
+            <span>Objectives</span>
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="gap-2">
+            <Activity className="h-4 w-4" />
+            <span className="hidden sm:inline">Recent Activity</span>
+            <span className="sm:hidden">Activity</span>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="gap-2">
+            <Users className="h-4 w-4" />
+            <span>My Team</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Overview Tab */}
+        <TabsContent value="overview">
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Profile Card */}
+            <Card className="md:col-span-1">
+              <CardHeader className="text-center relative pb-0">
+                <div className="absolute right-4 top-4">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="mx-auto mb-3 mt-2">
+                  {userLoading ? (
+                    <Skeleton className="h-24 w-24 rounded-full" />
                   ) : (
-                    <AvatarFallback className="text-2xl">{userProfile.avatarInitials}</AvatarFallback>
+                    <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+                      <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
-                </Avatar>
-              </div>
-              <CardTitle>{userProfile.name}</CardTitle>
-              <CardDescription>{userProfile.position}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-sm">{userProfile.email}</span>
-                </div>
-                <div className="flex items-center">
-                  <Building className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-sm">{userProfile.department}</span>
-                </div>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="text-sm">Joined {userProfile.joinDate}</span>
                 </div>
                 
-                <Separator />
+                {userLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-32 mx-auto" />
+                    <Skeleton className="h-4 w-24 mx-auto" />
+                  </div>
+                ) : (
+                  <>
+                    <CardTitle className="text-xl">
+                      {user?.firstName} {user?.lastName}
+                    </CardTitle>
+                    <CardDescription className="text-md font-medium">
+                      {user?.role || "Team Member"}
+                    </CardDescription>
+                  </>
+                )}
                 
-                <div>
-                  <h4 className="text-sm font-medium mb-2">About</h4>
-                  <p className="text-sm text-gray-600">{userProfile.bio}</p>
+                <div className="flex justify-center gap-1 mt-2">
+                  <Badge variant="outline" className="bg-primary/5">
+                    {userTeam?.name || (user?.teamId ? "Loading team..." : "No team assigned")}
+                  </Badge>
                 </div>
-                
-                <Separator />
-                
-                {/* Stats */}
-                <div>
-                  <h4 className="text-sm font-medium mb-2">OKR Statistics</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {userStats.map((stat, index) => (
-                      <div key={index} className="bg-gray-50 p-2 rounded-md text-center">
-                        <div className="text-2xl font-bold">{stat.value}</div>
-                        <div className="text-xs text-gray-500">{stat.name}</div>
+              </CardHeader>
+              
+              <CardContent className="mt-4">
+                <div className="space-y-4">
+                  {userLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-5 w-full" />
+                      <Skeleton className="h-5 w-full" />
+                      <Skeleton className="h-5 w-full" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
+                        <span className="text-sm">{user?.email || "No email available"}</span>
                       </div>
-                    ))}
+                      
+                      <div className="flex items-center">
+                        <Building className="h-4 w-4 mr-3 text-muted-foreground" />
+                        <span className="text-sm">{userTeam?.name || "No department assigned"}</span>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-3 text-muted-foreground" />
+                        <span className="text-sm">Joined {formatDate(user?.createdAt)}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  <Separator />
+                  
+                  {/* Stats Cards */}
+                  <div>
+                    <h3 className="text-sm font-medium mb-3 flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-2 text-primary" />
+                      OKR Statistics
+                    </h3>
+                    
+                    {objectivesLoading ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Skeleton className="h-16" />
+                        <Skeleton className="h-16" />
+                        <Skeleton className="h-16" />
+                        <Skeleton className="h-16" />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {stats.map((stat, index) => (
+                          <div 
+                            key={index} 
+                            className="bg-muted/40 border border-border/40 p-3 rounded-lg flex flex-col items-center justify-center"
+                          >
+                            <div className="flex items-center gap-1 mb-1">
+                              <div className="bg-background p-1 rounded-full">
+                                {stat.icon}
+                              </div>
+                            </div>
+                            <div className="text-2xl font-bold">{stat.value}</div>
+                            <div className="text-xs text-muted-foreground">{stat.name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            
+            {/* Right Panel */}
+            <div className="md:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Quick Overview</CardTitle>
+                      <CardDescription>Your current OKR performance and recent activities</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href="#objectives">
+                        View All
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {objectivesLoading ? (
+                    <div className="p-6 space-y-4">
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                  ) : userObjectives && userObjectives.length > 0 ? (
+                    <div className="divide-y">
+                      {userObjectives.slice(0, 3).map((objective, index) => (
+                        <div 
+                          key={objective.id} 
+                          className="p-4 hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-medium">{objective.title}</h3>
+                                <Badge variant={getStatusBadgeVariant(objective.status)}>
+                                  {getStatusText(objective.status)}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                                {objective.description || "No description available"}
+                              </p>
+                            </div>
+                            <div className={`text-lg font-bold ${getProgressColorClass(objective.progress)}`}>
+                              {objective.progress || 0}%
+                            </div>
+                          </div>
+                          <Progress 
+                            value={objective.progress || 0} 
+                            className="h-2" 
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="mt-2 p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => handleViewObjective(objective.id)}
+                          >
+                            View details
+                            <ChevronRight className="ml-1 h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      {userObjectives.length > 3 && (
+                        <div className="p-3 text-center">
+                          <Button variant="link" size="sm" asChild>
+                            <a href="#objectives">
+                              View all {userObjectives.length} objectives
+                              <ChevronRight className="ml-1 h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                        <Target className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-medium mb-1">No objectives yet</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Get started by creating your first objective
+                      </p>
+                      <Button size="sm">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Objective
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Recent Activity</CardTitle>
+                      <CardDescription>Your latest updates and check-ins</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href="#activity">
+                        View All
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {checkInsLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  ) : checkIns && checkIns.length > 0 ? (
+                    <div className="space-y-4">
+                      {checkIns.slice(0, 4).map((checkIn, index) => (
+                        <div key={checkIn.id || index} className="flex gap-3 items-start">
+                          <div className={`p-2 rounded-full 
+                            ${checkIn.progress && checkIn.progress > 70 
+                              ? "bg-green-100 text-green-600" 
+                              : checkIn.progress && checkIn.progress > 40 
+                              ? "bg-amber-100 text-amber-600"
+                              : "bg-red-100 text-red-600"}`
+                          }>
+                            {checkIn.progress && checkIn.progress > 70 
+                              ? <CheckCircle className="h-4 w-4" />
+                              : checkIn.progress && checkIn.progress > 40
+                              ? <AlertCircle className="h-4 w-4" />
+                              : <Activity className="h-4 w-4" />
+                            }
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">
+                              {checkIn.objectiveId ? "Objective" : "Key Result"} Check-in 
+                              {checkIn.progress !== undefined && checkIn.progress !== null ? ` (${checkIn.progress}%)` : ""}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {checkIn.notes || "No notes provided"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(checkIn.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                        <Clock className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-medium mb-1">No recent activity</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Check-ins and updates will appear here
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        
+        {/* Objectives Tab */}
+        <TabsContent value="objectives" id="objectives">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>My Objectives</CardTitle>
+                  <CardDescription>All your objectives and their progress</CardDescription>
+                </div>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Objective
+                </Button>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
-                <User className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Content Area */}
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>OKR Summary</CardTitle>
-                <CardDescription>Your objectives and key results at a glance</CardDescription>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
+              {objectivesLoading ? (
+                <div className="space-y-6">
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
+              ) : userObjectives && userObjectives.length > 0 ? (
                 <div className="space-y-6">
                   {userObjectives.map((objective) => (
                     <div 
                       key={objective.id} 
-                      className="p-4 border rounded-md hover:shadow-sm cursor-pointer transition-all"
+                      className="p-4 border rounded-lg hover:border-primary/50 hover:shadow-sm transition-all"
                       onClick={() => handleViewObjective(objective.id)}
                     >
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-3">
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{objective.title}</h3>
-                            <Badge className={getStatusColor(objective.status)}>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="text-lg font-medium">{objective.title}</h3>
+                            <Badge variant={getStatusBadgeVariant(objective.status)}>
                               {getStatusText(objective.status)}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{objective.description}</p>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {objective.description || "No description available"}
+                          </p>
+                          <div className="flex items-center text-xs text-muted-foreground gap-4">
+                            <span className="flex items-center">
+                              <Calendar className="h-3.5 w-3.5 mr-1" />
+                              Q2 2024
+                            </span>
+                            <span className="flex items-center">
+                              <Users className="h-3.5 w-3.5 mr-1" />
+                              {userTeam?.name || "Personal"}
+                            </span>
+                          </div>
                         </div>
-                        <div className={`text-lg font-bold ${getProgressColorClass(objective.progress)}`}>
-                          {objective.progress}%
+                        <div className="flex flex-col items-end">
+                          <div className="text-2xl font-bold mb-1 flex items-center">
+                            <span className={getProgressColorClass(objective.progress)}>
+                              {objective.progress || 0}%
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">Progress</div>
                         </div>
                       </div>
-
-                      <div className="mb-4">
-                        <Progress value={objective.progress} className="h-2" />
+                      
+                      <div className="mb-4 w-full">
+                        <Progress value={objective.progress || 0} className="h-2" />
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Key Results ({objective.keyResults.length})</span>
-                          <span className="text-gray-500">{objective.timeframe}</span>
-                        </div>
-                        
-                        <div className="grid gap-2">
-                          {objective.keyResults.slice(0, 2).map((kr) => (
-                            <div key={kr.id} className="text-sm">
-                              <div className="flex justify-between items-center">
-                                <div className="truncate">{kr.title}</div>
-                                <div className={getProgressColorClass(kr.progress)}>
-                                  {kr.progress}%
-                                </div>
-                              </div>
-                              <Progress value={kr.progress} className="h-1.5 mt-1" />
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {objective.keyResults.length > 2 && (
-                          <Button variant="ghost" size="sm" className="w-full mt-2">
-                            View all {objective.keyResults.length} key results
-                            <ChevronRight className="h-4 w-4 ml-1" />
-                          </Button>
-                        )}
+                      
+                      <div className="flex justify-end">
+                        <Button variant="outline" size="sm">
+                          View Details
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your latest updates and check-ins</CardDescription>
-              </CardHeader>
-              <CardContent>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Target className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No objectives found</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    You currently don't have any objectives. Create your first objective to start tracking your progress.
+                  </p>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Objective
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Activity Tab */}
+        <TabsContent value="activity" id="activity">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Your check-ins and updates over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {checkInsLoading ? (
                 <div className="space-y-4">
-                  <div className="flex gap-3 items-start">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : checkIns && checkIns.length > 0 ? (
+                <div className="space-y-6">
+                  {checkIns.map((checkIn, index) => (
+                    <div key={checkIn.id || index} className="flex gap-4 items-start p-4 border rounded-lg">
+                      <div className={`p-3 rounded-full 
+                        ${checkIn.progress && checkIn.progress > 70 
+                          ? "bg-green-100 text-green-600" 
+                          : checkIn.progress && checkIn.progress > 40 
+                          ? "bg-amber-100 text-amber-600"
+                          : "bg-red-100 text-red-600"}`
+                      }>
+                        {checkIn.progress && checkIn.progress > 70 
+                          ? <CheckCircle className="h-5 w-5" />
+                          : checkIn.progress && checkIn.progress > 40
+                          ? <AlertCircle className="h-5 w-5" />
+                          : <Activity className="h-5 w-5" />
+                        }
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                          <div>
+                            <h3 className="font-medium">
+                              {checkIn.objectiveId ? "Objective" : "Key Result"} Check-in
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDate(checkIn.createdAt)}
+                            </p>
+                          </div>
+                          {checkIn.progress !== undefined && checkIn.progress !== null && (
+                            <Badge variant="outline" className="whitespace-nowrap">
+                              Progress: {checkIn.progress}%
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="text-sm">
+                          <p>{checkIn.notes || "No notes provided for this check-in."}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">Completed key result</p>
-                      <p className="text-sm text-gray-600">Complete UI design revisions</p>
-                      <p className="text-xs text-gray-500">2 days ago</p>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Clock className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No activity yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    You haven't recorded any check-ins or updates yet. Start by checking in with your objectives or key results.
+                  </p>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Check-in
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Team Tab */}
+        <TabsContent value="team" id="team">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    {teamLoading ? (
+                      <Skeleton className="h-6 w-32" />
+                    ) : userTeam ? (
+                      <>{userTeam.name} Team</>
+                    ) : (
+                      <>No Team Assigned</>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {teamLoading ? (
+                      <Skeleton className="h-4 w-48 mt-1" />
+                    ) : userTeam ? (
+                      <>Your team members and their progress</>
+                    ) : (
+                      <>You are not currently assigned to any team</>
+                    )}
+                  </CardDescription>
+                </div>
+                {userTeam && (
+                  <Button variant="outline" size="sm">
+                    View Team Dashboard
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {teamLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ) : userTeam ? (
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">Team Information</h3>
+                      <Badge variant="outline">{userTeam.name}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {userTeam.description || "No team description available"}
+                    </p>
+                    <div className="flex items-center text-sm text-muted-foreground gap-4">
+                      <span className="flex items-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        3 members
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="flex gap-3 items-start">
-                    <div className="bg-amber-100 p-2 rounded-full">
-                      <AlertCircle className="h-4 w-4 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Objective at risk</p>
-                      <p className="text-sm text-gray-600">Improve user retention metrics</p>
-                      <p className="text-xs text-gray-500">3 days ago</p>
-                    </div>
-                  </div>
+                  <h3 className="font-medium pt-2">Team Members</h3>
                   
-                  <div className="flex gap-3 items-start">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <BarChart3 className="h-4 w-4 text-green-600" />
+                  <div className="grid gap-4">
+                    <div className="flex items-center p-3 hover:bg-muted/30 transition-colors rounded-md">
+                      <Avatar className="h-10 w-10 mr-3">
+                        <AvatarFallback className="bg-primary/10 text-primary">JD</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <div>
+                            <h4 className="font-medium">John Doe</h4>
+                            <p className="text-xs text-muted-foreground">Product Manager</p>
+                          </div>
+                          <div className="flex items-center">
+                            <Badge className="mr-2">Team Lead</Badge>
+                            <Badge variant="outline">3 objectives</Badge>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">Progress update</p>
-                      <p className="text-sm text-gray-600">Launch mobile app redesign (85% → 90%)</p>
-                      <p className="text-xs text-gray-500">5 days ago</p>
+                    
+                    <div className="flex items-center p-3 hover:bg-muted/30 transition-colors rounded-md">
+                      <Avatar className="h-10 w-10 mr-3">
+                        <AvatarFallback className="bg-primary/10 text-primary">AS</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <div>
+                            <h4 className="font-medium">Alice Smith</h4>
+                            <p className="text-xs text-muted-foreground">UX Designer</p>
+                          </div>
+                          <div>
+                            <Badge variant="outline">2 objectives</Badge>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-3 items-start">
-                    <div className="bg-indigo-100 p-2 rounded-full">
-                      <Clock className="h-4 w-4 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Added new objective</p>
-                      <p className="text-sm text-gray-600">Optimize feature development process</p>
-                      <p className="text-xs text-gray-500">1 week ago</p>
+                    
+                    <div className="flex items-center p-3 hover:bg-muted/30 transition-colors rounded-md">
+                      <Avatar className="h-10 w-10 mr-3">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <div>
+                            <h4 className="font-medium">{user?.firstName} {user?.lastName}</h4>
+                            <p className="text-xs text-muted-foreground">{user?.role || "Team Member"}</p>
+                          </div>
+                          <div>
+                            <Badge variant="outline">{userObjectives?.length || 0} objectives</Badge>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Users className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No Team Assigned</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    You are not currently assigned to any team. Contact your administrator to join a team.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 }
