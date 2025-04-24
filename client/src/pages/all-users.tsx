@@ -87,7 +87,7 @@ export default function AllUsers() {
       
       setIsTeamAssignDialogOpen(false);
       setSelectedUser(null);
-      setTeamAssignment({ teamId: "" });
+      setTeamAssignment({ teamId: "0" });
       
       const action = data.teamId ? "assigned to" : "removed from";
       const teamName = data.teamId && teams 
@@ -111,13 +111,13 @@ export default function AllUsers() {
   const handleAssignTeam = () => {
     if (!selectedUser) return;
     
-    const teamId = teamAssignment.teamId === "" ? null : Number(teamAssignment.teamId);
+    const teamId = teamAssignment.teamId === "" || teamAssignment.teamId === "0" ? null : Number(teamAssignment.teamId);
     assignTeamMutation.mutate({ id: selectedUser.id, teamId });
   };
   
   const openTeamAssignDialog = (user: User) => {
     setSelectedUser(user);
-    setTeamAssignment({ teamId: user.teamId?.toString() || "" });
+    setTeamAssignment({ teamId: user.teamId?.toString() || "0" });
     setIsTeamAssignDialogOpen(true);
   };
   
@@ -343,7 +343,7 @@ export default function AllUsers() {
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Team</SelectItem>
+                  <SelectItem value="0">No Team</SelectItem>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id.toString()}>
                       {team.name}
