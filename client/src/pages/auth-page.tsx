@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
 import {
   Card,
@@ -63,7 +64,15 @@ type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { loginMutation, registerMutation } = useAuth();
+  const [, navigate] = useLocation();
+  const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  
+  // Redirect to home if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   // Login form
   const loginForm = useForm<LoginValues>({
@@ -88,7 +97,11 @@ export default function AuthPage() {
 
   // Login submission
   function onLoginSubmit(data: LoginValues) {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        navigate("/");
+      }
+    });
   }
 
   // Registration submission
@@ -97,7 +110,23 @@ export default function AuthPage() {
       ...data,
       language: "en",
       role: "user",
+    }, {
+      onSuccess: () => {
+        navigate("/");
+      }
     });
+  }
+  
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary mb-4" />
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
   }
 
   const features = [
@@ -133,7 +162,7 @@ export default function AuthPage() {
               <BarChart3 className="h-10 w-10 text-primary" />
             </div>
             <h2 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
-              Pinnacle OKR
+              Dashkit OKR
             </h2>
             <p className="mt-2 text-sm text-slate-600">
               Align your teams, measure what matters, and achieve remarkable results
