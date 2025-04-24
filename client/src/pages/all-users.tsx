@@ -50,6 +50,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 export default function AllUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isTeamAssignDialogOpen, setIsTeamAssignDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
   const { toast } = useToast();
@@ -119,6 +120,42 @@ export default function AllUsers() {
     setSelectedUser(user);
     setTeamAssignment({ teamId: user.teamId?.toString() || "0" });
     setIsTeamAssignDialogOpen(true);
+  };
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/users/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+      
+      toast({
+        title: "User deleted successfully",
+        description: "The user has been permanently removed from the system",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting user",
+        description: "There was a problem deleting the user. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const openDeleteDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteUser = () => {
+    if (!selectedUser) return;
+    deleteUserMutation.mutate(selectedUser.id);
   };
   
   const isLoading = isLoadingUsers || isLoadingTeams;
@@ -293,7 +330,10 @@ export default function AllUsers() {
                               Manage Permissions
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem 
+                              onClick={() => openDeleteDialog(user)}
+                              className="text-red-600"
+                            >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete User
                             </DropdownMenuItem>
@@ -363,6 +403,47 @@ export default function AllUsers() {
               disabled={assignTeamMutation.isPending}
             >
               {assignTeamMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete User</DialogTitle>
+            <DialogDescription>
+              {selectedUser && 
+                `Are you sure you want to delete ${selectedUser.firstName} ${selectedUser.lastName}? This action cannot be undone.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-2 py-4">
+            <p className="text-sm text-gray-600">
+              Deleting this user will remove all their information and permissions from the system.
+              {selectedUser?.teamId && " They will also be removed from their assigned team."}
+            </p>
+            
+            {(selectedUser && users.some(u => u.managerId === selectedUser.id)) && (
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+                <strong>Warning:</strong> This user is a manager for other users. 
+                Those users will no longer have a manager assigned.
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
             </Button>
           </DialogFooter>
         </DialogContent>
