@@ -116,6 +116,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch user" });
     }
   });
+  
+  // Update user profile
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Verify user exists
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).send("User not found");
+      }
+      
+      // Check if user is authorized (can only edit own profile unless admin)
+      if (req.user?.id !== id && req.user?.role !== 'admin') {
+        return res.status(403).send("Not authorized to update this user");
+      }
+      
+      // Filter out password and username from request if present (these should be handled separately)
+      const { password, username, ...updateData } = req.body;
+      
+      // Update user
+      const updatedUser = await storage.updateUser(id, updateData);
+      
+      // Don't return the password and add missing onboarding properties
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      const enhancedUser = {
+        ...userWithoutPassword,
+        // Ensure onboarding properties exist even if not in database
+        firstLogin: userWithoutPassword.firstLogin ?? existingUser.firstLogin ?? true,
+        introVideoWatched: userWithoutPassword.introVideoWatched ?? existingUser.introVideoWatched ?? false,
+        walkthroughCompleted: userWithoutPassword.walkthroughCompleted ?? existingUser.walkthroughCompleted ?? false,
+        onboardingProgress: userWithoutPassword.onboardingProgress ?? existingUser.onboardingProgress ?? 0,
+        lastOnboardingStep: userWithoutPassword.lastOnboardingStep ?? existingUser.lastOnboardingStep ?? null
+      };
+      
+      res.json(enhancedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
   app.get("/api/teams/:teamId/users", async (req, res) => {
     try {
