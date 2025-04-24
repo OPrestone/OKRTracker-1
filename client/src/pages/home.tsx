@@ -19,13 +19,15 @@ import {
   Zap, 
   ChevronRight, 
   MessageSquare, 
-  Calendar, 
+  Calendar,
+  CalendarDays,
   ArrowUpRight, 
   BarChart2, 
   ArrowRight, 
   ListChecks, 
   Eye, 
-  UserCircle
+  UserCircle,
+  LayoutGrid
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
