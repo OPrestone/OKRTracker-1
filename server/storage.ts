@@ -21,6 +21,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getUsersByTeam(teamId: number): Promise<User[]>;
   
@@ -186,6 +187,22 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByTeam(teamId: number): Promise<User[]> {
     return db.select().from(users).where(eq(users.teamId, teamId));
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    try {
+      // First check if user exists
+      const user = await this.getUser(id);
+      if (!user) {
+        throw new Error(`User with id ${id} not found`);
+      }
+      
+      // Delete the user
+      await db.delete(users).where(eq(users.id, id));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
   }
 
   // Team Management

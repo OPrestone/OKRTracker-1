@@ -214,6 +214,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Delete user
+  app.delete("/api/users/:userId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const currentUser = req.user as User;
+      if (currentUser.role !== "admin") {
+        return res.status(403).json({ error: "Forbidden - Admin access required to delete users" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Prevent deleting yourself
+      if (userId === currentUser.id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+      
+      await storage.deleteUser(userId);
+      
+      res.status(200).json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      next(error);
+    }
+  });
 
   // Cadences API
   app.get("/api/cadences", async (req, res, next) => {
