@@ -348,43 +348,47 @@ export default function UserProfile() {
                     </div>
                   ) : userObjectives && userObjectives.length > 0 ? (
                     <div className="divide-y">
-                      {userObjectives.slice(0, 3).map((objective, index) => (
-                        <div 
-                          key={objective.id} 
-                          className="p-4 hover:bg-muted/30 transition-colors"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-medium">{objective.title}</h3>
-                                <Badge variant={getStatusBadgeVariant(objective.status)}>
-                                  {getStatusText(objective.status)}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
-                                {objective.description || "No description available"}
-                              </p>
-                            </div>
-                            <div className={`text-lg font-bold ${getProgressColorClass(objective.progress)}`}>
-                              {objective.progress || 0}%
-                            </div>
-                          </div>
-                          <Progress 
-                            value={objective.progress || 0} 
-                            className="h-2" 
-                          />
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="mt-2 p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
-                            onClick={() => handleViewObjective(objective.id)}
+                      {[...Array(Math.min(3, userObjectives.length))].map((_, index) => {
+                        if (!userObjectives || !userObjectives[index]) return null;
+                        const objective = userObjectives[index];
+                        return (
+                          <div 
+                            key={objective.id} 
+                            className="p-4 hover:bg-muted/30 transition-colors"
                           >
-                            View details
-                            <ChevronRight className="ml-1 h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                      {userObjectives.length > 3 && (
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-medium">{objective.title}</h3>
+                                  <Badge variant={getStatusBadgeVariant(objective.status)}>
+                                    {getStatusText(objective.status)}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                                  {objective.description || "No description available"}
+                                </p>
+                              </div>
+                              <div className={`text-lg font-bold ${getProgressColorClass(objective.progress)}`}>
+                                {objective.progress || 0}%
+                              </div>
+                            </div>
+                            <Progress 
+                              value={objective.progress || 0} 
+                              className="h-2" 
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="mt-2 p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
+                              onClick={() => handleViewObjective(objective.id)}
+                            >
+                              View details
+                              <ChevronRight className="ml-1 h-3 w-3" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                      {userObjectives && userObjectives.length > 3 && (
                         <div className="p-3 text-center">
                           <Button variant="link" size="sm" asChild>
                             <a href="#objectives">
@@ -509,56 +513,60 @@ export default function UserProfile() {
                 </div>
               ) : userObjectives && userObjectives.length > 0 ? (
                 <div className="space-y-6">
-                  {userObjectives.map((objective) => (
-                    <div 
-                      key={objective.id} 
-                      className="p-4 border rounded-lg hover:border-primary/50 hover:shadow-sm transition-all"
-                      onClick={() => handleViewObjective(objective.id)}
-                    >
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h3 className="text-lg font-medium">{objective.title}</h3>
-                            <Badge variant={getStatusBadgeVariant(objective.status)}>
-                              {getStatusText(objective.status)}
-                            </Badge>
+                  {[...Array(userObjectives.length)].map((_, index) => {
+                    if (!userObjectives || !userObjectives[index]) return null;
+                    const objective = userObjectives[index];
+                    return (
+                      <div 
+                        key={objective.id} 
+                        className="p-4 border rounded-lg hover:border-primary/50 hover:shadow-sm transition-all"
+                        onClick={() => handleViewObjective(objective.id)}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-3">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h3 className="text-lg font-medium">{objective.title}</h3>
+                              <Badge variant={getStatusBadgeVariant(objective.status)}>
+                                {getStatusText(objective.status)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {objective.description || "No description available"}
+                            </p>
+                            <div className="flex items-center text-xs text-muted-foreground gap-4">
+                              <span className="flex items-center">
+                                <Calendar className="h-3.5 w-3.5 mr-1" />
+                                Q2 2024
+                              </span>
+                              <span className="flex items-center">
+                                <Users className="h-3.5 w-3.5 mr-1" />
+                                {userTeam?.name || "Personal"}
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {objective.description || "No description available"}
-                          </p>
-                          <div className="flex items-center text-xs text-muted-foreground gap-4">
-                            <span className="flex items-center">
-                              <Calendar className="h-3.5 w-3.5 mr-1" />
-                              Q2 2024
-                            </span>
-                            <span className="flex items-center">
-                              <Users className="h-3.5 w-3.5 mr-1" />
-                              {userTeam?.name || "Personal"}
-                            </span>
+                          <div className="flex flex-col items-end">
+                            <div className="text-2xl font-bold mb-1 flex items-center">
+                              <span className={getProgressColorClass(objective.progress)}>
+                                {objective.progress || 0}%
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Progress</div>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end">
-                          <div className="text-2xl font-bold mb-1 flex items-center">
-                            <span className={getProgressColorClass(objective.progress)}>
-                              {objective.progress || 0}%
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">Progress</div>
+                        
+                        <div className="mb-4 w-full">
+                          <Progress value={objective.progress || 0} className="h-2" />
+                        </div>
+                        
+                        <div className="flex justify-end">
+                          <Button variant="outline" size="sm">
+                            View Details
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="mb-4 w-full">
-                        <Progress value={objective.progress || 0} className="h-2" />
-                      </div>
-                      
-                      <div className="flex justify-end">
-                        <Button variant="outline" size="sm">
-                          View Details
-                          <ChevronRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -596,45 +604,49 @@ export default function UserProfile() {
                 </div>
               ) : checkIns && checkIns.length > 0 ? (
                 <div className="space-y-6">
-                  {checkIns.map((checkIn, index) => (
-                    <div key={checkIn.id || index} className="flex gap-4 items-start p-4 border rounded-lg">
-                      <div className={`p-3 rounded-full 
-                        ${checkIn.progress && checkIn.progress > 70 
-                          ? "bg-green-100 text-green-600" 
-                          : checkIn.progress && checkIn.progress > 40 
-                          ? "bg-amber-100 text-amber-600"
-                          : "bg-red-100 text-red-600"}`
-                      }>
-                        {checkIn.progress && checkIn.progress > 70 
-                          ? <CheckCircle className="h-5 w-5" />
-                          : checkIn.progress && checkIn.progress > 40
-                          ? <AlertCircle className="h-5 w-5" />
-                          : <Activity className="h-5 w-5" />
-                        }
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                          <div>
-                            <h3 className="font-medium">
-                              {checkIn.objectiveId ? "Objective" : "Key Result"} Check-in
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {formatDate(checkIn.createdAt)}
-                            </p>
+                  {[...Array(checkIns.length)].map((_, index) => {
+                    if (!checkIns || !checkIns[index]) return null;
+                    const checkIn = checkIns[index];
+                    return (
+                      <div key={checkIn.id || index} className="flex gap-4 items-start p-4 border rounded-lg">
+                        <div className={`p-3 rounded-full 
+                          ${checkIn.progress && checkIn.progress > 70 
+                            ? "bg-green-100 text-green-600" 
+                            : checkIn.progress && checkIn.progress > 40 
+                            ? "bg-amber-100 text-amber-600"
+                            : "bg-red-100 text-red-600"}`
+                        }>
+                          {checkIn.progress && checkIn.progress > 70 
+                            ? <CheckCircle className="h-5 w-5" />
+                            : checkIn.progress && checkIn.progress > 40
+                            ? <AlertCircle className="h-5 w-5" />
+                            : <Activity className="h-5 w-5" />
+                          }
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <div>
+                              <h3 className="font-medium">
+                                {checkIn.objectiveId ? "Objective" : "Key Result"} Check-in
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {formatDate(checkIn.createdAt)}
+                              </p>
+                            </div>
+                            {checkIn.progress !== undefined && checkIn.progress !== null && (
+                              <Badge variant="outline" className="whitespace-nowrap">
+                                Progress: {checkIn.progress}%
+                              </Badge>
+                            )}
                           </div>
-                          {checkIn.progress !== undefined && checkIn.progress !== null && (
-                            <Badge variant="outline" className="whitespace-nowrap">
-                              Progress: {checkIn.progress}%
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <div className="text-sm">
-                          <p>{checkIn.notes || "No notes provided for this check-in."}</p>
+                          
+                          <div className="text-sm">
+                            <p>{checkIn.notes || "No notes provided for this check-in."}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">
