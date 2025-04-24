@@ -509,7 +509,7 @@ const SchedulesPage = () => {
   };
 
   return (
-    <DashboardLayout title="Schedules" breadcrumb={[{label: "Check-ins", href: "/checkins"}, {label: "Schedules", href: "/schedules"}]}>
+    <DashboardLayout title="Schedules">
       <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Check-in Schedules</h1>
@@ -848,127 +848,12 @@ const SchedulesPage = () => {
           </div>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">
-                  <button 
-                    className="flex items-center"
-                    onClick={() => handleSort('name')}
-                  >
-                    Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </button>
-                </TableHead>
-                <TableHead>
-                  <button 
-                    className="flex items-center"
-                    onClick={() => handleSort('status')}
-                  >
-                    Status
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </button>
-                </TableHead>
-                <TableHead>
-                  <button 
-                    className="flex items-center"
-                    onClick={() => handleSort('frequency')}
-                  >
-                    Cadence
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </button>
-                </TableHead>
-                <TableHead>Participants</TableHead>
-                <TableHead>Template</TableHead>
-                <TableHead>
-                  <button 
-                    className="flex items-center"
-                    onClick={() => handleSort('nextRun')}
-                  >
-                    Next Run
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </button>
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSchedules.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No schedules found. Create a new schedule to get started.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredSchedules.map((schedule) => (
-                  <TableRow key={schedule.id}>
-                    <TableCell className="font-medium">{schedule.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={schedule.status === 'active' ? 'default' : 'outline'}>
-                        {schedule.status === 'active' ? (
-                          <span className="flex items-center">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="flex items-center">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Paused
-                          </span>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatCadence(schedule.cadence)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Avatar className="h-6 w-6 mr-2">
-                          <AvatarFallback>
-                            {schedule.participants[0]?.type === 'team' ? 'T' : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{formatParticipants(schedule.participants)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{schedule.templateName}</TableCell>
-                    <TableCell>
-                      {new Date(schedule.nextRunAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => toggleScheduleStatus(schedule.id, schedule.status)}
-                        >
-                          {schedule.status === 'active' ? (
-                            <XCircle className="h-4 w-4" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                        </Button>
-                        
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          columns={scheduleColumns}
+          data={filteredSchedules}
+          searchColumn="name"
+          searchPlaceholder="Search schedules..."
+        />
       )}
     </DashboardLayout>
   );
