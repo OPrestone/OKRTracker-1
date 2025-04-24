@@ -173,7 +173,7 @@ export default function AuthPage() {
             </p>
           </div>
 
-          <Card className="border-none shadow-xl rounded-xl overflow-hidden">
+          <Card className="border-none shadow-xl rounded-xl overflow-hidden bg-background">
             <CardHeader className="pb-4 border-b bg-muted/30">
               <CardTitle className="text-xl flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -302,7 +302,10 @@ export default function AuthPage() {
                             name="firstName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm text-muted-foreground">First Name</FormLabel>
+                                <FormLabel className="text-sm text-muted-foreground">
+                                  <User className="h-3.5 w-3.5 inline-block mr-1.5 opacity-70" />
+                                  First Name
+                                </FormLabel>
                                 <FormControl>
                                   <Input 
                                     placeholder="First name" 
@@ -320,7 +323,10 @@ export default function AuthPage() {
                             name="lastName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm text-muted-foreground">Last Name</FormLabel>
+                                <FormLabel className="text-sm text-muted-foreground">
+                                  <User className="h-3.5 w-3.5 inline-block mr-1.5 opacity-70" />
+                                  Last Name
+                                </FormLabel>
                                 <FormControl>
                                   <Input 
                                     placeholder="Last name" 
