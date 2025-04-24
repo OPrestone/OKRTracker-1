@@ -354,49 +354,48 @@ export default function UserProfile() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone"
-                  name="phone"
-                  value={profileForm.phone}
-                  onChange={handleProfileInputChange}
-                  placeholder="Phone number"
-                />
+                <Label htmlFor="language">Preferred Language</Label>
+                <Select 
+                  name="language" 
+                  defaultValue={profileForm.language}
+                  onValueChange={(value) => setProfileForm(prev => ({ ...prev, language: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="zh">Chinese</SelectItem>
+                    <SelectItem value="ja">Japanese</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input 
-                  id="jobTitle"
-                  name="jobTitle"
-                  value={profileForm.jobTitle}
-                  onChange={handleProfileInputChange}
-                  placeholder="Job title"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input 
-                  id="location"
-                  name="location"
-                  value={profileForm.location}
-                  onChange={handleProfileInputChange}
-                  placeholder="City, Country"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  name="bio"
-                  value={profileForm.bio}
-                  onChange={handleProfileInputChange}
-                  placeholder="Tell us about yourself"
-                  rows={3}
-                />
-              </div>
+              {user?.role === 'admin' && (
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select 
+                    name="role" 
+                    defaultValue={profileForm.role}
+                    onValueChange={(value) => setProfileForm(prev => ({ ...prev, role: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Only admins can change roles
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowEditProfileModal(false)}>
