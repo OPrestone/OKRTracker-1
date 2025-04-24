@@ -365,7 +365,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/objectives", async (req, res, next) => {
     try {
-      const validatedData = insertObjectiveSchema.parse(req.body);
+      // Make a copy of the request body to potentially modify date fields
+      const requestData = { ...req.body };
+      
+      // Convert string dates to Date objects if present
+      if (requestData.startDate && typeof requestData.startDate === 'string') {
+        try {
+          // Try to parse the date
+          const parsedDate = new Date(requestData.startDate);
+          if (!isNaN(parsedDate.getTime())) {
+            requestData.startDate = parsedDate;
+          } else {
+            // If parsing fails, reject the request
+            return res.status(400).json({ 
+              message: "Invalid startDate format. Please provide a valid date." 
+            });
+          }
+        } catch (error) {
+          return res.status(400).json({ 
+            message: "Invalid startDate format. Please provide a valid date." 
+          });
+        }
+      }
+      
+      if (requestData.endDate && typeof requestData.endDate === 'string') {
+        try {
+          // Try to parse the date
+          const parsedDate = new Date(requestData.endDate);
+          if (!isNaN(parsedDate.getTime())) {
+            requestData.endDate = parsedDate;
+          } else {
+            // If parsing fails, reject the request
+            return res.status(400).json({ 
+              message: "Invalid endDate format. Please provide a valid date." 
+            });
+          }
+        } catch (error) {
+          return res.status(400).json({ 
+            message: "Invalid endDate format. Please provide a valid date." 
+          });
+        }
+      }
+      
+      const validatedData = insertObjectiveSchema.parse(requestData);
       const objective = await storage.createObjective(validatedData);
       res.status(201).json(objective);
     } catch (error) {
@@ -389,7 +431,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/objectives/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertObjectiveSchema.partial().parse(req.body);
+      
+      // Make a copy of the request body to potentially modify date fields
+      const requestData = { ...req.body };
+      
+      // Convert string dates to Date objects if present
+      if (requestData.startDate && typeof requestData.startDate === 'string') {
+        try {
+          // Try to parse the date
+          const parsedDate = new Date(requestData.startDate);
+          if (!isNaN(parsedDate.getTime())) {
+            requestData.startDate = parsedDate;
+          } else {
+            // If parsing fails, reject the request
+            return res.status(400).json({ 
+              message: "Invalid startDate format. Please provide a valid date." 
+            });
+          }
+        } catch (error) {
+          return res.status(400).json({ 
+            message: "Invalid startDate format. Please provide a valid date." 
+          });
+        }
+      }
+      
+      if (requestData.endDate && typeof requestData.endDate === 'string') {
+        try {
+          // Try to parse the date
+          const parsedDate = new Date(requestData.endDate);
+          if (!isNaN(parsedDate.getTime())) {
+            requestData.endDate = parsedDate;
+          } else {
+            // If parsing fails, reject the request
+            return res.status(400).json({ 
+              message: "Invalid endDate format. Please provide a valid date." 
+            });
+          }
+        } catch (error) {
+          return res.status(400).json({ 
+            message: "Invalid endDate format. Please provide a valid date." 
+          });
+        }
+      }
+      
+      const validatedData = insertObjectiveSchema.partial().parse(requestData);
       const updatedObjective = await storage.updateObjective(id, validatedData);
       res.json(updatedObjective);
     } catch (error) {
