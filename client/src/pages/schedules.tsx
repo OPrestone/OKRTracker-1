@@ -433,7 +433,7 @@ const SchedulesPage = () => {
     });
   };
 
-  // Format the cadence info into a readable string
+  // This is the formatCadence function used by the DataTable cell renderer
   const formatCadence = (cadence: CheckInSchedule['cadence']) => {
     let result = '';
     
