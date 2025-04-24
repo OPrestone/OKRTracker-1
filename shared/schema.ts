@@ -554,11 +554,7 @@ export const chatRoomMembers = pgTable("chat_room_members", {
   lastRead: timestamp("last_read").notNull().defaultNow()
 });
 
-// Messages Table with circular reference type fix
-type MessageCircularReference = {
-  id: number;
-};
-
+// Messages Table
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
@@ -569,7 +565,7 @@ export const messages = pgTable("messages", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   isEdited: boolean("is_edited").notNull().default(false),
-  replyToId: integer("reply_to_id").references((): MessageCircularReference => messages.id)
+  replyToId: integer("reply_to_id")
 });
 
 // Attachments Table

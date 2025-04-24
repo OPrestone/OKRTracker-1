@@ -701,36 +701,57 @@ export class DatabaseStorage implements IStorage {
     before?: number
   ): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]> {
     // Define the base query
-    let query = db.select({
-      id: messages.id,
-      chatRoomId: messages.chatRoomId,
-      userId: messages.userId,
-      content: messages.content,
-      type: messages.type,
-      createdAt: messages.createdAt,
-      updatedAt: messages.updatedAt,
-      deletedAt: messages.deletedAt,
-      isEdited: messages.isEdited,
-      replyToId: messages.replyToId,
-      user: users
-    })
-    .from(messages)
-    .innerJoin(users, eq(messages.userId, users.id))
-    .where(
-      and(
-        eq(messages.chatRoomId, chatRoomId),
-        isNull(messages.deletedAt)
-      )
-    )
-    .orderBy(desc(messages.createdAt))
-    .limit(limit);
+    const baseConditions = and(
+      eq(messages.chatRoomId, chatRoomId),
+      isNull(messages.deletedAt)
+    );
     
-    // Add before filter if provided
+    // Create appropriate query based on whether 'before' is provided
+    let messageResults;
     if (before !== undefined) {
-      query = query.where(lt(messages.id, before));
+      const fullConditions = and(
+        baseConditions,
+        lt(messages.id, before)
+      );
+      
+      messageResults = await db.select({
+        id: messages.id,
+        chatRoomId: messages.chatRoomId,
+        userId: messages.userId,
+        content: messages.content,
+        type: messages.type,
+        createdAt: messages.createdAt,
+        updatedAt: messages.updatedAt,
+        deletedAt: messages.deletedAt,
+        isEdited: messages.isEdited,
+        replyToId: messages.replyToId,
+        user: users
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(fullConditions)
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+    } else {
+      messageResults = await db.select({
+        id: messages.id,
+        chatRoomId: messages.chatRoomId,
+        userId: messages.userId,
+        content: messages.content,
+        type: messages.type,
+        createdAt: messages.createdAt,
+        updatedAt: messages.updatedAt,
+        deletedAt: messages.deletedAt,
+        isEdited: messages.isEdited,
+        replyToId: messages.replyToId,
+        user: users
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(baseConditions)
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
     }
-    
-    const messageResults = await query;
     
     // Get attachments and reactions for each message
     const messagesWithDetails = await Promise.all(messageResults.map(async (message) => {
