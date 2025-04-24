@@ -48,11 +48,12 @@ import { IntroVideoDialog } from "@/components/onboarding/intro-video-dialog";
 import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
 import { useEffect } from "react";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AuthGuard } from "@/lib/auth-guard";
 
 function AppRoutes() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <AuthGuard path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />

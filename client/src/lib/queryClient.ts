@@ -16,7 +16,7 @@ export async function apiRequest(
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // Important for session cookies
   });
 
   await throwIfResNotOk(res);
@@ -29,16 +29,29 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(queryKey[0] as string, {
+        credentials: "include", // Important for session cookies
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      // If we get a 401 with the returnNull option, return null instead of throwing
+      if (
+        error instanceof Error &&
+        error.message.startsWith("401:") &&
+        unauthorizedBehavior === "returnNull"
+      ) {
+        return null;
+      }
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({
@@ -46,12 +59,13 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: true, // Enable to handle session expiration
+      staleTime: 60000, // 1 minute stale time instead of Infinity
+      retry: 1, // Allow one retry
+      refetchOnMount: true, // Refetch on component mount
     },
     mutations: {
-      retry: false,
+      retry: 1, // Allow one retry for mutations
     },
   },
 });

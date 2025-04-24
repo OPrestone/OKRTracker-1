@@ -7,7 +7,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema,
          users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
-         statusEnum } from "@shared/schema";
+         statusEnum, User } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
