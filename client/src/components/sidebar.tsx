@@ -26,7 +26,8 @@ import {
   Clock,
   FilePlus2 as FileOutput,
   LayoutDashboard,
-  Target
+  Target,
+  Menu
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ import {
   SheetContent,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 
 interface SidebarProps {
   open: boolean;

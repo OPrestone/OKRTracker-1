@@ -3,6 +3,7 @@ import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { dashboardHelp } from "@/components/help/help-content";
+import { Menu } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,32 +19,35 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background dark:bg-background text-foreground dark:text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto bg-background dark:bg-background">
+      <main className="flex-1 overflow-y-auto relative">
         <Header 
           title={title}
           subtitle={subtitle}
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
-        <div className="p-6 bg-background dark:bg-background border-t border-border dark:border-border">
+        <div className="p-6 pb-24 bg-muted/10">
           {children}
         </div>
+        
+        {/* Footer */}
+        <footer className="border-t bg-background py-3 px-6 text-center text-sm text-muted-foreground">
+          <p>OKR Management Platform © {new Date().getFullYear()} - Powered by Replit</p>
+        </footer>
       </main>
 
       {/* Mobile sidebar toggle */}
       <div className="md:hidden fixed bottom-4 right-4 z-50">
         <button 
           onClick={() => setSidebarOpen(true)}
-          className="bg-primary dark:bg-primary text-primary-foreground dark:text-primary-foreground rounded-full p-3 shadow-lg"
+          className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <Menu className="h-6 w-6" />
         </button>
       </div>
     </div>
