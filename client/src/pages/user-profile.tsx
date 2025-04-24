@@ -56,6 +56,12 @@ export default function UserProfile() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   
+  // Modal states for different actions
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showCreateObjectiveModal, setShowCreateObjectiveModal] = useState(false);
+  const [showCreateCheckInModal, setShowCreateCheckInModal] = useState(false);
+  
   // Fetch user details if needed
   const { data: userDetails, isLoading: userLoading } = useQuery<UserType>({
     queryKey: ["/api/users", user?.id],
@@ -170,6 +176,71 @@ export default function UserProfile() {
       icon: <Activity className="h-4 w-4 text-red-500" /> 
     }
   ];
+  
+  // Handler functions for the buttons
+  const handleEditProfile = () => {
+    toast({
+      title: "Edit Profile",
+      description: "Edit profile functionality will be implemented soon.",
+    });
+    setShowEditProfileModal(true);
+  };
+  
+  const handleSettings = () => {
+    toast({
+      title: "Settings",
+      description: "Settings functionality will be implemented soon.",
+    });
+    setShowSettingsModal(true);
+  };
+  
+  const handleCreateObjective = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create objectives.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Create Objective",
+      description: "Opening objective creation form.",
+    });
+    setShowCreateObjectiveModal(true);
+    // Alternatively, navigate to the objective creation page
+    // navigate("/create-objective");
+  };
+  
+  const handleCreateCheckIn = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create check-ins.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Create Check-in",
+      description: "Opening check-in creation form.",
+    });
+    setShowCreateCheckInModal(true);
+  };
+  
+  const handleViewTeamDashboard = () => {
+    if (userTeam) {
+      navigate(`/team-dashboard/${userTeam.id}`);
+    } else {
+      toast({
+        title: "No Team Found",
+        description: "You are not currently assigned to a team.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <DashboardLayout title="My Profile">
@@ -177,11 +248,20 @@ export default function UserProfile() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-9">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9" 
+              onClick={handleSettings}
+            >
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
-            <Button size="sm" className="h-9">
+            <Button 
+              size="sm" 
+              className="h-9" 
+              onClick={handleEditProfile}
+            >
               <Edit className="mr-2 h-4 w-4" />
               Edit Profile
             </Button>
@@ -218,7 +298,12 @@ export default function UserProfile() {
             <Card className="md:col-span-1">
               <CardHeader className="text-center relative pb-0">
                 <div className="absolute right-4 top-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full"
+                    onClick={handleEditProfile}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                 </div>
@@ -408,7 +493,10 @@ export default function UserProfile() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Get started by creating your first objective
                       </p>
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={handleCreateObjective}
+                      >
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Create Objective
                       </Button>
