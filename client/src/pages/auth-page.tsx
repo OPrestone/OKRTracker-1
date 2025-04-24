@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { clearRedirectPath } from "@/lib/redirect-service";
 
 import {
   Card,
@@ -66,10 +67,13 @@ type RegisterValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState("login");
   
   // Redirect to home if already logged in
   useEffect(() => {
     if (user) {
+      // Clear any redirect paths when visiting auth page while authenticated
+      clearRedirectPath();
       navigate("/");
     }
   }, [user, navigate]);
@@ -188,7 +192,7 @@ export default function AuthPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <Tabs defaultValue="login" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 p-0 h-14 bg-muted/30 rounded-none">
                   <TabsTrigger value="login" className="rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-background">
                     <Users className="h-4 w-4 mr-2" />
@@ -270,6 +274,20 @@ export default function AuthPage() {
                               <><LogIn className="h-4 w-4 mr-2" /> Sign In</>
                             )}
                           </Button>
+                        </div>
+                        
+                        <div className="text-center pt-4">
+                          <p className="text-sm text-muted-foreground">
+                            Need an account?{" "}
+                            <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-primary font-medium"
+                              onClick={() => setActiveTab("register")}
+                              type="button"
+                            >
+                              Create one now
+                            </Button>
+                          </p>
                         </div>
                       </form>
                     </Form>
@@ -402,6 +420,20 @@ export default function AuthPage() {
                               <><UserPlus className="h-4 w-4 mr-2" /> Create Account</>
                             )}
                           </Button>
+                        </div>
+                        
+                        <div className="text-center pt-4">
+                          <p className="text-sm text-muted-foreground">
+                            Already have an account?{" "}
+                            <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-primary font-medium"
+                              onClick={() => setActiveTab("login")}
+                              type="button"
+                            >
+                              Sign in
+                            </Button>
+                          </p>
                         </div>
                       </form>
                     </Form>
