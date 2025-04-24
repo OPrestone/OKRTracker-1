@@ -586,7 +586,7 @@ export default function UserProfile() {
                   <CardTitle>My Objectives</CardTitle>
                   <CardDescription>All your objectives and their progress</CardDescription>
                 </div>
-                <Button>
+                <Button onClick={handleCreateObjective}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Create Objective
                 </Button>
@@ -647,7 +647,11 @@ export default function UserProfile() {
                         </div>
                         
                         <div className="flex justify-end">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewObjective(objective.id)}
+                          >
                             View Details
                             <ChevronRight className="ml-1 h-4 w-4" />
                           </Button>
@@ -665,7 +669,7 @@ export default function UserProfile() {
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     You currently don't have any objectives. Create your first objective to start tracking your progress.
                   </p>
-                  <Button>
+                  <Button onClick={handleCreateObjective}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Objective
                   </Button>
@@ -745,7 +749,7 @@ export default function UserProfile() {
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     You haven't recorded any check-ins or updates yet. Start by checking in with your objectives or key results.
                   </p>
-                  <Button>
+                  <Button onClick={handleCreateCheckIn}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Check-in
                   </Button>
@@ -781,7 +785,11 @@ export default function UserProfile() {
                   </CardDescription>
                 </div>
                 {userTeam && (
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleViewTeamDashboard}
+                  >
                     View Team Dashboard
                   </Button>
                 )}
