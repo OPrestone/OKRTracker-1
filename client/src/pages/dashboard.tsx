@@ -594,13 +594,15 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        <CheckInTable
-          checkIns={checkIns}
-          totalCount={18}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onViewCheckIn={handleViewCheckIn}
-        />
+        <div className="overflow-x-auto">
+          <CheckInTable
+            checkIns={checkIns}
+            totalCount={18}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onViewCheckIn={handleViewCheckIn}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

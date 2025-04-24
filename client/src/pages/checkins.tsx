@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+
+// Define schedule interface for the DataTable
+interface Schedule {
+  id: number;
+  name: string;
+  status: 'active' | 'paused';
+  cadence: string;
+  nextRun: string;
+  responseRate: number;
+}
 import DashboardLayout from '@/layouts/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +44,8 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { DataTable } from '@/components/ui/data-table/data-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { useToast } from '@/hooks/use-toast';
 import { 
   PlusCircle, 
