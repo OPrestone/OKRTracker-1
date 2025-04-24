@@ -39,6 +39,7 @@ import {
   SheetContent,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
 
 interface SidebarProps {
@@ -54,21 +55,16 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [userManagementExpanded, setUserManagementExpanded] = useState(false);
   const [reportsExpanded, setReportsExpanded] = useState(false);
 
-  // Temporary user info while auth is being fixed
-  const user = {
-    firstName: "Demo",
-    lastName: "User",
-    username: "demo",
-    role: "Admin"
-  };
+  // Get authenticated user and logout mutation from useAuth hook
+  const { user, logoutMutation } = useAuth();
   
+  // Calculate initials for avatar
   const initials = user?.firstName && user?.lastName 
     ? `${user.firstName[0]}${user.lastName[0]}` 
     : user?.username?.[0] || '?';
 
   const handleLogout = () => {
-    // Will be implemented when auth is fixed
-    console.log("Logout clicked");
+    logoutMutation.mutate();
   };
 
   const sidebarContent = (
@@ -81,7 +77,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       </div>
       
       {/* User Profile Card */}
-      <div className="p-4 mb-2 border-b border-gray-700">
+      {/* <div className="p-4 mb-2 border-b border-gray-700">
         <div className="flex items-center">
           <Avatar className="h-10 w-10 border border-gray-600">
             <AvatarImage src="/assets/avatar.png" alt={user?.firstName || 'User'} />
@@ -94,7 +90,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             <p className="text-xs text-gray-400">{user?.role}</p>
           </div>
         </div>
-      </div>
+      </div> */}
       
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
