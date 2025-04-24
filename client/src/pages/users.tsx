@@ -174,23 +174,42 @@ const UsersPage = () => {
   // Assign team mutation
   const assignTeamMutation = useMutation({
     mutationFn: async ({ id, teamId }: { id: number, teamId: number | null }) => {
-      const res = await apiRequest("PATCH", `/api/users/${id}`, { teamId });
-      return await res.json();
+      if (teamId === null) {
+        // Remove from team
+        const res = await apiRequest("DELETE", `/api/users/${id}/team`);
+        return await res.json();
+      } else {
+        // Assign to team
+        const res = await apiRequest("POST", `/api/users/${id}/team`, { teamId });
+        return await res.json();
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // If the user is assigned to a team, also invalidate team members
+      if (data.teamId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/teams", data.teamId, "users"] });
+      }
+      
       setIsTeamAssignDialogOpen(false);
       setSelectedUser(null);
       setTeamAssignment({ teamId: "" });
+      
+      const action = data.teamId ? "assigned to" : "removed from";
+      const teamName = data.teamId && teams 
+        ? teams.find(t => t.id === data.teamId)?.name || "the team"
+        : "any team";
+        
       toast({
-        title: "Team assigned",
-        description: "The user has been assigned to a new team.",
+        title: `Team ${action === "assigned to" ? "assignment" : "removal"} successful`,
+        description: `User has been ${action} ${teamName}`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error assigning team",
-        description: error.message,
+        title: "Error updating team",
+        description: "There was a problem updating the team assignment",
         variant: "destructive",
       });
     }
