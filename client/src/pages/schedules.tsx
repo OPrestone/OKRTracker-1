@@ -193,19 +193,43 @@ const scheduleColumns: ColumnDef<CheckInSchedule>[] = [
         variant={row.original.status === 'active' ? 'default' : 'secondary'}
         className={row.original.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
       >
-        {row.original.status === 'active' ? 'Active' : 'Paused'}
+        {row.original.status === 'active' ? (
+          <span className="flex items-center">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Active
+          </span>
+        ) : (
+          <span className="flex items-center">
+            <XCircle className="h-3 w-3 mr-1" />
+            Paused
+          </span>
+        )}
       </Badge>
     ),
   },
   {
     accessorKey: "cadence",
     header: "Cadence",
-    cell: ({ row }) => formatCadence(row.original.cadence),
+    cell: ({ row }) => {
+      const cadence = row.original.cadence;
+      return formatCadence(cadence);
+    },
   },
   {
     accessorKey: "participants",
     header: "Participants",
-    cell: ({ row }) => formatParticipants(row.original.participants),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center">
+          <Avatar className="h-6 w-6 mr-2">
+            <AvatarFallback>
+              {row.original.participants[0]?.type === 'team' ? 'T' : 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm">{formatParticipants(row.original.participants)}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "templateName",
@@ -217,20 +241,33 @@ const scheduleColumns: ColumnDef<CheckInSchedule>[] = [
     header: "Next Run",
     cell: ({ row }) => {
       const nextRunDate = new Date(row.original.nextRunAt);
-      return nextRunDate.toLocaleDateString() + ' ' + formatTime(nextRunDate.toTimeString().split(' ')[0]);
+      return nextRunDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
     },
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
       const schedule = row.original;
       return (
-        <div className="flex items-center space-x-1">
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Edit className="h-4 w-4" />
+          </Button>
+          
           <Button 
             variant="ghost" 
             size="icon" 
             className="h-8 w-8"
-            onClick={() => toggleScheduleStatus(schedule.id, schedule.status)}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleScheduleStatus(schedule.id, schedule.status);
+            }}
           >
             {schedule.status === 'active' ? (
               <XCircle className="h-4 w-4" />
