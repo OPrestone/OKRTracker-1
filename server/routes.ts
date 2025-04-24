@@ -173,6 +173,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Assign user to team
+  app.post("/api/users/:userId/team", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { teamId } = z.object({ teamId: z.number() }).parse(req.body);
+      
+      // Update the user's team
+      const updatedUser = await storage.updateUser(userId, { teamId });
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json({
+        ...userWithoutPassword,
+        message: "User assigned to team successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Remove user from team
+  app.delete("/api/users/:userId/team", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Set teamId to null to remove the user from their team
+      const updatedUser = await storage.updateUser(userId, { teamId: null });
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json({
+        ...userWithoutPassword,
+        message: "User removed from team successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Cadences API
   app.get("/api/cadences", async (req, res, next) => {
