@@ -103,22 +103,25 @@ export default function AuthPage() {
   function onLoginSubmit(data: LoginValues) {
     loginMutation.mutate(data, {
       onSuccess: () => {
-        navigate("/");
-      }
+        window.location.reload(); // Reload the page after successful login
+      },
     });
   }
 
   // Registration submission
   function onRegisterSubmit(data: RegisterValues) {
-    registerMutation.mutate({
-      ...data,
-      language: "en",
-      role: "user",
-    }, {
-      onSuccess: () => {
-        navigate("/");
+    registerMutation.mutate(
+      {
+        ...data,
+        language: "en",
+        role: "user",
+      },
+      {
+        onSuccess: () => {
+          window.location.reload(); // Reload the page after successful registration
+        },
       }
-    });
+    );
   }
   
   // Show loading state while checking auth
