@@ -47,10 +47,6 @@ import { GetStartedMenu } from "@/components/onboarding/get-started-menu";
 import { IntroVideoDialog } from "@/components/onboarding/intro-video-dialog";
 import { WalkthroughGuides } from "@/components/onboarding/walkthrough-guides";
 import { useEffect } from "react";
-// Import confetti and milestone components
-import { MilestoneProvider } from "@/contexts/milestone-context";
-import { MilestoneToast } from "@/components/milestone-toast";
-import { ConfettiDemo } from "@/components/confetti-demo";
 
 // Simple Public Route Component to replace ProtectedRoute temporarily
 interface PublicRouteProps {
@@ -108,9 +104,6 @@ function AppRoutes() {
       <PublicRoute path="/timeline-editor" component={TimelineEditor} />
       <PublicRoute path="/custom-dashboard" component={CustomDashboard} />
       
-      {/* Confetti Demo */}
-      <PublicRoute path="/confetti-demo" component={ConfettiDemo} />
-      
       <PublicRoute path="/configuration/general" component={General} />
       <PublicRoute path="/configuration/teams" component={TeamsConfig} />
       <PublicRoute path="/configuration/users-permissions" component={UsersPermissions} />
@@ -136,29 +129,19 @@ function OnboardingController() {
   );
 }
 
-// Import ErrorBoundary
-import ErrorBoundary from "@/components/error-boundary";
-
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
-          <HelpProvider>
-            <OnboardingProvider>
-              <ErrorBoundary>
-                <MilestoneProvider>
-                  <FeatureTour />
-                  <OnboardingController />
-                  <MilestoneToast />
-                  <AppRoutes />
-                </MilestoneProvider>
-              </ErrorBoundary>
-            </OnboardingProvider>
-          </HelpProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
+        <HelpProvider>
+          <OnboardingProvider>
+            <FeatureTour />
+            <OnboardingController />
+            <AppRoutes />
+          </OnboardingProvider>
+        </HelpProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

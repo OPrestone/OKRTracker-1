@@ -168,11 +168,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Setup WebSocket
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.host;
-  
-  // Create WebSocket URL with explicit port handling
-  // This ensures WebSocket works when using custom ports like 3000
-  const wsUrl = `${protocol}//${host}/ws`;
+  const wsUrl = `${protocol}//${window.location.host}/ws`;
   
   const handleWebSocketMessage = useCallback((data: any) => {
     if (data.type === 'new_message' && data.message && data.message.chatRoomId === currentRoomId) {

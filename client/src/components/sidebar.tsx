@@ -72,8 +72,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     <div className="flex flex-col h-full">
       <div className="p-5 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
         <h1 className="text-xl font-semibold flex items-center">
-          <img src="/src/assets/logo.png" alt="Pinnacle OKR" className="h-8 w-8 mr-2" />
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Pinnacle OKR</span>
+          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
         </h1>
       </div>
       
@@ -401,24 +401,6 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
         
-        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Development
-        </div>
-
-        <div
-          className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
-            location === "/confetti-demo" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <Link href="/confetti-demo" className="flex items-center w-full">
-            <Target className="mr-3 h-5 w-5 text-yellow-500" />
-            Milestone Celebrations
-          </Link>
-        </div>
-
         <div className="px-4 mt-6 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Administration
         </div>

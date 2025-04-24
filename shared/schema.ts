@@ -156,19 +156,6 @@ export const checkIns = pgTable("check_ins", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// OKR Templates
-export const okrTemplates = pgTable("okr_templates", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull(),
-  department: text("department").notNull(),
-  templateData: json("template_data").notNull(),
-  isAiGenerated: boolean("is_ai_generated").default(false),
-  createdById: integer("created_by_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -268,17 +255,6 @@ export const insertHighfiveRecipientSchema = createInsertSchema(highfiveRecipien
   isRead: true,
 });
 
-// OKR Template schema
-export const insertOkrTemplateSchema = createInsertSchema(okrTemplates).pick({
-  name: true,
-  description: true,
-  category: true,
-  department: true,
-  templateData: true,
-  isAiGenerated: true,
-  createdById: true,
-});
-
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -306,10 +282,6 @@ export type Initiative = typeof initiatives.$inferSelect;
 
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
 export type CheckIn = typeof checkIns.$inferSelect;
-
-// OKR Template types
-export type InsertOkrTemplate = z.infer<typeof insertOkrTemplateSchema>;
-export type OkrTemplate = typeof okrTemplates.$inferSelect;
 
 // Chat types
 export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
@@ -375,9 +347,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   receivedHighfives: many(highfiveRecipients, {
     relationName: "received_highfives",
-  }),
-  createdTemplates: many(okrTemplates, {
-    relationName: "template_creator",
   }),
 }));
 
@@ -559,15 +528,6 @@ export const highfiveRecipientsRelations = relations(highfiveRecipients, ({ one 
     fields: [highfiveRecipients.recipientId],
     references: [users.id],
     relationName: "received_highfives",
-  }),
-}));
-
-// OKR Template relations
-export const okrTemplatesRelations = relations(okrTemplates, ({ one }) => ({
-  creator: one(users, {
-    fields: [okrTemplates.createdById],
-    references: [users.id],
-    relationName: "template_creator",
   }),
 }));
 

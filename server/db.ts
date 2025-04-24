@@ -41,13 +41,5 @@ if (!process.env.DATABASE_URL) {
   throw new Error(errorMessage);
 }
 
-// Configure Neon connection with SSL parameters to address connection issues
-const connectionOptions = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false // This allows connecting even with self-signed or expired certificates
-  }
-};
-
-export const pool = new Pool(connectionOptions);
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });
