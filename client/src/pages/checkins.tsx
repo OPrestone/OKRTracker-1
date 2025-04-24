@@ -123,6 +123,68 @@ const CheckinCard = ({ checkin }: { checkin: any }) => {
   );
 };
 
+// Define schedule columns for DataTable
+const scheduleColumns: ColumnDef<Schedule>[] = [
+  {
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("name")}</div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge variant={status === "active" ? "default" : "outline"}>
+          {status === "active" ? (
+            <CheckCircle className="h-3 w-3 mr-1" />
+          ) : (
+            <XCircle className="h-3 w-3 mr-1" />
+          )}
+          {status === "active" ? "Active" : "Paused"}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "cadence",
+    header: "Cadence",
+  },
+  {
+    accessorKey: "nextRun",
+    header: "Next Run",
+  },
+  {
+    accessorKey: "responseRate",
+    header: "Response Rate",
+    cell: ({ row }) => {
+      const rate = row.getValue("responseRate") as number;
+      return (
+        <div className="flex items-center">
+          <Progress value={rate} className="h-2 w-16 mr-2" />
+          <span className="text-sm">{rate}%</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right">Actions</div>,
+    cell: () => {
+      return (
+        <div className="text-right">
+          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/schedules'}>
+            View
+          </Button>
+        </div>
+      );
+    },
+  },
+];
+
 const CheckinsPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -132,6 +194,34 @@ const CheckinsPage = () => {
   const [teamFilter, setTeamFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isUpdateOKRDialogOpen, setIsUpdateOKRDialogOpen] = useState(false);
+  
+  // Mock data for schedules
+  const schedules: Schedule[] = [
+    {
+      id: 1,
+      name: 'Weekly Team OKR Update',
+      status: 'active',
+      cadence: 'Every Monday at 9:00 AM',
+      nextRun: 'Apr 22, 2025',
+      responseRate: 85
+    },
+    {
+      id: 2,
+      name: 'Monthly OKR Review',
+      status: 'paused',
+      cadence: 'First Monday of month at 2:00 PM',
+      nextRun: 'May 5, 2025',
+      responseRate: 72
+    },
+    {
+      id: 3,
+      name: 'Quarterly Goals Reflection',
+      status: 'active',
+      cadence: 'Last Friday of quarter at 3:00 PM',
+      nextRun: 'Jun 27, 2025',
+      responseRate: 94
+    }
+  ];
   
   // State for new check-in form
   const [checkInType, setCheckInType] = useState('objective');
@@ -601,66 +691,12 @@ const CheckinsPage = () => {
             </Button>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cadence</TableHead>
-                  <TableHead>Next Run</TableHead>
-                  <TableHead>Response Rate</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Weekly Team OKR Update</TableCell>
-                  <TableCell>
-                    <Badge variant="default">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Active
-                    </Badge>
-                  </TableCell>
-                  <TableCell>Every Monday at 9:00 AM</TableCell>
-                  <TableCell>Apr 22, 2025</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Progress value={85} className="h-2 w-16 mr-2" />
-                      <span className="text-sm">85%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => window.location.href = '/schedules'}>
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Monthly OKR Review</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      <XCircle className="h-3 w-3 mr-1" />
-                      Paused
-                    </Badge>
-                  </TableCell>
-                  <TableCell>Monthly on the 1st at 2:00 PM</TableCell>
-                  <TableCell>May 1, 2025</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Progress value={0} className="h-2 w-16 mr-2" />
-                      <span className="text-sm">0%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => window.location.href = '/schedules'}>
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            columns={scheduleColumns}
+            data={schedules}
+            searchColumn="name"
+            searchPlaceholder="Search schedules..."
+          />
         </TabsContent>
 
         {/* Metrics tab content */}
