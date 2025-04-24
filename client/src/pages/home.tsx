@@ -1,18 +1,43 @@
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PlusCircle, Target, AlertTriangle, Users, CheckCircle } from "lucide-react";
+import { 
+  PlusCircle, 
+  Target, 
+  AlertTriangle, 
+  Users, 
+  CheckCircle, 
+  Flag, 
+  Rocket, 
+  Award, 
+  BarChart3, 
+  Clock, 
+  Zap, 
+  ChevronRight, 
+  MessageSquare, 
+  Calendar, 
+  ArrowUpRight, 
+  BarChart2, 
+  ArrowRight, 
+  ListChecks, 
+  Eye, 
+  UserCircle
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { Objective, KeyResult } from "@shared/schema";
+import { Separator } from "@/components/ui/separator";
+import { Link } from "wouter";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const Home = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("mission");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Fetch user's objectives
   const { data: userObjectives, isLoading: objectivesLoading } = useQuery<Objective[]>({
@@ -36,16 +61,440 @@ const Home = () => {
   const { data: checkIns, isLoading: checkInsLoading } = useQuery({
     queryKey: ["/api/check-ins"],
   });
+  
+  // Helper for greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
     <DashboardLayout title="Home">
-      <Tabs defaultValue="mission" onValueChange={setActiveTab} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="mission">Mission</TabsTrigger>
-          <TabsTrigger value="okrs">OKRs</TabsTrigger>
-          <TabsTrigger value="checkins">Check-ins</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
+      {/* Welcome Header Section */}
+      <div className="mb-8">
+        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{getGreeting()}, {user?.firstName || 'there'}!</h1>
+            <p className="text-muted-foreground">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0 flex gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5">
+              <Calendar className="h-4 w-4" />
+              View Calendar
+            </Button>
+            <Button size="sm" className="gap-1.5">
+              <PlusCircle className="h-4 w-4" />
+              Create Objective
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Dashboard Navigation */}
+      <Tabs defaultValue="dashboard" onValueChange={setActiveTab} className="mb-8">
+        <TabsList className="grid grid-cols-4 h-12 items-stretch">
+          <TabsTrigger value="dashboard" className="flex items-center justify-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Dashboard</span>
+            <span className="sm:hidden">Home</span>
+          </TabsTrigger>
+          <TabsTrigger value="okrs" className="flex items-center justify-center gap-2">
+            <Target className="h-4 w-4" />
+            <span>OKRs</span>
+          </TabsTrigger>
+          <TabsTrigger value="checkins" className="flex items-center justify-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">Check-ins</span>
+            <span className="sm:hidden">Updates</span>
+          </TabsTrigger>
+          <TabsTrigger value="mission" className="flex items-center justify-center gap-2">
+            <Flag className="h-4 w-4" />
+            <span className="hidden sm:inline">Company Vision</span>
+            <span className="sm:hidden">Vision</span>
+          </TabsTrigger>
         </TabsList>
+        
+        {/* Dashboard Tab Content */}
+        <TabsContent value="dashboard" className="space-y-6 mt-6">
+          {/* Status summary cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-gradient-to-br from-primary-50 to-white border-primary/20">
+              <CardContent className="p-6">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <h3 className="text-sm font-medium tracking-tight text-muted-foreground">My Objectives</h3>
+                  <Target className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex items-baseline">
+                  <div className="text-2xl font-bold">
+                    {userObjectives?.length || 0}
+                  </div>
+                  <div className="ml-2 text-sm text-muted-foreground">
+                    active
+                  </div>
+                  <span className="ml-auto text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <ArrowUpRight className="h-3 w-3" />
+                    On Track
+                  </span>
+                </div>
+                <Separator className="my-3 bg-primary/10" />
+                <div className="text-xs text-muted-foreground flex items-center justify-between">
+                  <span>Overall Progress</span>
+                  <span className="font-medium">
+                    {userObjectives && userObjectives.length > 0
+                      ? Math.round(userObjectives.reduce((sum, obj) => sum + obj.progress, 0) / userObjectives.length)
+                      : 0}%
+                  </span>
+                </div>
+                <Progress className="h-1.5 mt-2" value={userObjectives && userObjectives.length > 0
+                      ? Math.round(userObjectives.reduce((sum, obj) => sum + obj.progress, 0) / userObjectives.length)
+                      : 0} />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <h3 className="text-sm font-medium tracking-tight text-muted-foreground">Team Objectives</h3>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex items-baseline">
+                  <div className="text-2xl font-bold">
+                    {teamObjectives?.length || 0}
+                  </div>
+                  <div className="ml-2 text-sm text-muted-foreground">
+                    active
+                  </div>
+                  <span className="ml-auto text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    At Risk
+                  </span>
+                </div>
+                <Separator className="my-3" />
+                <div className="text-xs text-muted-foreground flex items-center justify-between">
+                  <span>Overall Progress</span>
+                  <span className="font-medium">
+                    {teamObjectives && teamObjectives.length > 0
+                      ? Math.round(teamObjectives.reduce((sum, obj) => sum + obj.progress, 0) / teamObjectives.length)
+                      : 0}%
+                  </span>
+                </div>
+                <Progress className="h-1.5 mt-2" value={teamObjectives && teamObjectives.length > 0
+                      ? Math.round(teamObjectives.reduce((sum, obj) => sum + obj.progress, 0) / teamObjectives.length)
+                      : 0} />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <h3 className="text-sm font-medium tracking-tight text-muted-foreground">Key Results</h3>
+                  <ListChecks className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex items-baseline">
+                  <div className="text-2xl font-bold">
+                    {keyResults?.length || 0}
+                  </div>
+                  <div className="ml-2 text-sm text-muted-foreground">
+                    total
+                  </div>
+                  <span className="ml-auto text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    On Track
+                  </span>
+                </div>
+                <Separator className="my-3" />
+                <div className="text-xs text-muted-foreground flex items-center justify-between">
+                  <span>Progress This Week</span>
+                  <span className="font-medium text-green-600">+12%</span>
+                </div>
+                <Progress className="h-1.5 mt-2" value={70} />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <h3 className="text-sm font-medium tracking-tight text-muted-foreground">Recent Check-ins</h3>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex items-baseline">
+                  <div className="text-2xl font-bold">
+                    {checkIns?.length || 0}
+                  </div>
+                  <div className="ml-2 text-sm text-muted-foreground">
+                    this week
+                  </div>
+                </div>
+                <Separator className="my-3" />
+                <div className="text-xs text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Last check-in</span>
+                    <span className="font-medium">
+                      {checkIns && checkIns.length > 0 
+                       ? new Date(checkIns[0].createdAt).toLocaleDateString() 
+                       : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full mt-4 h-8 text-xs" asChild>
+                  <Link to="/check-ins">
+                    <Eye className="mr-2 h-3 w-3" />
+                    View All Check-ins
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Middle row with my objectives and team activity */}
+          <div className="grid gap-6 md:grid-cols-7">
+            {/* Objectives column */}
+            <Card className="md:col-span-4">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-medium">My Progress</CardTitle>
+                  <CardDescription>Your active objectives and their current status</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/my-okrs">View All</Link>
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                {objectivesLoading ? (
+                  <div className="p-6 flex justify-center">
+                    <div className="animate-pulse space-y-4 w-full">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-2 bg-muted rounded"></div>
+                      <div className="h-8 bg-muted rounded"></div>
+                    </div>
+                  </div>
+                ) : userObjectives && userObjectives.length > 0 ? (
+                  <div className="divide-y">
+                    {userObjectives.slice(0, 3).map((objective) => (
+                      <div key={objective.id} className="p-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="space-y-1">
+                            <Link to={`/objectives/${objective.id}`} className="font-medium hover:underline">
+                              {objective.title}
+                            </Link>
+                            <div className="flex gap-2 items-center">
+                              <Badge variant={
+                                objective.status === 'On Track' ? 'default' : 
+                                objective.status === 'At Risk' ? 'warning' : 
+                                objective.status === 'Behind' ? 'destructive' : 
+                                objective.status === 'Completed' ? 'success' : 'outline'
+                              } className="text-[10px] font-normal px-2 py-0 h-5">
+                                {objective.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                Q2 2024
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-sm font-medium">{objective.progress}%</span>
+                        </div>
+                        <Progress value={objective.progress} className="h-1.5" />
+                      </div>
+                    ))}
+                    {userObjectives.length > 3 && (
+                      <div className="p-3 text-center">
+                        <Button variant="link" size="sm" asChild>
+                          <Link to="/my-okrs">
+                            View all {userObjectives.length} objectives
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 flex flex-col items-center justify-center text-center">
+                    <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mb-3">
+                      <Target className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium mb-1">No objectives yet</h3>
+                    <p className="text-sm text-muted-foreground mb-4">Create your first objective to start tracking progress</p>
+                    <Button size="sm">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create Objective
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Team Activity column */}
+            <Card className="md:col-span-3">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-medium">Team Activity</CardTitle>
+                  <CardDescription>Recent updates from your team</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {checkIns && Array.isArray(checkIns) && checkIns.length > 0 ? (
+                    <>
+                      {checkIns.slice(0, 4).map((checkIn: any, index: number) => (
+                        <div key={checkIn.id || index} className="flex items-start gap-3 p-4">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src="" />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {checkIn.userId ? "US" : "UK"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-1">
+                            <p className="text-sm">
+                              <span className="font-medium">User {checkIn.userId}</span>
+                              {' updated '}
+                              {checkIn.objectiveId ? "objective" : "key result"} progress to {' '}
+                              <span className="font-medium">{checkIn.progress}%</span>
+                            </p>
+                            {checkIn.notes && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">{checkIn.notes}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              {checkIn.createdAt ? new Date(checkIn.createdAt).toLocaleString() : 'Recent'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="p-3 text-center">
+                        <Button variant="link" size="sm" asChild>
+                          <Link to="/checkins">
+                            View all check-ins
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-6 flex flex-col items-center justify-center text-center">
+                      <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mb-3">
+                        <MessageSquare className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-medium mb-1">No recent activity</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Team updates will appear here</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Bottom row with quick links and upcoming items */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Quick Links */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Quick Links</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/company-okrs">
+                    <Target className="h-5 w-5 mb-1 text-primary" />
+                    Company OKRs
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/quick-start-guide">
+                    <Rocket className="h-5 w-5 mb-1 text-primary" />
+                    Quick Start Guide
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/reports">
+                    <BarChart2 className="h-5 w-5 mb-1 text-primary" />
+                    Reports
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/one-on-one-meetings">
+                    <UserCircle className="h-5 w-5 mb-1 text-primary" />
+                    1:1 Meetings
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/ai-recommendations">
+                    <Zap className="h-5 w-5 mb-1 text-primary" />
+                    AI Suggestions
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1 font-normal" asChild>
+                  <Link to="/team-performance">
+                    <Award className="h-5 w-5 mb-1 text-primary" />
+                    Team Performance
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Upcoming Items */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Upcoming</CardTitle>
+                  <CardDescription>Approaching deadlines and events</CardDescription>
+                </div>
+                <Button variant="ghost" size="icon">
+                  <Calendar className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-muted/40 rounded-lg p-3 border border-border/70">
+                    <div className="flex gap-4 items-start">
+                      <div className="bg-primary/15 text-primary rounded p-2 w-10 h-10 flex items-center justify-center font-medium text-sm">
+                        15
+                        <span className="text-[10px] ml-0.5">MAY</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm">Q2 OKR Planning Session</h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">Review and finalize Q2 objectives</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0 h-4">10:00 AM</Badge>
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Users className="h-3 w-3" />
+                            Team Meeting
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200/70">
+                    <div className="flex gap-4 items-start">
+                      <div className="bg-yellow-100 text-yellow-700 rounded p-2 w-10 h-10 flex items-center justify-center font-medium text-sm">
+                        22
+                        <span className="text-[10px] ml-0.5">MAY</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-yellow-800">Objective Deadline</h4>
+                        <p className="text-xs text-yellow-700/80 mt-0.5">Increase user engagement by 25%</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Badge variant="outline" className="bg-yellow-100 border-yellow-200 text-yellow-800 text-[10px] font-normal px-1.5 py-0 h-4">Critical</Badge>
+                          <span className="flex items-center gap-1 text-[10px] text-yellow-700/70">
+                            <Clock className="h-3 w-3" />
+                            3 days remaining
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" size="sm" className="w-full">
+                    View All Upcoming Items
+                    <ArrowRight className="ml-2 h-3 w-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Mission Tab */}
         <TabsContent value="mission" className="mt-4">
