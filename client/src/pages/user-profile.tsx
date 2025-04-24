@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   User, 
   Mail, 
@@ -34,11 +39,13 @@ import {
   Users,
   Star,
   TrendingUp,
-  PlusCircle
+  PlusCircle,
+  X
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Objective, KeyResult, User as UserType, CheckIn, Team } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Types for the profile
 interface KeyResultWithDetails extends KeyResult {
@@ -177,12 +184,68 @@ export default function UserProfile() {
     }
   ];
   
+  // Form state for edit profile
+  const [profileForm, setProfileForm] = useState({
+    firstName: userDetails?.firstName || "",
+    lastName: userDetails?.lastName || "",
+    email: userDetails?.email || "",
+    language: userDetails?.language || "en",
+    role: userDetails?.role || "user"
+  });
+
+  // Update form when user details load
+  useEffect(() => {
+    if (userDetails) {
+      setProfileForm({
+        firstName: userDetails.firstName || "",
+        lastName: userDetails.lastName || "",
+        email: userDetails.email || "",
+        language: userDetails.language || "en",
+        role: userDetails.role || "user"
+      });
+    }
+  }, [userDetails]);
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: Partial<UserType>) => {
+      if (!user?.id) throw new Error("User ID not found");
+      const res = await apiRequest("PUT", `/api/users/${user.id}`, data);
+      return await res.json();
+    },
+    onSuccess: (updatedUser) => {
+      // Invalidate user queries to refetch the latest data
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      setShowEditProfileModal(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handler functions for form
+  const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(profileForm);
+  };
+
   // Handler functions for the buttons
   const handleEditProfile = () => {
-    toast({
-      title: "Edit Profile",
-      description: "Edit profile functionality will be implemented soon.",
-    });
     setShowEditProfileModal(true);
   };
   
@@ -244,6 +307,112 @@ export default function UserProfile() {
 
   return (
     <DashboardLayout title="My Profile">
+      {/* Edit Profile Modal */}
+      <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your personal information and profile details.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleProfileSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input 
+                    id="firstName"
+                    name="firstName"
+                    value={profileForm.firstName}
+                    onChange={handleProfileInputChange}
+                    placeholder="First name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input 
+                    id="lastName"
+                    name="lastName"
+                    value={profileForm.lastName}
+                    onChange={handleProfileInputChange}
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={profileForm.email}
+                  onChange={handleProfileInputChange}
+                  placeholder="Email address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input 
+                  id="phone"
+                  name="phone"
+                  value={profileForm.phone}
+                  onChange={handleProfileInputChange}
+                  placeholder="Phone number"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job Title</Label>
+                <Input 
+                  id="jobTitle"
+                  name="jobTitle"
+                  value={profileForm.jobTitle}
+                  onChange={handleProfileInputChange}
+                  placeholder="Job title"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input 
+                  id="location"
+                  name="location"
+                  value={profileForm.location}
+                  onChange={handleProfileInputChange}
+                  placeholder="City, Country"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={profileForm.bio}
+                  onChange={handleProfileInputChange}
+                  placeholder="Tell us about yourself"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditProfileModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateProfileMutation.isPending}
+              >
+                {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
