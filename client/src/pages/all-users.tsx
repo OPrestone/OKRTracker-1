@@ -46,6 +46,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 
 export default function AllUsers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -183,6 +185,147 @@ export default function AllUsers() {
       <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge> : 
       <Badge variant="outline" className="text-gray-500">Inactive</Badge>;
   };
+  
+  // Define the columns for the users table
+  const userColumns: ColumnDef<User>[] = [
+    {
+      accessorKey: "username",
+      header: "User",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src="" alt={`${user.firstName} ${user.lastName}`} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {`${user.firstName[0]}${user.lastName[0]}`}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">{user.firstName} {user.lastName}</div>
+              <div className="text-sm text-muted-foreground">@{user.username}</div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "email",
+      header: "Contact",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="text-sm">
+            <div className="flex items-center text-gray-700">
+              <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+              {user.email}
+            </div>
+            <div className="flex items-center text-gray-600 mt-1">
+              <Phone className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+              Language: {user.language || 'en'}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "teamId",
+      header: "Team",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <>
+            <div className="flex items-center">
+              <Building className="h-4 w-4 mr-1.5 text-gray-400" />
+              <span>
+                {user.teamId ? 
+                  teams.find(t => t.id === user.teamId)?.name || 'Loading...' : 
+                  'No Team'}
+              </span>
+            </div>
+            {user.managerId && (
+              <div className="text-xs text-gray-500 mt-0.5">
+                Manager: {users.find(u => u.id === user.managerId)?.firstName || 'Loading...'}
+              </div>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => {
+        const role = row.original.role || 'user';
+        return (
+          <Badge variant={getRoleBadgeVariant(role)}>
+            {role.charAt(0).toUpperCase() + role.slice(1)}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "onboardingProgress",
+      header: "Onboarding",
+      cell: ({ row }) => {
+        const progress = row.original.onboardingProgress || 0;
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary rounded-full" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="text-xs text-gray-500">
+              {progress}%
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="text-right">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit User
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openTeamAssignDialog(user)}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Assign to Team
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Manage Permissions
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => openDeleteDialog(user)}
+                  className="text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <DashboardLayout title="All Users">
@@ -193,17 +336,6 @@ export default function AllUsers() {
         </div>
         
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Search users..."
-              className="pl-8 w-[200px] lg:w-[300px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
           <Button>
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
@@ -211,157 +343,19 @@ export default function AllUsers() {
         </div>
       </div>
 
-      <Card className="border shadow-sm">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6">
-              <div className="flex items-center space-x-4 mb-4">
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-4 w-[200px]" />
-                </div>
-              </div>
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4 mb-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredUsers && filteredUsers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 hover:bg-gray-50">
-                    <TableHead className="w-[250px]">User</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Team</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Onboarding</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-gray-50/50">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src="" alt={`${user.firstName} ${user.lastName}`} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {`${user.firstName[0]}${user.lastName[0]}`}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{user.firstName} {user.lastName}</div>
-                            <div className="text-sm text-muted-foreground">@{user.username}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="flex items-center text-gray-700">
-                            <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                            {user.email}
-                          </div>
-                          <div className="flex items-center text-gray-600 mt-1">
-                            <Phone className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                            Language: {user.language || 'en'}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Building className="h-4 w-4 mr-1.5 text-gray-400" />
-                          <span>
-                            {user.teamId ? 
-                              teams.find(t => t.id === user.teamId)?.name || 'Loading...' : 
-                              'No Team'}
-                          </span>
-                        </div>
-                        {user.managerId && (
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            Manager: {users.find(u => u.id === user.managerId)?.firstName || 'Loading...'}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role || 'user')}>
-                          {(user.role || 'user').charAt(0).toUpperCase() + (user.role || 'user').slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary rounded-full" 
-                              style={{ width: `${user.onboardingProgress || 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {user.onboardingProgress || 0}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit User
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openTeamAssignDialog(user)}>
-                              <Users className="h-4 w-4 mr-2" />
-                              Assign to Team
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <ShieldCheck className="h-4 w-4 mr-2" />
-                              Manage Permissions
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => openDeleteDialog(user)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="p-6 text-center">
-              <h3 className="text-lg font-medium text-gray-900">No users found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchTerm ? `No users match "${searchTerm}"` : "Add users to get started"}
-              </p>
-              <Button 
-                className="mt-4"
-                variant="outline"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Your First User
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-[450px] w-full rounded-lg" />
+        </div>
+      ) : (
+        <DataTable
+          columns={userColumns}
+          data={filteredUsers || []}
+          searchColumn="username"
+          searchPlaceholder="Search users..."
+          tableTitle="All Users"
+        />
+      )}
       
       {/* Team Assignment Dialog */}
       <Dialog open={isTeamAssignDialogOpen} onOpenChange={setIsTeamAssignDialogOpen}>

@@ -64,7 +64,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     : user?.username?.[0] || '?';
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        window.location.reload(); // Reload the page after successful logout
+      },
+    });
   };
 
   const sidebarContent = (
