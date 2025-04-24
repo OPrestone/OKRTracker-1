@@ -1,127 +1,227 @@
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Filter, Search, BarChart, ChevronRight, Calendar, Target, Users } from "lucide-react";
+import { 
+  Filter, Search, BarChart, ChevronRight, Calendar, Target, 
+  Users, Activity, Briefcase, Loader2, Building, ArrowUpRight 
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
-// Sample data
-const companyObjectives = [
-  {
-    id: 1,
-    title: "Achieve 25% Revenue Growth",
-    description: "Increase annual revenue through new customer acquisition and expansion of existing accounts",
-    level: "company",
-    timeframe: "Q4 2023",
-    type: "financial",
-    progress: 82,
-    status: "on_track",
-    assignedTeam: "Executive Team",
-    keyResults: [
-      { title: "Close $5M in new business", progress: 90 },
-      { title: "Upsell 30% of existing customers", progress: 75 },
-      { title: "Launch 2 new revenue streams", progress: 60 }
-    ]
-  },
-  {
-    id: 2,
-    title: "Launch New Product Platform",
-    description: "Develop and launch next-generation product platform to drive future growth",
-    level: "company",
-    timeframe: "Q1 2024",
-    type: "product",
-    progress: 45,
-    status: "at_risk",
-    assignedTeam: "Product Team",
-    keyResults: [
-      { title: "Complete core platform development", progress: 70 },
-      { title: "Conduct beta testing with 50 customers", progress: 40 },
-      { title: "Achieve platform stability benchmarks", progress: 20 }
-    ]
-  },
-  {
-    id: 3,
-    title: "Improve Customer Satisfaction Score to 90%",
-    description: "Enhance customer experience across all touchpoints to improve overall satisfaction",
-    level: "company",
-    timeframe: "Q4 2023",
-    type: "customer",
-    progress: 60,
-    status: "on_track",
-    assignedTeam: "Customer Success",
-    keyResults: [
-      { title: "Reduce support ticket resolution time to <24 hours", progress: 75 },
-      { title: "Implement customer feedback program", progress: 100 },
-      { title: "Decrease churn rate to <5%", progress: 40 }
-    ]
-  },
-  {
-    id: 4,
-    title: "Establish Market Leadership in Enterprise Segment",
-    description: "Position company as the leading solution for enterprise customers in our industry",
-    level: "company",
-    timeframe: "Q2 2024",
-    type: "market",
-    progress: 30,
-    status: "on_track",
-    assignedTeam: "Marketing",
-    keyResults: [
-      { title: "Publish 5 industry thought leadership pieces", progress: 40 },
-      { title: "Secure 3 major enterprise reference customers", progress: 33 },
-      { title: "Achieve 25% market share in enterprise segment", progress: 20 }
-    ]
-  },
-  {
-    id: 5,
-    title: "Build Engineering Excellence",
-    description: "Implement best practices and processes to support sustainable growth",
-    level: "company",
-    timeframe: "Q1 2024",
-    type: "operations",
-    progress: 55,
-    status: "on_track",
-    assignedTeam: "Engineering",
-    keyResults: [
-      { title: "Achieve 90% test coverage", progress: 70 },
-      { title: "Reduce regression bugs by 50%", progress: 60 },
-      { title: "Implement CI/CD across all repositories", progress: 35 }
-    ]
-  },
-  {
-    id: 6,
-    title: "Expand Global Team",
-    description: "Grow team across key regions to support international expansion",
-    level: "company",
-    timeframe: "Q2 2024",
-    type: "people",
-    progress: 35,
-    status: "behind",
-    assignedTeam: "HR",
-    keyResults: [
-      { title: "Hire key positions in EMEA region", progress: 50 },
-      { title: "Establish Asia-Pacific headquarters", progress: 20 },
-      { title: "Implement global onboarding program", progress: 35 }
-    ]
-  }
+// Define interfaces for type safety
+interface KeyResult {
+  id: number;
+  title: string;
+  description?: string;
+  objectiveId: number;
+  progress: number;
+  status: string;
+  assignedToId?: number;
+  assignedToName?: string;
+}
+
+interface Objective {
+  id: number;
+  title: string;
+  description?: string;
+  level: string;
+  timeframe?: string;
+  timeframeId: number;
+  timeframeName?: string;
+  type?: string;
+  progress: number;
+  status: string;
+  teamId?: number;
+  teamName?: string;
+  ownerId: number;
+  ownerName?: string;
+  keyResults: KeyResult[];
+  startDate?: string;
+  endDate?: string;
+}
+
+// Define objective types for filtering
+const OBJECTIVE_TYPES = [
+  { value: 'financial', label: 'Financial', icon: <BarChart className="h-4 w-4" /> },
+  { value: 'product', label: 'Product', icon: <Target className="h-4 w-4" /> },
+  { value: 'customer', label: 'Customer', icon: <Users className="h-4 w-4" /> },
+  { value: 'market', label: 'Market', icon: <ArrowUpRight className="h-4 w-4" /> },
+  { value: 'operations', label: 'Operations', icon: <Activity className="h-4 w-4" /> },
+  { value: 'people', label: 'People', icon: <Users className="h-4 w-4" /> },
+  { value: 'process', label: 'Process', icon: <Activity className="h-4 w-4" /> },
+  { value: 'technology', label: 'Technology', icon: <Briefcase className="h-4 w-4" /> },
 ];
 
 export default function CompanyOKRs() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
   
-  const filteredObjectives = companyObjectives.filter(obj => 
-    obj.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    obj.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // State for filtering and searching
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedTimeframes, setSelectedTimeframes] = useState<number[]>([]);
 
+  // Get auth context
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+
+  // Fetch objectives data
+  const { data: objectives = [], isLoading, error } = useQuery<Objective[]>({
+    queryKey: ["/api/objectives"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/objectives");
+        if (response.status === 401) {
+          // Handle unauthorized
+          return [];
+        }
+        if (!response.ok) {
+          throw new Error("Failed to fetch objectives");
+        }
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("Error fetching objectives:", err);
+        throw err;
+      }
+    },
+    enabled: isAuthenticated
+  });
+
+  // Fetch key results for each objective
+  const { data: keyResults = [] } = useQuery<KeyResult[]>({
+    queryKey: ["/api/key-results"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/key-results");
+        if (response.status === 401) {
+          // Handle unauthorized
+          return [];
+        }
+        if (!response.ok) {
+          throw new Error("Failed to fetch key results");
+        }
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("Error fetching key results:", err);
+        throw err;
+      }
+    },
+    enabled: isAuthenticated
+  });
+
+  // Fetch timeframes for filtering
+  const { data: timeframes = [] } = useQuery<any[]>({
+    queryKey: ["/api/timeframes"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/timeframes");
+        if (response.status === 401) {
+          // Handle unauthorized
+          return [];
+        }
+        if (!response.ok) {
+          throw new Error("Failed to fetch timeframes");
+        }
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("Error fetching timeframes:", err);
+        throw err;
+      }
+    },
+    enabled: isAuthenticated
+  });
+
+  // Fetch teams for assignment info
+  const { data: teams = [] } = useQuery<any[]>({
+    queryKey: ["/api/teams"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/teams");
+        if (response.status === 401) {
+          // Handle unauthorized
+          return [];
+        }
+        if (!response.ok) {
+          throw new Error("Failed to fetch teams");
+        }
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("Error fetching teams:", err);
+        throw err;
+      }
+    },
+    enabled: isAuthenticated
+  });
+
+  // Filter objectives based on all criteria
+  const filteredObjectives = objectives
+    .filter(obj => obj.level === 'company')
+    .filter(obj => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      return searchQuery === "" || 
+        obj.title.toLowerCase().includes(searchLower) ||
+        (obj.description?.toLowerCase().includes(searchLower) || false);
+    })
+    .filter(obj => {
+      // Tab filter
+      if (selectedTab === 'all') return true;
+      if (selectedTab === 'current') {
+        // Filter for current quarter timeframes
+        const currentTimeframe = timeframes.find(t => {
+          const now = new Date();
+          const start = new Date(t.startDate);
+          const end = new Date(t.endDate);
+          return now >= start && now <= end;
+        });
+        return obj.timeframeId === currentTimeframe?.id;
+      }
+      if (selectedTab === 'upcoming') {
+        // Filter for upcoming timeframes
+        const now = new Date();
+        return obj.startDate ? new Date(obj.startDate) > now : false;
+      }
+      if (selectedTab === 'completed') {
+        return obj.status === 'completed';
+      }
+      return true;
+    })
+    .filter(obj => {
+      // Type filter
+      return selectedTypes.length === 0 || selectedTypes.includes(obj.type || '');
+    })
+    .filter(obj => {
+      // Status filter
+      return selectedStatuses.length === 0 || selectedStatuses.includes(obj.status);
+    })
+    .filter(obj => {
+      // Timeframe filter
+      return selectedTimeframes.length === 0 || selectedTimeframes.includes(obj.timeframeId);
+    });
+
+  // Helper function to get status color
   const getStatusColor = (status: string) => {
     switch (status) {
       case "on_track":
@@ -132,29 +232,82 @@ export default function CompanyOKRs() {
         return "bg-red-100 text-red-800";
       case "completed":
         return "bg-blue-100 text-blue-800";
+      case "not_started":
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "financial":
-        return <BarChart className="h-4 w-4" />;
-      case "product":
-        return <Target className="h-4 w-4" />;
-      case "customer":
-        return <Users className="h-4 w-4" />;
-      case "market":
-        return <BarChart className="h-4 w-4" />;
-      case "operations":
-        return <BarChart className="h-4 w-4" />;
-      case "people":
-        return <Users className="h-4 w-4" />;
-      default:
-        return <Target className="h-4 w-4" />;
-    }
+  // Helper function to get type icon
+  const getTypeIcon = (type?: string) => {
+    const objectiveType = OBJECTIVE_TYPES.find(t => t.value === type);
+    return objectiveType?.icon || <Target className="h-4 w-4" />;
   };
+
+  // Get team name by ID
+  const getTeamName = (teamId?: number) => {
+    if (!teamId) return "Unassigned";
+    const team = teams.find(t => t.id === teamId);
+    return team?.name || "Unknown Team";
+  };
+
+  // Get timeframe name by ID
+  const getTimeframeName = (timeframeId: number) => {
+    const timeframe = timeframes.find(t => t.id === timeframeId);
+    return timeframe?.name || "Unknown Timeframe";
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedTypes([]);
+    setSelectedStatuses([]);
+    setSelectedTimeframes([]);
+    setSearchQuery("");
+    setSelectedTab("all");
+  };
+
+  // Toggle type selection in filter
+  const toggleTypeSelection = (type: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type) 
+        : [...prev, type]
+    );
+  };
+
+  // Toggle status selection in filter
+  const toggleStatusSelection = (status: string) => {
+    setSelectedStatuses(prev => 
+      prev.includes(status) 
+        ? prev.filter(s => s !== status) 
+        : [...prev, status]
+    );
+  };
+
+  // Toggle timeframe selection in filter
+  const toggleTimeframeSelection = (timeframeId: number) => {
+    setSelectedTimeframes(prev => 
+      prev.includes(timeframeId) 
+        ? prev.filter(t => t !== timeframeId) 
+        : [...prev, timeframeId]
+    );
+  };
+
+  // Navigate to objective detail page
+  const navigateToObjective = (id: number) => {
+    navigate(`/objective-detail/${id}`);
+  };
+
+  // Get all unique objective types from data
+  const availableTypes = [...new Set(objectives.map(obj => obj.type).filter(Boolean) as string[])];
+  
+  // Get all available statuses from data
+  const availableStatuses = [...new Set(objectives.map(obj => obj.status))]
+    .sort((a, b) => {
+      const order = ["not_started", "on_track", "at_risk", "behind", "completed"];
+      return order.indexOf(a) - order.indexOf(b);
+    });
 
   return (
     <DashboardLayout title="Company OKRs">
@@ -180,101 +333,222 @@ export default function CompanyOKRs() {
               <Button variant="outline">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
+                {(selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0) && (
+                  <Badge className="ml-2 bg-primary" variant="default">
+                    {selectedTypes.length + selectedStatuses.length + selectedTimeframes.length}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>All Objectives</DropdownMenuItem>
-              <DropdownMenuItem>Financial Objectives</DropdownMenuItem>
-              <DropdownMenuItem>Product Objectives</DropdownMenuItem>
-              <DropdownMenuItem>Customer Objectives</DropdownMenuItem>
-              <DropdownMenuItem>Current Quarter</DropdownMenuItem>
-              <DropdownMenuItem>Next Quarter</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Filter By Type</DropdownMenuLabel>
+              {availableTypes.map(type => (
+                <DropdownMenuCheckboxItem
+                  key={type}
+                  checked={selectedTypes.includes(type)}
+                  onCheckedChange={() => toggleTypeSelection(type)}
+                >
+                  <span className="flex items-center">
+                    {getTypeIcon(type)}
+                    <span className="ml-2 capitalize">{type}</span>
+                  </span>
+                </DropdownMenuCheckboxItem>
+              ))}
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel>Filter By Status</DropdownMenuLabel>
+              {availableStatuses.map(status => (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={selectedStatuses.includes(status)}
+                  onCheckedChange={() => toggleStatusSelection(status)}
+                >
+                  <span className="capitalize">{status.replace('_', ' ')}</span>
+                </DropdownMenuCheckboxItem>
+              ))}
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel>Filter By Timeframe</DropdownMenuLabel>
+              {timeframes.map(tf => (
+                <DropdownMenuCheckboxItem
+                  key={tf.id}
+                  checked={selectedTimeframes.includes(tf.id)}
+                  onCheckedChange={() => toggleTimeframeSelection(tf.id)}
+                >
+                  {tf.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+              
+              <DropdownMenuSeparator />
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-center" 
+                onClick={resetFilters}
+              >
+                Reset Filters
+              </Button>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full mb-6">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full mb-6">
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="current">Current Quarter</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="all" className="mt-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Showing all company-level objectives
+          </p>
+        </TabsContent>
+        
+        <TabsContent value="current" className="mt-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Showing objectives for the current quarter
+          </p>
+        </TabsContent>
+        
+        <TabsContent value="upcoming" className="mt-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Showing upcoming objectives that haven't started yet
+          </p>
+        </TabsContent>
+        
+        <TabsContent value="completed" className="mt-4">
+          <p className="text-sm text-gray-500 mb-4">
+            Showing completed objectives
+          </p>
+        </TabsContent>
       </Tabs>
 
-      {filteredObjectives.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading objectives...</span>
+        </div>
+      ) : error ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Error loading objectives</CardTitle>
+            <CardDescription>
+              There was a problem fetching the company objectives.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-red-500">
+              {error instanceof Error ? error.message : "An unknown error occurred"}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredObjectives.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-          {filteredObjectives.map((objective) => (
-            <Card key={objective.id} className="border-t-4" style={{ borderTopColor: objective.type === 'financial' ? '#818cf8' : objective.type === 'product' ? '#6ee7b7' : objective.type === 'customer' ? '#fcd34d' : '#f472b6' }}>
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="flex items-center">
-                    <Badge className="mr-2" variant="outline">
-                      <span className="flex items-center">
-                        {getTypeIcon(objective.type)}
-                        <span className="ml-1 capitalize">{objective.type}</span>
-                      </span>
-                    </Badge>
-                    <Badge className={getStatusColor(objective.status)}>
-                      {objective.status.replace('_', ' ').toUpperCase()}
+          {filteredObjectives.map((objective) => {
+            // Get key results for this objective
+            const objectiveKeyResults = keyResults.filter(kr => kr.objectiveId === objective.id);
+            
+            // Determine color based on objective type
+            const typeColor = objective.type === 'financial' ? '#818cf8' : 
+                          objective.type === 'product' ? '#6ee7b7' : 
+                          objective.type === 'customer' ? '#fcd34d' : 
+                          objective.type === 'market' ? '#93c5fd' :
+                          objective.type === 'operations' ? '#a5b4fc' :
+                          objective.type === 'people' ? '#f472b6' : '#d1d5db';
+            
+            return (
+              <Card 
+                key={objective.id} 
+                className="border-t-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                style={{ borderTopColor: typeColor }}
+                onClick={() => navigateToObjective(objective.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="flex items-center">
+                      <Badge className="mr-2" variant="outline">
+                        <span className="flex items-center">
+                          {getTypeIcon(objective.type)}
+                          <span className="ml-1 capitalize">{objective.type || 'General'}</span>
+                        </span>
+                      </Badge>
+                      <Badge className={getStatusColor(objective.status)}>
+                        {objective.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <Badge variant="outline" className="ml-2">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {getTimeframeName(objective.timeframeId)}
                     </Badge>
                   </div>
-                  <Badge variant="outline" className="ml-2">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {objective.timeframe}
-                  </Badge>
-                </div>
-                <CardTitle className="text-xl">{objective.title}</CardTitle>
-                <CardDescription className="mt-1.5">
-                  {objective.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">Overall Progress</span>
-                    <span>{objective.progress}%</span>
+                  <CardTitle className="text-xl">{objective.title}</CardTitle>
+                  <CardDescription className="mt-1.5">
+                    {objective.description || 'No description provided'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium">Overall Progress</span>
+                      <span>{objective.progress}%</span>
+                    </div>
+                    <Progress value={objective.progress} className="h-2" />
                   </div>
-                  <Progress value={objective.progress} className="h-2" />
-                </div>
-                
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Key Results:</h4>
-                  <ul className="space-y-3">
-                    {objective.keyResults.map((kr, idx) => (
-                      <li key={idx} className="text-sm">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-gray-700">{kr.title}</span>
-                          <span className="text-gray-500">{kr.progress}%</span>
-                        </div>
-                        <Progress value={kr.progress} className="h-1.5" />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="mt-5 text-sm text-gray-500 flex justify-between items-center">
-                  <span>Assigned: {objective.assignedTeam}</span>
-                  <Button size="sm" variant="ghost">
-                    Details <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Key Results:</h4>
+                    {objectiveKeyResults.length > 0 ? (
+                      <ul className="space-y-3">
+                        {objectiveKeyResults.map((kr) => (
+                          <li key={kr.id} className="text-sm">
+                            <div className="flex justify-between mb-1">
+                              <span className="text-gray-700">{kr.title}</span>
+                              <span className="text-gray-500">{kr.progress}%</span>
+                            </div>
+                            <Progress value={kr.progress} className="h-1.5" />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500">No key results defined</p>
+                    )}
+                  </div>
+                  
+                  <div className="mt-5 text-sm text-gray-500 flex justify-between items-center">
+                    <span>Assigned: {getTeamName(objective.teamId)}</span>
+                    <Button size="sm" variant="ghost">
+                      Details <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card>
           <CardHeader>
             <CardTitle>No company objectives found</CardTitle>
             <CardDescription>
-              {searchQuery 
-                ? `No objectives match your search: "${searchQuery}"`
+              {searchQuery || selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0
+                ? "No objectives match your current filters"
                 : "There are no company-level objectives at this time."}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {(searchQuery || selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0) && (
+              <Button className="mb-4" variant="outline" onClick={resetFilters}>
+                Clear all filters
+              </Button>
+            )}
             <p className="text-sm text-gray-500">
               Company objectives provide direction and alignment for the entire organization.
             </p>
