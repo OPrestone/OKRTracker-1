@@ -300,14 +300,18 @@ export default function CompanyOKRs() {
   };
 
   // Get all unique objective types from data
-  const availableTypes = [...new Set(objectives.map(obj => obj.type).filter(Boolean) as string[])];
+  const availableTypes = objectives.length 
+    ? Array.from(new Set(objectives.map(obj => obj.type).filter(Boolean) as string[])) 
+    : [];
   
   // Get all available statuses from data
-  const availableStatuses = [...new Set(objectives.map(obj => obj.status))]
-    .sort((a, b) => {
-      const order = ["not_started", "on_track", "at_risk", "behind", "completed"];
-      return order.indexOf(a) - order.indexOf(b);
-    });
+  const availableStatuses = objectives.length
+    ? Array.from(new Set(objectives.map(obj => obj.status)))
+        .sort((a, b) => {
+          const order = ["not_started", "on_track", "at_risk", "behind", "completed"];
+          return order.indexOf(a) - order.indexOf(b);
+        })
+    : [];
 
   return (
     <DashboardLayout title="Company OKRs">
@@ -317,118 +321,159 @@ export default function CompanyOKRs() {
           <p className="text-gray-600">View and track company-wide objectives and key results</p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Search objectives..."
-              className="pl-8 w-[200px] lg:w-[300px]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {isAuthenticated && (
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                type="search"
+                placeholder="Search objectives..."
+                className="pl-8 w-[200px] lg:w-[300px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                  {(selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0) && (
+                    <Badge className="ml-2 bg-primary" variant="default">
+                      {selectedTypes.length + selectedStatuses.length + selectedTimeframes.length}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Filter By Type</DropdownMenuLabel>
+                {availableTypes.map(type => (
+                  <DropdownMenuCheckboxItem
+                    key={type}
+                    checked={selectedTypes.includes(type)}
+                    onCheckedChange={() => toggleTypeSelection(type)}
+                  >
+                    <span className="flex items-center">
+                      {getTypeIcon(type)}
+                      <span className="ml-2 capitalize">{type}</span>
+                    </span>
+                  </DropdownMenuCheckboxItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel>Filter By Status</DropdownMenuLabel>
+                {availableStatuses.map(status => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={selectedStatuses.includes(status)}
+                    onCheckedChange={() => toggleStatusSelection(status)}
+                  >
+                    <span className="capitalize">{status.replace('_', ' ')}</span>
+                  </DropdownMenuCheckboxItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel>Filter By Timeframe</DropdownMenuLabel>
+                {timeframes.map(tf => (
+                  <DropdownMenuCheckboxItem
+                    key={tf.id}
+                    checked={selectedTimeframes.includes(tf.id)}
+                    onCheckedChange={() => toggleTimeframeSelection(tf.id)}
+                  >
+                    {tf.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-center" 
+                  onClick={resetFilters}
+                >
+                  Reset Filters
+                </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-                {(selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0) && (
-                  <Badge className="ml-2 bg-primary" variant="default">
-                    {selectedTypes.length + selectedStatuses.length + selectedTimeframes.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Filter By Type</DropdownMenuLabel>
-              {availableTypes.map(type => (
-                <DropdownMenuCheckboxItem
-                  key={type}
-                  checked={selectedTypes.includes(type)}
-                  onCheckedChange={() => toggleTypeSelection(type)}
-                >
-                  <span className="flex items-center">
-                    {getTypeIcon(type)}
-                    <span className="ml-2 capitalize">{type}</span>
-                  </span>
-                </DropdownMenuCheckboxItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Filter By Status</DropdownMenuLabel>
-              {availableStatuses.map(status => (
-                <DropdownMenuCheckboxItem
-                  key={status}
-                  checked={selectedStatuses.includes(status)}
-                  onCheckedChange={() => toggleStatusSelection(status)}
-                >
-                  <span className="capitalize">{status.replace('_', ' ')}</span>
-                </DropdownMenuCheckboxItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Filter By Timeframe</DropdownMenuLabel>
-              {timeframes.map(tf => (
-                <DropdownMenuCheckboxItem
-                  key={tf.id}
-                  checked={selectedTimeframes.includes(tf.id)}
-                  onCheckedChange={() => toggleTimeframeSelection(tf.id)}
-                >
-                  {tf.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <Button 
-                variant="ghost" 
-                className="w-full justify-center" 
-                onClick={resetFilters}
-              >
-                Reset Filters
-              </Button>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        )}
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="current">Current Quarter</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-4">
-          <p className="text-sm text-gray-500 mb-4">
-            Showing all company-level objectives
-          </p>
-        </TabsContent>
-        
-        <TabsContent value="current" className="mt-4">
-          <p className="text-sm text-gray-500 mb-4">
-            Showing objectives for the current quarter
-          </p>
-        </TabsContent>
-        
-        <TabsContent value="upcoming" className="mt-4">
-          <p className="text-sm text-gray-500 mb-4">
-            Showing upcoming objectives that haven't started yet
-          </p>
-        </TabsContent>
-        
-        <TabsContent value="completed" className="mt-4">
-          <p className="text-sm text-gray-500 mb-4">
-            Showing completed objectives
-          </p>
-        </TabsContent>
-      </Tabs>
+      {isAuthenticated && (
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full mb-6">
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="current">Current Quarter</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-4">
+            <p className="text-sm text-gray-500 mb-4">
+              Showing all company-level objectives
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="current" className="mt-4">
+            <p className="text-sm text-gray-500 mb-4">
+              Showing objectives for the current quarter
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="upcoming" className="mt-4">
+            <p className="text-sm text-gray-500 mb-4">
+              Showing upcoming objectives that haven't started yet
+            </p>
+          </TabsContent>
+          
+          <TabsContent value="completed" className="mt-4">
+            <p className="text-sm text-gray-500 mb-4">
+              Showing completed objectives
+            </p>
+          </TabsContent>
+        </Tabs>
+      )}
 
-      {isLoading ? (
+      {!isAuthenticated ? (
+        <Card className="border-2 border-dashed border-primary/20">
+          <CardHeader>
+            <CardTitle>Authentication Required</CardTitle>
+            <CardDescription>
+              You need to log in to view company objectives and key results.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-6">
+            <div className="mb-4 p-4 bg-primary/5 rounded-full">
+              <Loader2 className="h-12 w-12 text-primary" />
+            </div>
+            <p className="text-center text-muted-foreground mb-6 max-w-md">
+              Company OKRs provide organization-wide visibility into key objectives and their progress.
+              Log in to track, monitor, and contribute to company goals.
+            </p>
+            <div className="flex gap-4">
+              <Button 
+                variant="default" 
+                size="lg"
+                onClick={() => navigate('/auth')}
+              >
+                Log in
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/')}
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>Default admin login: <span className="font-mono">admin</span> / <span className="font-mono">admin123</span></p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2">Loading objectives...</span>
