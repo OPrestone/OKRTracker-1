@@ -29,9 +29,25 @@ import {
   FileText, 
   ChevronRight, 
   Award, 
-  ExternalLink
+  ExternalLink,
+  PlayCircle,
+  Rocket,
+  ArrowRight,
+  LucideIcon,
+  BookOpen,
+  CheckSquare,
+  PieChart,
+  UserCircle2,
+  Sparkles,
+  Lightbulb,
+  Zap
 } from "lucide-react";
 import { Link } from "wouter";
+
+// Import the image from assets
+import getStartedVideoPath from "@assets/get started.mp4";
+import picture5Path from "@assets/Picture5.png";
+import picture7Path from "@assets/Picture7.png";
 
 export default function QuickStartGuide() {
   const { toast } = useToast();
@@ -59,129 +75,244 @@ export default function QuickStartGuide() {
     });
   };
 
+  // Helper component for feature cards on the homepage
+  interface FeatureCardProps {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    className?: string;
+  }
+  
+  const FeatureCard = ({ icon, title, description, className = "" }: FeatureCardProps) => (
+    <div className={`p-6 rounded-xl border border-border/40 bg-card hover:shadow-md transition-shadow duration-200 ${className}`}>
+      <div className="flex items-start">
+        <div className="rounded-full p-2.5 bg-primary/10 text-primary mr-4 mt-1">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg mb-2">{title}</h3>
+          <p className="text-muted-foreground text-sm">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout title="Quick Start Guide">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Quick Start Guide</h1>
-        <p className="text-gray-600 mt-2">
-          Welcome to the OKR System! This guide will help you get started with managing objectives and key results.
-        </p>
+      {/* Hero Section */}
+      <div className="relative mb-12 rounded-2xl overflow-hidden bg-gradient-to-r from-primary/80 to-secondary/80 text-white">
+        <div className="absolute inset-0 bg-[url('@assets/Picture7.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
+        <div className="relative z-10 px-8 py-12 md:py-16">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-8 md:mb-0 md:mr-8 md:max-w-[50%]">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Your OKR Journey</h1>
+              <p className="text-lg opacity-90 mb-6">
+                Set, track, and achieve your most ambitious goals with our comprehensive OKR system.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90">
+                  <Link href="/create-objective">
+                    <Rocket className="mr-2 h-5 w-5" />
+                    Create First Objective
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10">
+                  <PlayCircle className="mr-2 h-5 w-5" />
+                  Watch Tutorial
+                </Button>
+              </div>
+            </div>
+            <div className="relative w-full md:w-auto flex-shrink-0">
+              <div className="w-full md:w-[320px] h-[240px] rounded-lg overflow-hidden shadow-xl">
+                <video 
+                  src={getStartedVideoPath} 
+                  className="w-full h-full object-cover"
+                  controls
+                  poster={picture5Path}
+                />
+              </div>
+              <div className="absolute -bottom-3 -right-3 bg-white text-primary rounded-full p-3 shadow-lg">
+                <Sparkles className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Flag className="mr-2 h-5 w-5 text-primary" />
+      {/* Features section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <FeatureCard 
+          icon={<Lightbulb className="h-6 w-6" />}
+          title="Learn OKR Fundamentals"
+          description="Understand the core principles and best practices to create effective OKRs."
+        />
+        <FeatureCard 
+          icon={<Target className="h-6 w-6" />}
+          title="Set Meaningful Objectives"
+          description="Define ambitious goals that move your organization forward."
+        />
+        <FeatureCard 
+          icon={<CheckSquare className="h-6 w-6" />}
+          title="Track Progress"
+          description="Regularly update and monitor your OKRs to ensure success."
+        />
+      </div>
+
+      {/* Progress Tracker */}
+      <Card className="mb-10 overflow-hidden border-2 border-border">
+        <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-6 py-4 border-b border-border">
+          <h2 className="text-xl font-bold flex items-center">
+            <Zap className="mr-2 h-5 w-5 text-primary" />
             Your OKR Progress
-          </CardTitle>
-          <CardDescription>Track your progress through the essential steps</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="flex justify-between mb-1 text-sm">
-              <span>Progress</span>
-              <span>{completedCount} of {totalSteps} steps completed</span>
-            </div>
+            <span className="ml-auto text-sm font-normal px-3 py-1 bg-primary/10 text-primary rounded-full">
+              {completedCount}/{totalSteps} Completed
+            </span>
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">Complete these essential steps to get started with OKRs</p>
+        </div>
+        
+        <CardContent className="p-6">
+          <div className="mb-5">
             <Progress value={progressPercentage} className="h-2" />
           </div>
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <div className={`rounded-full p-1 mr-3 ${completedSteps["step-1"] ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Learn OKR Basics</span>
+          
+          <div className="grid gap-4">
+            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+              <div className={`rounded-full p-1.5 ${completedSteps["step-1"] ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Learn OKR Basics</div>
+                <div className="text-sm text-muted-foreground">Understand the fundamental concepts of OKRs</div>
               </div>
               <Button 
-                variant="ghost" 
-                size="sm" 
+                variant={completedSteps["step-1"] ? "ghost" : "outline"}
+                size="sm"
                 onClick={() => markStepComplete("step-1")}
                 disabled={completedSteps["step-1"]}
+                className={completedSteps["step-1"] ? "text-green-600" : ""}
               >
-                {completedSteps["step-1"] ? "Completed" : "Mark Complete"}
+                {completedSteps["step-1"] ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Completed
+                  </>
+                ) : "Mark Complete"}
               </Button>
             </div>
-            <Separator />
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <div className={`rounded-full p-1 mr-3 ${completedSteps["step-2"] ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Create Your First Objective</span>
+            
+            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+              <div className={`rounded-full p-1.5 ${completedSteps["step-2"] ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+                <Flag className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Create Your First Objective</div>
+                <div className="text-sm text-muted-foreground">Define a clear, meaningful goal for yourself or your team</div>
               </div>
               <Button 
-                variant="ghost" 
-                size="sm" 
+                variant={completedSteps["step-2"] ? "ghost" : "outline"}
+                size="sm"
                 onClick={() => markStepComplete("step-2")}
                 disabled={completedSteps["step-2"]}
+                className={completedSteps["step-2"] ? "text-green-600" : ""}
               >
-                {completedSteps["step-2"] ? "Completed" : "Mark Complete"}
+                {completedSteps["step-2"] ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Completed
+                  </>
+                ) : "Mark Complete"}
               </Button>
             </div>
-            <Separator />
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <div className={`rounded-full p-1 mr-3 ${completedSteps["step-3"] ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Add Key Results</span>
+            
+            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+              <div className={`rounded-full p-1.5 ${completedSteps["step-3"] ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+                <Target className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Add Key Results</div>
+                <div className="text-sm text-muted-foreground">Define measurable outcomes for your objective</div>
               </div>
               <Button 
-                variant="ghost" 
-                size="sm" 
+                variant={completedSteps["step-3"] ? "ghost" : "outline"}
+                size="sm"
                 onClick={() => markStepComplete("step-3")}
                 disabled={completedSteps["step-3"]}
+                className={completedSteps["step-3"] ? "text-green-600" : ""}
               >
-                {completedSteps["step-3"] ? "Completed" : "Mark Complete"}
+                {completedSteps["step-3"] ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Completed
+                  </>
+                ) : "Mark Complete"}
               </Button>
             </div>
-            <Separator />
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <div className={`rounded-full p-1 mr-3 ${completedSteps["step-4"] ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}>
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Record Your First Check-in</span>
+            
+            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+              <div className={`rounded-full p-1.5 ${completedSteps["step-4"] ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+                <PieChart className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Record Your First Check-in</div>
+                <div className="text-sm text-muted-foreground">Start tracking progress on your OKRs</div>
               </div>
               <Button 
-                variant="ghost" 
-                size="sm" 
+                variant={completedSteps["step-4"] ? "ghost" : "outline"}
+                size="sm"
                 onClick={() => markStepComplete("step-4")}
                 disabled={completedSteps["step-4"]}
+                className={completedSteps["step-4"] ? "text-green-600" : ""}
               >
-                {completedSteps["step-4"] ? "Completed" : "Mark Complete"}
+                {completedSteps["step-4"] ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Completed
+                  </>
+                ) : "Mark Complete"}
               </Button>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="bg-muted/30">
-          <Button asChild variant="outline" className="ml-auto">
+        <div className="bg-muted/30 px-6 py-4 border-t border-border flex justify-between items-center">
+          <p className="text-sm text-muted-foreground">
+            Estimated time to complete: <span className="font-medium">20 minutes</span>
+          </p>
+          <Button asChild>
             <Link href="/my-okrs">
               Go to My OKRs <ChevronRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
-        </CardFooter>
+        </div>
       </Card>
 
+      {/* Learn more section */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4 flex items-center">
+          <BookOpen className="mr-2 h-6 w-6 text-primary" />
+          Knowledge Center
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Explore our comprehensive resources to help you master OKRs and drive results
+        </p>
+      </div>
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="overview" className="flex items-center">
-            <Book className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">OKR Overview</span>
-            <span className="sm:hidden">Overview</span>
+        <TabsList className="inline-flex h-14 items-center justify-center rounded-lg bg-muted p-1 mb-8 text-muted-foreground w-full md:w-fit">
+          <TabsTrigger value="overview" className="flex items-center h-12 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <Book className="mr-2 h-5 w-5" />
+            <span>OKR Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="tutorials" className="flex items-center">
-            <Video className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Video Tutorials</span>
-            <span className="sm:hidden">Videos</span>
+          <TabsTrigger value="tutorials" className="flex items-center h-12 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <Video className="mr-2 h-5 w-5" />
+            <span>Tutorials</span>
           </TabsTrigger>
-          <TabsTrigger value="examples" className="flex items-center">
-            <FileText className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Example OKRs</span>
-            <span className="sm:hidden">Examples</span>
+          <TabsTrigger value="examples" className="flex items-center h-12 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <FileText className="mr-2 h-5 w-5" />
+            <span>Examples</span>
           </TabsTrigger>
-          <TabsTrigger value="faq" className="flex items-center">
-            <HelpCircle className="mr-2 h-4 w-4" />
+          <TabsTrigger value="faq" className="flex items-center h-12 px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+            <HelpCircle className="mr-2 h-5 w-5" />
             <span>FAQ</span>
           </TabsTrigger>
         </TabsList>
@@ -280,69 +411,158 @@ export default function QuickStartGuide() {
         </TabsContent>
 
         <TabsContent value="tutorials">
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Tutorials</CardTitle>
-              <CardDescription>
-                Watch these short videos to learn how to use the OKR system effectively
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                    <Video className="h-12 w-12 text-gray-400" />
+          <div className="grid md:grid-cols-12 gap-6">
+            <div className="md:col-span-5 xl:col-span-4">
+              <Card className="h-full flex flex-col">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-2xl">
+                    <PlayCircle className="h-6 w-6 mr-2 text-primary" />
+                    Video Tutorials
+                  </CardTitle>
+                  <CardDescription>
+                    Watch these guided walkthroughs to master the OKR system
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Our video tutorials cover everything from basic concepts to advanced OKR techniques. 
+                      Select a video from the list to start learning.
+                    </p>
+                    
+                    <div className="border border-border rounded-lg overflow-hidden mt-6">
+                      <div className="aspect-video bg-black">
+                        <video 
+                          src={getStartedVideoPath} 
+                          className="w-full h-full object-contain"
+                          controls
+                          poster={picture5Path}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-2 text-lg">Currently Playing</h3>
+                      <p className="font-medium">Getting Started with OKRs</p>
+                      <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                        <span>5:32</span>
+                        <span className="mx-2">•</span>
+                        <span>Beginner Level</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">Getting Started with OKRs</h3>
-                    <p className="text-sm text-gray-600 mb-3">Learn the basics of OKRs and how to implement them in your team.</p>
-                    <div className="flex">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">5:32</span>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="md:col-span-7 xl:col-span-8">
+              <Card className="h-full flex flex-col">
+                <div className="p-6 border-b border-border">
+                  <h3 className="text-xl font-semibold">Tutorial Library</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Browse all available video tutorials</p>
+                </div>
+                
+                <div className="flex-1 p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Getting Started with OKRs</h4>
+                        <p className="text-sm text-muted-foreground mb-1">Learn the basics of OKRs and how to implement them.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">5:32</span>
+                          <span className="ml-2 text-muted-foreground">Beginner</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Creating Effective Key Results</h4>
+                        <p className="text-sm text-muted-foreground mb-1">Tips for creating measurable key results.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">4:47</span>
+                          <span className="ml-2 text-muted-foreground">Intermediate</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">OKR Check-ins and Updates</h4>
+                        <p className="text-sm text-muted-foreground mb-1">How to conduct effective check-ins with your team.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">6:18</span>
+                          <span className="ml-2 text-muted-foreground">Intermediate</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Analyzing OKR Performance</h4>
+                        <p className="text-sm text-muted-foreground mb-1">Using analytics to improve your OKR process.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">7:22</span>
+                          <span className="ml-2 text-muted-foreground">Advanced</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Team Alignment Strategies</h4>
+                        <p className="text-sm text-muted-foreground mb-1">Connect company and team objectives effectively.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">8:15</span>
+                          <span className="ml-2 text-muted-foreground">Advanced</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors cursor-pointer group">
+                      <div className="h-14 w-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mr-3">
+                        <PlayCircle className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">OKR Scoring & Evaluation</h4>
+                        <p className="text-sm text-muted-foreground mb-1">Learn how to score and evaluate OKRs properly.</p>
+                        <div className="flex items-center text-xs">
+                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">5:54</span>
+                          <span className="ml-2 text-muted-foreground">Intermediate</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                    <Video className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">Creating Effective Key Results</h3>
-                    <p className="text-sm text-gray-600 mb-3">Tips for creating measurable and meaningful key results.</p>
-                    <div className="flex">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">4:47</span>
+                <div className="p-4 border-t border-border">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-muted-foreground">
+                      Showing 6 of 12 videos
                     </div>
+                    <Button variant="outline" size="sm">
+                      View All Tutorials
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                    <Video className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">OKR Check-ins and Updates</h3>
-                    <p className="text-sm text-gray-600 mb-3">How to conduct effective OKR check-ins with your team.</p>
-                    <div className="flex">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">6:18</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                    <Video className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">Analyzing OKR Performance</h3>
-                    <p className="text-sm text-gray-600 mb-3">How to use reports and analytics to improve your OKR process.</p>
-                    <div className="flex">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">7:22</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="examples">
