@@ -19,7 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-[#f9fafb] text-[#495057]">
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
@@ -31,12 +31,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
-        <div className="p-6 pb-24 bg-muted/10">
+        <div className="px-6 py-6 pb-24">
           {children}
         </div>
         
         {/* Footer */}
-        <footer className="border-t bg-background py-3 px-6 text-center text-sm text-muted-foreground">
+        <footer className="border-t border-gray-200 bg-white py-4 px-6 text-center text-sm text-gray-600">
           <p>OKR Management Platform © {new Date().getFullYear()} - Powered by Replit</p>
         </footer>
       </main>
@@ -45,7 +45,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="md:hidden fixed bottom-4 right-4 z-50">
         <button 
           onClick={() => setSidebarOpen(true)}
-          className="bg-primary text-primary-foreground rounded-full p-3 shadow-lg"
+          className="bg-indigo-600 text-white rounded-full p-3 shadow-lg"
         >
           <Menu className="h-6 w-6" />
         </button>

@@ -71,101 +71,117 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="p-5 border-b border-border bg-gradient-to-r from-primary/10 to-secondary/10">
+    <div className="flex flex-col h-full bg-[#162447] text-gray-200">
+      <div className="p-5 border-b border-gray-700">
         <h1 className="text-xl font-semibold flex items-center">
           <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">OKR System</span>
+          <span className="text-white">OKR System</span>
         </h1>
       </div>
       
+      {/* User Profile Card */}
+      <div className="p-4 mb-2 border-b border-gray-700">
+        <div className="flex items-center">
+          <Avatar className="h-10 w-10 border border-gray-600">
+            <AvatarImage src="/assets/avatar.png" alt={user?.firstName || 'User'} />
+            <AvatarFallback className="bg-indigo-900 text-indigo-200 font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-white">{user?.firstName} {user?.lastName}</p>
+            <p className="text-xs text-gray-400">{user?.role}</p>
+          </div>
+        </div>
+      </div>
+      
       {/* Sidebar Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <nav className="flex-1 overflow-y-auto py-2">
+        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Main
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/quick-start-guide" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/quick-start-guide" className="flex items-center w-full">
-            <Rocket className="mr-3 h-5 w-5 text-emerald-500" />
+            <Rocket className="mr-3 h-5 w-5 text-indigo-400" />
             <span className="font-medium">Quick Start Guide</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/" className="flex items-center w-full">
-            <BarChart3 className="mr-3 h-5 w-5 text-indigo-500" />
-            Dashboard
+            <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Dashboard</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/team-leader-dashboard" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/team-leader-dashboard" className="flex items-center w-full">
-            <LayoutDashboard className="mr-3 h-5 w-5 text-purple-500" />
-            Team Leader Dashboard
+            <LayoutDashboard className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Team Leader Dashboard</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/home" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/home" className="flex items-center w-full">
-            <Home className="mr-3 h-5 w-5 text-teal-500" />
-            Home
+            <Home className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Home</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/mission" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/mission" className="flex items-center w-full">
-            <Compass className="mr-3 h-5 w-5 text-blue-600" />
-            Mission & Values
+            <Compass className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Mission & Values</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200", 
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/company-strategy" 
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
           <Link href="/company-strategy" className="flex items-center w-full">
-            <Flag className="mr-3 h-5 w-5 text-red-500" />
-            Company Strategy
+            <Flag className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Company Strategy</span>
           </Link>
         </div>
         
@@ -173,28 +189,28 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button 
           onClick={() => setOkrsExpanded(!okrsExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
+            "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
             (location === "/my-okrs" || location === "/draft-okrs" || location === "/approved-okrs" || location === "/company-okrs")
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
-          <Flag className="mr-3 h-5 w-5 text-orange-500" />
-          Manage OKRs
+          <Flag className="mr-3 h-5 w-5 text-indigo-400" />
+          <span>Manage OKRs</span>
           {okrsExpanded ? (
-            <ChevronUp className="ml-auto h-5 w-5" />
+            <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
           ) : (
-            <ChevronDown className="ml-auto h-5 w-5" />
+            <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
           )}
         </button>
         
         {okrsExpanded && (
-          <div className="pl-10">
+          <div className="pl-11 mt-1 mb-1">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/my-okrs" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/my-okrs" className="w-full">
                 My OKRs
@@ -202,10 +218,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/draft-okrs" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/draft-okrs" className="w-full">
                 Draft OKRs
@@ -213,10 +229,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/approved-okrs" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/approved-okrs" className="w-full">
                 Approved OKRs
@@ -224,10 +240,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/company-okrs" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/company-okrs" className="w-full">
                 Company OKRs
@@ -240,28 +256,28 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button 
           onClick={() => setUserManagementExpanded(!userManagementExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-3 text-sm font-medium transition-colors duration-200",
+            "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
             (location === "/teams" || location === "/users" || location === "/all-users")
-              ? "bg-primary/10 text-primary border-l-2 border-primary" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
           )}
         >
-          <Users className="mr-3 h-5 w-5 text-blue-500" />
-          User Management
+          <Users className="mr-3 h-5 w-5 text-indigo-400" />
+          <span>User Management</span>
           {userManagementExpanded ? (
-            <ChevronUp className="ml-auto h-5 w-5" />
+            <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
           ) : (
-            <ChevronDown className="ml-auto h-5 w-5" />
+            <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
           )}
         </button>
         
         {userManagementExpanded && (
-          <div className="pl-10">
+          <div className="pl-11 mt-1 mb-1">
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/teams" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/teams" className="w-full">
                 Teams
@@ -269,10 +285,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
             
             <div className={cn(
-              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200", 
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
               location === "/all-users" 
-                ? "text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
             )}>
               <Link href="/all-users" className="w-full">
                 Users
