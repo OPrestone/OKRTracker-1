@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { useQuery } from "@tanstack/react-query";
-import { User } from "@shared/schema";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { User, Team } from "@shared/schema";
 import { 
   Table, 
   TableBody, 
@@ -38,123 +38,96 @@ import {
   ShieldCheck,
   Mail,
   Phone,
-  Building
+  Building,
+  Users
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Sample user data
-const sampleUsers = [
-  {
-    id: 1,
-    username: "johndoe",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    role: "admin",
-    department: "Executive",
-    status: "active",
-    lastActive: "Today at 10:30 AM",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY"
-  },
-  {
-    id: 2,
-    username: "janedoe",
-    firstName: "Jane",
-    lastName: "Doe",
-    email: "jane.doe@example.com",
-    role: "manager",
-    department: "Marketing",
-    status: "active",
-    lastActive: "Today at 9:45 AM",
-    phone: "+1 (555) 234-5678",
-    location: "San Francisco, CA"
-  },
-  {
-    id: 3,
-    username: "bobsmith",
-    firstName: "Bob",
-    lastName: "Smith",
-    email: "bob.smith@example.com",
-    role: "user",
-    department: "Engineering",
-    status: "active",
-    lastActive: "Yesterday at 4:20 PM",
-    phone: "+1 (555) 345-6789",
-    location: "Austin, TX"
-  },
-  {
-    id: 4,
-    username: "alicejones",
-    firstName: "Alice",
-    lastName: "Jones",
-    email: "alice.jones@example.com",
-    role: "user",
-    department: "Sales",
-    status: "active",
-    lastActive: "Today at 8:15 AM",
-    phone: "+1 (555) 456-7890",
-    location: "Chicago, IL"
-  },
-  {
-    id: 5,
-    username: "charliebrown",
-    firstName: "Charlie",
-    lastName: "Brown",
-    email: "charlie.brown@example.com",
-    role: "user",
-    department: "Customer Success",
-    status: "inactive",
-    lastActive: "2 weeks ago",
-    phone: "+1 (555) 567-8901",
-    location: "Boston, MA"
-  },
-  {
-    id: 6,
-    username: "emilydavis",
-    firstName: "Emily",
-    lastName: "Davis",
-    email: "emily.davis@example.com",
-    role: "manager",
-    department: "Product",
-    status: "active",
-    lastActive: "Today at 11:05 AM",
-    phone: "+1 (555) 678-9012",
-    location: "Seattle, WA"
-  },
-  {
-    id: 7,
-    username: "michaelwilson",
-    firstName: "Michael",
-    lastName: "Wilson",
-    email: "michael.wilson@example.com",
-    role: "user",
-    department: "Finance",
-    status: "active",
-    lastActive: "Yesterday at 2:30 PM",
-    phone: "+1 (555) 789-0123",
-    location: "Miami, FL"
-  }
-];
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function AllUsers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isTeamAssignDialogOpen, setIsTeamAssignDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
+  const { toast } = useToast();
   
-  // For the real app, use this query
-  // const { data: users, isLoading } = useQuery<User[]>({
-  //   queryKey: ["/api/users"],
-  // });
-
-  // Using sample data for now
-  const isLoading = false;
-  const users = sampleUsers;
+  // Fetch users
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+  
+  // Fetch teams
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+  });
+  
+  // Assign team mutation
+  const assignTeamMutation = useMutation({
+    mutationFn: async ({ id, teamId }: { id: number, teamId: number | null }) => {
+      if (teamId === null) {
+        // Remove from team
+        const res = await apiRequest("DELETE", `/api/users/${id}/team`);
+        return await res.json();
+      } else {
+        // Assign to team
+        const res = await apiRequest("POST", `/api/users/${id}/team`, { teamId });
+        return await res.json();
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // If the user is assigned to a team, also invalidate team members
+      if (data.teamId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/teams", data.teamId, "users"] });
+      }
+      
+      setIsTeamAssignDialogOpen(false);
+      setSelectedUser(null);
+      setTeamAssignment({ teamId: "" });
+      
+      const action = data.teamId ? "assigned to" : "removed from";
+      const teamName = data.teamId && teams 
+        ? teams.find(t => t.id === data.teamId)?.name || "the team"
+        : "any team";
+        
+      toast({
+        title: `Team ${action === "assigned to" ? "assignment" : "removal"} successful`,
+        description: `User has been ${action} ${teamName}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error updating team",
+        description: "There was a problem updating the team assignment",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleAssignTeam = () => {
+    if (!selectedUser) return;
+    
+    const teamId = teamAssignment.teamId === "" ? null : Number(teamAssignment.teamId);
+    assignTeamMutation.mutate({ id: selectedUser.id, teamId });
+  };
+  
+  const openTeamAssignDialog = (user: User) => {
+    setSelectedUser(user);
+    setTeamAssignment({ teamId: user.teamId?.toString() || "" });
+    setIsTeamAssignDialogOpen(true);
+  };
+  
+  const isLoading = isLoadingUsers || isLoadingTeams;
   
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.department.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getRoleBadgeVariant = (role: string) => {
@@ -229,10 +202,9 @@ export default function AllUsers() {
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
                     <TableHead className="w-[250px]">User</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Department</TableHead>
+                    <TableHead>Team</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Active</TableHead>
+                    <TableHead>Onboarding</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -261,27 +233,42 @@ export default function AllUsers() {
                           </div>
                           <div className="flex items-center text-gray-600 mt-1">
                             <Phone className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                            {user.phone}
+                            Language: {user.language || 'en'}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Building className="h-4 w-4 mr-1.5 text-gray-400" />
-                          <span>{user.department}</span>
+                          <span>
+                            {user.teamId ? 
+                              teams.find(t => t.id === user.teamId)?.name || 'Loading...' : 
+                              'No Team'}
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">{user.location}</div>
+                        {user.managerId && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Manager: {users.find(u => u.id === user.managerId)?.firstName || 'Loading...'}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        <Badge variant={getRoleBadgeVariant(user.role || 'user')}>
+                          {(user.role || 'user').charAt(0).toUpperCase() + (user.role || 'user').slice(1)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(user.status)}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-600">{user.lastActive}</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary rounded-full" 
+                              style={{ width: `${user.onboardingProgress || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {user.onboardingProgress || 0}%
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -296,6 +283,10 @@ export default function AllUsers() {
                             <DropdownMenuItem>
                               <Pencil className="h-4 w-4 mr-2" />
                               Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openTeamAssignDialog(user)}>
+                              <Users className="h-4 w-4 mr-2" />
+                              Assign to Team
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <ShieldCheck className="h-4 w-4 mr-2" />
@@ -331,6 +322,51 @@ export default function AllUsers() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Team Assignment Dialog */}
+      <Dialog open={isTeamAssignDialogOpen} onOpenChange={setIsTeamAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign User to Team</DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Select a team for ${selectedUser.firstName} ${selectedUser.lastName} or remove from current team.`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Select
+                value={teamAssignment.teamId.toString()}
+                onValueChange={(value) => setTeamAssignment({ teamId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Team</SelectItem>
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTeamAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignTeam}
+              disabled={assignTeamMutation.isPending}
+            >
+              {assignTeamMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
