@@ -34,6 +34,8 @@ import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
 import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
+import StrategyMap from "@/pages/strategy-map";
+
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
 import TimelineEditor from "@/pages/timeline-editor";
@@ -87,7 +89,8 @@ function AppRoutes() {
       <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
-      
+      <Route path="/strategy-map" component={StrategyMap} />
+					
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />
       <ProtectedRoute path="/teams/:id" component={TeamDetail} />

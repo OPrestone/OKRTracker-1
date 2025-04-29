@@ -214,6 +214,20 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             <span>Company Strategy</span>
           </Link>
         </div>
+
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            location === "/strategy-map" 
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+          )}
+        >
+          <Link href="/strategy-map" className="flex items-center w-full">
+            <Flag className="mr-3 h-5 w-5 text-indigo-400" />
+            <span> Strategy Map</span>
+          </Link>
+        </div>
         
         {/* Manage OKRs Menu */}
         <button 
