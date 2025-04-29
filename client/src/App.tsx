@@ -27,6 +27,7 @@ import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
 import MissionPage from "@/pages/mission";
+import MissionCompanyPage from "@/pages/mission-company";
 import OneOnOneMeetings from "@/pages/one-on-one-meetings";
 import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
 import UserProfile from "@/pages/user-profile";
@@ -75,6 +76,7 @@ function AppRoutes() {
       <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />
       <ProtectedRoute path="/mission" component={MissionPage} />
+      <ProtectedRoute path="/mission-company" component={MissionCompanyPage} />
       <ProtectedRoute path="/company-strategy" component={CompanyStrategy} />
       
       {/* Manage OKRs Section */}
