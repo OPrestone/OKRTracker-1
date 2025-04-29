@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
-import MyOKRs from "./my-okrs";
+import MyOKRs from "@/components/dashboard/my-okrs";
 import { TeamsOKRPerformance } from "@/components/dashboard/teams-okr-performance";
 import { IndividualProgress } from "@/components/dashboard/individual-progress";
 import DashboardLayout from "@/layouts/dashboard-layout";
