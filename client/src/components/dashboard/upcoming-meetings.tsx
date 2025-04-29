@@ -19,8 +19,8 @@ function MeetingItem({ userName, userRole, userAvatar, date, time }: MeetingItem
   return (
     <div className="flex items-start">
       <Avatar className="h-10 w-10">
-        <AvatarImage src={userAvatar} alt={userName} />
-        <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+        <AvatarImage src={userAvatar} alt={userName || ''} />
+        <AvatarFallback>{userName ? userName.charAt(0) : '?'}</AvatarFallback>
       </Avatar>
       <div className="ml-3 flex-1">
         <div className="flex justify-between items-start">
@@ -59,7 +59,7 @@ export function UpcomingMeetings() {
 
   // Find user by ID
   const getUserById = (userId: number) => {
-    if (!userData) return { fullName: "Loading...", role: "" };
+    if (!userData || !Array.isArray(userData)) return { fullName: "Loading...", role: "" };
     return userData.find((user: any) => user.id === userId) || { fullName: "Unknown", role: "" };
   };
 
@@ -97,7 +97,7 @@ export function UpcomingMeetings() {
           <div className="text-red-500">Error loading meetings</div>
         ) : (
           <>
-            {data && data.slice(0, 3).map((meeting: any) => {
+            {data && Array.isArray(data) && data.slice(0, 3).map((meeting: any) => {
               const participant = getUserById(meeting.userId2);
               const meetingDate = new Date(meeting.startTime);
               
