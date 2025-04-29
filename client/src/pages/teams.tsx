@@ -573,7 +573,7 @@ const Teams = () => {
                       <SelectValue placeholder="Select parent team" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {teams?.map(team => (
                         <SelectItem key={team.id} value={team.id.toString()}>
                           {team.name}
@@ -611,7 +611,7 @@ const Teams = () => {
               searchPlaceholder="Search teams..."
               tableTitle="All Teams"
             />
-          ) : (
+          ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
               {filteredTeams?.map(team => (
                 <TeamCard key={team.id} team={team} onClick={handleTeamClick} />
@@ -623,7 +623,7 @@ const Teams = () => {
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </>
       )}
 
