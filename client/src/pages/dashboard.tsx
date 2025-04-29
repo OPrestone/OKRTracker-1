@@ -1,611 +1,156 @@
-import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import DashboardLayout from "@/layouts/dashboard-layout";
-import StatsCard from "@/components/dashboard/stats-card";
-import ObjectiveCard from "@/components/dashboard/objective-card";
-import TeamCard from "@/components/dashboard/team-card";
-import CheckInTable from "@/components/dashboard/check-in-table";
-import { HelpTooltip } from "@/components/help/tooltip";
-import { useHelp } from "@/hooks/use-help-context";
-import { 
-  dashboardHelp,
-  objectivesHelp,
-  teamsHelp,
-  checkInsHelp,
-  newObjectiveHelp
-} from "@/components/help/help-content";
-import { CreateObjectiveForm } from "@/components/objectives/create-objective-form";
-import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
-
-import { 
-  Target, 
-  CheckCircle,
-  Users,
-  User,
-  Building,
-  Code,
-  LineChart,
-  ChevronDown,
-  Calendar,
-  Download,
-  FileText,
-  Pencil,
-  Plus,
-  PlusCircle,
-  Sparkles,
-} from "lucide-react";
-
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import MyOKRs from "./my-okrs";
+import { TeamsOKRPerformance } from "@/components/dashboard/teams-okr-performance";
+import { IndividualProgress } from "@/components/dashboard/individual-progress";
+import DashboardLayout from "@/layouts/dashboard-layout";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useLocation } from "wouter";
+export default function Dashboards() {
+  const { data: teamsData = [] } = useQuery({
+    queryKey: ['/api/teams'],
+  }) as { data: any[] };
 
-const Dashboard = () => {
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  const [timeframeFilter, setTimeframeFilter] = useState("Q3 2023");
-  const [teamFilter, setTeamFilter] = useState("All Teams");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isNewObjectiveOpen, setIsNewObjectiveOpen] = useState(false);
-  
-  // Access the help context
-  const { markOverviewSeen } = useHelp();
-  
-  // Mark the dashboard overview as seen when the component mounts
-  useEffect(() => {
-    markOverviewSeen();
-  }, [markOverviewSeen]);
-  
-  // Stats data
-  const stats = [
-    {
-      title: "Total Objectives",
-      value: 24,
-      icon: <Target className="text-xl text-primary" />,
-      iconClass: "bg-blue-100",
-      change: {
-        value: "12%",
-        type: "increase" as const,
-        label: "vs last quarter"
-      }
-    },
-    {
-      title: "Key Results",
-      value: 86,
-      icon: <CheckCircle className="text-xl text-green-500" />,
-      iconClass: "bg-green-100",
-      change: {
-        value: "8%",
-        type: "increase" as const,
-        label: "vs last quarter"
-      }
-    },
-    {
-      title: "Teams",
-      value: 8,
-      icon: <Users className="text-xl text-amber-500" />,
-      iconClass: "bg-amber-100",
-      change: {
-        value: "2",
-        type: "increase" as const,
-        label: "new this quarter"
-      }
-    },
-    {
-      title: "Active Users",
-      value: 42,
-      icon: <User className="text-xl text-indigo-500" />,
-      iconClass: "bg-indigo-100",
-      change: {
-        value: "3%",
-        type: "decrease" as const,
-        label: "activity drop"
-      }
-    }
-  ];
-  
-  // Objectives data
-  const objectives = [
-    {
-      id: 1,
-      title: "Expand global market presence",
-      description: "Focus on establishing a strong presence in key international markets through localized products and strategic partnerships.",
-      type: "Company",
-      status: "On Track",
-      owner: {
-        name: "Sarah Johnson",
-        role: "CEO"
-      },
-      timeframe: "Q3 2023",
-      progress: 75,
-      keyResults: [
-        {
-          id: 1,
-          title: "Grow website traffic from international users by 40%",
-          progress: 80,
-          status: "on_track",
-          color: "#10B981"
-        },
-        {
-          id: 2,
-          title: "Launch product in 3 new international markets",
-          progress: 66,
-          status: "on_track",
-          color: "#F59E0B"
-        },
-        {
-          id: 3,
-          title: "Establish 5 new strategic partnerships",
-          progress: 60,
-          status: "on_track",
-          color: "#3B82F6"
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: "Improve customer experience and satisfaction",
-      description: "Enhance the overall customer journey across all digital platforms to improve retention and satisfaction metrics.",
-      type: "Company",
-      status: "At Risk",
-      owner: {
-        name: "Michael Chen",
-        role: "CXO"
-      },
-      timeframe: "Q3 2023",
-      progress: 45,
-      keyResults: [
-        {
-          id: 4,
-          title: "Increase Net Promoter Score from 50 to 70",
-          progress: 70,
-          status: "on_track",
-          color: "#10B981"
-        },
-        {
-          id: 5,
-          title: "Reduce average customer support response time from 24 hours to 6 hours",
-          progress: 30,
-          status: "behind",
-          color: "#EF4444"
-        },
-        {
-          id: 6,
-          title: "Increase customer retention rate from 80% to 90%",
-          progress: 50,
-          status: "at_risk",
-          color: "#F59E0B"
-        }
-      ]
-    }
-  ];
-  
-  // Teams data
-  const teams = [
-    {
-      id: 1,
-      name: "Marketing Team",
-      memberCount: 8,
-      progress: 72,
-      icon: <Building className="text-lg text-primary" />,
-      iconBgColor: "#EFF6FF",
-      iconColor: "#3B82F6",
-      objectives: [
-        {
-          id: 1,
-          title: "Increase brand awareness",
-          progress: 85,
-          status: "on_track"
-        },
-        {
-          id: 2,
-          title: "Launch new content strategy",
-          progress: 60,
-          status: "at_risk"
-        },
-        {
-          id: 3,
-          title: "Improve social engagement",
-          progress: 78,
-          status: "on_track"
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "Product Team",
-      memberCount: 12,
-      progress: 65,
-      icon: <Code className="text-lg text-purple-500" />,
-      iconBgColor: "#F3F4F6",
-      iconColor: "#8B5CF6",
-      objectives: [
-        {
-          id: 4,
-          title: "Launch new mobile app",
-          progress: 90,
-          status: "on_track"
-        },
-        {
-          id: 5,
-          title: "Reduce load time by 30%",
-          progress: 35,
-          status: "behind"
-        },
-        {
-          id: 6,
-          title: "Improve user retention",
-          progress: 48,
-          status: "at_risk"
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: "Sales Team",
-      memberCount: 6,
-      progress: 89,
-      icon: <LineChart className="text-lg text-green-500" />,
-      iconBgColor: "#ECFDF5",
-      iconColor: "#10B981",
-      objectives: [
-        {
-          id: 7,
-          title: "Increase quarterly revenue",
-          progress: 92,
-          status: "on_track"
-        },
-        {
-          id: 8,
-          title: "Expand customer base",
-          progress: 85,
-          status: "on_track"
-        },
-        {
-          id: 9,
-          title: "Optimize sales process",
-          progress: 75,
-          status: "on_track"
-        }
-      ]
-    }
-  ];
-  
-  // Check-ins data
-  const checkIns = [
-    {
-      id: 1,
-      user: {
-        name: "Emily Chen",
-        role: "Marketing Lead",
-        initials: "EC"
-      },
-      team: "Marketing",
-      objective: "Increase brand awareness in key markets",
-      progress: 78,
-      date: "Aug 25, 2023"
-    },
-    {
-      id: 2,
-      user: {
-        name: "Alex Rodriguez",
-        role: "Product Manager",
-        initials: "AR"
-      },
-      team: "Product",
-      objective: "Launch mobile application with core functionality",
-      progress: 65,
-      date: "Aug 24, 2023"
-    },
-    {
-      id: 3,
-      user: {
-        name: "David Kim",
-        role: "Sales Director",
-        initials: "DK"
-      },
-      team: "Sales",
-      objective: "Increase quarterly revenue by 25%",
-      progress: 92,
-      date: "Aug 23, 2023"
-    }
-  ];
+  const { data: objectivesData = [] } = useQuery({
+    queryKey: ['/api/objectives'],
+  }) as { data: any[] };
 
-  const handleViewObjective = (id: number) => {
-    toast({
-      title: "Viewing Objective",
-      description: `You're viewing objective #${id}`,
+  // Prepare data for pie chart
+  const preparePieData = () => {
+    if (!objectivesData || !Array.isArray(objectivesData)) return [];
+    
+    const statusCounts = {
+      completed: 0,
+      inProgress: 0,
+      atRisk: 0,
+      notStarted: 0
+    };
+    
+    objectivesData.forEach((objective: any) => {
+      if (objective.progress === 100) {
+        statusCounts.completed++;
+      } else if (objective.progress > 70) {
+        statusCounts.inProgress++;
+      } else if (objective.progress > 30) {
+        statusCounts.atRisk++;
+      } else {
+        statusCounts.notStarted++;
+      }
     });
+    
+    return [
+      { name: "Completed", value: statusCounts.completed, color: "#10b981" },
+      { name: "In Progress", value: statusCounts.inProgress, color: "#3b82f6" },
+      { name: "At Risk", value: statusCounts.atRisk, color: "#f59e0b" },
+      { name: "Not Started", value: statusCounts.notStarted, color: "#ef4444" }
+    ];
   };
 
-  const handleEditObjective = (id: number) => {
-    toast({
-      title: "Editing Objective",
-      description: `You're editing objective #${id}`,
-    });
+  // Prepare data for bar chart
+  const prepareBarData = () => {
+    if (!teamsData || !Array.isArray(teamsData)) return [];
+    
+    return teamsData.map((team: any) => ({
+      name: team.name,
+      performance: team.performance || 0
+    }));
   };
 
-  const handleViewTeam = (id: number) => {
-    navigate(`/teams`);
-  };
-
-  const handleViewCheckIn = (id: number) => {
-    navigate(`/checkins`);
-  };
-
-  const handleExport = () => {
-    toast({
-      title: "Exporting Data",
-      description: "Your data is being exported.",
-    });
-  };
+  const pieData = preparePieData();
+  const barData = prepareBarData();
 
   return (
-    <DashboardLayout title="Dashboard">
-      {/* Welcome Tooltip */}
-      <div className="mb-6 flex items-center">
-        <h1 className="text-2xl font-bold">Welcome to Your Dashboard</h1>
-        <div className="ml-2">
-          <HelpTooltip 
-            id="dashboard-welcome"
-            title="Welcome to Your Dashboard"
-            description="This is your central command center for OKRs. Here you can see a snapshot of your objectives, key results, and overall progress. Use the tooltips throughout the application to learn more about each feature."
-            feature="overview"
-            persistent={true}
-          />
+    <DashboardLayout title="Dashboard" subtitle="Monitor the progress of your objectives and performance metrics">
+      <div className="container mx-auto py-4">
+        <div className="flex justify-between items-center mb-8">
+          <Button>Export Report</Button>
         </div>
-      </div>
-    
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {stats.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            iconClass={stat.iconClass}
-            change={stat.change}
-          />
-        ))}
-      </div>
-      
-      {/* Filters / Controls */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Select value={timeframeFilter} onValueChange={setTimeframeFilter}>
-              <SelectTrigger className="min-w-[180px]">
-                <SelectValue placeholder="Timeframe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="Q3 2023">Timeframe: Q3 2023</SelectItem>
-                  <SelectItem value="Q4 2023">Timeframe: Q4 2023</SelectItem>
-                  <SelectItem value="Annual 2023">Timeframe: Annual 2023</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            
-            <Select value={teamFilter} onValueChange={setTeamFilter}>
-              <SelectTrigger className="min-w-[180px]">
-                <SelectValue placeholder="Teams" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="All Teams">Teams: All Teams</SelectItem>
-                  <SelectItem value="Marketing">Teams: Marketing</SelectItem>
-                  <SelectItem value="Product">Teams: Product</SelectItem>
-                  <SelectItem value="Sales">Teams: Sales</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="min-w-[160px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="All">Status: All</SelectItem>
-                  <SelectItem value="On Track">Status: On Track</SelectItem>
-                  <SelectItem value="At Risk">Status: At Risk</SelectItem>
-                  <SelectItem value="Behind">Status: Behind</SelectItem>
-                  <SelectItem value="Completed">Status: Completed</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+
+        <Tabs defaultValue="my-okrs" className="mb-8">
+          <TabsList className="grid w-full md:w-auto grid-cols-4 md:grid-flow-col md:auto-cols-max gap-2">
+            <TabsTrigger value="my-okrs">My OKRs</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="team">Team Performance</TabsTrigger>
+            <TabsTrigger value="individual">Individual Progress</TabsTrigger>
+          </TabsList>
           
-          <div className="flex items-center space-x-3">
-            <Button 
-              variant="outline" 
-              onClick={handleExport}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create OKR
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>Create Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/ai-recommendations")}>
-                    <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
-                    <span>Create with AI</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsNewObjectiveOpen(true)}>
-                    <Pencil className="mr-2 h-4 w-4 text-blue-500" />
-                    <span>Create Manually</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/draft-okrs")}>
-                    <FileText className="mr-2 h-4 w-4 text-slate-500" />
-                    <span>View Draft OKRs</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Dialog open={isNewObjectiveOpen} onOpenChange={setIsNewObjectiveOpen}>
-                <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Create New Objective</DialogTitle>
-                    <DialogDescription>
-                      Create a new objective with key results to track your progress.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-6 py-4">
-                    <CreateObjectiveForm 
-                      onSuccess={() => setIsNewObjectiveOpen(false)}
-                      onCancel={() => setIsNewObjectiveOpen(false)}
-                    />
+          {/* My OKRs Tab */}
+          <TabsContent value="my-okrs" className="pt-4">
+            <MyOKRs />
+          </TabsContent>
+          
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Objectives Status Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Objectives Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          dataKey="value"
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                </DialogContent>
-              </Dialog>
-              
-              <HelpTooltip
-                id={newObjectiveHelp.id}
-                title={newObjectiveHelp.title}
-                description={newObjectiveHelp.description}
-              />
+                </CardContent>
+              </Card>
+
+              {/* Team Performance Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={barData}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis type="category" dataKey="name" width={80} />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Performance']} />
+                        <Bar dataKey="performance" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* OKR Overview Section */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold">Company Objectives Overview</h2>
-          <HelpTooltip 
-            id={objectivesHelp.id}
-            title={objectivesHelp.title}
-            description={objectivesHelp.description}
-          />
-        </div>
-        
-        {objectives.map((objective) => (
-          <ObjectiveCard
-            key={objective.id}
-            id={objective.id}
-            title={objective.title}
-            description={objective.description}
-            type={objective.type}
-            status={objective.status}
-            owner={objective.owner}
-            timeframe={objective.timeframe}
-            progress={objective.progress}
-            keyResults={objective.keyResults}
-            onView={handleViewObjective}
-            onEdit={handleEditObjective}
-          />
-        ))}
-      </div>
-      
-      {/* Team Performance & Onboarding Section */}
-      <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Team Performance - Takes 3 columns on large screens */}
-        <div className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Team Performance</h2>
-              <HelpTooltip 
-                id={teamsHelp.id}
-                title={teamsHelp.title}
-                description={teamsHelp.description}
-              />
-            </div>
-            <Button variant="link" onClick={() => navigate("/teams")}>
-              View All Teams
-            </Button>
-          </div>
+          </TabsContent>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {teams.map((team) => (
-              <TeamCard
-                key={team.id}
-                id={team.id}
-                name={team.name}
-                memberCount={team.memberCount}
-                progress={team.progress}
-                icon={team.icon}
-                iconBgColor={team.iconBgColor}
-                iconColor={team.iconColor}
-                objectives={team.objectives}
-                onViewDetails={handleViewTeam}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Onboarding Progress - Takes 1 column on large screens */}
-        <div className="lg:col-span-1">
-          <OnboardingProgress />
-        </div>
-      </div>
-      
-      {/* Recent Check-ins */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Recent Check-ins</h2>
-            <HelpTooltip 
-              id={checkInsHelp.id}
-              title={checkInsHelp.title}
-              description={checkInsHelp.description}
-            />
-          </div>
-          <Button variant="link" onClick={() => navigate("/checkins")}>
-            View All Check-ins
-          </Button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <CheckInTable
-            checkIns={checkIns}
-            totalCount={18}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onViewCheckIn={handleViewCheckIn}
-          />
-        </div>
+          {/* Team Performance Tab */}
+          <TabsContent value="team" className="pt-4">
+            <TeamsOKRPerformance />
+          </TabsContent>
+          
+          {/* Individual Progress Tab */}
+          <TabsContent value="individual" className="pt-4">
+            <IndividualProgress />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
-};
-
-export default Dashboard;
+}
