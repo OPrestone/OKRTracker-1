@@ -1492,6 +1492,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Team users endpoint
+  app.get("/api/teams/:teamId/users", async (req, res, next) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      const users = await storage.getUsersByTeam(teamId);
+      res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Team objectives endpoint
+  app.get("/api/teams/:teamId/objectives", async (req, res, next) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
+      
+      // Create sample objectives for the team
+      const sampleObjectives = [
+        {
+          id: teamId * 100 + 1,
+          title: "Increase team productivity by 20%",
+          name: "Increase team productivity by 20%",
+          description: "Improve team workflows and processes to boost productivity",
+          level: "team",
+          ownerId: 1,
+          teamId: teamId,
+          timeframeId: 1,
+          status: "on_track",
+          progress: 65,
+          parentId: null,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: teamId * 100 + 2,
+          title: "Complete quarterly deliverables on schedule",
+          name: "Complete quarterly deliverables on schedule",
+          description: "Ensure all team deliverables are completed on time",
+          level: "team",
+          ownerId: 1,
+          teamId: teamId,
+          timeframeId: 1,
+          status: "on_track",
+          progress: 80,
+          parentId: null,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: teamId * 100 + 3,
+          title: "Implement new team collaboration tools",
+          name: "Implement new team collaboration tools",
+          description: "Adopt and integrate new tools to improve team collaboration",
+          level: "team",
+          ownerId: 1,
+          teamId: teamId,
+          timeframeId: 1,
+          status: "at_risk",
+          progress: 40,
+          parentId: null,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(sampleObjectives);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Upcoming meetings endpoint
   app.get("/api/meetings/upcoming", async (req, res, next) => {
     try {
