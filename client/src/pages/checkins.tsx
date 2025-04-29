@@ -1,871 +1,1329 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-
-// Define schedule interface for the DataTable
-interface Schedule {
-  id: number;
-  name: string;
-  status: 'active' | 'paused';
-  cadence: string;
-  nextRun: string;
-  responseRate: number;
-}
-import DashboardLayout from '@/layouts/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { useLocation } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { BarChart, LineChart, Calendar, CalendarDays, Clock, ListChecks, ArrowUpRight, CalendarClock, BarChart4, LineChart as LineChartIcon, ChevronRight, MessageSquare, ThumbsUp, AlertCircle, CheckCircle, UserRound, Users, Check } from "lucide-react";
+import { cn, getInitials, formatDate } from "@/lib/utils";
+import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { DataTable } from '@/components/ui/data-table/data-table';
-import { ColumnDef } from '@tanstack/react-table';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  PlusCircle, 
-  Calendar, 
-  Search, 
-  AlertCircle, 
-  Filter,
-  ArrowUpRight,
-  ClipboardList,
-  BarChart3,
-  ClipboardCheck,
-  Goal,
-  CheckCircle,
-  XCircle,
-  ListChecks
-} from 'lucide-react';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { formatDistanceToNow } from 'date-fns';
-import { CheckIn, Objective, KeyResult, User } from '@shared/schema';
-import { useAuth } from '@/hooks/use-auth';
-import { UpdateOKRDialog } from '@/components/check-ins/update-okr-dialog';
+  LineChart as ReLineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Legend
+} from "recharts";
 
-const CheckinCard = ({ checkin }: { checkin: any }) => {
-  const date = new Date(checkin.createdAt);
-  
-  const formattedDate = formatDistanceToNow(date, { addSuffix: true });
-  
-  // Get the target type (objective or key result)
-  const targetType = checkin.objectiveId ? 'Objective' : 'Key Result';
-  
-  return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center">
-            <Avatar className="h-8 w-8 mr-3">
-              <AvatarFallback>{checkin.user?.firstName?.[0]}{checkin.user?.lastName?.[0]}</AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-base font-medium">{checkin.user?.firstName} {checkin.user?.lastName}</CardTitle>
-              <CardDescription>{formattedDate}</CardDescription>
-            </div>
-          </div>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-            {targetType} Check-in
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-1">Target:</h4>
-          <p className="text-gray-900">
-            {checkin.objective?.title || checkin.keyResult?.title || 'Unknown'}
-          </p>
-        </div>
-        
-        {checkin.notes && (
-          <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-1">Notes:</h4>
-            <p className="text-gray-600 text-sm">{checkin.notes}</p>
-          </div>
-        )}
-        
-        {checkin.progress !== undefined && (
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <h4 className="text-sm font-medium text-gray-700">Progress:</h4>
-              <span className="text-sm font-medium">{checkin.progress}%</span>
-            </div>
-            <Progress value={checkin.progress} className="h-2" />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-// Define schedule columns for DataTable
-const scheduleColumns: ColumnDef<Schedule>[] = [
+// Mock data for demo purposes
+const checkInData = [
   {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("name")}</div>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge variant={status === "active" ? "default" : "outline"}>
-          {status === "active" ? (
-            <CheckCircle className="h-3 w-3 mr-1" />
-          ) : (
-            <XCircle className="h-3 w-3 mr-1" />
-          )}
-          {status === "active" ? "Active" : "Paused"}
-        </Badge>
-      );
+    id: 1,
+    date: new Date(2023, 8, 5),
+    keyResult: {
+      id: 101,
+      title: "Increase customer retention rate from 75% to 85%",
+      objective: {
+        id: 1,
+        title: "Improve customer satisfaction and loyalty",
+      },
+      targetValue: 85,
+      currentValue: 79,
+      startValue: 75,
+      progress: 40,
     },
-  },
-  {
-    accessorKey: "cadence",
-    header: "Cadence",
-  },
-  {
-    accessorKey: "nextRun",
-    header: "Next Run",
-  },
-  {
-    accessorKey: "responseRate",
-    header: "Response Rate",
-    cell: ({ row }) => {
-      const rate = row.getValue("responseRate") as number;
-      return (
-        <div className="flex items-center">
-          <Progress value={rate} className="h-2 w-16 mr-2" />
-          <span className="text-sm">{rate}%</span>
-        </div>
-      );
+    previousProgress: 30,
+    progress: 40,
+    comment: "We've implemented a new customer feedback system and are seeing positive results. Need to work on response time to customer inquiries.",
+    confidenceLevel: "On Track",
+    createdBy: {
+      id: 1,
+      name: "Alex Morgan",
+      avatar: null,
     },
+    comments: [
+      {
+        id: 1,
+        content: "Great progress! Let's discuss the feedback system in our next meeting.",
+        author: {
+          id: 2,
+          name: "Jamie Taylor",
+          avatar: null,
+        },
+        createdAt: new Date(2023, 8, 5, 14, 30),
+      }
+    ]
   },
   {
-    id: "actions",
-    header: () => <div className="text-right">Actions</div>,
-    cell: () => {
-      return (
-        <div className="text-right">
-          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/schedules'}>
-            View
-          </Button>
-        </div>
-      );
+    id: 2,
+    date: new Date(2023, 8, 12),
+    keyResult: {
+      id: 102,
+      title: "Launch new loyalty program with 5000 sign-ups",
+      objective: {
+        id: 1,
+        title: "Improve customer satisfaction and loyalty",
+      },
+      targetValue: 5000,
+      currentValue: 3200,
+      startValue: 0,
+      progress: 64,
     },
+    previousProgress: 45,
+    progress: 64,
+    comment: "The loyalty program launch went well, and we're seeing strong sign-ups. Marketing campaign is performing above expectations.",
+    confidenceLevel: "On Track",
+    createdBy: {
+      id: 1,
+      name: "Alex Morgan",
+      avatar: null,
+    },
+    comments: []
   },
+  {
+    id: 3,
+    date: new Date(2023, 8, 19),
+    keyResult: {
+      id: 103,
+      title: "Reduce customer support response time from 8 hours to 2 hours",
+      objective: {
+        id: 2,
+        title: "Enhance customer experience",
+      },
+      targetValue: 2,
+      currentValue: 3.5,
+      startValue: 8,
+      progress: 75,
+    },
+    previousProgress: 60,
+    progress: 75,
+    comment: "New ticketing system has helped reduce response times significantly. Still working on staffing during peak hours.",
+    confidenceLevel: "At Risk",
+    createdBy: {
+      id: 3,
+      name: "Jordan Lee",
+      avatar: null,
+    },
+    comments: [
+      {
+        id: 2,
+        content: "Can we look at additional temporary staffing for peak hours?",
+        author: {
+          id: 4,
+          name: "Taylor Swift",
+          avatar: null,
+        },
+        createdAt: new Date(2023, 8, 19, 16, 45),
+      }
+    ]
+  }
 ];
 
-const CheckinsPage = () => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState('checkins');
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [teamFilter, setTeamFilter] = useState('all');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isUpdateOKRDialogOpen, setIsUpdateOKRDialogOpen] = useState(false);
-  
-  // Mock data for schedules
-  const schedules: Schedule[] = [
-    {
+// Mock trend data
+const trendData = [
+  { date: "Week 1", value: 10 },
+  { date: "Week 2", value: 25 },
+  { date: "Week 3", value: 30 },
+  { date: "Week 4", value: 40 },
+  { date: "Week 5", value: 55 },
+  { date: "Week 6", value: 64 },
+  { date: "Week 7", value: 68 },
+  { date: "Week 8", value: 75 },
+];
+
+// Mock team data
+const teamCheckInsData = [
+  {
+    id: 1,
+    team: "Product Team",
+    objective: "Launch version 2.0 of our flagship product",
+    checkInCount: 24,
+    avgProgress: 68,
+    atRiskCount: 1,
+    lastCheckIn: new Date(2023, 8, 20),
+  },
+  {
+    id: 2,
+    team: "Marketing Team",
+    objective: "Increase brand awareness by 40%",
+    checkInCount: 18,
+    avgProgress: 72,
+    atRiskCount: 0,
+    lastCheckIn: new Date(2023, 8, 19),
+  },
+  {
+    id: 3,
+    team: "Engineering Team",
+    objective: "Reduce system downtime by 99.9%",
+    checkInCount: 22,
+    avgProgress: 85,
+    atRiskCount: 0,
+    lastCheckIn: new Date(2023, 8, 21),
+  },
+  {
+    id: 4,
+    team: "Sales Team",
+    objective: "Increase quarterly revenue by 30%",
+    checkInCount: 16,
+    avgProgress: 42,
+    atRiskCount: 2,
+    lastCheckIn: new Date(2023, 8, 18),
+  }
+];
+
+// Mock key results data needing check-in
+const needsCheckInData = [
+  {
+    id: 201,
+    title: "Increase website conversion rate from 2% to 3.5%",
+    objective: {
+      id: 3, 
+      title: "Optimize digital marketing performance"
+    },
+    owner: {
+      id: 4,
+      name: "Taylor Swift",
+      avatar: null,
+    },
+    dueDate: new Date(2023, 8, 22),
+    lastCheckIn: new Date(2023, 8, 8)
+  },
+  {
+    id: 202,
+    title: "Reduce customer acquisition cost by 20%",
+    objective: {
+      id: 3, 
+      title: "Optimize digital marketing performance"
+    },
+    owner: {
       id: 1,
-      name: 'Weekly Team OKR Update',
-      status: 'active',
-      cadence: 'Every Monday at 9:00 AM',
-      nextRun: 'Apr 22, 2025',
-      responseRate: 85
+      name: "Alex Morgan",
+      avatar: null,
     },
-    {
-      id: 2,
-      name: 'Monthly OKR Review',
-      status: 'paused',
-      cadence: 'First Monday of month at 2:00 PM',
-      nextRun: 'May 5, 2025',
-      responseRate: 72
+    dueDate: new Date(2023, 8, 23),
+    lastCheckIn: new Date(2023, 8, 9)
+  },
+  {
+    id: 203,
+    title: "Complete security audit and fix all critical issues",
+    objective: {
+      id: 4, 
+      title: "Strengthen security and compliance"
     },
-    {
+    owner: {
       id: 3,
-      name: 'Quarterly Goals Reflection',
-      status: 'active',
-      cadence: 'Last Friday of quarter at 3:00 PM',
-      nextRun: 'Jun 27, 2025',
-      responseRate: 94
-    }
-  ];
+      name: "Jordan Lee",
+      avatar: null,
+    },
+    dueDate: new Date(2023, 8, 24),
+    lastCheckIn: new Date(2023, 8, 10)
+  }
+];
+
+function ConfidenceBadge({ level }: { level: string }) {
+  switch (level) {
+    case "On Track":
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+          <CheckCircle className="h-3 w-3" />
+          <span>On Track</span>
+        </Badge>
+      );
+    case "At Risk":
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          <span>At Risk</span>
+        </Badge>
+      );
+    case "Off Track":
+      return (
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          <span>Off Track</span>
+        </Badge>
+      );
+    default:
+      return null;
+  }
+}
+
+function ProgressIndicator({ previous, current }: { previous: number; current: number }) {
+  const change = current - previous;
+  const indicator = change > 0 ? "positive" : change < 0 ? "negative" : "neutral";
   
-  // State for new check-in form
-  const [checkInType, setCheckInType] = useState('objective');
-  const [selectedObjectiveId, setSelectedObjectiveId] = useState('');
-  const [selectedKeyResultId, setSelectedKeyResultId] = useState('');
-  const [progress, setProgress] = useState('0');
-  const [notes, setNotes] = useState('');
+  return (
+    <div className="flex items-center gap-1">
+      <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+        <div 
+          className="h-full bg-primary-600 rounded-full" 
+          style={{ width: `${current}%` }}
+        />
+      </div>
+      <span className="text-sm">{current}%</span>
+      {indicator !== "neutral" && (
+        <span 
+          className={cn(
+            "text-xs flex items-center",
+            indicator === "positive" ? "text-green-600" : "text-red-600"
+          )}
+        >
+          {indicator === "positive" ? "+" : ""}{change}%
+          {indicator === "positive" && <ArrowUpRight className="h-3 w-3" />}
+        </span>
+      )}
+    </div>
+  );
+}
 
-  // Fetch check-ins
-  const { data: checkIns, isLoading: checkInsLoading } = useQuery({
-    queryKey: ['/api/check-ins'],
-  });
-
-  // Fetch objectives for dropdown
-  const { data: objectives } = useQuery<Objective[]>({
-    queryKey: ['/api/objectives'],
-  });
-
-  // Fetch key results based on selected objective
-  const { data: keyResults } = useQuery<KeyResult[]>({
-    queryKey: ['/api/objectives', selectedObjectiveId, 'key-results'],
-    enabled: !!selectedObjectiveId && checkInType === 'keyResult',
-  });
-
-  // Fetch teams
+// Main Check-in form component
+function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => void }) {
+  // Set default progress to 0 if no key result is provided
+  const [progress, setProgress] = useState(keyResult ? keyResult.progress || 0 : 0);
+  const [confidence, setConfidence] = useState("On Track");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkInType, setCheckInType] = useState("OKR Check-in");
+  const [checkInTemplate, setCheckInTemplate] = useState("Weekly");
+  const [focusLastWeek, setFocusLastWeek] = useState("");
+  const [goalsThisWeek, setGoalsThisWeek] = useState("");
+  const [challenges, setChallenges] = useState("");
+  const [needsForOKRs, setNeedsForOKRs] = useState("");
+  
+  // States for the team and user data
+  const [selectedTeam, setSelectedTeam] = useState<string>("");
+  
+  // State for tracking selected objectives and key results
+  const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
+  const [selectedKeyResults, setSelectedKeyResults] = useState<string[]>([]);
+  
+  // Query to fetch teams data
   const { data: teams } = useQuery({
     queryKey: ['/api/teams'],
   });
-
-  // Filter check-ins
-  const filteredCheckIns = checkIns?.filter((checkIn: any) => {
-    // Filter by search query (if any)
-    const matchesSearch = !searchQuery || 
-      (checkIn.notes && checkIn.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (checkIn.objective?.title && checkIn.objective.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (checkIn.keyResult?.title && checkIn.keyResult.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    // Filter by tab
-    if (activeTab === 'my' && checkIn.userId !== user?.id) {
-      return false;
-    }
-    
-    // Filter by team
-    if (teamFilter !== 'all') {
-      // Would need to map checkIn.userId to a team
-      // For now, we'll just show all if filtering by team
-      // This would normally check if the user of the check-in is in the selected team
-    }
-    
-    return matchesSearch;
+  
+  // Query to fetch users data
+  const { data: users } = useQuery({
+    queryKey: ['/api/users'],
   });
-
-  const handleCreateCheckIn = async () => {
-    try {
-      if (!user?.id) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to create a check-in',
-          variant: 'destructive',
-        });
-        return;
+  
+  // Function to handle objective checkbox changes
+  const handleObjectiveChange = (objectiveId: string) => {
+    setSelectedObjectives(prevSelected => {
+      if (prevSelected.includes(objectiveId)) {
+        return prevSelected.filter(id => id !== objectiveId);
+      } else {
+        return [...prevSelected, objectiveId];
       }
-
-      const checkInData = {
-        userId: user.id,
-        objectiveId: checkInType === 'objective' ? parseInt(selectedObjectiveId) : null,
-        keyResultId: checkInType === 'keyResult' ? parseInt(selectedKeyResultId) : null,
-        progress: parseInt(progress),
-        notes: notes,
-      };
-
-      await apiRequest('POST', '/api/check-ins', checkInData);
-      
-      // Reset form and close dialog
-      setCheckInType('objective');
-      setSelectedObjectiveId('');
-      setSelectedKeyResultId('');
-      setProgress('0');
-      setNotes('');
-      setIsCreateDialogOpen(false);
-      
-      // Refresh check-ins
-      queryClient.invalidateQueries({ queryKey: ['/api/check-ins'] });
-      
-      toast({
-        title: 'Check-in created',
-        description: 'Your check-in has been recorded successfully.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error creating check-in',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
-        variant: 'destructive',
-      });
-    }
+    });
   };
-
+  
+  // Function to handle key result checkbox changes
+  const handleKeyResultChange = (keyResultId: string) => {
+    setSelectedKeyResults(prevSelected => {
+      if (prevSelected.includes(keyResultId)) {
+        return prevSelected.filter(id => id !== keyResultId);
+      } else {
+        return [...prevSelected, keyResultId];
+      }
+    });
+  };
+  
+  const { toast } = useToast();
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Create payload with selected objectives and key results
+    const payload = {
+      keyResultId: keyResult?.id || null,
+      progress,
+      confidenceLevel: confidence,
+      template: checkInTemplate,
+      focusLastWeek,
+      goalsThisWeek,
+      challenges,
+      needsForOKRs,
+      selectedObjectives,
+      selectedKeyResults,
+      teamId: selectedTeam || null
+    };
+    
+    // Log the payload for debugging (This would be replaced with an API call in production)
+    console.log("Check-in submission payload:", payload);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      toast({
+        title: "Check-in submitted",
+        description: "Your weekly OKR check-in has been recorded with " + 
+          selectedObjectives.length + " objectives and " + 
+          selectedKeyResults.length + " key results.",
+      });
+      onClose();
+    }, 1000);
+  };
+  
+  // Function to get the current user
+  const getCurrentUser = () => {
+    if (users && Array.isArray(users) && users.length > 0) {
+      // For simplicity, we'll use the first user as the current user
+      return users[0];
+    }
+    return { username: "alex.morgan", fullName: "Alex Morgan" };
+  };
+  
+  const currentUser = getCurrentUser();
+  
   return (
-    <DashboardLayout title="Check-ins">
-      <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Check-ins</h1>
-          <p className="text-gray-600">Track progress on objectives and key results</p>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setIsUpdateOKRDialogOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Goal className="h-4 w-4" />
-            Update OKRs
-          </Button>
-        
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Check-in
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Check-in</DialogTitle>
-                <DialogDescription>
-                  Record your progress on an objective or key result.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-4 py-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">
-                    Check-in Type
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
-                        checked={checkInType === 'objective'}
-                        onChange={() => setCheckInType('objective')}
-                        className="h-4 w-4 text-primary"
-                      />
-                      <span>Objective</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
-                        checked={checkInType === 'keyResult'}
-                        onChange={() => setCheckInType('keyResult')}
-                        className="h-4 w-4 text-primary"
-                      />
-                      <span>Key Result</span>
-                    </label>
-                  </div>
-                </div>
-                
-                {checkInType === 'objective' ? (
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Objective
-                    </label>
-                    <Select value={selectedObjectiveId} onValueChange={setSelectedObjectiveId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an objective" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {objectives?.map(objective => (
-                          <SelectItem key={objective.id} value={objective.id.toString()}>
-                            {objective.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Objective
-                      </label>
-                      <Select value={selectedObjectiveId} onValueChange={setSelectedObjectiveId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an objective" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {objectives?.map(objective => (
-                            <SelectItem key={objective.id} value={objective.id.toString()}>
-                              {objective.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Key Result
-                      </label>
-                      <Select 
-                        value={selectedKeyResultId} 
-                        onValueChange={setSelectedKeyResultId}
-                        disabled={!selectedObjectiveId}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={selectedObjectiveId ? "Select a key result" : "Select an objective first"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {keyResults?.map(keyResult => (
-                            <SelectItem key={keyResult.id} value={keyResult.id.toString()}>
-                              {keyResult.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Progress (%)
-                  </label>
-                  <div className="flex space-x-2 items-center">
-                    <Input 
-                      type="range" 
-                      min="0" 
-                      max="100" 
-                      step="1"
-                      value={progress}
-                      onChange={(e) => setProgress(e.target.value)}
-                      className="flex-1"
-                    />
-                    <span className="w-10 text-center">{progress}%</span>
-                  </div>
-                </div>
-                
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Notes
-                  </label>
-                  <Textarea 
-                    placeholder="Add any details about your progress..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateCheckIn}
-                  disabled={
-                    (checkInType === 'objective' && !selectedObjectiveId) ||
-                    (checkInType === 'keyResult' && !selectedKeyResultId)
-                  }
-                >
-                  Create Check-in
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Main section tabs: Check-ins, Templates, Schedules, Metrics */}
-      <Tabs value={activeSection} onValueChange={setActiveSection} className="mb-6">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="checkins" className="flex items-center gap-2">
-            <ClipboardCheck className="h-4 w-4" />
-            Check-ins
-          </TabsTrigger>
-          <TabsTrigger value="templates" className="flex items-center gap-2">
-            <ListChecks className="h-4 w-4" />
-            Templates
-          </TabsTrigger>
-          <TabsTrigger value="schedules" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Schedules
-          </TabsTrigger>
-          <TabsTrigger value="metrics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Metrics
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Check-ins tab content */}
-        <TabsContent value="checkins" className="mt-0">
-          <div className="mb-6 flex flex-col sm:flex-row justify-between items-start gap-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList>
-                <TabsTrigger value="all">All Check-ins</TabsTrigger>
-                <TabsTrigger value="my">My Check-ins</TabsTrigger>
-                <TabsTrigger value="team">Team Check-ins</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            <div className="flex gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input 
-                  className="pl-9"
-                  placeholder="Search check-ins..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <Select value={teamFilter} onValueChange={setTeamFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Filter by team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Teams</SelectItem>
-                  {teams?.map((team: any) => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2 mb-1">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 10-3 3-3-3"/></svg>
           </div>
-
-          {checkInsLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 bg-slate-200 rounded-full mr-3"></div>
-                        <div className="space-y-2">
-                          <div className="h-4 bg-slate-200 rounded w-24"></div>
-                          <div className="h-3 bg-slate-200 rounded w-16"></div>
-                        </div>
-                      </div>
-                      <div className="h-6 bg-slate-200 rounded w-20"></div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="h-4 bg-slate-200 rounded w-16"></div>
-                        <div className="h-4 bg-slate-200 rounded w-full"></div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-slate-200 rounded w-16"></div>
-                        <div className="h-4 bg-slate-200 rounded w-full"></div>
-                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <div className="h-4 bg-slate-200 rounded w-16"></div>
-                          <div className="h-4 bg-slate-200 rounded w-8"></div>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded w-full"></div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <h2 className="text-xl font-bold">Check-in</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <UserRound className="h-4 w-4 text-gray-500" />
+              Creator
+            </label>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-gray-50">
+              <span>{currentUser.fullName}</span>
             </div>
-          ) : filteredCheckIns && filteredCheckIns.length > 0 ? (
-            <div className="space-y-4">
-              {filteredCheckIns.map((checkIn: any) => (
-                <CheckinCard key={checkIn.id} checkin={checkIn} />
-              ))}
-            </div>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No check-ins found</AlertTitle>
-              <AlertDescription>
-                {searchQuery 
-                  ? `No check-ins matching "${searchQuery}" were found. Try a different search.` 
-                  : "No check-ins have been recorded yet. Create a new check-in to track progress."}
-              </AlertDescription>
-            </Alert>
-          )}
-        </TabsContent>
-
-        {/* Templates tab content */}
-        <TabsContent value="templates" className="mt-0">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-lg font-semibold">Check-in Templates</h2>
-              <p className="text-sm text-muted-foreground">Create and manage templates for different types of check-ins</p>
-            </div>
-            <Button onClick={() => window.location.href = '/templates'}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Manage Templates
-            </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Weekly OKR Check-In</CardTitle>
-                <CardDescription>Track weekly progress on objectives and key results</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>1. What was your focus last week?</div>
-                  <div>2. What are your goals this week?</div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/templates'}>
-                  View Details
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">OKR Team Retro</CardTitle>
-                <CardDescription>Retrospective for team OKR performance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>1. What are we proud of this cycle?</div>
-                  <div>2. What were the main challenges during this cycle?</div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/templates'}>
-                  View Details
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">OKR Review</CardTitle>
-                <CardDescription>Mid-term or end-of-cycle OKR review</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>1. Review current objectives and their progress</div>
-                  <div>2. Identify achievements and blockers</div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/templates'}>
-                  View Details
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Schedules tab content */}
-        <TabsContent value="schedules" className="mt-0">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-lg font-semibold">Check-in Schedules</h2>
-              <p className="text-sm text-muted-foreground">Create and manage recurring check-in schedules</p>
-            </div>
-            <Button onClick={() => window.location.href = '/schedules'}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Manage Schedules
-            </Button>
-          </div>
-
-          <DataTable
-            columns={scheduleColumns}
-            data={schedules}
-            searchColumn="name"
-            searchPlaceholder="Search schedules..."
-          />
-        </TabsContent>
-
-        {/* Metrics tab content */}
-        <TabsContent value="metrics" className="mt-0">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-lg font-semibold">Check-in Metrics</h2>
-              <p className="text-sm text-muted-foreground">Analytics on check-in responses and engagement</p>
-            </div>
-            <Select defaultValue="last30days">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-gray-500" />
+              Team
+            </label>
+            <Select
+              value={selectedTeam}
+              onValueChange={setSelectedTeam}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="last7days">Last 7 days</SelectItem>
-                <SelectItem value="last30days">Last 30 days</SelectItem>
-                <SelectItem value="last90days">Last 90 days</SelectItem>
-                <SelectItem value="thisQuarter">This quarter</SelectItem>
-                <SelectItem value="thisYear">This year</SelectItem>
+                {teams && Array.isArray(teams) ? teams.map((team: any) => (
+                  <SelectItem key={team.id} value={team.id.toString()}>
+                    {team.name}
+                  </SelectItem>
+                )) : null}
+                <SelectItem value="VLS">VLS</SelectItem>
+                <SelectItem value="ICT Team">ICT Team</SelectItem>
+                <SelectItem value="Operations">Operations</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Response Rate</CardTitle>
-                <CardDescription>Average completion rate for check-ins</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="text-3xl font-bold">78%</div>
-                <div className="mt-4">
-                  <Progress value={78} className="h-2" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="m4 6 8-4 8 4"/><path d="m18 10 4 2"/><path d="m4 10 4 2"/><path d="M14 12v4"/><path d="M10 12v4"/><path d="M4 22v-8"/><path d="M20 22v-8"/><path d="M12 22v-4"/><path d="m12 12-4 2 4 2 4-2-4-2Z"/></svg>
+              Check-in Type
+            </label>
+            <div className="bg-emerald-50 text-emerald-700 px-3 py-2 rounded-md inline-block">
+              Progress Update
+            </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <CalendarClock className="h-4 w-4 text-gray-500" />
+              Check-in Template
+            </label>
+            <Select
+              value={checkInTemplate}
+              onValueChange={setCheckInTemplate}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select template" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Weekly">Weekly</SelectItem>
+                <SelectItem value="Daily">Daily</SelectItem>
+                <SelectItem value="Monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      
+      <div className="pt-4 border-t border-gray-200 space-y-6">
+        <div className="space-y-3">
+          <h3 className="font-medium flex items-center gap-1.5">
+            <span className="text-gray-700">1. What was your focus last week?</span>
+            <span className="text-lg">👀</span>
+          </h3>
+          <Textarea
+            placeholder="Share what you focused on last week..."
+            value={focusLastWeek}
+            onChange={(e) => setFocusLastWeek(e.target.value)}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-3">
+          <h3 className="font-medium flex items-center gap-1.5">
+            <span className="text-gray-700">2. What are your goals this week?</span>
+            <span className="text-lg">🚀</span>
+          </h3>
+          <Textarea
+            placeholder="Outline your goals for this week..."
+            value={goalsThisWeek}
+            onChange={(e) => setGoalsThisWeek(e.target.value)}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-3">
+          <h3 className="font-medium flex items-center gap-1.5">
+            <span className="text-gray-700">3. Which challenges are you facing?</span>
+            <span className="text-lg">⚠️</span>
+          </h3>
+          <Textarea
+            placeholder="Describe any challenges or blockers..."
+            value={challenges}
+            onChange={(e) => setChallenges(e.target.value)}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-3">
+          <h3 className="font-medium flex items-center gap-1.5">
+            <span className="text-gray-700">4. What do you need to achieve your OKRs?</span>
+            <span className="text-lg">🤝</span>
+          </h3>
+          <Textarea
+            placeholder="What support or resources do you need?"
+            value={needsForOKRs}
+            onChange={(e) => setNeedsForOKRs(e.target.value)}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-4 pt-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-700">Select Objectives & Key Results</h3>
+            <Button type="button" variant="outline" className="flex items-center gap-1.5" size="sm" 
+              onClick={() => window.location.href = "/objectives"}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              <span>New Objective Updates</span>
+            </Button>
+          </div>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="space-y-4">
+                {/* Assigned Objectives */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Your Assigned Objectives</h4>
+                  <div className="space-y-2">
+                    {/* This would normally be fetched from API, using mock data for now */}
+                    <div className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                      <Checkbox 
+                        id="obj-1" 
+                        className="mt-1" 
+                        checked={selectedObjectives.includes("obj-1")}
+                        onCheckedChange={() => handleObjectiveChange("obj-1")}
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="obj-1" className="text-sm font-medium cursor-pointer">
+                          Improve customer satisfaction and loyalty
+                        </label>
+                        <p className="text-xs text-muted-foreground">75% complete • Due on Oct 15, 2023</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                      <Checkbox 
+                        id="obj-2" 
+                        className="mt-1" 
+                        checked={selectedObjectives.includes("obj-2")}
+                        onCheckedChange={() => handleObjectiveChange("obj-2")}
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="obj-2" className="text-sm font-medium cursor-pointer">
+                          Enhance digital marketing performance
+                        </label>
+                        <p className="text-xs text-muted-foreground">45% complete • Due on Nov 10, 2023</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Total Check-ins</CardTitle>
-                <CardDescription>Number of check-ins submitted</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="text-3xl font-bold">143</div>
-                <div className="text-sm text-muted-foreground mt-1">+12% from previous period</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Most Active Teams</CardTitle>
-                <CardDescription>Teams with highest check-in activity</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Product Team</span>
-                    <span className="text-sm">92%</span>
+                
+                {/* Assigned Key Results */}
+                <div>
+                  <h4 className="text-sm font-medium mb-3">Your Assigned Key Results</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                      <Checkbox 
+                        id="kr-1" 
+                        className="mt-1" 
+                        checked={selectedKeyResults.includes("kr-1")}
+                        onCheckedChange={() => handleKeyResultChange("kr-1")}
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="kr-1" className="text-sm font-medium cursor-pointer">
+                          Increase customer retention rate from 75% to 85%
+                        </label>
+                        <p className="text-xs text-muted-foreground">Under "Improve customer satisfaction and loyalty"</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                      <Checkbox 
+                        id="kr-2" 
+                        className="mt-1" 
+                        checked={selectedKeyResults.includes("kr-2")}
+                        onCheckedChange={() => handleKeyResultChange("kr-2")}
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="kr-2" className="text-sm font-medium cursor-pointer">
+                          Reduce customer acquisition cost by 20%
+                        </label>
+                        <p className="text-xs text-muted-foreground">Under "Enhance digital marketing performance"</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                      <Checkbox 
+                        id="kr-3" 
+                        className="mt-1" 
+                        checked={selectedKeyResults.includes("kr-3")}
+                        onCheckedChange={() => handleKeyResultChange("kr-3")}
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="kr-3" className="text-sm font-medium cursor-pointer">
+                          Increase website conversion rate from 2% to 3.5%
+                        </label>
+                        <p className="text-xs text-muted-foreground">Under "Enhance digital marketing performance"</p>
+                      </div>
+                    </div>
                   </div>
-                  <Progress value={92} className="h-2" />
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Engineering Team</span>
-                    <span className="text-sm">87%</span>
-                  </div>
-                  <Progress value={87} className="h-2" />
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Marketing Team</span>
-                    <span className="text-sm">73%</span>
-                  </div>
-                  <Progress value={73} className="h-2" />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      <div className="space-y-3 pt-2">
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Update Progress ({progress}%)</h3>
+          <Slider
+            value={[progress]}
+            onValueChange={(value) => setProgress(value[0])}
+            max={100}
+            step={1}
+            className="mb-2"
+          />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-1">Confidence Level</h3>
+          <Select
+            value={confidence}
+            onValueChange={setConfidence}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select confidence level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="On Track">On Track</SelectItem>
+              <SelectItem value="At Risk">At Risk</SelectItem>
+              <SelectItem value="Off Track">Off Track</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit Check-in"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+export default function CheckIns() {
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedKeyResult, setSelectedKeyResult] = useState<any>(null);
+  
+  // Function to handle opening the check-in modal
+  const handleOpenCheckIn = (keyResult: any) => {
+    setSelectedKeyResult(keyResult);
+    setOpenModal(true);
+  };
+  
+  return (
+    <DashboardLayout title="Check-ins" subtitle="Keep track of progress and updates on objectives and key results">
+      <div className="container mx-auto py-8 max-w-7xl">
+        <div className="mb-8 flex items-center justify-between">
+          <div></div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              <span>Set Reminder</span>
+            </Button>
+            <Dialog open={openModal} onOpenChange={setOpenModal}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <ListChecks className="h-4 w-4" />
+                  <span>Create Check-in</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Check-in</DialogTitle>
+                  <DialogDescription>
+                    Share your progress, goals, and challenges.
+                  </DialogDescription>
+                </DialogHeader>
+                <CheckInForm 
+                  keyResult={selectedKeyResult} 
+                  onClose={() => setOpenModal(false)} 
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      
+      <Tabs defaultValue="upcoming">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="upcoming" className="flex items-center gap-2">
+            <ListChecks className="h-4 w-4" />
+            <span>Upcoming Check-ins</span>
+          </TabsTrigger>
+          <TabsTrigger value="my-checkins" className="flex items-center gap-2">
+            <UserRound className="h-4 w-4" />
+            <span>My Check-ins</span>
+          </TabsTrigger>
+          <TabsTrigger value="team-checkins" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>Team Check-ins</span>
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="flex items-center gap-2">
+            <LineChartIcon className="h-4 w-4" />
+            <span>Trends</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Upcoming Check-ins Tab */}
+        <TabsContent value="upcoming">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <h2 className="text-xl font-semibold mb-4">Needs Check-in</h2>
+              
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Key Result</TableHead>
+                        <TableHead>Owner</TableHead>
+                        <TableHead>Last Check-in</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {needsCheckInData.map((kr) => (
+                        <TableRow key={kr.id} className="h-16">
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{kr.title}</p>
+                              <p className="text-sm text-muted-foreground">{kr.objective.title}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback>{getInitials(kr.owner.name)}</AvatarFallback>
+                              </Avatar>
+                              <span>{kr.owner.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {format(kr.lastCheckIn, "MMM d")}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{format(kr.dueDate, "MMM d")}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleOpenCheckIn(kr)}
+                            >
+                              Check-in
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Check-in Schedule</h2>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weekly Schedule</CardTitle>
+                  <CardDescription>Your regular check-in schedule</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between gap-2 py-2 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Calendar className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Team OKRs</p>
+                        <p className="text-sm text-muted-foreground">Weekly update</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">Monday</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-2 py-2 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center">
+                        <BarChart className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Personal OKRs</p>
+                        <p className="text-sm text-muted-foreground">Weekly update</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">Wednesday</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-2 py-2">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center">
+                        <LineChart className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Project OKRs</p>
+                        <p className="text-sm text-muted-foreground">Bi-weekly update</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">Friday</Badge>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full">
+                    Configure Reminders
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        
+        {/* My Check-ins Tab */}
+        <TabsContent value="my-checkins">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Recent Check-ins</h2>
+              <div className="flex items-center space-x-2">
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Check-ins</SelectItem>
+                    <SelectItem value="mine">Created by me</SelectItem>
+                    <SelectItem value="team">My team's</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input 
+                  placeholder="Search check-ins..." 
+                  className="w-64"
+                />
+              </div>
+            </div>
+            
+            {checkInData.map((checkIn) => (
+              <Card key={checkIn.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 md:grid-cols-4">
+                    <div className="p-6 md:border-r">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            {format(checkIn.date, "MMMM d, yyyy")}
+                          </p>
+                          <h3 className="text-lg font-semibold">
+                            {checkIn.keyResult.objective.title}
+                          </h3>
+                        </div>
+                        <ConfidenceBadge level={checkIn.confidenceLevel} />
+                      </div>
+                      
+                      <p className="font-medium mb-1">{checkIn.keyResult.title}</p>
+                      
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
+                        <ProgressIndicator 
+                          previous={checkIn.previousProgress} 
+                          current={checkIn.progress} 
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2 mt-4">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback>{getInitials(checkIn.createdBy.name)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">{checkIn.createdBy.name}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 md:col-span-3">
+                      <div>
+                        <p className="font-medium text-muted-foreground mb-2">Comments & Context</p>
+                        <p>{checkIn.comment}</p>
+                      </div>
+                      
+                      {checkIn.comments.length > 0 && (
+                        <div className="mt-6">
+                          <p className="font-medium text-muted-foreground mb-2">
+                            Feedback ({checkIn.comments.length})
+                          </p>
+                          <div className="space-y-4">
+                            {checkIn.comments.map((comment) => (
+                              <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback>{getInitials(comment.author.name)}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm font-medium">{comment.author.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(comment.createdAt, "MMM d, h:mm a")}
+                                  </span>
+                                </div>
+                                <p className="text-sm">{comment.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 pt-4 border-t flex items-center space-x-2">
+                        <Input 
+                          placeholder="Add a comment or feedback..." 
+                          className="flex-1"
+                        />
+                        <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Comment</span>
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <ThumbsUp className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+        
+        {/* Team Check-ins Tab */}
+        <TabsContent value="team-checkins">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Team Check-in Statistics</h2>
+              <Select defaultValue="all">
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Teams</SelectItem>
+                  <SelectItem value="product">Product Team</SelectItem>
+                  <SelectItem value="marketing">Marketing Team</SelectItem>
+                  <SelectItem value="engineering">Engineering Team</SelectItem>
+                  <SelectItem value="sales">Sales Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Check-ins</p>
+                      <p className="text-3xl font-bold">86</p>
+                    </div>
+                    <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center">
+                      <ListChecks className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Avg. Completion</p>
+                      <p className="text-3xl font-bold">67%</p>
+                    </div>
+                    <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
+                      <BarChart className="h-6 w-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">At Risk Items</p>
+                      <p className="text-3xl font-bold">3</p>
+                    </div>
+                    <div className="h-12 w-12 bg-amber-50 rounded-full flex items-center justify-center">
+                      <AlertCircle className="h-6 w-6 text-amber-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Engagement</p>
+                      <p className="text-3xl font-bold">92%</p>
+                    </div>
+                    <div className="h-12 w-12 bg-purple-50 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Check-in Overview</CardTitle>
+                <CardDescription>Recent check-ins by team</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Team</TableHead>
+                      <TableHead>Primary Objective</TableHead>
+                      <TableHead>Check-ins</TableHead>
+                      <TableHead>Avg Progress</TableHead>
+                      <TableHead>At Risk</TableHead>
+                      <TableHead>Last Check-in</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {teamCheckInsData.map((team) => (
+                      <TableRow key={team.id}>
+                        <TableCell className="font-medium">{team.team}</TableCell>
+                        <TableCell>{team.objective}</TableCell>
+                        <TableCell>{team.checkInCount}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                              <div 
+                                className="h-full bg-primary-600 rounded-full" 
+                                style={{ width: `${team.avgProgress}%` }}
+                              />
+                            </div>
+                            <span>{team.avgProgress}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{team.atRiskCount}</TableCell>
+                        <TableCell>{format(team.lastCheckIn, "MMM d")}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        </TabsContent>
+        
+        {/* Trends Tab */}
+        <TabsContent value="trends">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Progress Trend</CardTitle>
+                  <CardDescription>Key result completion over time</CardDescription>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ReLineChart data={trendData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="date" />
+                      <YAxis domain={[0, 100]} />
+                      <RechartsTooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </ReLineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Confidence Levels</CardTitle>
+                  <CardDescription>
+                    Distribution of confidence ratings over time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={[
+                        { week: "Week 1", onTrack: 5, atRisk: 3, offTrack: 1 },
+                        { week: "Week 2", onTrack: 6, atRisk: 2, offTrack: 1 },
+                        { week: "Week 3", onTrack: 8, atRisk: 1, offTrack: 0 },
+                        { week: "Week 4", onTrack: 7, atRisk: 2, offTrack: 0 },
+                        { week: "Week 5", onTrack: 8, atRisk: 1, offTrack: 0 },
+                        { week: "Week 6", onTrack: 9, atRisk: 0, offTrack: 0 },
+                        { week: "Week 7", onTrack: 8, atRisk: 1, offTrack: 0 },
+                        { week: "Week 8", onTrack: 7, atRisk: 2, offTrack: 0 },
+                      ]}
+                      stackOffset="none"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="week" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="onTrack"
+                        stackId="1"
+                        stroke="#22c55e"
+                        fill="#22c55e"
+                        fillOpacity={0.6}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="atRisk"
+                        stackId="1"
+                        stroke="#f59e0b"
+                        fill="#f59e0b"
+                        fillOpacity={0.6}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="offTrack"
+                        stackId="1"
+                        stroke="#ef4444"
+                        fill="#ef4444"
+                        fillOpacity={0.6}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+            
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Check-in Frequency by Day</CardTitle>
-                <CardDescription>Distribution of check-ins across days</CardDescription>
+                <CardTitle>Check-in Activity</CardTitle>
+                <CardDescription>
+                  Team member participation and engagement
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-end justify-between gap-2 pt-6">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
-                    const heights = [65, 85, 70, 90, 60, 30, 20];
-                    return (
-                      <div key={day} className="flex flex-col items-center">
-                        <div 
-                          className="w-12 bg-primary/90 rounded-t-md flex items-end justify-center text-white text-xs font-medium py-1"
-                          style={{ height: `${heights[i]}%` }}
-                        >
-                          {heights[i]}%
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Team Member</TableHead>
+                      <TableHead>Check-ins</TableHead>
+                      <TableHead>Comments</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead>Engagement</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>AM</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">Alex Morgan</p>
+                            <p className="text-xs text-muted-foreground">Product Manager</p>
+                          </div>
                         </div>
-                        <div className="mt-2 text-xs text-muted-foreground">{day}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Average Progress Updates</CardTitle>
-                <CardDescription>Average progress reported in check-ins</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-5">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Product OKRs</span>
-                      <span>63%</span>
-                    </div>
-                    <Progress value={63} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Engineering OKRs</span>
-                      <span>71%</span>
-                    </div>
-                    <Progress value={71} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Marketing OKRs</span>
-                      <span>52%</span>
-                    </div>
-                    <Progress value={52} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Sales OKRs</span>
-                      <span>82%</span>
-                    </div>
-                    <Progress value={82} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Customer Success OKRs</span>
-                      <span>78%</span>
-                    </div>
-                    <Progress value={78} className="h-2" />
-                  </div>
-                </div>
+                      </TableCell>
+                      <TableCell>24</TableCell>
+                      <TableCell>18</TableCell>
+                      <TableCell>Today</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                            <div 
+                              className="h-full bg-green-500 rounded-full" 
+                              style={{ width: "90%" }}
+                            />
+                          </div>
+                          <span>High</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>JL</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">Jordan Lee</p>
+                            <p className="text-xs text-muted-foreground">Engineering Lead</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>18</TableCell>
+                      <TableCell>12</TableCell>
+                      <TableCell>Yesterday</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                            <div 
+                              className="h-full bg-green-500 rounded-full" 
+                              style={{ width: "85%" }}
+                            />
+                          </div>
+                          <span>High</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>TS</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">Taylor Swift</p>
+                            <p className="text-xs text-muted-foreground">Marketing Director</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>16</TableCell>
+                      <TableCell>23</TableCell>
+                      <TableCell>Yesterday</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                            <div 
+                              className="h-full bg-green-500 rounded-full" 
+                              style={{ width: "95%" }}
+                            />
+                          </div>
+                          <span>High</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>JT</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">Jamie Taylor</p>
+                            <p className="text-xs text-muted-foreground">Sales Director</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>12</TableCell>
+                      <TableCell>8</TableCell>
+                      <TableCell>2 days ago</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                            <div 
+                              className="h-full bg-amber-500 rounded-full" 
+                              style={{ width: "65%" }}
+                            />
+                          </div>
+                          <span>Medium</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Update OKR Dialog */}
-      <UpdateOKRDialog 
-        open={isUpdateOKRDialogOpen} 
-        onOpenChange={setIsUpdateOKRDialogOpen}
-        onComplete={() => {
-          toast({
-            title: "OKRs Updated",
-            description: "Your objectives and key results have been updated successfully."
-          });
-        }}
-      />
+      </div>
     </DashboardLayout>
   );
-};
-
-export default CheckinsPage;
+}

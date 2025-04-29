@@ -35,6 +35,8 @@ import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
 import StrategyMap from "@/pages/strategy-map";
+import FinancePage from "@/pages/import-financial";
+
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
@@ -117,6 +119,10 @@ function AppRoutes() {
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
       <ProtectedRoute path="/timeline-editor" component={TimelineEditor} />
       <ProtectedRoute path="/custom-dashboard" component={CustomDashboard} />
+
+
+      <ProtectedRoute path="/import-financial" component={FinancePage} />
+
       
       <ProtectedRoute path="/configuration/general" component={General} />
       <ProtectedRoute path="/configuration/teams" component={TeamsConfig} />

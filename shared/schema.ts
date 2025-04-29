@@ -698,3 +698,29 @@ export const insertReactionSchema = createInsertSchema(reactions).pick({
   userId: true,
   emoji: true
 });
+
+// Financial Data 
+export const financialData = pgTable("financial_data", {
+  id: serial("id").primaryKey(),
+  date: timestamp("date").notNull(),
+  revenue: integer("revenue"),
+  expenses: integer("expenses"),
+  profit: integer("profit"),
+  category: text("category"),
+  objectiveId: integer("objective_id").references(() => objectives.id),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  notes: text("notes"),
+  source: text("source"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFinancialDataSchema = createInsertSchema(financialData).pick({
+  date: true,
+  revenue: true,
+  expenses: true,
+  profit: true,
+  category: true,
+  objectiveId: true,
+  notes: true,
+  source: true,
+});

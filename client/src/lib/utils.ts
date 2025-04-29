@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
 
 /**
  * Combines class names with tailwind-merge
@@ -42,6 +43,15 @@ export function formatTime(timestamp: string | number | Date): string {
   const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
   
   return `${formattedHours}:${formattedMinutes} ${ampm}`;
+}
+
+/**
+ * Formats a date into a readable date string
+ * @param date - The date to format
+ * @returns Formatted date string (e.g., "Jan 1, 2023")
+ */
+export function formatDate(date: Date | string | number): string {
+  return format(new Date(date), 'MMM d, yyyy');
 }
 
 /**
