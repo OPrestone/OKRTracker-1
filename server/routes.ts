@@ -1336,6 +1336,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Dashboard data endpoint
+  app.get("/api/dashboard", async (req, res, next) => {
+    try {
+      // Get all objectives to count and calculate completion
+      const objectives = await storage.getAllObjectives();
+      const completedObjectives = objectives.filter(obj => obj.progress === 100);
+      const inProgressObjectives = objectives.filter(obj => obj.progress > 0 && obj.progress < 100);
+      
+      // Get all key results
+      let totalKeyResults = 0;
+      let completedKeyResults = 0;
+      
+      for (const obj of objectives) {
+        const keyResults = await storage.getKeyResultsByObjective(obj.id);
+        totalKeyResults += keyResults.length;
+        completedKeyResults += keyResults.filter(kr => kr.progress === 100).length;
+      }
+      
+      // Get team performance data
+      const teams = await storage.getAllTeams();
+      let teamPerformanceSum = 0;
+      
+      const enhancedTeams = await Promise.all(teams.map(async team => {
+        // Get team members count
+        const members = await storage.getUsersByTeam(team.id);
+        return {
+          ...team,
+          memberCount: members.length,
+          // Add a random performance percentage for each team (between 65-95%)
+          performance: Math.floor(Math.random() * 30) + 65
+        };
+      }));
+      
+      // Calculate average team performance
+      teamPerformanceSum = enhancedTeams.reduce((sum, team) => sum + team.performance, 0);
+      const teamPerformanceAvg = enhancedTeams.length ? teamPerformanceSum / enhancedTeams.length : 0;
+      
+      // Get current quarter timeframe information
+      const timeframes = await storage.getAllTimeframes();
+      const currentDate = new Date();
+      // Find current or upcoming timeframe for quarter calculation
+      const currentTimeframe = timeframes.find(tf => {
+        const startDate = new Date(tf.startDate);
+        const endDate = new Date(tf.endDate);
+        return (currentDate >= startDate && currentDate <= endDate) || currentDate < startDate;
+      }) || timeframes[0]; // Default to first timeframe if none found
+      
+      // Calculate days remaining in timeframe
+      const endDate = new Date(currentTimeframe?.endDate || new Date());
+      const totalDays = currentTimeframe ? 
+        Math.ceil((new Date(currentTimeframe.endDate).getTime() - new Date(currentTimeframe.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 
+        90; // Default to 90 days for a quarter
+      
+      const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const timePercentage = Math.min(100, Math.max(0, Math.round((1 - (daysRemaining / totalDays)) * 100)));
+      
+      // Prepare and send dashboard data
+      res.json({
+        objectives: {
+          total: objectives.length,
+          completed: completedObjectives.length,
+          inProgress: inProgressObjectives.length,
+          progress: objectives.length ? 
+            Math.round(objectives.reduce((sum, obj) => sum + obj.progress, 0) / objectives.length) : 0
+        },
+        keyResults: {
+          total: totalKeyResults,
+          completed: completedKeyResults,
+          completionRate: totalKeyResults ? (completedKeyResults / totalKeyResults) * 100 : 0
+        },
+        teamPerformance: {
+          average: teamPerformanceAvg,
+          improvement: Math.floor(Math.random() * 10) + 5 // Random improvement percentage (5-15%)
+        },
+        timeRemaining: {
+          days: daysRemaining,
+          percentage: 100 - timePercentage, // Percentage of quarter remaining
+          quarter: currentTimeframe?.name || "Current Quarter"
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Company objectives progress endpoint
+  app.get("/api/objectives/company", async (req, res, next) => {
+    try {
+      const objectives = await storage.getAllObjectives();
+      // Filter only company-level objectives with no parent teams
+      const companyObjectives = objectives.filter(obj => !obj.teamId || obj.teamId === 0);
+      
+      // If no company objectives, return a few of the highest-level team objectives
+      let result = companyObjectives;
+      if (result.length === 0) {
+        // Get all team objectives, limit to 4-5 for display
+        result = objectives.slice(0, 5);
+      }
+      
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Enhanced team data endpoint
+  app.get("/api/teams", async (req, res, next) => {
+    try {
+      const teams = await storage.getAllTeams();
+      
+      // Enhance teams with member count and performance
+      const enhancedTeams = await Promise.all(teams.map(async team => {
+        // Get team members count
+        const members = await storage.getUsersByTeam(team.id);
+        return {
+          ...team,
+          memberCount: members.length,
+          // Add a random performance percentage for each team (between 65-95%)
+          performance: Math.floor(Math.random() * 30) + 65
+        };
+      }));
+      
+      res.json(enhancedTeams);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Upcoming meetings endpoint
+  app.get("/api/meetings/upcoming", async (req, res, next) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      // Create sample meetings for the next two weeks
+      const today = new Date();
+      const meetings = [];
+      
+      // Generate meetings between managers and their team members
+      const managers = users.filter(user => user.role === 'manager' || user.role === 'admin');
+      const teamMembers = users.filter(user => user.role !== 'admin');
+      
+      // For each manager, create meetings with team members
+      for (const manager of managers) {
+        // Get team members that might report to this manager
+        const potentialReports = teamMembers.filter(member => member.id !== manager.id);
+        
+        // Create 2-3 upcoming meetings for each manager
+        const meetingCount = Math.floor(Math.random() * 2) + 2;
+        
+        for (let i = 0; i < meetingCount && i < potentialReports.length; i++) {
+          const report = potentialReports[i];
+          // Set meeting date between today and the next 7 days
+          const meetingDate = new Date(today);
+          meetingDate.setDate(today.getDate() + Math.floor(Math.random() * 7) + 1);
+          meetingDate.setHours(9 + Math.floor(Math.random() * 7), Math.floor(Math.random() * 4) * 15, 0, 0);
+          
+          // Create a meeting that lasts 30-60 minutes
+          const endTime = new Date(meetingDate);
+          endTime.setMinutes(meetingDate.getMinutes() + (Math.floor(Math.random() * 2) + 1) * 30);
+          
+          meetings.push({
+            id: i + 1 + (manager.id * 10),
+            userId1: manager.id,
+            userId2: report.id,
+            title: "One-on-One Meeting",
+            description: `Weekly check-in between ${manager.firstName} and ${report.firstName}`,
+            startTime: meetingDate.toISOString(),
+            endTime: endTime.toISOString(),
+            type: "one_on_one",
+            status: "scheduled"
+          });
+        }
+      }
+      
+      // Sort meetings by date
+      meetings.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      
+      res.json(meetings);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Resource links endpoint
+  app.get("/api/resources", async (req, res, next) => {
+    try {
+      // Sample resources for OKR management
+      const resources = [
+        {
+          id: 1,
+          title: "OKR Best Practices",
+          description: "Learn how to set effective OKRs that drive results.",
+          url: "https://example.com/okr-best-practices",
+          type: "article",
+          tags: ["okr", "beginner", "strategy"]
+        },
+        {
+          id: 2,
+          title: "Measuring Key Results",
+          description: "How to define measurable key results for your objectives.",
+          url: "https://example.com/measuring-key-results",
+          type: "video",
+          tags: ["key-results", "metrics", "intermediate"]
+        },
+        {
+          id: 3,
+          title: "OKR Implementation Guide",
+          description: "A step-by-step guide to implementing OKRs in your organization.",
+          url: "https://example.com/okr-implementation",
+          type: "guide",
+          tags: ["implementation", "strategy", "advanced"]
+        },
+        {
+          id: 4,
+          title: "Team Alignment Workshop",
+          description: "Workshop template for aligning team objectives with company goals.",
+          url: "https://example.com/team-alignment",
+          type: "template",
+          tags: ["alignment", "workshop", "teams"]
+        },
+        {
+          id: 5,
+          title: "Common OKR Pitfalls",
+          description: "Avoid these common mistakes when setting and tracking OKRs.",
+          url: "https://example.com/okr-pitfalls",
+          type: "article",
+          tags: ["common-mistakes", "tips", "beginner"]
+        }
+      ];
+      
+      res.json(resources);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   return httpServer;
 }
 
