@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   XCircle,
   Check,
-  X
+  X,
+  User
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
 import DashboardLayout from "@/layouts/dashboard-layout";
