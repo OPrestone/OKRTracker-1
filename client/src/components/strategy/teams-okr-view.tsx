@@ -280,7 +280,7 @@ export const TeamsOKRView: React.FC = () => {
 
               {/* Objectives and Key Results */}
               {category.objectives.map(objective => (
-                <React.Fragment key={objective.id}>
+                <div key={objective.id}>
                   {/* Objective Row */}
                   <div className="grid grid-cols-12 px-4 py-3 border-b items-center hover:bg-gray-50">
                     <div className="col-span-7 flex items-center">
@@ -347,7 +347,7 @@ export const TeamsOKRView: React.FC = () => {
                       </Button>
                     </div>
                   )}
-                </React.Fragment>
+                </div>
               ))}
             </div>
           )}
