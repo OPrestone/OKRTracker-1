@@ -224,7 +224,7 @@ const Teams = () => {
   const [newTeamParent, setNewTeamParent] = useState("");
   
   // View state (table or cards)
-  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   
   // Pagination state
   const [currentMembersPage, setCurrentMembersPage] = useState(1);
