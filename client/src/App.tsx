@@ -35,6 +35,7 @@ import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
 import StrategyMap from "@/pages/strategy-map";
+import CreateObjective from "@/pages/create-objective";
 import FinancePage from "@/pages/import-financial";
 
 
@@ -92,6 +93,7 @@ function AppRoutes() {
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       <Route path="/strategy-map" component={StrategyMap} />
+					<Route path="/create-objective" component={CreateObjective} />
 					
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />

@@ -141,7 +141,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         >
           <Link href="/" className="flex items-center w-full">
             <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
-            <span>Dashboard</span>
+            <span>Dashboards</span>
           </Link>
         </div>
          
@@ -188,7 +188,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
-        <div
+        {/* <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
             location === "/company-strategy" 
@@ -200,7 +200,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             <Flag className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Company Strategy</span>
           </Link>
-        </div>
+        </div> */}
 
         <div
           className={cn(
