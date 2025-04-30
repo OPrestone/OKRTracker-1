@@ -366,7 +366,19 @@ function CycleCreateDialog() {
 function CyclesList() {
   const queryClient = useQueryClient();
 
-  const cyclesQuery = useQuery({
+  // Define cycle type
+  interface Cycle {
+    id: number;
+    name: string;
+    startDate: string;
+    endDate: string;
+    type: string;
+    status: string;
+    isDefault: boolean;
+    description?: string;
+  }
+
+  const cyclesQuery = useQuery<Cycle[], Error>({
     queryKey: ['/api/cycles'],
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -460,7 +472,7 @@ function CyclesList() {
 
   return (
     <div className="space-y-4">
-      {cycles.map((cycle: any) => (
+      {cycles.map((cycle) => (
         <div key={cycle.id} className="p-4 border rounded-md hover:border-neutral-300 transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>

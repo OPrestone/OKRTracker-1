@@ -41,7 +41,6 @@ import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
 import Configure from "@/pages/configure";
 
-
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
 import TimelineEditor from "@/pages/timeline-editor";
