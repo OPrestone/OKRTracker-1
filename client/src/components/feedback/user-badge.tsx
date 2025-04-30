@@ -27,7 +27,17 @@ export function UserBadgeDisplay({
   size = "md",
   showDetails = true,
 }: UserBadgeProps) {
+  // Add null checks for all properties
+  if (!userBadge) {
+    return null; // Return early if userBadge is undefined or null
+  }
+  
   const { badge, user, awardedBy, message, createdAt } = userBadge;
+  
+  // Verify required objects exist
+  if (!badge || !user || !awardedBy) {
+    return null; // Return early if any required property is missing
+  }
   
   // Size classes
   const sizeClasses = {
@@ -41,12 +51,14 @@ export function UserBadgeDisplay({
     ? formatDistanceToNow(new Date(createdAt), { addSuffix: true }) 
     : "recently";
   
-  // Create avatar fallback from user initials
+  // Create avatar fallback from user initials with null checks
   const getUserInitials = () => {
+    if (!user.firstName || !user.lastName) return 'U'; // Default fallback
     return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
   };
   
   const getAwarderInitials = () => {
+    if (!awardedBy.firstName || !awardedBy.lastName) return 'A'; // Default fallback
     return `${awardedBy.firstName.charAt(0)}${awardedBy.lastName.charAt(0)}`;
   };
   
