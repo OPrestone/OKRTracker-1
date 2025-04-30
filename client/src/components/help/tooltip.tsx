@@ -53,9 +53,9 @@ export const HelpTooltip = forwardRef<HTMLDivElement, HelpTooltipProps>((props, 
   const [open, setOpen] = useState(false);
   const { isNewUser, markOverviewSeen, markSearchUsed, markObjectiveCreated, markReportsViewed } = useHelp();
 
-  // On mount, check if we should show this tooltip based on view count
+  // Initialize view tracking without auto-showing tooltips
   useEffect(() => {
-    // If tooltip is not persistent, use the regular tooltip logic
+    // Still track views for analytics purposes but don't auto-show tooltips
     if (!persistent) {
       const tooltipViews = localStorage.getItem(TOOLTIP_VIEWS_KEY);
       let tooltipViewsObj: Record<string, number> = {};
@@ -71,32 +71,15 @@ export const HelpTooltip = forwardRef<HTMLDivElement, HelpTooltipProps>((props, 
       const viewCount = tooltipViewsObj[id] || 0;
       setViews(viewCount);
       
-      // Auto-show the tooltip if user hasn't seen it enough times
-      if (viewCount < showFor) {
-        setShowTooltip(true);
-        setOpen(true);
-        
-        // Update view count
-        tooltipViewsObj[id] = viewCount + 1;
-        localStorage.setItem(TOOLTIP_VIEWS_KEY, JSON.stringify(tooltipViewsObj));
-        
-        // Auto-close after 5 seconds
-        const timer = setTimeout(() => {
-          setOpen(false);
-        }, 5000);
-        
-        return () => clearTimeout(timer);
-      }
+      // Don't auto-show tooltips, only track views when manually triggered
+      setShowTooltip(false);
+      setOpen(false);
     } else {
-      // For persistent tooltips, check if the tooltip has been dismissed
+      // For persistent tooltips, check if the tooltip has been dismissed but don't auto-open
       try {
         const dismissedTooltips = JSON.parse(localStorage.getItem(TOOLTIPS_DISMISSED_KEY) || '{}');
         const hasBeenDismissed = dismissedTooltips[id];
-        
-        // Only show the tooltip for new users if it hasn't been dismissed
-        if (isNewUser && !hasBeenDismissed) {
-          setOpen(true);
-        }
+        setOpen(false); // Always start closed regardless of previous state
       } catch (error) {
         console.error('Error parsing dismissed tooltips from localStorage', error);
         localStorage.setItem(TOOLTIPS_DISMISSED_KEY, JSON.stringify({}));
@@ -151,13 +134,23 @@ export const HelpTooltip = forwardRef<HTMLDivElement, HelpTooltipProps>((props, 
           size="icon"
           className="h-5 w-5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           onClick={() => setOpen(!open)}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={() => {
+            setIsHovered(true);
+            // Show tooltip on hover
+            setOpen(true);
+          }}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            // Only hide tooltip on mouseleave if it was opened by hover (not by click)
+            if (!open || isHovered) {
+              setOpen(false);
+            }
+          }}
         >
           <HelpCircle className="h-4 w-4" />
         </Button>
         
-        {(open || (isHovered && !persistent)) && (
+        {open && (
           <Card 
             className={cn(
               "absolute z-50 w-72 shadow-md",
@@ -201,7 +194,32 @@ export const HelpTooltip = forwardRef<HTMLDivElement, HelpTooltipProps>((props, 
   return (
     <TooltipProvider>
       <Tooltip open={open} onOpenChange={setOpen}>
-        <TooltipTrigger asChild onClick={handleTriggerClick}>
+        <TooltipTrigger asChild 
+          onClick={handleTriggerClick}
+          onMouseEnter={() => {
+            // Show tooltip on hover
+            setOpen(true);
+            // Track view
+            const tooltipViews = localStorage.getItem(TOOLTIP_VIEWS_KEY);
+            let tooltipViewsObj: Record<string, number> = {};
+            
+            if (tooltipViews) {
+              try {
+                tooltipViewsObj = JSON.parse(tooltipViews);
+              } catch (e) {
+                console.error("Failed to parse tooltip views", e);
+              }
+            }
+            
+            const viewCount = tooltipViewsObj[id] || 0;
+            tooltipViewsObj[id] = viewCount + 1;
+            localStorage.setItem(TOOLTIP_VIEWS_KEY, JSON.stringify(tooltipViewsObj));
+          }}
+          onMouseLeave={() => {
+            // Hide tooltip on mouse leave
+            setOpen(false);
+          }}
+        >
           {children ? (
             children
           ) : (

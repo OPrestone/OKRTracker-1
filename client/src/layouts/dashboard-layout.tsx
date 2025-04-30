@@ -37,7 +37,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-white py-4 px-6 text-center text-sm text-gray-600">
-          <p>OKR Management Platform © {new Date().getFullYear()} - Powered by Replit</p>
+          <p>OKR Management Platform © {new Date().getFullYear()} - Powered by 
+ Pinnacle</p>
         </footer>
       </main>
 
