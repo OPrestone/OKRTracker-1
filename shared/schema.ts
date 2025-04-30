@@ -437,6 +437,20 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   receivedHighfives: many(highfiveRecipients, {
     relationName: "received_highfives",
   }),
+  // Feedback relations
+  sentFeedback: many(feedback, {
+    relationName: "feedback_sender",
+  }),
+  receivedFeedback: many(feedback, {
+    relationName: "feedback_receiver",
+  }),
+  // Badge relations
+  userBadges: many(userBadges, {
+    relationName: "user_badges",
+  }),
+  awardedBadges: many(userBadges, {
+    relationName: "badge_awarder",
+  }),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -582,6 +596,55 @@ export const checkInsRelations = relations(checkIns, ({ one }) => ({
     fields: [checkIns.keyResultId],
     references: [keyResults.id],
     relationName: "key_result_check_ins",
+  }),
+}));
+
+// Feedback relations
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  sender: one(users, {
+    fields: [feedback.senderId],
+    references: [users.id],
+    relationName: "feedback_sender",
+  }),
+  receiver: one(users, {
+    fields: [feedback.receiverId],
+    references: [users.id],
+    relationName: "feedback_receiver",
+  }),
+  objective: one(objectives, {
+    fields: [feedback.objectiveId],
+    references: [objectives.id],
+    relationName: "objective_feedback",
+  }),
+  keyResult: one(keyResults, {
+    fields: [feedback.keyResultId],
+    references: [keyResults.id],
+    relationName: "key_result_feedback",
+  }),
+}));
+
+// Badge relations
+export const badgesRelations = relations(badges, ({ many }) => ({
+  userBadges: many(userBadges, {
+    relationName: "badge_users",
+  }),
+}));
+
+export const userBadgesRelations = relations(userBadges, ({ one }) => ({
+  user: one(users, {
+    fields: [userBadges.userId],
+    references: [users.id],
+    relationName: "user_badges",
+  }),
+  badge: one(badges, {
+    fields: [userBadges.badgeId],
+    references: [badges.id],
+    relationName: "badge_users",
+  }),
+  awardedBy: one(users, {
+    fields: [userBadges.awardedById],
+    references: [users.id],
+    relationName: "badge_awarder",
   }),
 }));
 
