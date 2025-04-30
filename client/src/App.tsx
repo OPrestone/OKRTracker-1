@@ -38,7 +38,7 @@ import StrategyMap from "@/pages/strategy-map";
 import CreateObjective from "@/pages/create-objective";
 import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";
-
+import FeedbackWall from "@/pages/feedback-wall";
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";

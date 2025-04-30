@@ -1290,6 +1290,271 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Feedback and Recognition System Routes
+  
+  // Feedback routes
+  app.post("/api/feedback", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const feedbackData = {
+        ...req.body,
+        senderId: req.user.id,
+      };
+      
+      // Import the feedback service
+      const { createFeedback } = await import("./services/feedback-service");
+      
+      const newFeedback = await createFeedback(feedbackData);
+      res.status(201).json(newFeedback);
+    } catch (error) {
+      console.error("Error creating feedback:", error);
+      res.status(500).json({ message: "Failed to create feedback" });
+    }
+  });
+
+  app.get("/api/feedback/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // Import the feedback service
+      const { getFeedbackById } = await import("./services/feedback-service");
+      
+      const feedback = await getFeedbackById(id);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+      
+      // Allow only receiver, sender, or admins to see private feedback
+      if (
+        feedback.visibility === "private" &&
+        req.user.id !== feedback.receiverId &&
+        req.user.id !== feedback.senderId &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ message: "Not authorized to view this feedback" });
+      }
+      
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  app.get("/api/feedback/public", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Import the feedback service
+      const { getPublicFeedback } = await import("./services/feedback-service");
+      
+      const publicFeedback = await getPublicFeedback();
+      res.json(publicFeedback);
+    } catch (error) {
+      console.error("Error fetching public feedback:", error);
+      res.status(500).json({ message: "Failed to fetch public feedback" });
+    }
+  });
+
+  app.get("/api/users/:userId/feedback/received", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Check if current user has permission to see this feedback
+      // Allow owners, managers, and admins to see all feedback
+      if (
+        req.user.id !== userId &&
+        req.user.role !== "admin" &&
+        req.user.role !== "manager"
+      ) {
+        return res.status(403).json({ message: "Not authorized to view this feedback" });
+      }
+      
+      // Import the feedback service
+      const { getReceivedFeedback } = await import("./services/feedback-service");
+      
+      const receivedFeedback = await getReceivedFeedback(userId);
+      res.json(receivedFeedback);
+    } catch (error) {
+      console.error("Error fetching received feedback:", error);
+      res.status(500).json({ message: "Failed to fetch received feedback" });
+    }
+  });
+
+  app.get("/api/users/:userId/feedback/given", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Only allow users to see their own given feedback, or admins
+      if (req.user.id !== userId && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized to view this feedback" });
+      }
+      
+      // Import the feedback service
+      const { getGivenFeedback } = await import("./services/feedback-service");
+      
+      const givenFeedback = await getGivenFeedback(userId);
+      res.json(givenFeedback);
+    } catch (error) {
+      console.error("Error fetching given feedback:", error);
+      res.status(500).json({ message: "Failed to fetch given feedback" });
+    }
+  });
+
+  app.patch("/api/feedback/:id/read", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // Import the feedback service
+      const { getFeedbackById, markFeedbackAsRead } = await import("./services/feedback-service");
+      
+      // Get the feedback to check permissions
+      const feedback = await getFeedbackById(id);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+      
+      // Only the receiver can mark as read
+      if (req.user.id !== feedback.receiverId) {
+        return res.status(403).json({ message: "Not authorized to mark this feedback as read" });
+      }
+      
+      const updatedFeedback = await markFeedbackAsRead(id);
+      res.json(updatedFeedback);
+    } catch (error) {
+      console.error("Error marking feedback as read:", error);
+      res.status(500).json({ message: "Failed to mark feedback as read" });
+    }
+  });
+
+  // Badge routes
+  app.get("/api/badges", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Import the feedback service
+      const { getAllBadges } = await import("./services/feedback-service");
+      
+      const badges = await getAllBadges();
+      res.json(badges);
+    } catch (error) {
+      console.error("Error fetching badges:", error);
+      res.status(500).json({ message: "Failed to fetch badges" });
+    }
+  });
+
+  app.post("/api/badges", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Only allow admins to create badges
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized to create badges" });
+      }
+      
+      const badgeData = req.body;
+      
+      // Import the feedback service
+      const { createBadge } = await import("./services/feedback-service");
+      
+      const newBadge = await createBadge(badgeData);
+      res.status(201).json(newBadge);
+    } catch (error) {
+      console.error("Error creating badge:", error);
+      res.status(500).json({ message: "Failed to create badge" });
+    }
+  });
+
+  app.post("/api/badges/award", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Only allow managers and admins to award badges
+      if (req.user.role !== "admin" && req.user.role !== "manager") {
+        return res.status(403).json({ message: "Not authorized to award badges" });
+      }
+      
+      const awardData = {
+        ...req.body,
+        awardedById: req.user.id,
+      };
+      
+      // Import the feedback service
+      const { awardBadge } = await import("./services/feedback-service");
+      
+      const userBadge = await awardBadge(awardData);
+      res.status(201).json(userBadge);
+    } catch (error) {
+      console.error("Error awarding badge:", error);
+      res.status(500).json({ message: "Failed to award badge" });
+    }
+  });
+
+  app.get("/api/users/:userId/badges", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Import the feedback service
+      const { getUserBadges } = await import("./services/feedback-service");
+      
+      const userBadges = await getUserBadges(userId);
+      res.json(userBadges);
+    } catch (error) {
+      console.error("Error fetching user badges:", error);
+      res.status(500).json({ message: "Failed to fetch user badges" });
+    }
+  });
+
+  app.get("/api/badges/public", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Import the feedback service
+      const { getPublicUserBadges } = await import("./services/feedback-service");
+      
+      const publicBadges = await getPublicUserBadges();
+      res.json(publicBadges);
+    } catch (error) {
+      console.error("Error fetching public badges:", error);
+      res.status(500).json({ message: "Failed to fetch public badges" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time chat
