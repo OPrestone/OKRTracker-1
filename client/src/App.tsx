@@ -39,8 +39,6 @@ import CreateObjective from "@/pages/create-objective";
 import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
-import Configure from "@/pages/configure";
-
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
@@ -131,7 +129,6 @@ function AppRoutes() {
       <ProtectedRoute path="/import-financial" component={FinancePage} />
 
       
-      <ProtectedRoute path="/configure" component={Configure} />
       <ProtectedRoute path="/configuration/general" component={General} />
       <ProtectedRoute path="/configuration/teams" component={TeamsConfig} />
       <ProtectedRoute path="/configuration/users-permissions" component={UsersPermissions} />
