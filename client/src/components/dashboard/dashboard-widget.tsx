@@ -128,22 +128,34 @@ export function DashboardWidget({
         <div className="space-y-4">
           <div className="flex flex-col items-center">
             <div className="relative h-36 w-36">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3"></circle>
-                <circle 
-                  className="transition-all duration-500 ease-in-out" 
-                  cx="18" 
-                  cy="18" 
-                  r="15" 
-                  fill="none" 
-                  stroke={overallProgress >= 75 ? "#10B981" : overallProgress >= 50 ? "#3B82F6" : overallProgress >= 25 ? "#F59E0B" : "#EF4444"} 
-                  strokeWidth="3" 
-                  strokeDasharray="100" 
-                  strokeDashoffset={100 - overallProgress}
-                  transform="rotate(-90 18 18)"
-                ></circle>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart 
+                  innerRadius="70%" 
+                  outerRadius="100%" 
+                  data={[{ name: 'Progress', value: overallProgress }]} 
+                  startAngle={90} 
+                  endAngle={-270}
+                >
+                  <RadialBar
+                    background
+                    dataKey="value"
+                    fill={overallProgress >= 75 ? "#10B981" : overallProgress >= 50 ? "#3B82F6" : overallProgress >= 25 ? "#F59E0B" : "#EF4444"}
+                  />
+                  <Tooltip 
+                    content={({ payload }: any) => {
+                      if (payload && payload.length > 0) {
+                        return (
+                          <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                            {payload[0].value}% complete
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <span className="text-3xl font-bold">{overallProgress}%</span>
               </div>
             </div>
@@ -424,22 +436,34 @@ export function DashboardWidget({
       return (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="relative h-32 w-32">
-            <svg className="w-full h-full" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3"></circle>
-              <circle 
-                className="transition-all duration-500 ease-in-out" 
-                cx="18" 
-                cy="18" 
-                r="15" 
-                fill="none" 
-                stroke={completionRate >= 75 ? "#10B981" : completionRate >= 50 ? "#3B82F6" : completionRate >= 25 ? "#F59E0B" : "#EF4444"} 
-                strokeWidth="3" 
-                strokeDasharray="100" 
-                strokeDashoffset={100 - completionRate}
-                transform="rotate(-90 18 18)"
-              ></circle>
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart 
+                innerRadius="70%" 
+                outerRadius="100%" 
+                data={[{ name: 'Completion', value: completionRate }]} 
+                startAngle={90} 
+                endAngle={-270}
+              >
+                <RadialBar
+                  background
+                  dataKey="value"
+                  fill={completionRate >= 75 ? "#10B981" : completionRate >= 50 ? "#3B82F6" : completionRate >= 25 ? "#F59E0B" : "#EF4444"}
+                />
+                <Tooltip 
+                  content={({ payload }: any) => {
+                    if (payload && payload.length > 0) {
+                      return (
+                        <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                          {payload[0].value}% completed
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </RadialBarChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <span className="text-2xl font-bold">{completionRate}%</span>
             </div>
           </div>
