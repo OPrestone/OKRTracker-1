@@ -37,6 +37,7 @@ import ChatPage from "@/pages/chat";
 import StrategyMap from "@/pages/strategy-map";
 import CreateObjective from "@/pages/create-objective";
 import FinancePage from "@/pages/import-financial";
+import ProjectKanban from "@/pages/project-kanban";
 
 
 // Import new drag-and-drop pages
@@ -93,8 +94,8 @@ function AppRoutes() {
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       <Route path="/strategy-map" component={StrategyMap} />
-					<Route path="/create-objective" component={CreateObjective} />
-					
+                                        <Route path="/create-objective" component={CreateObjective} />
+                                        
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />
       <ProtectedRoute path="/teams/:id" component={TeamDetail} />
@@ -121,6 +122,7 @@ function AppRoutes() {
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
       <ProtectedRoute path="/timeline-editor" component={TimelineEditor} />
       <ProtectedRoute path="/custom-dashboard" component={CustomDashboard} />
+      <ProtectedRoute path="/project-kanban" component={ProjectKanban} />
 
 
       <ProtectedRoute path="/import-financial" component={FinancePage} />
