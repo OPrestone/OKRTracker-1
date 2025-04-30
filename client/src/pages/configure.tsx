@@ -49,6 +49,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import Sidebar from "@/components/sidebar";
 
 // Form schema for creating and updating cycles
 const cycleFormSchema = z.object({
@@ -519,6 +520,9 @@ export default function Configure() {
   const [isUploadingSystemLogo, setIsUploadingSystemLogo] = useState(false);
   const [systemLogoFile, setSystemLogoFile] = useState<File | null>(null);
   
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   // Section specific saving states
   const [isNotificationSaving, setIsNotificationSaving] = useState(false);
   const [isSecuritySaving, setIsSecuritySaving] = useState(false);
@@ -967,11 +971,17 @@ export default function Configure() {
     }, 1000);
   };
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Configure</h1>
-        <p className="text-neutral-600">Customize your OKR system settings and preferences</p>
-      </div>
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      
+      {/* Main content */}
+      <div className="flex-1 overflow-auto">
+        <div className="container mx-auto py-6 px-6">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Configure</h1>
+            <p className="text-neutral-600">Customize your OKR system settings and preferences</p>
+          </div>
 
       <Tabs defaultValue="general" className="mb-8">
         <TabsList className="grid w-full md:w-auto grid-cols-6 md:grid-flow-col md:auto-cols-max gap-2">
