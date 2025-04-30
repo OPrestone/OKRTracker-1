@@ -9,12 +9,8 @@ export default function Configure() {
   const [activeTab, setActiveTab] = useState("general");
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Configuration</h1>
-        </div>
-        
+    <DashboardLayout title="Configure" subtitle="Manage application settings">
+      <div className="container mx-auto">
         <Tabs defaultValue="general" className="space-y-4" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 w-full md:w-auto md:flex">
             <TabsTrigger value="general">General Settings</TabsTrigger>
