@@ -28,21 +28,29 @@ export async function createFeedback(feedbackData: InsertFeedback): Promise<Feed
 
 export async function getFeedbackById(id: number): Promise<(Feedback & { sender: any; receiver: any }) | undefined> {
   const result = await db
-    .select({
-      feedback: feedback,
-      sender: users,
-      receiver: users,
-    })
+    .select()
     .from(feedback)
-    .where(eq(feedback.id, id))
-    .leftJoin(users, eq(feedback.senderId, users.id))
-    .leftJoin(users.as("receiver"), eq(feedback.receiverId, users.as("receiver").id));
+    .where(eq(feedback.id, id));
 
   if (result.length === 0) {
     return undefined;
   }
 
-  const { feedback: feedbackItem, sender, receiver } = result[0];
+  // Get feedback item
+  const feedbackItem = result[0];
+  
+  // Fetch sender
+  const [sender] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, feedbackItem.senderId));
+    
+  // Fetch receiver
+  const [receiver] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, feedbackItem.receiverId));
+
   return {
     ...feedbackItem,
     sender,
@@ -51,64 +59,109 @@ export async function getFeedbackById(id: number): Promise<(Feedback & { sender:
 }
 
 export async function getPublicFeedback(limit: number = 10): Promise<(Feedback & { sender: any; receiver: any })[]> {
-  const results = await db
-    .select({
-      feedback: feedback,
-      sender: users,
-      receiver: users,
-    })
+  // Get public feedback items
+  const feedbackItems = await db
+    .select()
     .from(feedback)
     .where(eq(feedback.visibility, "public"))
-    .leftJoin(users, eq(feedback.senderId, users.id))
-    .leftJoin(users.as("receiver"), eq(feedback.receiverId, users.as("receiver").id))
     .orderBy(desc(feedback.createdAt))
     .limit(limit);
+    
+  // Prepare result
+  const results = [];
+  
+  // For each feedback, get sender and receiver
+  for (const feedbackItem of feedbackItems) {
+    // Get sender
+    const [sender] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.senderId));
+      
+    // Get receiver
+    const [receiver] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.receiverId));
+      
+    results.push({
+      ...feedbackItem,
+      sender,
+      receiver
+    });
+  }
 
-  return results.map(({ feedback: feedbackItem, sender, receiver }) => ({
-    ...feedbackItem,
-    sender,
-    receiver,
-  }));
+  return results;
 }
 
 export async function getReceivedFeedback(userId: number): Promise<(Feedback & { sender: any; receiver: any })[]> {
-  const results = await db
-    .select({
-      feedback: feedback,
-      sender: users,
-      receiver: users,
-    })
+  // Get feedback received by the user
+  const feedbackItems = await db
+    .select()
     .from(feedback)
     .where(eq(feedback.receiverId, userId))
-    .leftJoin(users, eq(feedback.senderId, users.id))
-    .leftJoin(users.as("receiver"), eq(feedback.receiverId, users.as("receiver").id))
     .orderBy(desc(feedback.createdAt));
+    
+  // Prepare result
+  const results = [];
+  
+  // For each feedback, get sender and receiver
+  for (const feedbackItem of feedbackItems) {
+    // Get sender
+    const [sender] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.senderId));
+      
+    // Get receiver
+    const [receiver] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.receiverId));
+      
+    results.push({
+      ...feedbackItem,
+      sender,
+      receiver
+    });
+  }
 
-  return results.map(({ feedback: feedbackItem, sender, receiver }) => ({
-    ...feedbackItem,
-    sender,
-    receiver,
-  }));
+  return results;
 }
 
 export async function getGivenFeedback(userId: number): Promise<(Feedback & { sender: any; receiver: any })[]> {
-  const results = await db
-    .select({
-      feedback: feedback,
-      sender: users,
-      receiver: users,
-    })
+  // Get feedback given by the user
+  const feedbackItems = await db
+    .select()
     .from(feedback)
     .where(eq(feedback.senderId, userId))
-    .leftJoin(users, eq(feedback.senderId, users.id))
-    .leftJoin(users.as("receiver"), eq(feedback.receiverId, users.as("receiver").id))
     .orderBy(desc(feedback.createdAt));
+    
+  // Prepare result
+  const results = [];
+  
+  // For each feedback, get sender and receiver
+  for (const feedbackItem of feedbackItems) {
+    // Get sender
+    const [sender] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.senderId));
+      
+    // Get receiver
+    const [receiver] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, feedbackItem.receiverId));
+      
+    results.push({
+      ...feedbackItem,
+      sender,
+      receiver
+    });
+  }
 
-  return results.map(({ feedback: feedbackItem, sender, receiver }) => ({
-    ...feedbackItem,
-    sender,
-    receiver,
-  }));
+  return results;
 }
 
 export async function markFeedbackAsRead(id: number): Promise<Feedback> {
