@@ -45,7 +45,51 @@ export const teams = pgTable("teams", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Highfive Recognition
+// Feedback and Recognition System
+export const feedbackTypeEnum = pgEnum("feedback_type", [
+  "positive",
+  "constructive",
+  "general",
+  "recognition",
+]);
+
+// Feedback 
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  receiverId: integer("receiver_id").notNull().references(() => users.id),
+  type: feedbackTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  visibility: text("visibility").notNull(), // public or private
+  objectiveId: integer("objective_id").references(() => objectives.id),
+  keyResultId: integer("key_result_id").references(() => keyResults.id),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Recognition Badges
+export const badges = pgTable("badges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  color: text("color").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User Badges - for tracking which users have earned which badges
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  badgeId: integer("badge_id").notNull().references(() => badges.id),
+  awardedById: integer("awarded_by_id").notNull().references(() => users.id),
+  message: text("message"),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Highfive Recognition (existing functionality)
 export const highfives = pgTable("highfives", {
   id: serial("id").primaryKey(),
   senderId: integer("sender_id").notNull().references(() => users.id),
@@ -240,7 +284,35 @@ export const insertCheckInSchema = createInsertSchema(checkIns).pick({
   notes: true,
 });
 
-// Highfive schemas
+// Feedback and Recognition schemas
+export const insertFeedbackSchema = createInsertSchema(feedback).pick({
+  senderId: true,
+  receiverId: true,
+  type: true,
+  title: true,
+  message: true,
+  visibility: true,
+  objectiveId: true,
+  keyResultId: true,
+  isRead: true,
+});
+
+export const insertBadgeSchema = createInsertSchema(badges).pick({
+  name: true,
+  description: true,
+  icon: true,
+  color: true,
+});
+
+export const insertUserBadgeSchema = createInsertSchema(userBadges).pick({
+  userId: true,
+  badgeId: true,
+  awardedById: true,
+  message: true,
+  isPublic: true,
+});
+
+// Highfive schemas (existing)
 export const insertHighfiveSchema = createInsertSchema(highfives).pick({
   senderId: true,
   message: true,
@@ -282,6 +354,23 @@ export type Initiative = typeof initiatives.$inferSelect;
 
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
 export type CheckIn = typeof checkIns.$inferSelect;
+
+// Feedback and Recognition types
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type Feedback = typeof feedback.$inferSelect;
+
+export type InsertBadge = z.infer<typeof insertBadgeSchema>;
+export type Badge = typeof badges.$inferSelect;
+
+export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+export type UserBadge = typeof userBadges.$inferSelect;
+
+// Highfive types
+export type InsertHighfive = z.infer<typeof insertHighfiveSchema>;
+export type Highfive = typeof highfives.$inferSelect;
+
+export type InsertHighfiveRecipient = z.infer<typeof insertHighfiveRecipientSchema>;
+export type HighfiveRecipient = typeof highfiveRecipients.$inferSelect;
 
 // Chat types
 export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
