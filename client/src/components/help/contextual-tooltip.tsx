@@ -55,7 +55,7 @@ export const ContextualTooltip = forwardRef<HTMLDivElement, ContextualTooltipPro
   const [isDismissed, setIsDismissed] = useState(false);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
-  // Load view and dismissed state on mount
+  // Load view and dismissed state on mount, but don't auto-show tooltips
   useEffect(() => {
     const loadTooltipState = () => {
       // Get view count
@@ -87,49 +87,16 @@ export const ContextualTooltip = forwardRef<HTMLDivElement, ContextualTooltipPro
       
       setViews(viewCount);
       setIsDismissed(dismissed);
+      setOpen(false); // Ensure tooltip is closed on initial load
+      setShowTooltip(false); // Ensure tooltip is not auto-shown
       
       return { viewCount, dismissed };
     };
     
-    const { viewCount, dismissed } = loadTooltipState();
+    loadTooltipState();
     
-    // Auto-show the tooltip for new users if it hasn't been dismissed
-    // and hasn't been seen too many times
-    if (isNewUser && !dismissed && viewCount < showFor) {
-      // Delay showing the tooltip slightly for better UX
-      const timer = setTimeout(() => {
-        setShowTooltip(true);
-        setOpen(true);
-        
-        // Update view count
-        const tooltipViews = localStorage.getItem(TOOLTIP_VIEWS_KEY);
-        let viewsObj: Record<string, number> = {};
-        
-        if (tooltipViews) {
-          try {
-            viewsObj = JSON.parse(tooltipViews);
-          } catch (e) {
-            console.error("Failed to parse tooltip views", e);
-          }
-        }
-        
-        viewsObj[id] = viewCount + 1;
-        localStorage.setItem(TOOLTIP_VIEWS_KEY, JSON.stringify(viewsObj));
-        setViews(viewCount + 1);
-        
-        // Auto-close after some time for high priority tooltips
-        if (priority === "high") {
-          const closeTimer = setTimeout(() => {
-            setOpen(false);
-          }, 8000);
-          
-          return () => clearTimeout(closeTimer);
-        }
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [id, isNewUser, priority, showFor]);
+    // No auto-show functionality - tooltips will only appear on hover or click
+  }, [id]);
 
   const handleTriggerClick = () => {
     setOpen(!open);
@@ -194,12 +161,61 @@ export const ContextualTooltip = forwardRef<HTMLDivElement, ContextualTooltipPro
       <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild onClick={handleTriggerClick}>
           {children ? (
-            children
+            <div
+              onMouseEnter={() => {
+                // Update view count and show tooltip on hover
+                setOpen(true);
+                
+                const tooltipViews = localStorage.getItem(TOOLTIP_VIEWS_KEY);
+                let viewsObj: Record<string, number> = {};
+                
+                if (tooltipViews) {
+                  try {
+                    viewsObj = JSON.parse(tooltipViews);
+                  } catch (e) {
+                    console.error("Failed to parse tooltip views", e);
+                  }
+                }
+                
+                const viewCount = viewsObj[id] || 0;
+                viewsObj[id] = viewCount + 1;
+                localStorage.setItem(TOOLTIP_VIEWS_KEY, JSON.stringify(viewsObj));
+                setViews(viewCount + 1);
+              }}
+              onMouseLeave={() => {
+                setOpen(false);
+              }}
+            >
+              {children}
+            </div>
           ) : (
             <Button
               variant="ghost"
               size="icon"
               className={`h-6 w-6 rounded-full relative ${isNewUser && !isDismissed ? 'animate-pulse' : ''}`}
+              onMouseEnter={() => {
+                // Update view count and show tooltip on hover
+                setOpen(true);
+                
+                const tooltipViews = localStorage.getItem(TOOLTIP_VIEWS_KEY);
+                let viewsObj: Record<string, number> = {};
+                
+                if (tooltipViews) {
+                  try {
+                    viewsObj = JSON.parse(tooltipViews);
+                  } catch (e) {
+                    console.error("Failed to parse tooltip views", e);
+                  }
+                }
+                
+                const viewCount = viewsObj[id] || 0;
+                viewsObj[id] = viewCount + 1;
+                localStorage.setItem(TOOLTIP_VIEWS_KEY, JSON.stringify(viewsObj));
+                setViews(viewCount + 1);
+              }}
+              onMouseLeave={() => {
+                setOpen(false);
+              }}
             >
               <HelpCircle className={`h-4 w-4 ${isNewUser && !isDismissed ? 'text-primary' : 'text-muted-foreground'}`} />
               {isNewUser && !isDismissed && priority === "high" && (
