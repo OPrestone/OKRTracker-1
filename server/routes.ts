@@ -159,31 +159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/teams/:teamId/users", async (req, res) => {
-    try {
-      const teamId = parseInt(req.params.teamId);
-      const users = await storage.getUsersByTeam(teamId);
-      
-      // Enhance user data with onboarding properties if missing
-      const enhancedUsers = users.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return {
-          ...userWithoutPassword,
-          // Ensure onboarding properties exist even if not in database
-          firstLogin: userWithoutPassword.firstLogin ?? true,
-          introVideoWatched: userWithoutPassword.introVideoWatched ?? false,
-          walkthroughCompleted: userWithoutPassword.walkthroughCompleted ?? false,
-          onboardingProgress: userWithoutPassword.onboardingProgress ?? 0,
-          lastOnboardingStep: userWithoutPassword.lastOnboardingStep ?? null
-        };
-      });
-      
-      res.json(enhancedUsers);
-    } catch (error) {
-      console.error("Error fetching team users:", error);
-      res.json([]);
-    }
-  });
+  // Route has been moved to avoid duplication - see implementation at line ~1760
+  // app.get("/api/teams/:teamId/users" ...
 
   // Access Groups API
   app.get("/api/access-groups", async (req, res, next) => {
@@ -537,6 +514,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teams/:teamId/objectives", async (req, res, next) => {
     try {
       const teamId = parseInt(req.params.teamId);
+      if (isNaN(teamId)) {
+        return res.status(400).json({ error: "Invalid team ID" });
+      }
       const objectives = await storage.getObjectivesByTeam(teamId);
       res.json(objectives);
     } catch (error) {
