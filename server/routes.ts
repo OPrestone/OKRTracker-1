@@ -1316,6 +1316,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // IMPORTANT: Order matters for Express routes - more specific routes first
+  app.get("/api/feedback/public", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Import the feedback service
+      const { getPublicFeedback } = await import("./services/feedback-service");
+      
+      const publicFeedback = await getPublicFeedback();
+      res.json(publicFeedback);
+    } catch (error) {
+      console.error("Error fetching public feedback:", error);
+      res.status(500).json({ message: "Failed to fetch public feedback" });
+    }
+  });
+
   app.get("/api/feedback/:id", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
@@ -1347,23 +1365,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching feedback:", error);
       res.status(500).json({ message: "Failed to fetch feedback" });
-    }
-  });
-
-  app.get("/api/feedback/public", async (req, res, next) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Import the feedback service
-      const { getPublicFeedback } = await import("./services/feedback-service");
-      
-      const publicFeedback = await getPublicFeedback();
-      res.json(publicFeedback);
-    } catch (error) {
-      console.error("Error fetching public feedback:", error);
-      res.status(500).json({ message: "Failed to fetch public feedback" });
     }
   });
 

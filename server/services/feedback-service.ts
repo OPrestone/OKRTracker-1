@@ -18,8 +18,8 @@ export async function createFeedback(feedbackData: InsertFeedback): Promise<Feed
     .insert(feedback)
     .values({
       ...feedbackData,
-      createdAt: new Date(),
-      read: false,
+      isRead: false, // Use isRead instead of read to match schema
+      // Don't manually set createdAt as it's handled by the DB
     })
     .returning();
 
@@ -167,7 +167,7 @@ export async function getGivenFeedback(userId: number): Promise<(Feedback & { se
 export async function markFeedbackAsRead(id: number): Promise<Feedback> {
   const [updatedFeedback] = await db
     .update(feedback)
-    .set({ read: true })
+    .set({ isRead: true }) // Use isRead instead of read to match schema
     .where(eq(feedback.id, id))
     .returning();
 
@@ -203,74 +203,117 @@ export async function awardBadge(userBadgeData: InsertUserBadge): Promise<UserBa
     .insert(userBadges)
     .values({
       ...userBadgeData,
-      createdAt: new Date(),
+      // Don't manually set createdAt as it's handled by the DB
     })
     .returning();
   
-  // Then get the full user badge with related data
-  const [result] = await db
-    .select({
-      userBadge: userBadges,
-      badge: badges,
-      user: users,
-      awardedBy: users.as("awarder"),
-    })
-    .from(userBadges)
-    .where(eq(userBadges.id, newUserBadge.id))
-    .innerJoin(badges, eq(userBadges.badgeId, badges.id))
-    .innerJoin(users, eq(userBadges.userId, users.id))
-    .innerJoin(users.as("awarder"), eq(userBadges.awardedById, users.as("awarder").id));
+  // Fetch badge info
+  const [badge] = await db
+    .select()
+    .from(badges)
+    .where(eq(badges.id, newUserBadge.badgeId));
+    
+  // Fetch user info
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, newUserBadge.userId));
+    
+  // Fetch awarder info
+  const [awardedBy] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, newUserBadge.awardedById));
 
   return {
-    ...result.userBadge,
-    badge: result.badge,
-    user: result.user,
-    awardedBy: result.awardedBy,
+    ...newUserBadge,
+    badge,
+    user,
+    awardedBy,
   };
 }
 
 export async function getUserBadges(userId: number): Promise<(UserBadge & { badge: Badge; user: any; awardedBy: any })[]> {
-  const results = await db
-    .select({
-      userBadge: userBadges,
-      badge: badges,
-      user: users,
-      awardedBy: users.as("awarder"),
-    })
+  // Get all user badges for this user
+  const userBadgeItems = await db
+    .select()
     .from(userBadges)
     .where(eq(userBadges.userId, userId))
-    .innerJoin(badges, eq(userBadges.badgeId, badges.id))
-    .innerJoin(users, eq(userBadges.userId, users.id))
-    .innerJoin(users.as("awarder"), eq(userBadges.awardedById, users.as("awarder").id))
     .orderBy(desc(userBadges.createdAt));
-
-  return results.map(({ userBadge, badge, user, awardedBy }) => ({
-    ...userBadge,
-    badge,
-    user,
-    awardedBy,
-  }));
+    
+  // Prepare result array
+  const results = [];
+  
+  // For each user badge, get related data
+  for (const userBadgeItem of userBadgeItems) {
+    // Get badge
+    const [badge] = await db
+      .select()
+      .from(badges)
+      .where(eq(badges.id, userBadgeItem.badgeId));
+      
+    // Get user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userBadgeItem.userId));
+      
+    // Get awarder
+    const [awardedBy] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userBadgeItem.awardedById));
+      
+    results.push({
+      ...userBadgeItem,
+      badge,
+      user,
+      awardedBy
+    });
+  }
+  
+  return results;
 }
 
 export async function getPublicUserBadges(limit: number = 10): Promise<(UserBadge & { badge: Badge; user: any; awardedBy: any })[]> {
-  const results = await db
-    .select({
-      userBadge: userBadges,
-      badge: badges,
-      user: users,
-      awardedBy: users.as("awarder"),
-    })
+  // Get public user badges
+  const userBadgeItems = await db
+    .select()
     .from(userBadges)
-    .innerJoin(badges, eq(userBadges.badgeId, badges.id))
-    .innerJoin(users, eq(userBadges.userId, users.id))
-    .innerJoin(users.as("awarder"), eq(userBadges.awardedById, users.as("awarder").id))
+    .where(eq(userBadges.isPublic, true))
     .orderBy(desc(userBadges.createdAt))
     .limit(limit);
-
-  return results.map(({ userBadge, badge, user, awardedBy }) => ({
-    ...userBadge,
-    badge,
-    user,
-    awardedBy,
-  }));
+    
+  // Prepare result array
+  const results = [];
+  
+  // For each user badge, get related data
+  for (const userBadgeItem of userBadgeItems) {
+    // Get badge
+    const [badge] = await db
+      .select()
+      .from(badges)
+      .where(eq(badges.id, userBadgeItem.badgeId));
+      
+    // Get user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userBadgeItem.userId));
+      
+    // Get awarder
+    const [awardedBy] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userBadgeItem.awardedById));
+      
+    results.push({
+      ...userBadgeItem,
+      badge,
+      user,
+      awardedBy
+    });
+  }
+  
+  return results;
 }
