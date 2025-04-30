@@ -31,6 +31,7 @@ import {
   X
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
+import DashboardLayout from "@/layouts/dashboard-layout";
 
 export default function Mission() {
   // State for full page edit mode
@@ -502,22 +503,23 @@ Kenyans.`;
 
   // Regular view mode
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
-        <div className="flex space-x-3">
-          <Button variant="outline" className="flex items-center gap-2">
-            <FileDown className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Presentation className="h-4 w-4" />
-            <span>Present</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => {
+    <DashboardLayout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
+          <div className="flex space-x-3">
+            <Button variant="outline" className="flex items-center gap-2">
+              <FileDown className="h-4 w-4" />
+              <span>Export</span>
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Presentation className="h-4 w-4" />
+              <span>Present</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => {
               setMissionDraft(missionStatement);
               setBoundariesDraft({
                 freedoms: [...boundaries.freedoms],
@@ -852,6 +854,6 @@ Kenyans.`;
           <TeamsOkrsView />
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
