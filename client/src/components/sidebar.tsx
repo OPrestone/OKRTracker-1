@@ -33,7 +33,7 @@ import {
   Calendar,
   Award
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,11 +52,28 @@ interface SidebarProps {
 
 const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
-  const [configExpanded, setConfigExpanded] = useState(false);
-  const [okrsExpanded, setOkrsExpanded] = useState(false);
+  
+  // Check if any submenu paths are currently active to auto-expand parent menus
+  const isOkrPathActive = ['/my-okrs', '/draft-okrs', '/approved-okrs', '/company-okrs'].includes(location);
+  const isUserManagementPathActive = ['/teams', '/all-users', '/users'].includes(location);
+  const isReportPathActive = ['/activity-report', '/alignment-report', '/completion-report', '/progress-report'].includes(location);
+  const isConfigPathActive = ['/configure', '/system-settings', '/integrations', '/billing-settings', '/security-settings'].includes(location);
+  
+  // Initialize expanded states based on current location
+  const [configExpanded, setConfigExpanded] = useState(isConfigPathActive);
+  const [okrsExpanded, setOkrsExpanded] = useState(isOkrPathActive);
   const [companyObjectivesExpanded, setCompanyObjectivesExpanded] = useState(false);
-  const [userManagementExpanded, setUserManagementExpanded] = useState(false);
-  const [reportsExpanded, setReportsExpanded] = useState(false);
+  const [userManagementExpanded, setUserManagementExpanded] = useState(isUserManagementPathActive);
+  const [reportsExpanded, setReportsExpanded] = useState(isReportPathActive);
+
+  // Update expanded states when location changes
+  useEffect(() => {
+    // Check if any submenu paths are active and update expanded states
+    setOkrsExpanded(isOkrPathActive);
+    setUserManagementExpanded(isUserManagementPathActive);
+    setReportsExpanded(isReportPathActive);
+    setConfigExpanded(isConfigPathActive);
+  }, [location, isOkrPathActive, isUserManagementPathActive, isReportPathActive, isConfigPathActive]);
 
   // Get authenticated user and logout mutation from useAuth hook
   const { user, logoutMutation } = useAuth();
