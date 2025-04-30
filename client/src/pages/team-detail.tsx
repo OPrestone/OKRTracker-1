@@ -2,12 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -25,24 +19,43 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { 
-  ChevronLeft, 
-  Users, 
-  Target, 
-  BarChart3, 
-  Calendar, 
-  Settings,
-  PlusCircle,
-  UserPlus
+import {
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Target,
+  Search,
+  FileText,
+  Flame,
+  Smile,
+  Heart,
+  Award,
+  PlusCircle
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface TeamObjective {
   id: number;
   title: string;
   progress: number;
   status: "on_track" | "at_risk" | "behind" | "completed";
+  dueDate?: string;
+  assignee?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    avatarUrl?: string;
+  };
+}
+
+interface TaskActivity {
+  day: string;
+  created: number;
+  completed: number;
 }
 
 export default function TeamDetailPage() {
@@ -50,6 +63,19 @@ export default function TeamDetailPage() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
   const teamId = parseInt(id);
+  const [viewMode, setViewMode] = useState<"today" | "weekly" | "monthly">("weekly");
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  
+  // Sample activity data for the chart (this would come from API in real implementation)
+  const activityData: TaskActivity[] = [
+    { day: "Mon", created: 20, completed: 15 },
+    { day: "Tue", created: 32, completed: 25 },
+    { day: "Wed", created: 27, completed: 20 },
+    { day: "Thu", created: 35, completed: 30 },
+    { day: "Fri", created: 30, completed: 22 },
+    { day: "Sat", created: 18, completed: 16 },
+    { day: "Sun", created: 13, completed: 11 },
+  ];
   
   const { data: team, isLoading: teamLoading } = useQuery({
     queryKey: [`/api/teams/${teamId}`],
@@ -85,6 +111,54 @@ export default function TeamDetailPage() {
     },
     enabled: !!teamId
   });
+  
+  // Sample completed tasks data (this would come from API in real implementation)
+  const completedTasks = [
+    {
+      id: 1,
+      title: "Logo Design",
+      client: "Google",
+      clientLogo: "G",
+      clientColor: "#4285F4",
+      dueDate: "July 21, 2023",
+      assignee: {
+        id: 1,
+        firstName: "Alex",
+        lastName: "Morgan",
+        avatarUrl: ""
+      }
+    },
+    {
+      id: 2,
+      title: "Landing Page Design",
+      client: "Facebook",
+      clientLogo: "f",
+      clientColor: "#1877F2",
+      dueDate: "July 23, 2023",
+      assignee: {
+        id: 2,
+        firstName: "Sarah",
+        lastName: "Johnson",
+        avatarUrl: ""
+      }
+    }
+  ];
+  
+  // Sample scheduled launches (this would come from API in real implementation)
+  const scheduledLaunches = [
+    {
+      id: 1,
+      title: "The Bible of Mobile UX Design",
+      company: "Visual.inc",
+      date: "July 21, 2023"
+    },
+    {
+      id: 2,
+      title: "Hubspot Landing Page Design",
+      company: "Hubspot",
+      date: "July 23, 2023"
+    }
+  ];
 
   const handleGoBack = () => {
     setLocation("/teams");
@@ -115,31 +189,47 @@ export default function TeamDetailPage() {
   };
 
   return (
-    <DashboardLayout title={team ? team.name : "Team Details"} 
-      subtitle={team?.description || "Loading team information..."}>
-      <div className="mb-6">
-        <Button variant="ghost" onClick={handleGoBack} className="mb-4 gap-1">
-          <ChevronLeft className="h-4 w-4" />
-          Back to Teams
-        </Button>
-
+    <DashboardLayout>
+      <div className="mb-8">
         {teamLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-full max-w-md" />
           </div>
         ) : team ? (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full flex items-center justify-center" 
-                  style={{ backgroundColor: team.color || '#3B82F6' }}>
-                  <Users className="h-6 w-6 text-white" />
+          <div>
+            <div className="flex flex-col space-y-3 mb-4">
+              <h1 className="text-2xl font-bold">{team.name}</h1>
+              <p className="text-muted-foreground">
+                {team.description || "This project will be create awesome product. Will running around 6 months with superfast pace working but touch with awesome visual"}
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex -space-x-2 mr-2">
+                  {members && members.slice(0, 4).map((member: any) => (
+                    <Avatar key={member.id} className="border-2 border-background w-8 h-8">
+                      {member.avatarUrl ? (
+                        <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
+                      ) : (
+                        <AvatarFallback className="text-xs">
+                          {member.firstName?.[0]}{member.lastName?.[0]}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                  ))}
+                  
+                  {members && members.length > 4 && (
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent border-2 border-background text-xs font-medium">
+                      +{members.length - 4}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold">{team.name}</h1>
-                  <p className="text-muted-foreground">{team.description}</p>
-                </div>
+                
+                <Button size="sm" variant="outline" className="rounded-full text-sm font-medium">
+                  Invite
+                </Button>
               </div>
             </div>
           </div>
@@ -155,402 +245,322 @@ export default function TeamDetailPage() {
       </div>
 
       {team && (
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="w-full max-w-md grid grid-cols-4">
-            <TabsTrigger value="overview" className="flex gap-1 items-center">
-              <BarChart3 className="h-4 w-4" /> Overview
-            </TabsTrigger>
-            <TabsTrigger value="members" className="flex gap-1 items-center">
-              <Users className="h-4 w-4" /> Members
-            </TabsTrigger>
-            <TabsTrigger value="objectives" className="flex gap-1 items-center">
-              <Target className="h-4 w-4" /> Objectives
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex gap-1 items-center">
-              <Settings className="h-4 w-4" /> Settings
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Team Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {objectivesLoading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </div>
-                  ) : objectives && objectives.length > 0 ? (
-                    <>
-                      <div className="text-2xl font-bold">
-                        {Math.round(objectives.reduce((acc: number, obj: any) => acc + (obj.progress || 0), 0) / objectives.length)}%
-                      </div>
-                      <Progress 
-                        value={Math.round(objectives.reduce((acc: number, obj: any) => acc + (obj.progress || 0), 0) / objectives.length)} 
-                        className={`h-2 mt-2 ${getProgressColor(Math.round(objectives.reduce((acc: number, obj: any) => acc + (obj.progress || 0), 0) / objectives.length))}`}
-                      />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Average progress across {objectives.length} objectives
-                      </p>
-                    </>
-                  ) : (
-                    <div className="text-center py-3 text-muted-foreground">
-                      No objectives to track progress
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+        <div className="space-y-8">
+          {/* User and Project Selection Row */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=N`} alt="User" />
+                <AvatarFallback>N</AvatarFallback>
+              </Avatar>
               
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {membersLoading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  ) : members && members.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="text-2xl font-bold">{members.length}</div>
-                      <div className="flex -space-x-2">
-                        {members.slice(0, 5).map((member: any, index: number) => (
-                          <Avatar key={member.id} className="border-2 border-background">
-                            {member.avatarUrl ? (
-                              <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
-                            ) : (
-                              <AvatarFallback>
-                                {member.firstName?.[0]}{member.lastName?.[0]}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                        ))}
-                        
-                        {members.length > 5 && (
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium">
-                            +{members.length - 5}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-3 text-muted-foreground">
-                      No members in this team
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full" size="sm">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Member
-                  </Button>
-                </CardFooter>
-              </Card>
+              <div className="flex items-center border rounded-md px-2">
+                <span className="text-sm px-2 py-1">Today</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
               
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Active Objectives</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {objectivesLoading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </div>
-                  ) : objectives && objectives.length > 0 ? (
-                    <div>
-                      <div className="text-2xl font-bold">{objectives.length}</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium text-green-600">
-                          {objectives.filter((obj: any) => obj.status === 'on_track').length}
-                        </span> on track, 
-                        <span className="font-medium text-amber-600 ml-1">
-                          {objectives.filter((obj: any) => obj.status === 'at_risk').length}
-                        </span> at risk, 
-                        <span className="font-medium text-red-600 ml-1">
-                          {objectives.filter((obj: any) => obj.status === 'behind').length}
-                        </span> behind
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-3 text-muted-foreground">
-                      No objectives found
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Objective
-                  </Button>
-                </CardFooter>
-              </Card>
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">Design Project</span>
+              </div>
+              
+              <div className="flex items-center border rounded-md px-2">
+                <span className="text-sm px-2 py-1">Monthly</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              
+              <Button variant="outline" className="gap-2">
+                <span>New Broadcast</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              
+              <div className="border rounded-md px-2 py-1">
+                <span className="text-sm">Everyone</span>
+                <ChevronRight className="h-4 w-4 inline-block text-muted-foreground" />
+              </div>
             </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest updates and changes to team objectives</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* This would be replaced with actual activity data */}
-                  {objectivesLoading ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-14 w-full" />
-                      <Skeleton className="h-14 w-full" />
-                      <Skeleton className="h-14 w-full" />
-                    </div>
-                  ) : objectives && objectives.length > 0 ? (
-                    <div className="space-y-4">
-                      {objectives.slice(0, 3).map((objective: any) => (
-                        <div key={objective.id} className="flex items-start space-x-4">
-                          <div className="bg-primary/10 p-2 rounded-full">
-                            <Target className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium">{objective.title}</h4>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <div className="text-xs text-muted-foreground">
-                                Updated 2 days ago
-                              </div>
-                              <div>•</div>
-                              <div>
-                                {getStatusBadge(objective.status)}
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <Badge variant="outline" className="bg-background">
-                              {objective.progress}%
-                            </Badge>
-                          </div>
-                        </div>
+          </div>
+          
+          {/* Project Stats Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {members && members.slice(0, 3).map((member: any) => (
+                        <Avatar key={member.id} className="border-2 border-background w-8 h-8">
+                          {member.avatarUrl ? (
+                            <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
+                          ) : (
+                            <AvatarFallback className="text-xs">
+                              {member.firstName?.[0]}{member.lastName?.[0]}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-6 text-muted-foreground">
-                      No recent activity found
+                    <span className="text-sm text-muted-foreground">Team members</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <div className="text-2xl font-bold">24</div>
+                      <div className="text-sm text-muted-foreground">Tasks</div>
                     </div>
-                  )}
+                    <div>
+                      <div className="text-2xl font-bold">190</div>
+                      <div className="text-sm text-muted-foreground">Hours</div>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Members Tab */}
-          <TabsContent value="members" className="space-y-6">
-            <Card>
-              <CardHeader>
+                
+                {/* Task Activity Chart */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium">Tasks Activity</h3>
+                    <div className="flex items-center border rounded-md">
+                      <span className="text-xs px-2 py-1">Weekly</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-xs text-muted-foreground">Created: 131</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <span className="text-xs text-muted-foreground">Completed: 91</span>
+                    </div>
+                  </div>
+                  
+                  <div className="h-[150px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={activityData}
+                        margin={{
+                          top: 5,
+                          right: 10,
+                          left: 0,
+                          bottom: 5,
+                        }}
+                      >
+                        <defs>
+                          <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                          </linearGradient>
+                          <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Area 
+                          type="monotone" 
+                          dataKey="created" 
+                          stroke="#10B981" 
+                          fillOpacity={1}
+                          fill="url(#colorCreated)" 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="completed" 
+                          stroke="#8B5CF6" 
+                          fillOpacity={1}
+                          fill="url(#colorCompleted)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                {/* Reactions/Emojis */}
                 <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Team Members</CardTitle>
-                    <CardDescription>Manage team members and their roles</CardDescription>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={cn("rounded-full p-2 h-8 w-8", 
+                        selectedEmoji === "smile" && "bg-yellow-100 border-yellow-300"
+                      )}
+                      onClick={() => setSelectedEmoji(selectedEmoji === "smile" ? null : "smile")}
+                    >
+                      <Smile className="h-4 w-4 text-yellow-500" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={cn("rounded-full p-2 h-8 w-8", 
+                        selectedEmoji === "heart" && "bg-red-100 border-red-300"
+                      )}
+                      onClick={() => setSelectedEmoji(selectedEmoji === "heart" ? null : "heart")}
+                    >
+                      <Heart className="h-4 w-4 text-red-500" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={cn("rounded-full p-2 h-8 w-8", 
+                        selectedEmoji === "award" && "bg-orange-100 border-orange-300"
+                      )}
+                      onClick={() => setSelectedEmoji(selectedEmoji === "award" ? null : "award")}
+                    >
+                      <Award className="h-4 w-4 text-orange-500" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={cn("rounded-full p-2 h-8 w-8", 
+                        selectedEmoji === "flame" && "bg-red-100 border-red-300"
+                      )}
+                      onClick={() => setSelectedEmoji(selectedEmoji === "flame" ? null : "flame")}
+                    >
+                      <Flame className="h-4 w-4 text-red-500" />
+                    </Button>
                   </div>
-                  <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Member
-                  </Button>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {membersLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-16 w-full" />
+              </div>
+            </div>
+            
+            <div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium mb-1">Group Name</h3>
+                  <div className="flex items-center p-3 border rounded-lg">
+                    <span className="text-sm">Good Job Design team 👍</span>
+                    <span className="ml-3 text-sm text-muted-foreground">client</span>
                   </div>
-                ) : members && members.length > 0 ? (
-                  <div className="space-y-4">
-                    {members.map((member: any) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            {member.avatarUrl ? (
-                              <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
-                            ) : (
-                              <AvatarFallback>
-                                {member.firstName?.[0]}{member.lastName?.[0]}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{member.firstName} {member.lastName}</div>
-                            <div className="text-sm text-muted-foreground">{member.role || 'Member'}</div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Badge variant="outline">{member.role || 'Member'}</Badge>
-                          <Button variant="ghost" size="sm">
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    No team members found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Objectives Tab */}
-          <TabsContent value="objectives" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Team Objectives</CardTitle>
-                    <CardDescription>Track and manage team objectives and key results</CardDescription>
-                  </div>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    New Objective
-                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {objectivesLoading ? (
-                  <div className="space-y-6">
-                    <Skeleton className="h-28 w-full" />
-                    <Skeleton className="h-28 w-full" />
-                    <Skeleton className="h-28 w-full" />
+                
+                <div>
+                  <div className="font-medium text-sm mb-2">Add Collaborators</div>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1 bg-blue-100 rounded-md px-2 py-1">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src="https://api.dicebear.com/7.x/initials/svg?seed=S" />
+                        <AvatarFallback className="text-xs">S</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs">Scott</span>
+                      <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-1 bg-green-100 rounded-md px-2 py-1">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src="https://api.dicebear.com/7.x/initials/svg?seed=J" />
+                        <AvatarFallback className="text-xs">J</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs">Jessica</span>
+                      <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
+                        <ChevronRight className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
                   </div>
-                ) : objectives && objectives.length > 0 ? (
-                  <div className="space-y-6">
-                    {objectives.map((objective: any) => (
-                      <div key={objective.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between mb-2">
-                          <div>
-                            <h3 className="font-medium">{objective.title}</h3>
-                            <div className="text-sm text-muted-foreground">
-                              Owner: {objective.ownerName || 'Unassigned'}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(objective.status)}
-                            <Badge variant="outline">{objective.progress}%</Badge>
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <Progress 
-                            value={objective.progress} 
-                            className={`h-2 ${getProgressColor(objective.progress)}`}
-                          />
-                        </div>
-                        <div className="flex justify-between items-center mt-3">
-                          <div className="text-sm text-muted-foreground flex items-center">
-                            <Calendar className="h-3.5 w-3.5 mr-1" />
-                            {objective.timeframe || 'No timeframe set'}
-                          </div>
-                          <Button variant="outline" size="sm">
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Alert>
-                    <Target className="h-4 w-4" />
-                    <AlertTitle>No objectives found</AlertTitle>
-                    <AlertDescription>
-                      This team doesn't have any objectives yet. Add objectives to track team progress.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Settings</CardTitle>
-                <CardDescription>Manage team information and properties</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {teamLoading ? (
-                  <div className="space-y-6">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : team ? (
-                  <div className="space-y-6">
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium">Team Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue={team.name}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      />
+          {/* Completed Tasks and Scheduled Launches */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Recently Completed Tasks */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold">Recently Completed Tasks</h3>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src="https://api.dicebear.com/7.x/initials/svg?seed=S" />
+                    <AvatarFallback className="text-xs">S</AvatarFallback>
+                  </Avatar>
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src="https://api.dicebear.com/7.x/initials/svg?seed=J" />
+                    <AvatarFallback className="text-xs">J</AvatarFallback>
+                  </Avatar>
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src="https://api.dicebear.com/7.x/initials/svg?seed=M" />
+                    <AvatarFallback className="text-xs">M</AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {completedTasks.map(task => (
+                  <div key={task.id} className="flex items-center gap-4 border rounded-lg p-4">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: task.clientColor }}>
+                      <span className="text-white font-bold">{task.clientLogo}</span>
                     </div>
                     
-                    <div className="grid gap-2">
-                      <label className="text-sm font-medium">Description</label>
-                      <textarea 
-                        defaultValue={team.description || ''}
-                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="Describe the team's purpose and responsibilities"
-                      />
+                    <div className="flex-1">
+                      <h4 className="font-medium">{task.title}</h4>
+                      <p className="text-sm text-muted-foreground">Client: {task.client}</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium">Team Color</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="color" 
-                            defaultValue={team.color || '#3B82F6'} 
-                            className="h-10 w-10 p-0 border-0 rounded cursor-pointer" 
-                          />
-                          <input 
-                            type="text"
-                            defaultValue={team.color || '#3B82F6'}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          />
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-end">
+                        <span className="bg-green-100 text-green-800 rounded-full px-2 py-0.5 text-xs mb-1">Completed</span>
+                        <span className="text-xs text-muted-foreground">Assignee</span>
                       </div>
                       
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium">Parent Team</label>
-                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                          <option value="">None (Top-level team)</option>
-                          <option value="1">Executive Leadership</option>
-                          <option value="2">Product Development</option>
-                          <option value="3">Marketing</option>
-                        </select>
-                      </div>
+                      <Avatar className="h-8 w-8">
+                        {task.assignee.avatarUrl ? (
+                          <AvatarImage src={task.assignee.avatarUrl} alt={`${task.assignee.firstName} ${task.assignee.lastName}`} />
+                        ) : (
+                          <AvatarFallback>
+                            {task.assignee.firstName[0]}{task.assignee.lastName[0]}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
                     </div>
                   </div>
-                ) : (
-                  <Alert>
-                    <AlertTitle>Error loading team settings</AlertTitle>
-                    <AlertDescription>
-                      There was a problem loading team settings. Please try again.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline">Cancel</Button>
-                <Button>Save Changes</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                ))}
+              </div>
+            </div>
+            
+            {/* Scheduled Launches */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold">Scheduled Launches</h3>
+                <Button variant="link" size="sm" className="text-blue-600">
+                  View all
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {scheduledLaunches.map(launch => (
+                  <div key={launch.id} className="flex justify-between items-center border rounded-lg p-4">
+                    <div className="flex-1">
+                      <p className="font-bold text-xl">{launch.date.split(" ")[1]}</p>
+                      <p className="text-muted-foreground text-sm">{launch.date.split(" ")[0]} {launch.date.split(" ")[2]}</p>
+                    </div>
+                    
+                    <div className="flex-1 ml-4">
+                      <h4 className="font-medium">{launch.title}</h4>
+                      <p className="text-sm text-muted-foreground">{launch.company}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
