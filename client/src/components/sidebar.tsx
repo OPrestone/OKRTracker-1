@@ -370,6 +370,67 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
+        {/* Drag & Drop Section */}
+        <div className="px-4 py-2 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Drag & Drop Interfaces
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            location === "/project-kanban" 
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+          )}
+        >
+          <Link href="/project-kanban" className="flex items-center w-full">
+            <LayoutDashboard className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Project Kanban</span>
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            location === "/objectives-organizer" 
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+          )}
+        >
+          <Link href="/objectives-organizer" className="flex items-center w-full">
+            <Target className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Objectives Organizer</span>
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            location === "/timeline-editor" 
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+          )}
+        >
+          <Link href="/timeline-editor" className="flex items-center w-full">
+            <Calendar className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Timeline Editor</span>
+          </Link>
+        </div>
+        
+        <div
+          className={cn(
+            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            location === "/custom-dashboard" 
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+          )}
+        >
+          <Link href="/custom-dashboard" className="flex items-center w-full">
+            <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Custom Dashboard</span>
+          </Link>
+        </div>
+        
         {/* Reports Menu */}
         <button 
           onClick={() => setReportsExpanded(!reportsExpanded)}

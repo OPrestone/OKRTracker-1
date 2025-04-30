@@ -1,554 +1,485 @@
-import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useRef } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, Plus, Filter, ChevronDown, ChevronUp, Info, MoreVertical, Check } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar, Filter, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
-import { format, addDays, startOfMonth, endOfMonth, differenceInDays, parseISO, isValid, isWithinInterval } from "date-fns";
-
-// Types
-interface Objective {
-  id: number;
-  title: string;
-  description: string;
-  level: string;
-  status: string;
-  progress: number;
-  timeframeId: number;
-  startDate?: string;
-  endDate?: string;
-  teamId?: number;
-}
-
-interface Team {
-  id: number;
-  name: string;
-}
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Timeframe {
   id: number;
   name: string;
+  description: string | null;
   startDate: string;
   endDate: string;
   cadenceId: number;
+  isActive: boolean;
 }
 
-interface TimelineDragState {
-  active: boolean;
-  objectiveId: number | null;
-  type: "start" | "end" | "move" | null;
-  startX: number;
-  initialStartDate: Date | null;
-  initialEndDate: Date | null;
+interface Objective {
+  id: number;
+  title: string;
+  description: string | null;
+  level: string;
+  ownerId: number;
+  teamId: number | null;
+  timeframeId: number;
+  status: string | null;
+  progress: number | null;
+  parentId: number | null;
+  createdAt: string;
 }
 
-const TimelineEditor = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // State
-  const [view, setView] = useState<"month" | "quarter" | "year">("month");
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(40); // width per day in pixels
-  const [dragState, setDragState] = useState<TimelineDragState>({
-    active: false,
-    objectiveId: null,
-    type: null,
-    startX: 0,
-    initialStartDate: null,
-    initialEndDate: null,
-  });
-  
-  // Define date range based on the view
-  useEffect(() => {
-    if (view === "month") {
-      setStartDate(startOfMonth(selectedDate));
-      setEndDate(endOfMonth(selectedDate));
-    } else if (view === "quarter") {
-      // Calculate start of quarter
-      const month = selectedDate.getMonth();
-      const quarterStartMonth = Math.floor(month / 3) * 3;
-      const quarterStart = new Date(selectedDate.getFullYear(), quarterStartMonth, 1);
-      setStartDate(quarterStart);
-      setEndDate(new Date(selectedDate.getFullYear(), quarterStartMonth + 3, 0));
-    } else if (view === "year") {
-      setStartDate(new Date(selectedDate.getFullYear(), 0, 1));
-      setEndDate(new Date(selectedDate.getFullYear(), 11, 31));
-    }
-  }, [view, selectedDate]);
+interface TimeframeWithObjectives extends Timeframe {
+  objectives: Objective[];
+}
 
-  // Fetch objectives data
-  const { data: objectives = [], isLoading: isLoadingObjectives, isError: isObjectivesError } = useQuery({
-    queryKey: ["/api/objectives"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/objectives");
-      return response.json();
-    },
-  });
+function SortableObjective({ objective }: { objective: Objective }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: objective.id.toString() });
 
-  // Fetch teams data
-  const { data: teams = [] } = useQuery({
-    queryKey: ["/api/teams"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/teams");
-      return response.json();
-    },
-  });
-
-  // Fetch timeframes data
-  const { data: timeframes = [] } = useQuery({
-    queryKey: ["/api/timeframes"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/timeframes");
-      return response.json();
-    },
-  });
-
-  // Define mutation to update objective dates
-  const updateObjectiveDatesMutation = useMutation({
-    mutationFn: async ({ id, startDate, endDate }: { id: number; startDate?: string; endDate?: string }) => {
-      const response = await apiRequest("PATCH", `/api/objectives/${id}`, {
-        startDate,
-        endDate,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      toast({
-        title: "Timeline Updated",
-        description: "The objective timeline has been successfully updated.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update timeline",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Filter objectives by team and date range
-  const filteredObjectives = objectives.filter((obj: Objective) => {
-    // Filter by team if selected
-    if (selectedTeam && selectedTeam !== "all" && obj.teamId?.toString() !== selectedTeam) {
-      return false;
-    }
-    
-    // Check if objective has start and end dates
-    if (!obj.startDate || !obj.endDate) {
-      return false;
-    }
-    
-    // Convert string dates to Date objects
-    const objStart = parseISO(obj.startDate);
-    const objEnd = parseISO(obj.endDate);
-    
-    // Validate dates
-    if (!isValid(objStart) || !isValid(objEnd)) {
-      return false;
-    }
-    
-    // Check if objective overlaps with the visible date range
-    return (
-      // Either the start date is within our range
-      isWithinInterval(objStart, { start: startDate, end: endDate }) ||
-      // Or the end date is within our range
-      isWithinInterval(objEnd, { start: startDate, end: endDate }) ||
-      // Or it spans our entire range
-      (objStart <= startDate && objEnd >= endDate)
-    );
-  });
-
-  // Generate dates array for the timeline header
-  const datesInRange = Array.from(
-    { length: differenceInDays(endDate, startDate) + 1 },
-    (_, i) => addDays(startDate, i)
-  );
-
-  // Get the timeframe name for an objective
-  const getTimeframeName = (timeframeId: number) => {
-    const timeframe = timeframes.find((t: Timeframe) => t.id === timeframeId);
-    return timeframe ? timeframe.name : "Unknown Timeframe";
-  };
-
-  // Get the team name for an objective
-  const getTeamName = (teamId?: number) => {
-    if (!teamId) return "Unassigned";
-    const team = teams.find((t: Team) => t.id === teamId);
-    return team ? team.name : "Unknown Team";
-  };
-
-  // Calculate position and width of timeline item
-  const getTimelineItemStyle = (startDateStr?: string, endDateStr?: string) => {
-    if (!startDateStr || !endDateStr) return { left: 0, width: 0 };
-    
-    const objStart = parseISO(startDateStr);
-    const objEnd = parseISO(endDateStr);
-    
-    if (!isValid(objStart) || !isValid(objEnd)) return { left: 0, width: 0 };
-    
-    // Calculate the days from the start of our visible range
-    const daysFromStart = Math.max(0, differenceInDays(objStart, startDate));
-    // Calculate the total days for the objective within our range
-    const visibleEndDate = objEnd > endDate ? endDate : objEnd;
-    const visibleStartDate = objStart < startDate ? startDate : objStart;
-    const visibleDuration = differenceInDays(visibleEndDate, visibleStartDate) + 1;
-    
-    // Convert to pixels
-    const left = daysFromStart * zoomLevel;
-    const width = visibleDuration * zoomLevel;
-    
-    return { left, width };
-  };
-
-  // Handle zoom in/out
-  const handleZoom = (direction: "in" | "out") => {
-    if (direction === "in") {
-      setZoomLevel(prev => Math.min(prev + 10, 100));
-    } else {
-      setZoomLevel(prev => Math.max(prev - 10, 20));
-    }
-  };
-
-  // Handle mouse down on timeline item
-  const handleMouseDown = (
-    e: React.MouseEvent,
-    objective: Objective,
-    type: "start" | "end" | "move"
-  ) => {
-    if (!objective.startDate || !objective.endDate) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setDragState({
-      active: true,
-      objectiveId: objective.id,
-      type,
-      startX: e.clientX,
-      initialStartDate: parseISO(objective.startDate),
-      initialEndDate: parseISO(objective.endDate),
-    });
-    
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  // Handle mouse move during drag
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!dragState.active || !dragState.objectiveId || !dragState.initialStartDate || !dragState.initialEndDate) return;
-    
-    const deltaX = e.clientX - dragState.startX;
-    const daysDelta = Math.round(deltaX / zoomLevel);
-    
-    // Find the objective being dragged
-    const objective = objectives.find((obj: Objective) => obj.id === dragState.objectiveId);
-    if (!objective) return;
-    
-    // Create a copy of the objective with updated dates
-    const updatedObj = { ...objective };
-    
-    if (dragState.type === "start") {
-      // Adjust only start date, but don't allow it to go past end date
-      const newStartDate = addDays(dragState.initialStartDate, daysDelta);
-      if (newStartDate < dragState.initialEndDate) {
-        updatedObj.startDate = format(newStartDate, "yyyy-MM-dd");
-      }
-    } else if (dragState.type === "end") {
-      // Adjust only end date, but don't allow it to go before start date
-      const newEndDate = addDays(dragState.initialEndDate, daysDelta);
-      if (newEndDate > dragState.initialStartDate) {
-        updatedObj.endDate = format(newEndDate, "yyyy-MM-dd");
-      }
-    } else if (dragState.type === "move") {
-      // Move both dates by the same amount
-      updatedObj.startDate = format(addDays(dragState.initialStartDate, daysDelta), "yyyy-MM-dd");
-      updatedObj.endDate = format(addDays(dragState.initialEndDate, daysDelta), "yyyy-MM-dd");
-    }
-    
-    // Update the objectives array with the modified object (temporary visual update)
-    const objIndex = objectives.findIndex((obj: Objective) => obj.id === dragState.objectiveId);
-    if (objIndex !== -1) {
-      objectives[objIndex] = updatedObj;
-    }
-  };
-
-  // Handle mouse up after drag
-  const handleMouseUp = () => {
-    if (!dragState.active || !dragState.objectiveId) {
-      cleanupDragListeners();
-      return;
-    }
-    
-    // Find the objective that was being dragged
-    const objective = objectives.find((obj: Objective) => obj.id === dragState.objectiveId);
-    if (!objective) {
-      cleanupDragListeners();
-      return;
-    }
-    
-    // Save the changes to the server
-    updateObjectiveDatesMutation.mutate({
-      id: dragState.objectiveId,
-      startDate: objective.startDate,
-      endDate: objective.endDate,
-    });
-    
-    cleanupDragListeners();
-  };
-
-  // Remove event listeners
-  const cleanupDragListeners = () => {
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-    setDragState({
-      active: false,
-      objectiveId: null,
-      type: null,
-      startX: 0,
-      initialStartDate: null,
-      initialEndDate: null,
-    });
-  };
-
-  // Clean up event listeners on unmount
-  useEffect(() => {
-    return () => {
-      cleanupDragListeners();
-    };
-  }, []);
-
-  // Get color based on objective status
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'on track':
-        return 'bg-green-200 border-green-400';
-      case 'at risk':
-        return 'bg-amber-200 border-amber-400';
-      case 'behind':
-        return 'bg-red-200 border-red-400';
-      case 'completed':
-        return 'bg-blue-200 border-blue-400';
-      default:
-        return 'bg-gray-200 border-gray-400';
-    }
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
   return (
-    <DashboardLayout title="Timeline Editor">
-      <div className="space-y-4">
-        {isObjectivesError && (
-          <Alert variant="destructive">
-            <AlertDescription>
-              There was an error loading objectives. Please try again.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0 pb-4">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold mr-2">Timeline Editor</h1>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/objectives"] })}
-              title="Refresh data"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="mb-2"
+    >
+      <ObjectiveCard objective={objective} />
+    </div>
+  );
+}
+
+function ObjectiveCard({ objective }: { objective: Objective }) {
+  return (
+    <Card className="shadow-sm hover:shadow transition-shadow cursor-grab">
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-medium text-sm mb-1">{objective.title}</h3>
+            {objective.description && (
+              <p className="text-xs text-gray-500 mb-2 line-clamp-1">{objective.description}</p>
+            )}
           </div>
           
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 space-x-0 sm:space-x-2">
-            <Select 
-              value={view} 
-              onValueChange={(value) => setView(value as "month" | "quarter" | "year")}
-            >
-              <SelectTrigger className="w-[120px]">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span>View</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">Month</SelectItem>
-                <SelectItem value="quarter">Quarter</SelectItem>
-                <SelectItem value="year">Year</SelectItem>
-              </SelectContent>
-            </Select>
+          <Badge className={objective.level === "company" ? "bg-purple-100 text-purple-800" : objective.level === "team" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
+            {objective.level}
+          </Badge>
+        </div>
+        
+        <div className="mt-2">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-gray-500">Progress</span>
+            <span className="text-xs font-medium">{objective.progress || 0}%</span>
+          </div>
+          <Progress value={objective.progress || 0} className="h-1" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TimeframeColumn({ timeframe, objectives }: { timeframe: TimeframeWithObjectives; objectives: Objective[] }) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const startDate = formatDate(timeframe.startDate);
+  const endDate = formatDate(timeframe.endDate);
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-3 min-w-[280px] h-full">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h3 className="text-sm font-medium">{timeframe.name}</h3>
+          <div className="flex items-center text-xs text-gray-500 mt-1">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span>{startDate} - {endDate}</span>
+          </div>
+        </div>
+        <Badge variant={timeframe.isActive ? "default" : "outline"} className="text-xs">
+          {timeframe.isActive ? "Active" : "Inactive"}
+        </Badge>
+      </div>
+      
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className="text-gray-600 font-medium">Objectives</span>
+          <Badge variant="outline" className="text-xs">
+            {objectives.length}
+          </Badge>
+        </div>
+        
+        <Separator className="my-2" />
+        
+        <div className="space-y-2 mt-3">
+          <SortableContext items={objectives.map(o => o.id.toString())} strategy={verticalListSortingStrategy}>
+            {objectives.map((objective) => (
+              <SortableObjective key={objective.id} objective={objective} />
+            ))}
+          </SortableContext>
+          
+          <Button variant="ghost" size="sm" className="w-full border border-dashed border-gray-300 text-gray-500 mt-2">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Objective
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TimelineEditor() {
+  const [_, navigate] = useLocation();
+  const [search, setSearch] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [viewType, setViewType] = useState<"all" | "active" | "upcoming" | "past">("active");
+  
+  // Mock data for timeframes and objectives
+  const timeframes: TimeframeWithObjectives[] = [
+    {
+      id: 1,
+      name: "Q1 2025",
+      description: "First quarter strategic initiatives",
+      startDate: "2025-01-01",
+      endDate: "2025-03-31",
+      cadenceId: 1,
+      isActive: false,
+      objectives: [
+        {
+          id: 101,
+          title: "Improve Customer Satisfaction",
+          description: "Increase NPS score by 15 points",
+          level: "company",
+          ownerId: 1,
+          teamId: null,
+          timeframeId: 1,
+          status: "in_progress",
+          progress: 35,
+          parentId: null,
+          createdAt: "2024-12-15"
+        },
+        {
+          id: 102,
+          title: "Launch Mobile App v2",
+          description: "Release new version with improved UX",
+          level: "team",
+          ownerId: 2,
+          teamId: 3,
+          timeframeId: 1,
+          status: "in_progress",
+          progress: 20,
+          parentId: 101,
+          createdAt: "2024-12-20"
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: "Q2 2025",
+      description: "Second quarter strategic initiatives",
+      startDate: "2025-04-01",
+      endDate: "2025-06-30",
+      cadenceId: 1,
+      isActive: true,
+      objectives: [
+        {
+          id: 103,
+          title: "Expand Market Reach",
+          description: "Enter 3 new geographic markets",
+          level: "company",
+          ownerId: 1,
+          teamId: null,
+          timeframeId: 2,
+          status: "not_started",
+          progress: 0,
+          parentId: null,
+          createdAt: "2025-01-10"
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: "Q3 2025",
+      description: "Third quarter strategic initiatives",
+      startDate: "2025-07-01",
+      endDate: "2025-09-30",
+      cadenceId: 1,
+      isActive: false,
+      objectives: []
+    },
+    {
+      id: 4,
+      name: "Q4 2025",
+      description: "Fourth quarter strategic initiatives",
+      startDate: "2025-10-01",
+      endDate: "2025-12-31",
+      cadenceId: 1,
+      isActive: false,
+      objectives: []
+    }
+  ];
+
+  // Fetch timeframes and objectives from API (commented out for now)
+  // const { data: timeframes = [], isLoading } = useQuery<TimeframeWithObjectives[]>({
+  //   queryKey: ['/api/timeframes/with-objectives'],
+  //   queryFn: getQueryFn({ on401: "throw" }),
+  // });
+
+  // Filter timeframes based on view type
+  const filteredTimeframes = timeframes.filter(timeframe => {
+    const now = new Date();
+    const startDate = new Date(timeframe.startDate);
+    const endDate = new Date(timeframe.endDate);
+    
+    switch (viewType) {
+      case "active":
+        return timeframe.isActive;
+      case "upcoming":
+        return startDate > now;
+      case "past":
+        return endDate < now;
+      default:
+        return true;
+    }
+  }).filter(timeframe => {
+    if (!search) return true;
+    
+    return (
+      timeframe.name.toLowerCase().includes(search.toLowerCase()) ||
+      (timeframe.description && timeframe.description.toLowerCase().includes(search.toLowerCase())) ||
+      timeframe.objectives.some(obj => 
+        obj.title.toLowerCase().includes(search.toLowerCase()) ||
+        (obj.description && obj.description.toLowerCase().includes(search.toLowerCase()))
+      )
+    );
+  });
+
+  const findTimeframeByObjectiveId = (objectiveId: string) => {
+    return filteredTimeframes.find(timeframe => 
+      timeframe.objectives.some(obj => obj.id.toString() === objectiveId)
+    );
+  };
+
+  const findObjective = (objectiveId: string) => {
+    for (const timeframe of filteredTimeframes) {
+      const objective = timeframe.objectives.find(obj => obj.id.toString() === objectiveId);
+      if (objective) return objective;
+    }
+    return null;
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    if (activeId === overId) {
+      setActiveId(null);
+      return;
+    }
+    
+    // Check if we're dragging between timeframes
+    const activeTimeframe = findTimeframeByObjectiveId(activeId);
+    const overObjective = findObjective(overId);
+    
+    if (!activeTimeframe || !overObjective) {
+      setActiveId(null);
+      return;
+    }
+    
+    const overTimeframe = filteredTimeframes.find(tf => tf.id === overObjective.timeframeId);
+    
+    if (!overTimeframe) {
+      setActiveId(null);
+      return;
+    }
+    
+    if (activeTimeframe.id === overTimeframe.id) {
+      // Reordering within the same timeframe
+      const newTimeframes = filteredTimeframes.map(timeframe => {
+        if (timeframe.id !== activeTimeframe.id) return timeframe;
+        
+        const oldIndex = timeframe.objectives.findIndex(obj => obj.id.toString() === activeId);
+        const newIndex = timeframe.objectives.findIndex(obj => obj.id.toString() === overId);
+        
+        return {
+          ...timeframe,
+          objectives: arrayMove(timeframe.objectives, oldIndex, newIndex)
+        };
+      });
+      
+      // Here you would update state or call an API to persist changes
+      console.log("Reordered objectives within timeframe:", newTimeframes);
+    } else {
+      // Moving between timeframes
+      const activeObjective = findObjective(activeId);
+      if (!activeObjective) {
+        setActiveId(null);
+        return;
+      }
+      
+      const updatedTimeframes = filteredTimeframes.map(timeframe => {
+        // Remove from source timeframe
+        if (timeframe.id === activeTimeframe.id) {
+          return {
+            ...timeframe,
+            objectives: timeframe.objectives.filter(obj => obj.id.toString() !== activeId)
+          };
+        }
+        
+        // Add to destination timeframe
+        if (timeframe.id === overTimeframe.id) {
+          // Update the objective's timeframeId
+          const updatedObjective = {
+            ...activeObjective,
+            timeframeId: timeframe.id
+          };
+          
+          // Add at the right position
+          const overIndex = timeframe.objectives.findIndex(obj => obj.id.toString() === overId);
+          const newObjectives = [...timeframe.objectives];
+          newObjectives.splice(overIndex, 0, updatedObjective);
+          
+          return {
+            ...timeframe,
+            objectives: newObjectives
+          };
+        }
+        
+        return timeframe;
+      });
+      
+      // Here you would update state or call an API to persist changes
+      console.log("Moved objective between timeframes:", updatedTimeframes);
+    }
+    
+    setActiveId(null);
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900">Timeline Editor</h1>
+            <p className="text-neutral-600 mt-1">
+              Plan and organize objectives across different timeframes
+            </p>
+          </div>
+          
+          <div className="flex gap-4">
+            <Tabs value={viewType} className="w-[400px]" onValueChange={(value) => setViewType(value as any)}>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="past">Past</TabsTrigger>
+              </TabsList>
+            </Tabs>
             
-            <Select 
-              value={selectedTeam || "all"}
-              onValueChange={(value) => setSelectedTeam(value === "all" ? null : value)}
-            >
-              <SelectTrigger className="w-[160px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Filter Teams</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Teams</SelectItem>
-                {teams.map((team: Team) => (
-                  <SelectItem key={team.id} value={team.id.toString()}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center space-x-1">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={() => handleZoom("out")}
-                disabled={zoomLevel <= 20}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={() => handleZoom("in")}
-                disabled={zoomLevel >= 100}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
+            <div className="relative">
+              <Input 
+                placeholder="Search timeframes or objectives..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-64"
+              />
+              <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
+            
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Timeframe
+            </Button>
           </div>
         </div>
         
-        <Separator />
-        
-        {isLoadingObjectives ? (
-          <div className="flex justify-center p-8">
-            <div className="animate-pulse flex space-x-4">
-              <div className="h-12 w-12 rounded-full bg-slate-200"></div>
-              <div className="flex-1 space-y-4 py-1">
-                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded"></div>
-                  <div className="h-4 bg-slate-200 rounded w-5/6"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 overflow-x-auto" ref={containerRef}>
-            <div className="relative min-w-full" style={{ overflowX: "auto" }}>
-              {/* Timeline header with dates */}
-              <div className="sticky top-0 bg-background z-10 border-b border-gray-200 dark:border-gray-700">
-                <div className="grid" style={{ gridTemplateColumns: `200px repeat(${datesInRange.length}, ${zoomLevel}px)` }}>
-                  <div className="border-r border-gray-200 dark:border-gray-700 p-2 font-medium">
-                    Objective
-                  </div>
-                  
-                  {datesInRange.map((date, i) => (
-                    <div 
-                      key={i}
-                      className={`
-                        border-r border-gray-200 dark:border-gray-700 p-1 text-xs whitespace-nowrap text-center
-                        ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
-                      `}
-                    >
-                      {format(date, view === "year" ? "MMM d" : "MMM d")}
-                    </div>
-                  ))}
-                </div>
-              </div>
+        <div className="overflow-x-auto pb-6">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex space-x-4 min-h-[calc(100vh-200px)]">
+              {filteredTimeframes.map((timeframe) => (
+                <TimeframeColumn 
+                  key={timeframe.id} 
+                  timeframe={timeframe} 
+                  objectives={timeframe.objectives}
+                />
+              ))}
               
-              {/* Timeline body with objective bars */}
-              <div>
-                {filteredObjectives.map((objective: Objective, index: number) => {
-                  const { left, width } = getTimelineItemStyle(objective.startDate, objective.endDate);
-                  
-                  if (width === 0) return null; // Skip objectives that aren't visible
-                  
-                  return (
-                    <div 
-                      key={objective.id}
-                      className={`
-                        grid border-b border-gray-200 dark:border-gray-700
-                        ${index % 2 === 0 ? 'bg-gray-50/50 dark:bg-gray-800/10' : ''}
-                      `}
-                      style={{ gridTemplateColumns: `200px repeat(${datesInRange.length}, ${zoomLevel}px)` }}
-                    >
-                      <div className="p-2 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div className="text-sm font-medium truncate" title={objective.title}>
-                          {objective.title}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {getTeamName(objective.teamId)} · {getTimeframeName(objective.timeframeId)}
-                        </div>
-                      </div>
-                      
-                      <div 
-                        className={`col-span-full absolute h-6 mt-3 rounded-md border-2 cursor-move
-                          ${getStatusColor(objective.status)}
-                          flex items-center px-2 text-xs font-medium truncate
-                        `}
-                        style={{ 
-                          left: `calc(200px + ${left}px)`, 
-                          width: `${width}px`,
-                          touchAction: "none"
-                        }}
-                        onMouseDown={(e) => handleMouseDown(e, objective, "move")}
-                        role="button"
-                        aria-label={`Drag to move ${objective.title}`}
-                        tabIndex={0}
-                      >
-                        <div className="truncate text-sm">
-                          {objective.title}
-                        </div>
-                        
-                        {/* Resize handles */}
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-2 cursor-w-resize"
-                          onMouseDown={(e) => handleMouseDown(e, objective, "start")}
-                          aria-label="Adjust start date"
-                        />
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-e-resize"
-                          onMouseDown={(e) => handleMouseDown(e, objective, "end")}
-                          aria-label="Adjust end date"
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <DragOverlay>
+                {activeId ? (
+                  <div className="w-[280px] opacity-80">
+                    <ObjectiveCard objective={findObjective(activeId)!} />
+                  </div>
+                ) : null}
+              </DragOverlay>
             </div>
-          </div>
-        )}
-        
-        <div className="bg-muted rounded-lg p-4 mt-8">
-          <h3 className="font-medium mb-2">How to use the Timeline Editor</h3>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            <li>Drag the middle of an objective bar to move its entire timeline</li>
-            <li>Drag the edges to adjust the start or end date</li>
-            <li>Use the zoom buttons to adjust the timeline scale</li>
-            <li>Filter by team to focus on specific groups</li>
-            <li>Switch between month, quarter, and year views</li>
-            <li>Changes are automatically saved when you release the mouse</li>
-          </ul>
+          </DndContext>
         </div>
       </div>
     </DashboardLayout>
   );
-};
-
-export default TimelineEditor;
+}

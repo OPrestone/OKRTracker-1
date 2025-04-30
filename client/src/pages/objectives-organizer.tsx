@@ -1,249 +1,302 @@
-import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, Target, LucideGitBranch, ArrowUpDown, Filter, MoreVertical, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import {
   DndContext,
   DragOverlay,
-  DragStartEvent,
-  DragEndEvent,
-  DragOverEvent,
-  MouseSensor,
-  TouchSensor,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
   useSensor,
   useSensors,
-  UniqueIdentifier,
+  DragStartEvent,
+  DragEndEvent
 } from "@dnd-kit/core";
 import {
+  SortableContext,
   arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  filterObjectives,
-  filterObjectivesByLevel,
-} from "@/lib/filter-utils";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Search, 
-  Filter, 
-  Layers, 
-  CheckCircle2, 
-  RefreshCw, 
-  ListFilter,
-  X,
-} from "lucide-react";
-import ObjectiveCard from "@/components/organizer/draggable-objective-card";
-import { ObjectiveGroup } from "@/components/organizer/objective-group";
-import { SortableObjective } from "@/components/organizer/sortable-objective";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-// Types
 interface Objective {
   id: number;
   title: string;
-  description?: string;
+  description: string | null;
   level: string;
-  status: string;
-  progress: number;
-  owner?: {
-    id: number;
-    name: string;
-    role?: string;
-  };
-  keyResults?: any[];
+  ownerId: number;
+  teamId: number | null;
   timeframeId: number;
-  teamId?: number;
+  status: string | null;
+  progress: number | null;
+  parentId: number | null;
+  createdAt: string;
 }
 
-interface Timeframe {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  cadenceId: number;
+interface ObjectiveGroup {
+  id: string;
+  title: string;
+  objectives: Objective[];
 }
 
-interface Team {
-  id: number;
-  name: string;
+function SortableObjective({ objective }: { objective: Objective }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: objective.id.toString() });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="mb-3"
+    >
+      <ObjectiveCard objective={objective} />
+    </div>
+  );
 }
 
-const ObjecitveStatusOptions = [
-  "All",
-  "On Track",
-  "At Risk",
-  "Behind",
-  "Completed",
-];
+function ObjectiveCard({ objective }: { objective: Objective }) {
+  const getStatusBadge = (status: string | null) => {
+    if (!status) return "bg-gray-100 text-gray-800";
+    
+    switch (status) {
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "at_risk":
+        return "bg-yellow-100 text-yellow-800";
+      case "behind":
+        return "bg-red-100 text-red-800";
+      case "complete":
+        return "bg-green-100 text-green-800";
+      case "not_started":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
-const ObjectiveGroups = {
-  organization: { id: "organization", title: "Organization Objectives" },
-  department: { id: "department", title: "Department Objectives" },
-  team: { id: "team", title: "Team Objectives" },
-  individual: { id: "individual", title: "Individual Objectives" },
-  completed: { id: "completed", title: "Completed Objectives" },
-};
+  const getLevelIcon = (level: string) => {
+    switch (level) {
+      case "company":
+        return <LucideGitBranch className="h-4 w-4 mr-1" />;
+      case "team":
+        return <LucideGitBranch className="h-4 w-4 mr-1" />;
+      case "personal":
+        return <Target className="h-4 w-4 mr-1" />;
+      default:
+        return <Target className="h-4 w-4 mr-1" />;
+    }
+  };
 
-const ObjectivesOrganizer = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  return (
+    <Card className="shadow-sm hover:shadow transition-shadow cursor-grab">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <Badge variant="outline" className="flex items-center text-xs">
+            {getLevelIcon(objective.level)}
+            {objective.level.charAt(0).toUpperCase() + objective.level.slice(1)}
+          </Badge>
+          
+          <Badge className={`text-xs ${getStatusBadge(objective.status)}`}>
+            {objective.status ? objective.status.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Not Started'}
+          </Badge>
+        </div>
+        
+        <h3 className="font-medium text-sm mb-2">{objective.title}</h3>
+        {objective.description && (
+          <p className="text-xs text-gray-500 mb-3 line-clamp-2">{objective.description}</p>
+        )}
+        
+        <div className="mt-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-gray-500">Progress</span>
+            <span className="text-xs font-medium">{objective.progress || 0}%</span>
+          </div>
+          <Progress value={objective.progress || 0} className="h-1" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ObjectiveGroup({ group, objectives }: { group: ObjectiveGroup; objectives: Objective[] }) {
+  return (
+    <div className="bg-gray-50 rounded-lg p-3 min-w-[300px] h-full">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <h3 className="text-sm font-medium">{group.title}</h3>
+          <Badge variant="outline" className="ml-2 text-xs">
+            {objectives.length}
+          </Badge>
+        </div>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="space-y-3">
+        <SortableContext items={objectives.map(o => o.id.toString())} strategy={verticalListSortingStrategy}>
+          {objectives.map((objective) => (
+            <SortableObjective key={objective.id} objective={objective} />
+          ))}
+        </SortableContext>
+      </div>
+    </div>
+  );
+}
+
+export default function ObjectivesOrganizer() {
+  const [_, navigate] = useLocation();
+  const [search, setSearch] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [viewType, setViewType] = useState<"priority" | "status" | "level" | "owner">("status");
   
-  // States
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedTimeframe, setSelectedTimeframe] = useState<number | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
-  
-  // Sensors
+  // Fetch objectives from API
+  const { data: objectives = [], isLoading } = useQuery<Objective[]>({
+    queryKey: ['/api/objectives'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  // Generate groups based on the selected view type
+  const [groups, setGroups] = useState<ObjectiveGroup[]>([]);
+
+  useEffect(() => {
+    if (!objectives.length) return;
+    
+    let newGroups: ObjectiveGroup[] = [];
+    
+    switch (viewType) {
+      case "status":
+        newGroups = [
+          { id: "not_started", title: "Not Started", objectives: [] },
+          { id: "in_progress", title: "In Progress", objectives: [] },
+          { id: "at_risk", title: "At Risk", objectives: [] },
+          { id: "behind", title: "Behind", objectives: [] },
+          { id: "complete", title: "Complete", objectives: [] },
+        ];
+        
+        objectives.forEach(obj => {
+          const status = obj.status || "not_started";
+          const groupIndex = newGroups.findIndex(g => g.id === status);
+          if (groupIndex !== -1) {
+            newGroups[groupIndex].objectives.push(obj);
+          } else {
+            newGroups[0].objectives.push(obj);
+          }
+        });
+        break;
+        
+      case "level":
+        newGroups = [
+          { id: "company", title: "Company", objectives: [] },
+          { id: "team", title: "Team", objectives: [] },
+          { id: "personal", title: "Personal", objectives: [] },
+        ];
+        
+        objectives.forEach(obj => {
+          const groupIndex = newGroups.findIndex(g => g.id === obj.level);
+          if (groupIndex !== -1) {
+            newGroups[groupIndex].objectives.push(obj);
+          }
+        });
+        break;
+        
+      case "priority":
+        newGroups = [
+          { id: "urgent", title: "Urgent", objectives: [] },
+          { id: "high", title: "High", objectives: [] },
+          { id: "medium", title: "Medium", objectives: [] },
+          { id: "low", title: "Low", objectives: [] },
+        ];
+        
+        // For this example, we'll distribute objectives randomly
+        objectives.forEach(obj => {
+          const randomIndex = Math.floor(Math.random() * newGroups.length);
+          newGroups[randomIndex].objectives.push(obj);
+        });
+        break;
+        
+      case "owner":
+        // Group by owner
+        const ownerGroups = objectives.reduce((acc, obj) => {
+          const ownerId = obj.ownerId.toString();
+          if (!acc[ownerId]) {
+            acc[ownerId] = {
+              id: ownerId,
+              title: `Owner ${ownerId}`,
+              objectives: []
+            };
+          }
+          acc[ownerId].objectives.push(obj);
+          return acc;
+        }, {} as Record<string, ObjectiveGroup>);
+        
+        newGroups = Object.values(ownerGroups);
+        break;
+    }
+    
+    // Filter objectives based on search
+    if (search) {
+      newGroups = newGroups.map(group => ({
+        ...group,
+        objectives: group.objectives.filter(
+          obj => obj.title.toLowerCase().includes(search.toLowerCase()) ||
+                (obj.description && obj.description.toLowerCase().includes(search.toLowerCase()))
+        )
+      }));
+    }
+    
+    setGroups(newGroups);
+  }, [objectives, viewType, search]);
+
+  const findGroupByObjectiveId = (objectiveId: string) => {
+    return groups.find(group => 
+      group.objectives.some(obj => obj.id.toString() === objectiveId)
+    );
+  };
+
+  const findObjective = (objectiveId: string) => {
+    for (const group of groups) {
+      const objective = group.objectives.find(obj => obj.id.toString() === objectiveId);
+      if (objective) return objective;
+    }
+    return null;
+  };
+
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
-  // Fetch objectives data
-  const { data: objectives = [], isLoading: isLoadingObjectives, isError: isObjectivesError } = useQuery({
-    queryKey: ["/api/objectives"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/objectives");
-      return response.json();
-    },
-  });
-  
-  // Fetch timeframes data
-  const { data: timeframes = [] } = useQuery({
-    queryKey: ["/api/timeframes"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/timeframes");
-      return response.json();
-    },
-  });
-  
-  // Fetch teams data
-  const { data: teams = [] } = useQuery({
-    queryKey: ["/api/teams"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/teams");
-      return response.json();
-    },
-  });
-  
-  // Update objective level mutation
-  const updateObjectiveLevelMutation = useMutation({
-    mutationFn: async ({ id, level }: { id: number; level: string }) => {
-      const response = await apiRequest("PATCH", `/api/objectives/${id}`, { level });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      toast({
-        title: "Objective Updated",
-        description: "The objective has been successfully moved to a new level.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update objective",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Utility function to get container ID from combined ID
-  const getContainerFromId = (id: string) => {
-    if (typeof id !== "string") return null;
-    return id.split("-")[0];
-  };
-  
-  // Utility function to get objective ID from combined ID
-  const getObjectiveFromId = (id: string) => {
-    if (typeof id !== "string") return null;
-    return parseInt(id.split("-")[1]);
-  };
-  
-  // Get objectives by level
-  const getObjectivesByLevel = (level: string) => {
-    let filteredObjectives = [...objectives];
-    
-    // Apply filters
-    if (searchQuery) {
-      filteredObjectives = filterObjectives(filteredObjectives, { search: searchQuery });
-    }
-    
-    if (selectedLevel !== "All") {
-      filteredObjectives = filterObjectivesByLevel(filteredObjectives, selectedLevel);
-    }
-    
-    if (selectedStatus !== "All") {
-      filteredObjectives = filterObjectives(filteredObjectives, { status: [selectedStatus] });
-    }
-    
-    if (selectedTimeframe) {
-      filteredObjectives = filterObjectives(filteredObjectives, { timeframe: [selectedTimeframe] });
-    }
-    
-    // Filter by team if selected
-    if (selectedTeam) {
-      filteredObjectives = filterObjectives(filteredObjectives, { team: [selectedTeam] });
-    }
-    
-    // Now filter by the requested level
-    if (level === "completed") {
-      return filteredObjectives.filter(obj => obj.status.toLowerCase() === "completed");
-    } else {
-      return filteredObjectives.filter(obj => 
-        obj.level.toLowerCase() === level.toLowerCase() && 
-        obj.status.toLowerCase() !== "completed"
-      );
-    }
-  };
-  
-  // Handle drag start
+
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id);
+    setActiveId(event.active.id as string);
   };
-  
-  // Handle drag over
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    
-    if (!over) return;
-    
-    const activeContainer = getContainerFromId(active.id as string);
-    const overContainer = getContainerFromId(over.id as string);
-    
-    if (!activeContainer || !overContainer || activeContainer === overContainer) {
-      return;
-    }
-    
-    // Handle moving objectives between containers in the UI
-    // The actual update happens in handleDragEnd
-  };
-  
-  // Handle drag end
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -255,398 +308,152 @@ const ObjectivesOrganizer = () => {
     const activeId = active.id as string;
     const overId = over.id as string;
     
-    const activeContainer = getContainerFromId(activeId);
-    const overContainer = getContainerFromId(overId);
-    
-    if (!activeContainer || !overContainer) {
+    if (activeId === overId) {
       setActiveId(null);
       return;
     }
     
-    if (activeContainer !== overContainer) {
-      // Item moved to a different container (level)
-      const objectiveId = getObjectiveFromId(activeId);
-      
-      if (objectiveId) {
-        // Update the objective's level in the database
-        updateObjectiveLevelMutation.mutate({ 
-          id: objectiveId, 
-          level: overContainer === "organization" ? "Organization" :
-                overContainer === "department" ? "Department" :
-                overContainer === "team" ? "Team" :
-                overContainer === "individual" ? "Individual" :
-                "Completed" 
+    const activeGroup = findGroupByObjectiveId(activeId);
+    const overGroup = findGroupByObjectiveId(overId);
+    
+    if (!activeGroup || !overGroup) {
+      setActiveId(null);
+      return;
+    }
+    
+    if (activeGroup.id === overGroup.id) {
+      // Reordering within the same group
+      setGroups(currentGroups => {
+        return currentGroups.map(group => {
+          if (group.id !== activeGroup.id) return group;
+          
+          const oldIndex = group.objectives.findIndex(obj => obj.id.toString() === activeId);
+          const newIndex = group.objectives.findIndex(obj => obj.id.toString() === overId);
+          
+          return {
+            ...group,
+            objectives: arrayMove(group.objectives, oldIndex, newIndex)
+          };
         });
-      }
-    } else if (activeId !== overId) {
-      // Items rearranged within the same container
-      // This would be implemented if you add position/order to objectives
+      });
+    } else {
+      // Moving between groups
+      setGroups(currentGroups => {
+        const updatedGroups = currentGroups.map(group => {
+          // Remove from source group
+          if (group.id === activeGroup.id) {
+            return {
+              ...group,
+              objectives: group.objectives.filter(obj => obj.id.toString() !== activeId)
+            };
+          }
+          
+          // Add to destination group
+          if (group.id === overGroup.id) {
+            const activeObjective = findObjective(activeId);
+            if (!activeObjective) return group;
+            
+            // Find position to insert
+            const overObjectiveIndex = group.objectives.findIndex(obj => obj.id.toString() === overId);
+            
+            const newObjectives = [...group.objectives];
+            newObjectives.splice(overObjectiveIndex, 0, activeObjective);
+            
+            return {
+              ...group,
+              objectives: newObjectives
+            };
+          }
+          
+          return group;
+        });
+        
+        return updatedGroups;
+      });
     }
     
     setActiveId(null);
   };
-  
-  // Handle search
-  const handleSearch = () => {
-    if (searchInputRef.current) {
-      setSearchQuery(searchInputRef.current.value);
-    }
-  };
-  
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSelectedLevel("All");
-    setSelectedStatus("All");
-    setSelectedTimeframe(null);
-    setSelectedTeam(null);
-    
-    if (searchInputRef.current) {
-      searchInputRef.current.value = "";
-    }
-  };
-  
-  // Get timeframe name
-  const getTimeframeName = (id: number) => {
-    const timeframe = timeframes.find((t: Timeframe) => t.id === id);
-    return timeframe ? timeframe.name : "Unknown";
-  };
-  
-  // Get active objective
-  const getActiveObjective = (): Objective | null => {
-    if (!activeId) return null;
-    
-    const container = getContainerFromId(activeId as string);
-    const objectiveId = getObjectiveFromId(activeId as string);
-    
-    if (!container || !objectiveId) return null;
-    
-    const objective = objectives.find((obj: Objective) => obj.id === objectiveId);
-    return objective || null;
-  };
-  
+
   return (
-    <DashboardLayout title="Objectives Organizer">
-      <div className="space-y-4">
-        {isObjectivesError && (
-          <Alert variant="destructive">
-            <AlertDescription>
-              There was an error loading objectives. Please try again.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-2 md:space-y-0 pb-4">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold mr-2">Objectives Organizer</h1>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/objectives"] })}
-              title="Refresh data"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+    <DashboardLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900">Objectives Organizer</h1>
+            <p className="text-neutral-600 mt-1">
+              Rearrange and organize objectives with drag-and-drop
+            </p>
           </div>
           
-          <div className="relative w-full md:w-auto">
-            <div className="flex items-center space-x-2">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search objectives..."
-                  className="pl-9"
-                  onChange={handleSearch}
-                />
-              </div>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearFilters}
-                disabled={!searchQuery && selectedLevel === "All" && selectedStatus === "All" && !selectedTimeframe && !selectedTeam}
-              >
-                <X className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Clear</span>
-              </Button>
+          <div className="flex gap-4">
+            <Select value={viewType} onValueChange={(value) => setViewType(value as any)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Select view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="status">By Status</SelectItem>
+                <SelectItem value="level">By Level</SelectItem>
+                <SelectItem value="priority">By Priority</SelectItem>
+                <SelectItem value="owner">By Owner</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <div className="relative">
+              <Input 
+                placeholder="Search objectives..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-64"
+              />
+              <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
             </div>
+            
+            <Button 
+              onClick={() => navigate("/create-objective")}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New Objective
+            </Button>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="col-span-1 space-y-4">
-            <div className="bg-card rounded-lg border p-4">
-              <div className="font-medium flex items-center mb-3">
-                <Filter className="h-4 w-4 mr-2" />
-                <span>Filters</span>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="level-filter">Level</Label>
-                  <Select 
-                    value={selectedLevel} 
-                    onValueChange={setSelectedLevel}
-                  >
-                    <SelectTrigger id="level-filter">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Levels</SelectItem>
-                      <SelectItem value="Organization">Organization</SelectItem>
-                      <SelectItem value="Department">Department</SelectItem>
-                      <SelectItem value="Team">Team</SelectItem>
-                      <SelectItem value="Individual">Individual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="status-filter">Status</Label>
-                  <Select 
-                    value={selectedStatus} 
-                    onValueChange={setSelectedStatus}
-                  >
-                    <SelectTrigger id="status-filter">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ObjecitveStatusOptions.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="timeframe-filter">Timeframe</Label>
-                  <Select 
-                    value={selectedTimeframe?.toString() || ""} 
-                    onValueChange={(value) => setSelectedTimeframe(value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger id="timeframe-filter">
-                      <SelectValue placeholder="Select timeframe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Timeframes</SelectItem>
-                      {timeframes.map((timeframe: Timeframe) => (
-                        <SelectItem 
-                          key={timeframe.id} 
-                          value={timeframe.id.toString()}
-                        >
-                          {timeframe.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="team-filter">Team</Label>
-                  <Select 
-                    value={selectedTeam?.toString() || ""} 
-                    onValueChange={(value) => setSelectedTeam(value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger id="team-filter">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Teams</SelectItem>
-                      {teams.map((team: Team) => (
-                        <SelectItem 
-                          key={team.id} 
-                          value={team.id.toString()}
-                        >
-                          {team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Active Filters</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={clearFilters}
-                      disabled={!searchQuery && selectedLevel === "All" && selectedStatus === "All" && !selectedTimeframe && !selectedTeam}
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      Clear All
-                    </Button>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1.5">
-                    {searchQuery && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Search className="h-3 w-3" />
-                        <span className="truncate max-w-[120px]">{searchQuery}</span>
-                        <button 
-                          className="ml-1" 
-                          onClick={() => {
-                            setSearchQuery("");
-                            if (searchInputRef.current) {
-                              searchInputRef.current.value = "";
-                            }
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    
-                    {selectedLevel !== "All" && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Layers className="h-3 w-3" />
-                        {selectedLevel}
-                        <button 
-                          className="ml-1" 
-                          onClick={() => setSelectedLevel("All")}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    
-                    {selectedStatus !== "All" && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {selectedStatus}
-                        <button 
-                          className="ml-1" 
-                          onClick={() => setSelectedStatus("All")}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    
-                    {selectedTimeframe && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <ListFilter className="h-3 w-3" />
-                        {getTimeframeName(selectedTimeframe)}
-                        <button 
-                          className="ml-1" 
-                          onClick={() => setSelectedTimeframe(null)}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )}
-                    
-                    {selectedTeam && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <ListFilter className="h-3 w-3" />
-                        {teams.find(t => t.id === selectedTeam)?.name}
-                        <button 
-                          className="ml-1" 
-                          onClick={() => setSelectedTeam(null)}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
+        <div className="overflow-x-auto pb-6">
+          {isLoading ? (
+            <div className="flex space-x-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gray-100 rounded-lg h-[500px] w-[300px] animate-pulse"></div>
+              ))}
             </div>
-            
-            <div className="bg-card rounded-lg border p-4">
-              <h2 className="font-medium mb-2">How to Use</h2>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>• Drag objectives between levels</li>
-                <li>• Filter and search to find specific objectives</li>
-                <li>• Changes are saved automatically</li>
-                <li>• Use filters to narrow down objectives</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="col-span-1 md:col-span-3">
-            {isLoadingObjectives ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map(i => (
-                  <div 
-                    key={i} 
-                    className="border rounded-lg p-4 animate-pulse space-y-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-                      <div className="h-6 bg-gray-200 rounded-full w-12"></div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-24 bg-gray-100 rounded"></div>
-                      <div className="h-24 bg-gray-100 rounded"></div>
-                    </div>
-                  </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex space-x-4 min-h-[calc(100vh-200px)]">
+                {groups.map((group) => (
+                  <ObjectiveGroup 
+                    key={group.id} 
+                    group={group} 
+                    objectives={group.objectives}
+                  />
                 ))}
-              </div>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-              >
-                <div className="space-y-4">
-                  <ObjectiveGroup
-                    id="organization"
-                    title="Organization Objectives"
-                    description="High-level strategic objectives for the entire organization"
-                    objectives={getObjectivesByLevel("organization")}
-                  />
-                  
-                  <ObjectiveGroup
-                    id="department"
-                    title="Department Objectives"
-                    description="Departmental objectives supporting organization goals"
-                    objectives={getObjectivesByLevel("department")}
-                  />
-                  
-                  <ObjectiveGroup
-                    id="team"
-                    title="Team Objectives"
-                    description="Team-level objectives supporting department goals"
-                    objectives={getObjectivesByLevel("team")}
-                  />
-                  
-                  <ObjectiveGroup
-                    id="individual"
-                    title="Individual Objectives"
-                    description="Individual objectives for personal development and contribution"
-                    objectives={getObjectivesByLevel("individual")}
-                  />
-                  
-                  <ObjectiveGroup
-                    id="completed"
-                    title="Completed Objectives"
-                    description="Objectives that have been successfully completed"
-                    objectives={getObjectivesByLevel("completed")}
-                  />
-                </div>
                 
                 <DragOverlay>
                   {activeId ? (
-                    <div className="transform-gpu scale-105">
-                      <ObjectiveCard 
-                        objective={getActiveObjective() as Objective}
-                        isDragging={true} 
-                      />
+                    <div className="w-[300px] opacity-80">
+                      <ObjectiveCard objective={findObjective(activeId)!} />
                     </div>
                   ) : null}
                 </DragOverlay>
-              </DndContext>
-            )}
-          </div>
+              </div>
+            </DndContext>
+          )}
         </div>
       </div>
     </DashboardLayout>
   );
-};
-
-export default ObjectivesOrganizer;
+}
