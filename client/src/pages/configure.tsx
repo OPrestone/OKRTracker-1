@@ -3816,6 +3816,8 @@ export default function Configure() {
           </div>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }
