@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
   Card, 
@@ -253,15 +254,14 @@ const Teams = () => {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const [, setLocation] = useLocation();
+  
   const handleTeamClick = (team: Team) => {
-    setSelectedTeam(team);
+    // Navigate to team detail page instead of opening dialog
+    setLocation(`/teams/${team.id}`);
   };
 
-  const handleCloseDetails = () => {
-    setSelectedTeam(null);
-    setCurrentMembersPage(1);
-    setCurrentObjectivesPage(1);
-  };
+  // No longer needed since we're using the dedicated team detail page
   
   // Pagination logic
   const getPaginatedData = <T extends object>(data: T[] | undefined, page: number): T[] => {
@@ -361,6 +361,7 @@ const Teams = () => {
                 className="cursor-pointer"
                 onClick={() => handleTeamClick(team)}
               >
+                <Eye className="mr-2 h-4 w-4" />
                 View details
               </DropdownMenuItem>
               <DropdownMenuItem 
