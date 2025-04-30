@@ -15,7 +15,7 @@ import {
   Inbox,
   Home
 } from "lucide-react";
-import { useOnboarding } from "@/hooks/use-onboarding";
+
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { SearchDialog } from "@/components/search/search-dialog";
@@ -43,8 +43,7 @@ interface HeaderProps {
 }
 
 const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) => {
-  // Get the onboarding context at the component level
-  const onboarding = useOnboarding();
+
   const { user } = useAuth();
   
   const handleLogout = () => {
@@ -78,17 +77,6 @@ const Header = ({ title, subtitle, sidebarOpen, setSidebarOpen }: HeaderProps) =
           <div className="relative mr-1">
             <SearchDialog />
           </div>
-          
-          {/* Get Started Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="hidden md:flex items-center gap-1.5 text-indigo-600 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 mr-1"
-            onClick={() => onboarding.toggleGetStartedMenu()}
-          >
-            <Rocket className="h-4 w-4" />
-            <span>Get Started</span>
-          </Button>
           
           {/* Notifications */}
           <DropdownMenu>
