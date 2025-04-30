@@ -55,7 +55,9 @@ export function FeedbackCard({ feedback, variant = "expanded" }: FeedbackCardPro
   const isCompact = variant === "compact";
   
   // Format the creation date
-  const formattedDate = formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+  const formattedDate = createdAt 
+    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true }) 
+    : "recently";
   
   // Create avatar fallback from user initials
   const getSenderInitials = () => {

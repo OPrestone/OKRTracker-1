@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -32,178 +31,276 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MessageSquare, Users, Info, Star, Eye, EyeOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PenSquare, Award, ThumbsUp, Lightbulb } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+// Define the feedback form schema
 const feedbackFormSchema = z.object({
   receiverId: z.number({
     required_error: "Please select a recipient",
   }),
-  type: z.enum(["positive", "constructive", "general", "recognition"], {
+  type: z.enum(["praise", "suggestion", "criticism", "question"], {
     required_error: "Please select a feedback type",
   }),
   title: z.string().min(3, {
-    message: "Title must be at least 3 characters.",
+    message: "Title must be at least 3 characters",
+  }).max(100, {
+    message: "Title must not exceed 100 characters",
   }),
   message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
+    message: "Message must be at least 10 characters",
+  }).max(1000, {
+    message: "Message must not exceed 1000 characters",
   }),
   visibility: z.enum(["public", "private"], {
     required_error: "Please select visibility",
   }),
-  objectiveId: z.number().optional(),
-  keyResultId: z.number().optional(),
+  objectiveId: z.number().optional().nullable(),
+  keyResultId: z.number().optional().nullable(),
 });
 
 type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
 
 type FeedbackModalProps = {
-  recipient: {
+  recipient?: {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
+    role?: string;
   };
-  objectiveId?: number;
-  keyResultId?: number;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
 };
 
-export function FeedbackModal({
-  recipient,
-  objectiveId,
-  keyResultId,
-  trigger,
-}: FeedbackModalProps) {
+export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Default values for the form
-  const defaultValues: Partial<FeedbackFormValues> = {
-    receiverId: recipient.id,
-    type: "positive",
-    visibility: "private",
-    objectiveId: objectiveId,
-    keyResultId: keyResultId,
-  };
-
-  const form = useForm<FeedbackFormValues>({
-    resolver: zodResolver(feedbackFormSchema),
-    defaultValues,
+  // Fetch users for selection
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    enabled: open && !recipient,
   });
 
+  // Set up form with default values
+  const form = useForm<FeedbackFormValues>({
+    resolver: zodResolver(feedbackFormSchema),
+    defaultValues: {
+      receiverId: recipient?.id || undefined,
+      type: undefined,
+      title: "",
+      message: "",
+      visibility: "public",
+      objectiveId: null,
+      keyResultId: null,
+    },
+  });
+
+  // Set up mutation for submitting feedback
   const feedbackMutation = useMutation({
     mutationFn: async (values: FeedbackFormValues) => {
-      const response = await apiRequest("POST", "/api/feedback", {
-        ...values,
-        senderId: user?.id,
-      });
+      const response = await apiRequest("POST", "/api/feedback", values);
       return await response.json();
     },
     onSuccess: () => {
-      // Invalidate feedback queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/feedback"] });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/users", recipient.id, "feedback"] 
-      });
-      
-      // Show success toast
       toast({
-        title: "Feedback sent",
-        description: "Your feedback has been sent successfully.",
-        variant: "default",
+        title: "Feedback Submitted",
+        description: "Your feedback has been sent successfully",
       });
-      
-      // Close the modal and reset form
+      queryClient.invalidateQueries({ queryKey: ["/api/feedback/public"] });
+      form.reset();
       setOpen(false);
-      form.reset(defaultValues);
     },
     onError: (error: Error) => {
       toast({
-        title: "Error sending feedback",
-        description: error.message || "There was an error sending your feedback.",
+        title: "Error",
+        description: error.message || "Failed to submit feedback",
         variant: "destructive",
       });
     },
   });
 
-  function onSubmit(data: FeedbackFormValues) {
-    feedbackMutation.mutate(data);
+  function onSubmit(values: FeedbackFormValues) {
+    feedbackMutation.mutate(values);
   }
+
+  // Helper to get user initials
+  const getUserInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+  };
+
+  // Function to render the feedback type help text
+  const renderFeedbackTypeHelp = (type: string) => {
+    switch (type) {
+      case "praise":
+        return "Recognize someone's good work or achievements";
+      case "suggestion":
+        return "Offer ideas for improvement in a constructive way";
+      case "criticism":
+        return "Provide respectful criticism to help someone improve";
+      case "question":
+        return "Ask a question about someone's work or approach";
+      default:
+        return "";
+    }
+  };
+
+  const feedbackTypeIcons = {
+    praise: <Star className="h-4 w-4 text-yellow-500" />,
+    suggestion: <MessageSquare className="h-4 w-4 text-blue-500" />,
+    criticism: <Info className="h-4 w-4 text-orange-500" />,
+    question: <MessageSquare className="h-4 w-4 text-purple-500" />,
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline">
-            <PenSquare className="mr-2 h-4 w-4" />
+          <Button>
+            <MessageSquare className="mr-2 h-4 w-4" />
             Give Feedback
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Give Feedback</DialogTitle>
+          <DialogTitle>Share Feedback</DialogTitle>
           <DialogDescription>
-            Provide feedback to {recipient.firstName} {recipient.lastName}
+            Provide constructive feedback to a colleague. This helps everyone grow and improve.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {!recipient && (
+              <FormField
+                control={form.control}
+                name="receiverId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recipient</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a recipient" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {users
+                          .filter((u) => u.id !== user?.id)
+                          .map((user) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              <div className="flex items-center">
+                                <Avatar className="h-6 w-6 mr-2">
+                                  <AvatarImage
+                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${getUserInitials(
+                                      user.firstName,
+                                      user.lastName
+                                    )}`}
+                                  />
+                                  <AvatarFallback>
+                                    {getUserInitials(user.firstName, user.lastName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                {user.firstName} {user.lastName}
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {recipient && (
+              <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-md">
+                <Avatar>
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${getUserInitials(
+                      recipient.firstName,
+                      recipient.lastName
+                    )}`}
+                  />
+                  <AvatarFallback>
+                    {getUserInitials(recipient.firstName, recipient.lastName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">
+                    {recipient.firstName} {recipient.lastName}
+                  </p>
+                  {recipient.role && (
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {recipient.role}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem>
                   <FormLabel>Feedback Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-2"
-                    >
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="positive" />
-                        </FormControl>
-                        <FormLabel className="font-normal flex items-center">
-                          <ThumbsUp className="h-4 w-4 mr-1 text-green-500" />
-                          Positive
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="constructive" />
-                        </FormControl>
-                        <FormLabel className="font-normal flex items-center">
-                          <Lightbulb className="h-4 w-4 mr-1 text-amber-500" />
-                          Constructive
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="general" />
-                        </FormControl>
-                        <FormLabel className="font-normal flex items-center">
-                          <PenSquare className="h-4 w-4 mr-1 text-blue-500" />
-                          General
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-1 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="recognition" />
-                        </FormControl>
-                        <FormLabel className="font-normal flex items-center">
-                          <Award className="h-4 w-4 mr-1 text-purple-500" />
-                          Recognition
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="praise">
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 mr-2" />
+                          Praise
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="suggestion">
+                        <div className="flex items-center">
+                          <MessageSquare className="h-4 w-4 text-blue-500 mr-2" />
+                          Suggestion
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="criticism">
+                        <div className="flex items-center">
+                          <Info className="h-4 w-4 text-orange-500 mr-2" />
+                          Criticism
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="question">
+                        <div className="flex items-center">
+                          <MessageSquare className="h-4 w-4 text-purple-500 mr-2" />
+                          Question
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {field.value && (
+                    <FormDescription>
+                      {renderFeedbackTypeHelp(field.value)}
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -216,7 +313,7 @@ export function FeedbackModal({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief title for your feedback" {...field} />
+                    <Input placeholder="A brief title for your feedback" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -231,7 +328,7 @@ export function FeedbackModal({
                   <FormLabel>Message</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter your feedback message"
+                      placeholder="Share your feedback details here..."
                       className="min-h-[120px]"
                       {...field}
                     />
@@ -245,28 +342,38 @@ export function FeedbackModal({
               control={form.control}
               name="visibility"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="space-y-3">
                   <FormLabel>Visibility</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select visibility" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="private">
-                        Private (Only visible to recipient)
-                      </SelectItem>
-                      <SelectItem value="public">
-                        Public (Visible on recognition wall)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="public" />
+                        </FormControl>
+                        <FormLabel className="font-normal flex items-center">
+                          <Eye className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Public (visible to everyone)
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="private" />
+                        </FormControl>
+                        <FormLabel className="font-normal flex items-center">
+                          <EyeOff className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Private (visible only to recipient)
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
                   <FormDescription>
-                    Determine who can see this feedback
+                    {field.value === "public"
+                      ? "Will be displayed on the Recognition Wall"
+                      : "Only the recipient will see this feedback"}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -281,11 +388,11 @@ export function FeedbackModal({
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 disabled={feedbackMutation.isPending}
               >
-                {feedbackMutation.isPending ? "Sending..." : "Send Feedback"}
+                {feedbackMutation.isPending ? "Submitting..." : "Submit Feedback"}
               </Button>
             </DialogFooter>
           </form>

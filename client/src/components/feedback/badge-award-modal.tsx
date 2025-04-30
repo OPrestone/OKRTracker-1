@@ -1,13 +1,11 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { Badge, User } from "@shared/schema";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -33,13 +31,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge as UIBadge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Award } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Award, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Badge award form schema
 const badgeAwardSchema = z.object({
   userId: z.number({
     required_error: "Please select a recipient",
@@ -47,104 +62,104 @@ const badgeAwardSchema = z.object({
   badgeId: z.number({
     required_error: "Please select a badge",
   }),
-  message: z.string().min(5, {
-    message: "Message must be at least 5 characters.",
+  message: z.string().min(3, {
+    message: "Please add a message explaining why this badge is being awarded",
+  }).max(500, {
+    message: "Message must not exceed 500 characters",
   }),
-  isPublic: z.boolean().default(true),
 });
 
-type BadgeAwardValues = z.infer<typeof badgeAwardSchema>;
+type BadgeAwardFormValues = z.infer<typeof badgeAwardSchema>;
 
 type BadgeAwardModalProps = {
-  recipient?: User;
-  trigger?: React.ReactNode;
+  recipient?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    role?: string;
+  };
+  trigger?: ReactNode;
 };
 
-export function BadgeAwardModal({
-  recipient,
-  trigger,
-}: BadgeAwardModalProps) {
+export function BadgeAwardModal({ recipient, trigger }: BadgeAwardModalProps = {}) {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+  const [openUserCombobox, setOpenUserCombobox] = useState(false);
+  const [openBadgeCombobox, setOpenBadgeCombobox] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch available badges
-  const { data: badges, isLoading: loadingBadges } = useQuery<Badge[]>({
-    queryKey: ["/api/badges"],
-  });
-
-  // Fetch users if no recipient is provided
-  const { data: users, isLoading: loadingUsers } = useQuery<User[]>({
+  // Fetch users for selection
+  const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
-    enabled: !recipient,
+    enabled: open && !recipient,
   });
 
-  // Default values for the form
-  const defaultValues: Partial<BadgeAwardValues> = {
-    userId: recipient?.id,
-    isPublic: true,
-  };
+  // Fetch available badges
+  const { data: badges = [] } = useQuery({
+    queryKey: ["/api/badges"],
+    enabled: open,
+  });
 
-  const form = useForm<BadgeAwardValues>({
+  // Set up form with default values
+  const form = useForm<BadgeAwardFormValues>({
     resolver: zodResolver(badgeAwardSchema),
-    defaultValues,
+    defaultValues: {
+      userId: recipient?.id || undefined,
+      badgeId: undefined,
+      message: "",
+    },
   });
 
+  // Get current selections
+  const selectedUserId = form.watch("userId");
   const selectedBadgeId = form.watch("badgeId");
-  const selectedBadge = badges?.find((b) => b.id === selectedBadgeId);
 
-  const badgeAwardMutation = useMutation({
-    mutationFn: async (values: BadgeAwardValues) => {
-      const response = await apiRequest("POST", "/api/badges/award", {
-        ...values,
-        awardedById: user?.id,
-      });
+  // Find selected user and badge from their IDs
+  const selectedUser = users.find((u) => u.id === selectedUserId);
+  const selectedBadge = badges.find((b) => b.id === selectedBadgeId);
+
+  // Set up mutation for awarding badge
+  const awardBadgeMutation = useMutation({
+    mutationFn: async (values: BadgeAwardFormValues) => {
+      const response = await apiRequest("POST", "/api/badges/award", values);
       return await response.json();
     },
     onSuccess: () => {
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/badges/user"] });
-      if (recipient) {
-        queryClient.invalidateQueries({ 
-          queryKey: ["/api/users", recipient.id, "badges"] 
-        });
-      }
-      
-      // Show success toast
       toast({
-        title: "Badge awarded",
-        description: "The badge has been awarded successfully.",
-        variant: "default",
+        title: "Badge Awarded",
+        description: "The badge has been awarded successfully",
       });
-      
-      // Close the modal and reset form
+      queryClient.invalidateQueries({ queryKey: ["/api/badges/public"] });
+      if (recipient) {
+        queryClient.invalidateQueries({ queryKey: ["/api/users", recipient.id, "badges"] });
+      }
+      form.reset();
       setOpen(false);
-      form.reset(defaultValues);
     },
     onError: (error: Error) => {
       toast({
-        title: "Error awarding badge",
-        description: error.message || "There was an error awarding the badge.",
+        title: "Error",
+        description: error.message || "Failed to award badge",
         variant: "destructive",
       });
     },
   });
 
-  function onSubmit(data: BadgeAwardValues) {
-    badgeAwardMutation.mutate(data);
+  function onSubmit(values: BadgeAwardFormValues) {
+    awardBadgeMutation.mutate(values);
   }
 
-  // Create initials for avatar fallback
-  const getRecipientInitials = (user: User) => {
-    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+  // Helper to get user initials
+  const getUserInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline">
+          <Button variant="default">
             <Award className="mr-2 h-4 w-4" />
             Award Badge
           </Button>
@@ -152,117 +167,188 @@ export function BadgeAwardModal({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Award Badge</DialogTitle>
+          <DialogTitle>Award a Badge</DialogTitle>
           <DialogDescription>
-            {recipient
-              ? `Award a badge to ${recipient.firstName} ${recipient.lastName}`
-              : "Select a user and badge to award"}
+            Recognize outstanding contributions and achievements with a badge.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {!recipient && (
               <FormField
                 control={form.control}
                 name="userId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Recipient</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a recipient" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {loadingUsers ? (
-                          <div className="p-2">
-                            <Skeleton className="h-5 w-full" />
-                            <Skeleton className="h-5 w-full mt-2" />
-                            <Skeleton className="h-5 w-full mt-2" />
-                          </div>
-                        ) : (
-                          users?.map((user) => (
-                            <SelectItem
-                              key={user.id}
-                              value={user.id.toString()}
-                              className="flex items-center"
-                            >
-                              <div className="flex items-center">
-                                <Avatar className="h-6 w-6 mr-2">
-                                  <AvatarImage
-                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${getRecipientInitials(
-                                      user
-                                    )}`}
+                    <Popover open={openUserCombobox} onOpenChange={setOpenUserCombobox}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openUserCombobox}
+                            className={cn(
+                              "justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value && selectedUser
+                              ? `${selectedUser.firstName} ${selectedUser.lastName}`
+                              : "Select user"}
+                            <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0">
+                        <Command>
+                          <CommandInput placeholder="Search users..." />
+                          <CommandEmpty>No user found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandList>
+                              {users.map((user) => (
+                                <CommandItem
+                                  key={user.id}
+                                  value={`${user.firstName} ${user.lastName}`}
+                                  onSelect={() => {
+                                    form.setValue("userId", user.id);
+                                    setOpenUserCombobox(false);
+                                  }}
+                                >
+                                  <Avatar className="h-6 w-6 mr-2">
+                                    <AvatarImage
+                                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${getUserInitials(
+                                        user.firstName,
+                                        user.lastName
+                                      )}`}
+                                    />
+                                    <AvatarFallback>
+                                      {getUserInitials(user.firstName, user.lastName)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {user.firstName} {user.lastName}
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4",
+                                      selectedUserId === user.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
                                   />
-                                  <AvatarFallback>
-                                    {getRecipientInitials(user)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {user.firstName} {user.lastName}
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                                </CommandItem>
+                              ))}
+                            </CommandList>
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
 
+            {recipient && (
+              <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-md">
+                <Avatar>
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${getUserInitials(
+                      recipient.firstName,
+                      recipient.lastName
+                    )}`}
+                  />
+                  <AvatarFallback>
+                    {getUserInitials(recipient.firstName, recipient.lastName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">
+                    {recipient.firstName} {recipient.lastName}
+                  </p>
+                  {recipient.role && (
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {recipient.role}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="badgeId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Badge</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a badge" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {loadingBadges ? (
-                        <div className="p-2">
-                          <Skeleton className="h-5 w-full" />
-                          <Skeleton className="h-5 w-full mt-2" />
-                          <Skeleton className="h-5 w-full mt-2" />
-                        </div>
-                      ) : (
-                        badges?.map((badge) => (
-                          <SelectItem
-                            key={badge.id}
-                            value={badge.id.toString()}
-                            className="flex items-center"
-                          >
+                  <Popover open={openBadgeCombobox} onOpenChange={setOpenBadgeCombobox}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openBadgeCombobox}
+                          className={cn(
+                            "justify-between",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value && selectedBadge ? (
                             <div className="flex items-center">
-                              <UIBadge
-                                style={{ backgroundColor: badge.color }}
-                                className="text-white mr-2 h-6 w-6 flex items-center justify-center p-0"
+                              <Badge
+                                style={{ backgroundColor: selectedBadge.color }}
+                                className="text-white mr-2"
                               >
-                                {badge.icon}
-                              </UIBadge>
-                              {badge.name}
+                                {selectedBadge.icon}
+                              </Badge>
+                              {selectedBadge.name}
                             </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {selectedBadge && (
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      {selectedBadge.description}
-                    </div>
-                  )}
+                          ) : (
+                            "Select badge"
+                          )}
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0">
+                      <Command>
+                        <CommandInput placeholder="Search badges..." />
+                        <CommandEmpty>No badge found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandList>
+                            {badges.map((badge) => (
+                              <CommandItem
+                                key={badge.id}
+                                value={badge.name}
+                                onSelect={() => {
+                                  form.setValue("badgeId", badge.id);
+                                  setOpenBadgeCombobox(false);
+                                }}
+                              >
+                                <Badge
+                                  style={{ backgroundColor: badge.color }}
+                                  className="text-white mr-2"
+                                >
+                                  {badge.icon}
+                                </Badge>
+                                {badge.name}
+                                <Check
+                                  className={cn(
+                                    "ml-auto h-4 w-4",
+                                    selectedBadgeId === badge.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormDescription>
+                    {selectedBadge && selectedBadge.description}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -273,49 +359,17 @@ export function BadgeAwardModal({
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Award Message</FormLabel>
+                  <FormLabel>Message</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter a message explaining why this badge is being awarded"
+                      placeholder="Explain why you're awarding this badge..."
                       className="min-h-[100px]"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isPublic"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Visibility</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={(value) => field.onChange(value === "true")}
-                      defaultValue={field.value ? "true" : "false"}
-                      className="flex space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="true" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Public (Show on recognition wall)
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="false" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Private (Only visible to recipient)
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
+                  <FormDescription>
+                    This message will be displayed along with the badge award.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -329,11 +383,11 @@ export function BadgeAwardModal({
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
-                disabled={badgeAwardMutation.isPending}
+                disabled={awardBadgeMutation.isPending}
               >
-                {badgeAwardMutation.isPending ? "Awarding..." : "Award Badge"}
+                {awardBadgeMutation.isPending ? "Awarding..." : "Award Badge"}
               </Button>
             </DialogFooter>
           </form>

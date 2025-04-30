@@ -117,6 +117,7 @@ function AppRoutes() {
       
       {/* Communication */}
       <ProtectedRoute path="/chat" component={ChatPage} />
+      <ProtectedRoute path="/feedback-wall" component={FeedbackWall} />
       
       {/* Drag and Drop Interfaces */}
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
