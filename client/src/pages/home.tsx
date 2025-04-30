@@ -8,6 +8,7 @@ import { UpcomingMeetings } from "@/components/dashboard/upcoming-meetings";
 import { StrategyMap } from "@/components/dashboard/strategy-map";
 import { ResourcesSection } from "@/components/dashboard/resources-section";
 import { AdditionalResources } from "@/components/resources/additional-resources";
+import { MissionStatement } from "@/components/mission-statement";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -80,6 +81,12 @@ export default function Home() {
             <ProgressChart />
             <TeamPerformance />
             <UpcomingMeetings />
+          </div>
+
+          {/* Mission Statement Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-neutral-900 mb-4">Company Mission</h2>
+            <MissionStatement />
           </div>
 
           {/* Strategy Map Preview */}
