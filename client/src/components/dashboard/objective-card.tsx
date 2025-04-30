@@ -25,6 +25,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { 
+  ResponsiveContainer, 
+  RadialBarChart, 
+  RadialBar, 
+  Tooltip 
+} from "recharts";
 
 // Import the dialogs for the dropdown menu actions
 import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
@@ -156,27 +162,36 @@ const ObjectiveCard = ({
             </div>
             
             <div className="ml-6 flex-shrink-0">
-              <div className="relative group">
-                <svg className="w-16 h-16" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="16" fill="none" stroke="#e5e7eb" strokeWidth="2"></circle>
-                  <circle 
-                    className="transition-all duration-500 ease-in-out" 
-                    cx="18" 
-                    cy="18" 
-                    r="16" 
-                    fill="none" 
-                    stroke={getProgressRingColor(progress)} 
-                    strokeWidth="2" 
-                    strokeDasharray="100" 
-                    strokeDashoffset={100 - progress}
-                    transform="rotate(-90 18 18)"
-                  ></circle>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative group w-16 h-16">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart 
+                    innerRadius="70%" 
+                    outerRadius="100%" 
+                    data={[{ name: 'Progress', value: progress }]} 
+                    startAngle={90} 
+                    endAngle={-270}
+                  >
+                    <RadialBar
+                      background
+                      dataKey="value"
+                      fill={getProgressRingColor(progress)}
+                    />
+                    <Tooltip 
+                      content={({ payload }: any) => {
+                        if (payload && payload.length > 0) {
+                          return (
+                            <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                              {payload[0].value}% complete
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <span className="text-lg font-bold">{progress}%</span>
-                </div>
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                  {progress}% complete
                 </div>
               </div>
             </div>

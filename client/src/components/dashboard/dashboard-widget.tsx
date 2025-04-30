@@ -18,6 +18,12 @@ import {
   Calendar,
   CheckCheck,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  Tooltip
+} from "recharts";
 
 interface Widget {
   id: string;
