@@ -276,7 +276,7 @@ export function Header() {
               <li key={item.href} className="flex items-center">
                 {index > 0 && (
                   <svg 
-                    className="h-4 w-4 text-neutral-400" 
+                    className="h-4 w-4 text-slate-400" 
                     viewBox="0 0 20 20" 
                     fill="currentColor"
                   >
@@ -290,8 +290,8 @@ export function Header() {
                 <a 
                   href={item.href} 
                   className={index === breadcrumbs.length - 1 
-                    ? "ml-1 font-medium text-neutral-900" 
-                    : "ml-1 text-neutral-500 hover:text-neutral-700"
+                    ? "ml-1 font-medium text-slate-900" 
+                    : "ml-1 text-slate-500 hover:text-indigo-600 transition-colors duration-200"
                   }
                 >
                   {item.label}
@@ -312,17 +312,17 @@ export function Header() {
                   placeholder="Search..."
                   value={searchValue}
                   onChange={e => setSearchValue(e.target.value)}
-                  className="w-40 md:w-64 h-9 pl-9 pr-8 rounded-md text-sm"
+                  className="w-40 md:w-64 h-9 pl-9 pr-8 rounded-full border-slate-200 text-sm focus-visible:ring-indigo-500"
                   onFocus={() => {
                     if (searchValue.length >= 3) {
                       setShowResults(true);
                     }
                   }}
                 />
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 
                 {isSearching ? (
-                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-neutral-400" />
+                  <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-slate-400" />
                 ) : searchValue ? (
                   <Button
                     type="button"
@@ -340,15 +340,15 @@ export function Header() {
             
             {/* Search Results Dropdown */}
             {showResults && searchValue.length >= 3 && (
-              <div className="absolute right-0 mt-2 w-72 md:w-96 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-72 md:w-96 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg z-50">
                 {isSearching ? (
                   <div className="flex items-center justify-center p-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-neutral-400 mr-2" />
-                    <span className="text-sm text-neutral-500">Searching...</span>
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400 mr-2" />
+                    <span className="text-sm text-slate-500">Searching...</span>
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div className="p-4 text-center">
-                    <p className="text-sm text-neutral-500">No results found for "{searchValue}"</p>
+                    <p className="text-sm text-slate-500">No results found for "{searchValue}"</p>
                   </div>
                 ) : (
                   <div>
@@ -358,7 +358,7 @@ export function Header() {
                           <li key={`${result.type}-${result.id}`}>
                             <a
                               href={result.url}
-                              className="flex items-start px-4 py-2 hover:bg-neutral-50 transition-colors"
+                              className="flex items-start px-4 py-2 hover:bg-slate-50 transition-colors"
                               onClick={() => setShowResults(false)}
                             >
                               <span className="mt-0.5 mr-2 flex-shrink-0">
@@ -367,11 +367,11 @@ export function Header() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{result.title}</p>
                                 {result.description && (
-                                  <p className="text-xs text-neutral-500 truncate">
+                                  <p className="text-xs text-slate-500 truncate">
                                     {result.description}
                                   </p>
                                 )}
-                                <p className="text-xs text-neutral-400 mt-1 capitalize">
+                                <p className="text-xs text-slate-400 mt-1 capitalize">
                                   {result.type}
                                 </p>
                               </div>
@@ -383,11 +383,11 @@ export function Header() {
                     
                     {/* See All Results Button */}
                     {searchResults.length > 7 && (
-                      <div className="p-2 border-t border-neutral-200">
+                      <div className="p-2 border-t border-slate-200">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full text-primary"
+                          className="w-full text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
                           onClick={() => {
                             navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
                             setShowResults(false);
@@ -409,40 +409,40 @@ export function Header() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="relative rounded-full"
+                className="relative rounded-full text-slate-500 hover:text-indigo-600 hover:bg-slate-100"
                 onClick={() => setShowNotifications(!showNotifications)}
               >
-                <Bell className="h-5 w-5 text-neutral-500" />
+                <Bell className="h-4.5 w-4.5" />
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">5</span>
               </Button>
 
               {/* Dropdown Content */}
               <div 
-                className={`${showNotifications ? 'block' : 'hidden'} absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200`}
+                className={`${showNotifications ? 'block' : 'hidden'} absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-slate-200`}
               >
-                <div className="flex items-center justify-between p-3 border-b">
-                  <h3 className="font-medium">Notifications</h3>
-                  <Button variant="ghost" size="sm" className="text-xs h-7">
+                <div className="flex items-center justify-between p-3 border-b border-slate-100">
+                  <h3 className="font-medium text-slate-800">Notifications</h3>
+                  <Button variant="ghost" size="sm" className="text-xs h-7 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md">
                     Mark all as read
                   </Button>
                 </div>
                 
                 <div className="max-h-80 overflow-y-auto">
                   {/* High Priority */}
-                  <div className="p-3 border-b">
+                  <div className="p-3 border-b border-slate-100">
                     <div className="flex items-center">
                       <Badge className="bg-red-500 h-5 mr-2">High Priority</Badge>
-                      <span className="text-xs text-neutral-500">Today</span>
+                      <span className="text-xs text-slate-500">Today</span>
                     </div>
                     <ul className="mt-1 space-y-2">
                       <li>
-                        <a href="#" className="block hover:bg-neutral-50 rounded p-2 transition-colors">
+                        <a href="#" className="block hover:bg-slate-50 rounded-md p-2 transition-colors">
                           <div className="flex">
                             <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">OKR approval pending</p>
-                              <p className="text-xs text-neutral-500 mt-0.5">Sales Q2 Objectives need approval before Friday deadline</p>
-                              <p className="text-xs text-neutral-400 mt-1">2 hours ago</p>
+                              <p className="text-sm font-medium text-slate-800">OKR approval pending</p>
+                              <p className="text-xs text-slate-500 mt-0.5">Sales Q2 Objectives need approval before Friday deadline</p>
+                              <p className="text-xs text-slate-400 mt-1">2 hours ago</p>
                             </div>
                           </div>
                         </a>
@@ -451,32 +451,32 @@ export function Header() {
                   </div>
                   
                   {/* Medium Priority */}
-                  <div className="p-3 border-b">
+                  <div className="p-3 border-b border-slate-100">
                     <div className="flex items-center">
                       <Badge className="bg-amber-500 h-5 mr-2">Medium Priority</Badge>
-                      <span className="text-xs text-neutral-500">Today</span>
+                      <span className="text-xs text-slate-500">Today</span>
                     </div>
                     <ul className="mt-1 space-y-2">
                       <li>
-                        <a href="#" className="block hover:bg-neutral-50 rounded p-2 transition-colors">
+                        <a href="#" className="block hover:bg-slate-50 rounded-md p-2 transition-colors">
                           <div className="flex">
                             <AlertCircle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">Key result update required</p>
-                              <p className="text-xs text-neutral-500 mt-0.5">Customer satisfaction survey key result needs an update</p>
-                              <p className="text-xs text-neutral-400 mt-1">4 hours ago</p>
+                              <p className="text-sm font-medium text-slate-800">Key result update required</p>
+                              <p className="text-xs text-slate-500 mt-0.5">Customer satisfaction survey key result needs an update</p>
+                              <p className="text-xs text-slate-400 mt-1">4 hours ago</p>
                             </div>
                           </div>
                         </a>
                       </li>
                       <li>
-                        <a href="#" className="block hover:bg-neutral-50 rounded p-2 transition-colors">
+                        <a href="#" className="block hover:bg-slate-50 rounded-md p-2 transition-colors">
                           <div className="flex">
                             <CalendarClock className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">Weekly check-in reminder</p>
-                              <p className="text-xs text-neutral-500 mt-0.5">Your team's weekly check-in is tomorrow at 10am</p>
-                              <p className="text-xs text-neutral-400 mt-1">6 hours ago</p>
+                              <p className="text-sm font-medium text-slate-800">Weekly check-in reminder</p>
+                              <p className="text-xs text-slate-500 mt-0.5">Your team's weekly check-in is tomorrow at 10am</p>
+                              <p className="text-xs text-slate-400 mt-1">6 hours ago</p>
                             </div>
                           </div>
                         </a>
@@ -487,30 +487,30 @@ export function Header() {
                   {/* Low Priority */}
                   <div className="p-3">
                     <div className="flex items-center">
-                      <Badge variant="outline" className="h-5 mr-2">Informational</Badge>
-                      <span className="text-xs text-neutral-500">Yesterday</span>
+                      <Badge variant="outline" className="h-5 mr-2 text-slate-700 border-slate-300">Informational</Badge>
+                      <span className="text-xs text-slate-500">Yesterday</span>
                     </div>
                     <ul className="mt-1 space-y-2">
                       <li>
-                        <a href="#" className="block hover:bg-neutral-50 rounded p-2 transition-colors">
+                        <a href="#" className="block hover:bg-slate-50 rounded-md p-2 transition-colors">
                           <div className="flex">
                             <Users className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">New team member added</p>
-                              <p className="text-xs text-neutral-500 mt-0.5">Sarah Johnson has joined the Marketing team</p>
-                              <p className="text-xs text-neutral-400 mt-1">Yesterday at 2:30 PM</p>
+                              <p className="text-sm font-medium text-slate-800">New team member added</p>
+                              <p className="text-xs text-slate-500 mt-0.5">Sarah Johnson has joined the Marketing team</p>
+                              <p className="text-xs text-slate-400 mt-1">Yesterday at 2:30 PM</p>
                             </div>
                           </div>
                         </a>
                       </li>
                       <li>
-                        <a href="#" className="block hover:bg-neutral-50 rounded p-2 transition-colors">
+                        <a href="#" className="block hover:bg-slate-50 rounded-md p-2 transition-colors">
                           <div className="flex">
                             <FileText className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium">New resource available</p>
-                              <p className="text-xs text-neutral-500 mt-0.5">Check out the new OKR best practices guide</p>
-                              <p className="text-xs text-neutral-400 mt-1">Yesterday at 11:15 AM</p>
+                              <p className="text-sm font-medium text-slate-800">New resource available</p>
+                              <p className="text-xs text-slate-500 mt-0.5">Check out the new OKR best practices guide</p>
+                              <p className="text-xs text-slate-400 mt-1">Yesterday at 11:15 AM</p>
                             </div>
                           </div>
                         </a>
@@ -519,8 +519,8 @@ export function Header() {
                   </div>
                 </div>
                 
-                <div className="border-t p-2">
-                  <a href="/notifications" className="block text-center text-sm text-primary p-2 hover:bg-neutral-50 rounded transition-colors">
+                <div className="border-t border-slate-100 p-2">
+                  <a href="/notifications" className="block text-center text-sm text-indigo-600 p-2 hover:bg-indigo-50 rounded-md transition-colors">
                     View all notifications
                   </a>
                 </div>
