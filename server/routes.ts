@@ -1869,6 +1869,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+
+  // Integrations API
+  
+  // Slack Integration API
+  app.get("/api/integrations/slack/status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const status = {
+        configured: slackService.isSlackConfigured(),
+        botToken: process.env.SLACK_BOT_TOKEN ? "configured" : "missing",
+        channelId: process.env.SLACK_CHANNEL_ID ? "configured" : "missing"
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Error checking Slack status:", error);
+      res.status(500).json({ error: "Failed to check Slack integration status" });
+    }
+  });
+  
+  app.post("/api/integrations/slack/test", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const testResult = await slackService.testSlackConnection();
+      res.json(testResult);
+    } catch (error) {
+      console.error("Error testing Slack connection:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Error testing Slack connection: ${error.message || 'Unknown error'}` 
+      });
+    }
+  });
+  
+  app.post("/api/integrations/slack/send-notification", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const { message, channel } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+      
+      const result = await slackService.sendSimpleMessage(message, channel);
+      
+      if (result) {
+        res.json({ success: true, message: "Notification sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send notification" });
+      }
+    } catch (error) {
+      console.error("Error sending Slack notification:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Error sending Slack notification: ${error.message || 'Unknown error'}`
+      });
+    }
+  });
+  
+  // Add OKR integration with Slack to send updates to a Slack channel
+  app.post("/api/integrations/slack/send-okr-update", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const { objectiveId, keyResultId, progress } = req.body;
+      
+      if (!objectiveId || !progress) {
+        return res.status(400).json({ error: "Objective ID and progress are required" });
+      }
+      
+      // Get objective details
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Get key result details if provided
+      let keyResult = null;
+      if (keyResultId) {
+        keyResult = await storage.getKeyResult(keyResultId);
+        if (!keyResult) {
+          return res.status(404).json({ error: "Key result not found" });
+        }
+      }
+      
+      // Get user details
+      const user = await storage.getUser(req.user.id);
+      
+      // Send to Slack
+      const result = await slackService.sendOkrUpdate(
+        objective,
+        keyResult,
+        progress,
+        { firstName: user.firstName, lastName: user.lastName }
+      );
+      
+      if (result) {
+        res.json({ success: true, message: "OKR update sent to Slack successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send OKR update to Slack" });
+      }
+    } catch (error) {
+      console.error("Error sending OKR update to Slack:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Error sending OKR update to Slack: ${error.message || 'Unknown error'}`
+      });
+    }
+  });
   
   return httpServer;
 }

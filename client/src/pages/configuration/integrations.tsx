@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Link,
   PlugZap,
@@ -32,20 +35,35 @@ import {
   SiGoogle 
 } from "react-icons/si";
 
+interface SlackStatus {
+  configured: boolean;
+  botToken: string;
+  channelId: string;
+}
+
+interface TestResult {
+  success: boolean;
+  message: string;
+}
+
 const IntegrationCard = ({
   title,
   description,
   icon,
   isConnected = false,
+  isLoading = false,
   onConnect,
-  onDisconnect
+  onDisconnect,
+  status
 }: {
   title: string;
   description: string;
   icon: React.ReactNode;
   isConnected?: boolean;
+  isLoading?: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
+  status?: string;
 }) => {
   return (
     <Card>
