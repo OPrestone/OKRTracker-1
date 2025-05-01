@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
+import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
 import {
   Table,
   TableBody,
@@ -210,34 +212,54 @@ const teamSummaryStats = [
   {
     title: "Overall Progress",
     value: "67%",
-    description: "Average completion rate across all teams",
-    icon: <TrendingUp className="h-5 w-5 text-blue-600" />,
-    change: "+4.2%",
-    trend: "up"
+    subtitle: "Average completion rate across all teams",
+    icon: <TrendingUp className="h-5 w-5 text-indigo-500" />,
+    trend: 4.2,
+    chartData: [
+      { name: 'Mar', value: 52 },
+      { name: 'Apr', value: 58 },
+      { name: 'May', value: 63 },
+      { name: 'Jun', value: 67 },
+    ]
   },
   {
     title: "OKRs On Track",
     value: "62.5%",
-    description: "Percentage of OKRs on track to completion",
-    icon: <Check className="h-5 w-5 text-green-600" />,
-    change: "+2.5%",
-    trend: "up"
+    subtitle: "Percentage of OKRs on track to completion",
+    icon: <Check className="h-5 w-5 text-emerald-500" />,
+    trend: 2.5,
+    chartData: [
+      { name: 'Mar', value: 56 },
+      { name: 'Apr', value: 58 },
+      { name: 'May', value: 60 },
+      { name: 'Jun', value: 62.5 },
+    ]
   },
   {
     title: "Teams at Risk",
     value: "2",
-    description: "Teams with at-risk or behind objectives",
-    icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
-    change: "-1",
-    trend: "down" 
+    subtitle: "Teams with at-risk or behind objectives",
+    icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
+    trend: -1,
+    chartData: [
+      { name: 'Mar', value: 3 },
+      { name: 'Apr', value: 4 },
+      { name: 'May', value: 3 },
+      { name: 'Jun', value: 2 },
+    ]
   },
   {
     title: "Objectives Completed",
     value: "12",
-    description: "Total number of completed objectives",
-    icon: <BadgeCheck className="h-5 w-5 text-indigo-600" />,
-    change: "+3",
-    trend: "up"
+    subtitle: "Total number of completed objectives",
+    icon: <BadgeCheck className="h-5 w-5 text-indigo-500" />,
+    trend: 3,
+    chartData: [
+      { name: 'Mar', value: 7 },
+      { name: 'Apr', value: 9 },
+      { name: 'May', value: 10 },
+      { name: 'Jun', value: 12 },
+    ]
   }
 ];
 
@@ -299,30 +321,23 @@ export function TeamsOKRPerformance() {
           <TabsContent value="dashboard" className="mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {teamSummaryStats.map((stat, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                        <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
-                        <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
-                      </div>
-                      <div className="bg-gray-100 p-2 rounded-full">
-                        {stat.icon}
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <span className={`text-xs font-medium ${
-                        stat.trend === 'up' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {stat.trend === 'up' ? '↑' : '↓'} {stat.change} {stat.trend === 'up' ? 'increase' : 'decrease'}
-                      </span>
-                      <span className="text-xs text-gray-500 ml-1">since last month</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  key={index}
+                  title={stat.title}
+                  value={stat.value}
+                  subtitle={stat.subtitle}
+                  icon={stat.icon}
+                  trend={stat.trend}
+                  data={stat.chartData}
+                  chartType="area"
+                  color={
+                    stat.title.includes("Risk") 
+                      ? "#f59e0b" 
+                      : stat.title.includes("Track") 
+                        ? "#10b981" 
+                        : "#6366f1"
+                  }
+                />
               ))}
             </div>
             
