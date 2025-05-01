@@ -121,8 +121,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto pt-2 pb-4">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
-          Main Navigation
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full shadow-sm shadow-indigo-500/50"></span>
         </div>
         
         <div
