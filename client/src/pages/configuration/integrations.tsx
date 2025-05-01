@@ -88,15 +88,39 @@ const IntegrationCard = ({
           )}
         </div>
         <CardDescription>{description}</CardDescription>
+        {status && <p className="mt-2 text-xs text-gray-500">{status}</p>}
       </CardHeader>
       <CardFooter>
         {isConnected ? (
-          <Button variant="outline" onClick={onDisconnect} className="w-full">
-            Disconnect
+          <Button 
+            variant="outline" 
+            onClick={onDisconnect} 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Disconnecting...
+              </>
+            ) : (
+              "Disconnect"
+            )}
           </Button>
         ) : (
-          <Button onClick={onConnect} className="w-full">
-            Connect
+          <Button 
+            onClick={onConnect} 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              "Connect"
+            )}
           </Button>
         )}
       </CardFooter>
@@ -127,6 +151,12 @@ const Integrations = () => {
     gcalendar: false
   });
   
+  // Integration statuses
+  const [integrationStatus, setIntegrationStatus] = useState<Record<string, string>>({});
+  
+  // Loading states
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  
   // LDAP settings
   const [ldapEnabled, setLdapEnabled] = useState(false);
   const [ldapSettings, setLdapSettings] = useState({
@@ -138,28 +168,103 @@ const Integrations = () => {
     userFilter: "(objectClass=person)"
   });
   
+  // Fetch Slack status
+  const { data: slackStatus, isLoading: isLoadingSlackStatus } = useQuery({
+    queryKey: ["/api/integrations/slack/status"],
+    onSuccess: (data: SlackStatus) => {
+      if (data) {
+        setIntegrations(prev => ({ ...prev, slack: data.configured }));
+        
+        // Set status message based on missing configurations
+        if (!data.configured) {
+          const missingItems: string[] = [];
+          if (data.botToken === "missing") missingItems.push("Bot Token");
+          if (data.channelId === "missing") missingItems.push("Channel ID");
+          
+          if (missingItems.length > 0) {
+            setIntegrationStatus(prev => ({
+              ...prev,
+              slack: `Missing required configuration: ${missingItems.join(", ")}`
+            }));
+          }
+        } else {
+          setIntegrationStatus(prev => ({ ...prev, slack: "Configured and ready to use" }));
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error fetching Slack status",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Test Slack connection
+  const { mutate: testSlackConnection, isPending: isTestingSlack } = useMutation<TestResult, Error>({
+    mutationFn: async () => {
+      setLoading(prev => ({ ...prev, slackTest: true }));
+      const res = await apiRequest("POST", "/api/integrations/slack/test");
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setLoading(prev => ({ ...prev, slackTest: false }));
+      if (data.success) {
+        toast({
+          title: "Slack Connection Successful",
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: "Slack Connection Failed",
+          description: data.message,
+          variant: "destructive"
+        });
+      }
+    },
+    onError: (error) => {
+      setLoading(prev => ({ ...prev, slackTest: false }));
+      toast({
+        title: "Test Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+  
   // Connect/disconnect integration
   const handleToggleIntegration = (key: keyof typeof integrations) => {
-    if (integrations[key]) {
-      // Disconnect
-      setIntegrations({
-        ...integrations,
-        [key]: false
-      });
-      toast({
-        title: "Integration disconnected",
-        description: `The integration with ${key.charAt(0).toUpperCase() + key.slice(1)} has been disconnected.`
-      });
+    if (key === "slack") {
+      if (integrations[key]) {
+        // Skip actual disconnect for this demo since we're just checking configuration
+        // In a real app, we would make an API call to disconnect
+        setIntegrations(prev => ({ ...prev, [key]: false }));
+        toast({
+          title: "Slack integration disconnected",
+          description: "You will no longer receive OKR updates in Slack."
+        });
+      } else {
+        // For Slack we use test connection instead of a generic connect
+        testSlackConnection();
+      }
     } else {
-      // Connect
-      setIntegrations({
-        ...integrations,
-        [key]: true
-      });
-      toast({
-        title: "Integration connected",
-        description: `Successfully connected with ${key.charAt(0).toUpperCase() + key.slice(1)}.`
-      });
+      // For other integrations we use the mock toggle
+      if (integrations[key]) {
+        // Disconnect
+        setIntegrations(prev => ({ ...prev, [key]: false }));
+        toast({
+          title: "Integration disconnected",
+          description: `The integration with ${key.charAt(0).toUpperCase() + key.slice(1)} has been disconnected.`
+        });
+      } else {
+        // Connect
+        setIntegrations(prev => ({ ...prev, [key]: true }));
+        toast({
+          title: "Integration connected",
+          description: `Successfully connected with ${key.charAt(0).toUpperCase() + key.slice(1)}.`
+        });
+      }
     }
   };
   
@@ -244,8 +349,10 @@ const Integrations = () => {
               description="Receive OKR updates and notifications in your Slack channels"
               icon={<SiSlack className="h-6 w-6 text-[#4A154B]" />}
               isConnected={integrations.slack}
+              isLoading={isLoadingSlackStatus || isTestingSlack || loading.slackTest}
               onConnect={() => handleToggleIntegration("slack")}
               onDisconnect={() => handleToggleIntegration("slack")}
+              status={integrationStatus.slack}
             />
             
             <IntegrationCard
