@@ -43,6 +43,8 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { MiniChart } from "@/components/dashboard/mini-chart";
 import {
   Calendar,
   CheckCircle,
@@ -615,6 +617,41 @@ export function IndividualProgress() {
     return Math.round(sum / userObjectives.length);
   };
 
+  // Get the progress change based on the performance history
+  const getProgressChange = () => {
+    if (performanceData.length < 2) return 0;
+    const currentProgress = performanceData[performanceData.length - 1].progress;
+    const previousProgress = performanceData[performanceData.length - 2].progress;
+    return currentProgress - previousProgress;
+  };
+  
+  // Get total number of key results
+  const getTotalKeyResults = () => {
+    return userObjectives.reduce((total, obj) => total + obj.keyResults.length, 0);
+  };
+  
+  // Calculate trend for key results (mock data for now)
+  const getKeyResultsTrend = () => {
+    return getTotalKeyResults() > 5 ? 2 : -1;
+  };
+  
+  // Calculate average days remaining until objective due dates
+  const getAverageDaysRemaining = () => {
+    if (userObjectives.length === 0) return 0;
+    
+    const today = new Date();
+    let totalDays = 0;
+    
+    userObjectives.forEach(obj => {
+      const dueDate = new Date(obj.dueDate);
+      const diffTime = Math.max(0, dueDate.getTime() - today.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      totalDays += diffDays;
+    });
+    
+    return Math.round(totalDays / userObjectives.length);
+  };
+
   // Stats for objectives
   const getObjectiveStats = () => {
     const total = userObjectives.length;
@@ -628,6 +665,50 @@ export function IndividualProgress() {
 
   const objectiveStats = getObjectiveStats();
   const overallProgress = calculateOverallProgress();
+
+  // Create user analytics stats for the stats cards
+  const userAnalyticsStats = [
+    {
+      title: "Average Progress",
+      value: `${overallProgress}%`,
+      subtitle: "Across all assigned objectives",
+      icon: <Target className="h-5 w-5 text-indigo-500" />,
+      trend: getProgressChange(),
+      chartData: performanceData.map(item => ({ name: item.month, value: item.progress }))
+    },
+    {
+      title: "Objectives Count",
+      value: `${userObjectives.length}`,
+      subtitle: "Total assigned objectives",
+      icon: <BarChartIcon className="h-5 w-5 text-emerald-500" />,
+      trend: 0, // Neutral trend
+      chartData: [
+        { name: 'On Track', value: objectiveStats.onTrack },
+        { name: 'At Risk', value: objectiveStats.atRisk },
+        { name: 'Behind', value: objectiveStats.behind },
+        { name: 'Completed', value: objectiveStats.completed }
+      ]
+    },
+    {
+      title: "Key Results",
+      value: `${getTotalKeyResults()}`,
+      subtitle: "Total across all objectives",
+      icon: <CheckCircle className="h-5 w-5 text-amber-500" />,
+      trend: getKeyResultsTrend(),
+      chartData: performanceData.slice(-4).map(item => ({ name: item.month, value: item.progress }))
+    },
+    {
+      title: "Time to Completion",
+      value: `${getAverageDaysRemaining()} days`,
+      subtitle: "Average remaining time",
+      icon: <Clock className="h-5 w-5 text-indigo-500" />,
+      trend: -5, // Just an example, could be calculated
+      chartData: performanceData.slice(-4).map((item, idx) => ({ 
+        name: item.month, 
+        value: 30 - idx * 5
+      }))
+    }
+  ];
 
   return (
     <div className="space-y-6">
