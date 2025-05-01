@@ -52,9 +52,13 @@ import {
   UserPlus,
   PersonStanding,
   Settings,
+  Settings2,
   Pencil,
   Eye,
   EyeOff,
+  BarChart3,
+  Target,
+  FileBarChart,
 } from "lucide-react";
 import {
   Alert,
@@ -841,45 +845,63 @@ const AccessGroups = () => {
                   </div>
                 </div>
                 
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-medium text-sm mb-3">Reports & Data</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
+                <div className="border border-slate-200 rounded-lg p-5 bg-slate-50">
+                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
+                    <BarChart3 className="h-4 w-4 mr-2 text-blue-500" />
+                    Reports & Data
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="view-reports" 
                         checked={accessGroupForm.permissions.viewReports}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("viewReports", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="view-reports">View Reports</Label>
+                      <Label htmlFor="view-reports" className="text-slate-700">
+                        <BarChart3 className="h-3.5 w-3.5 mr-1.5 inline text-blue-500" />
+                        View Reports
+                      </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="export-data" 
                         checked={accessGroupForm.permissions.exportData}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("exportData", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="export-data">Export Data</Label>
+                      <Label htmlFor="export-data" className="text-slate-700">
+                        <FileBarChart className="h-3.5 w-3.5 mr-1.5 inline text-green-500" />
+                        Export Data
+                      </Label>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <DialogFooter className="bg-slate-50 border-t border-slate-100 p-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsCreateDialogOpen(false)}
+                className="border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={!accessGroupForm.name || createAccessGroupMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={!accessGroupForm.name || createAccessGroupMutation.isPending}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
+              >
                 {createAccessGroupMutation.isPending ? (
                   <>
                     <span className="mr-2">Creating...</span>
-                    <span className="animate-spin">
-                      <span className="sr-only">Loading...</span>
-                    </span>
+                    <span className="animate-spin">⟳</span>
                   </>
                 ) : (
                   "Create Access Group"
@@ -931,88 +953,97 @@ const AccessGroups = () => {
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-4">Permissions</h3>
                 
-                <div className="border rounded-lg p-4 mb-4">
-                  <h3 className="font-medium text-sm mb-3">OKR Management</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
+                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
+                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
+                    <Target className="h-4 w-4 mr-2 text-indigo-500" />
+                    OKR Management
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-create-okrs" 
                         checked={accessGroupForm.permissions.createOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createOKRs", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-create-okrs" className="flex items-center">
+                      <Label htmlFor="edit-create-okrs" className="flex items-center text-slate-700">
                         <Pencil className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
                         Create OKRs
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-edit-all-okrs" 
                         checked={accessGroupForm.permissions.editAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("editAllOKRs", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-edit-all-okrs" className="flex items-center">
+                      <Label htmlFor="edit-edit-all-okrs" className="flex items-center text-slate-700">
                         <Edit className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
                         Edit All OKRs
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-delete-okrs" 
                         checked={accessGroupForm.permissions.deleteOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("deleteOKRs", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-delete-okrs" className="flex items-center">
+                      <Label htmlFor="edit-delete-okrs" className="flex items-center text-slate-700">
                         <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
                         Delete OKRs
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-view-all-okrs" 
                         checked={accessGroupForm.permissions.viewAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("viewAllOKRs", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-view-all-okrs" className="flex items-center">
+                      <Label htmlFor="edit-view-all-okrs" className="flex items-center text-slate-700">
                         <Eye className="h-3.5 w-3.5 mr-1.5 text-green-500" />
                         View All OKRs
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-create-key-results" 
                         checked={accessGroupForm.permissions.createKeyResults}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createKeyResults", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-create-key-results" className="flex items-center">
+                      <Label htmlFor="edit-create-key-results" className="flex items-center text-slate-700">
                         <Plus className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
                         Create Key Results
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="edit-edit-assigned-key-results" 
                         checked={accessGroupForm.permissions.editAssignedKeyResults}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("editAssignedKeyResults", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-edit-assigned-key-results" className="flex items-center">
+                      <Label htmlFor="edit-edit-assigned-key-results" className="flex items-center text-slate-700">
                         <Edit className="h-3.5 w-3.5 mr-1.5 text-green-500" />
                         Edit Assigned Key Results
                       </Label>
