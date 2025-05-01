@@ -146,28 +146,42 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
             location === "/home" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
           )}
         >
           <Link href="/home" className="flex items-center w-full">
-            <Home className="mr-3 h-5 w-5 text-indigo-400" />
+            <div className={cn(
+              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
+              location === "/home" 
+                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
+                : "bg-indigo-900/20"
+            )}>
+              <Home className="h-4 w-4 text-indigo-300" />
+            </div>
             <span>Home</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
             location === "/" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
           )}
         >
           <Link href="/" className="flex items-center w-full">
-            <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
+            <div className={cn(
+              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
+              location === "/" 
+                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
+                : "bg-indigo-900/20"
+            )}>
+              <BarChart3 className="h-4 w-4 text-indigo-300" />
+            </div>
             <span>Dashboards</span>
           </Link>
         </div>
@@ -412,7 +426,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         </div>
         
         {/* Drag & Drop Section */}
-        <div className="px-4 py-2 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-5 py-3 mt-2 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
+          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
           Drag & Drop Interfaces
         </div>
         
@@ -553,7 +568,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         )}
         
 
-        <div className="px-4 mt-6 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-5 py-3 mt-4 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
+          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
           Administration
         </div>
         <div
@@ -690,26 +706,26 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       </nav>
       
       {/* User Profile */}
-      <div className="border-t border-gray-700 p-4 mt-auto bg-[#111e3a]">
+      <div className="border-t border-indigo-900/40 p-4 mt-auto bg-gradient-to-r from-indigo-900/40 to-purple-900/30 shadow-inner">
         <div className="flex items-center">
           <Link href="/user-profile">
-            <Avatar className="h-9 w-9 mr-3 border border-gray-600 hover:border-indigo-400 transition-colors">
+            <Avatar className="h-10 w-10 mr-3 border-2 border-indigo-500/40 hover:border-indigo-400 transition-colors shadow-md">
               <AvatarImage src="" alt="User profile" />
-              <AvatarFallback className="bg-indigo-900 text-indigo-200 font-medium">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-indigo-700 to-purple-700 text-white font-medium">{initials}</AvatarFallback>
             </Avatar>
           </Link>
           <div>
             <Link href="/user-profile" className="hover:text-white transition-colors">
-              <p className="text-sm font-medium text-gray-200">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-gray-400">{user?.role}</p>
+              <p className="text-sm font-semibold text-white">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs text-indigo-300/80">{user?.role || "Team Member"}</p>
             </Link>
           </div>
           <div className="ml-auto">
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={handleLogout} 
-              className="text-gray-400 hover:text-white hover:bg-indigo-900/30 transition-colors duration-200"
+              onClick={handleLogout}
+              className="text-indigo-300 hover:text-white hover:bg-indigo-700/30 transition-all duration-200 rounded-lg"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -722,13 +738,13 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-[#162447] h-full shadow-sm">
+      <aside className="hidden md:flex md:flex-col w-64 bg-gradient-to-b from-[#1a1a2e] to-[#16213e] h-full shadow-xl">
         {sidebarContent}
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-[#162447]">
+        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-gradient-to-b from-[#1a1a2e] to-[#16213e]">
           {sidebarContent}
         </SheetContent>
       </Sheet>
