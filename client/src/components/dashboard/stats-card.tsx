@@ -12,6 +12,8 @@ interface StatsCardProps {
   chart?: React.ReactNode;
   progressBar?: boolean;
   progressValue?: number;
+  iconColor?: string;
+  bgColor?: string;
 }
 
 export function StatsCard({
@@ -24,72 +26,75 @@ export function StatsCard({
   chart,
   progressBar,
   progressValue = 0,
+  iconColor = "text-primary-600",
+  bgColor = "bg-primary-100",
 }: StatsCardProps) {
   const showTrend = trend !== undefined;
   const isPositive = trend && trend > 0;
   const isNegative = trend && trend < 0;
 
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-          {showTrend && (
-            <div 
-              className={cn(
-                "flex items-center text-xs font-medium px-2 py-1 rounded-full",
-                isPositive ? "text-emerald-700 bg-emerald-50" : 
-                isNegative ? "text-rose-700 bg-rose-50" : 
-                "text-slate-700 bg-slate-100"
-              )}
-            >
-              {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
-              {Math.abs(trend).toFixed(1)}%
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-3xl font-bold text-slate-900 mb-1">
-              {value}
-            </div>
+    <div className="bg-white rounded-lg shadow p-5 border border-neutral-100">
+      <div className="flex items-center">
+        {icon && (
+          <div className={cn("p-3 rounded-full", bgColor, iconColor)}>
+            {icon}
+          </div>
+        )}
+        <div className={icon ? "ml-4" : ""}>
+          <p className="text-sm font-medium text-neutral-500">{title}</p>
+          <div className="flex items-baseline">
+            <h2 className="text-xl font-semibold text-neutral-900">{value}</h2>
             {subtitle && (
-              <div className="text-xs text-slate-500">
-                {subtitle}
-              </div>
+              <span className="ml-1 text-sm text-neutral-500">{subtitle}</span>
             )}
           </div>
-          {icon && (
-            <div className="mt-1">
-              {icon}
+          {showTrend && (
+            <div className="flex items-center mt-1">
+              <span
+                className={cn(
+                  "flex items-center text-xs font-medium",
+                  isPositive ? "text-emerald-600" : isNegative ? "text-rose-600" : "text-slate-600"
+                )}
+              >
+                {isPositive ? (
+                  <ArrowUp className="mr-1 h-3 w-3" />
+                ) : isNegative ? (
+                  <ArrowDown className="mr-1 h-3 w-3" />
+                ) : null}
+                {isPositive ? "+" : ""}
+                {Math.abs(trend).toFixed(1)}%
+              </span>
+              {trendLabel && (
+                <span className="ml-1.5 text-xs text-neutral-500">
+                  {trendLabel}
+                </span>
+              )}
             </div>
           )}
         </div>
-        
-        {progressBar && (
-          <div className="mt-3">
-            <div className="w-full bg-slate-100 rounded-full h-2">
-              <div 
-                className="bg-indigo-500 h-2 rounded-full" 
-                style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
-              />
-            </div>
-            {trendLabel && (
-              <div className="text-xs text-slate-500 mt-1">
-                {trendLabel}
+      </div>
+      
+      {(progressBar || chart) && (
+        <div className="mt-3">
+          {progressBar && (
+            <>
+              <div className="w-full bg-neutral-200 rounded-full h-1.5">
+                <div
+                  className="bg-primary-500 h-1.5 rounded-full"
+                  style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
+                ></div>
               </div>
-            )}
-          </div>
-        )}
-        
-        {chart && (
-          <div className="mt-3">
-            {chart}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <p className="text-xs text-neutral-500 mt-1.5">
+                {trendLabel || `${progressValue}% complete`}
+              </p>
+            </>
+          )}
+          
+          {chart && <div className="mt-2">{chart}</div>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -97,42 +102,42 @@ export function MiniStatsCard({
   title,
   value,
   trend,
-  icon
+  icon,
+  iconColor = "text-primary-600",
+  bgColor = "bg-primary-100"
 }: Omit<StatsCardProps, 'chart' | 'progressBar' | 'progressValue' | 'subtitle' | 'trendLabel'>) {
   const isPositive = trend && trend > 0;
   const isNegative = trend && trend < 0;
   
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-xs text-slate-500 mb-1">{title}</p>
-            <h3 className="text-lg font-semibold text-slate-900">{value}</h3>
-          </div>
-          {icon && (
-            <div className="h-8 w-8 flex items-center justify-center rounded-md bg-slate-100">
-              {icon}
-            </div>
-          )}
+    <div className="bg-white rounded-lg shadow p-4 border border-neutral-100">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-medium text-neutral-500">{title}</p>
+          <h3 className="text-lg font-semibold text-neutral-900 mt-0.5">{value}</h3>
         </div>
-        
-        {trend !== undefined && (
-          <div className="mt-2">
-            <div 
-              className={cn(
-                "text-xs inline-flex items-center",
-                isPositive ? "text-emerald-600" : 
-                isNegative ? "text-rose-600" : 
-                "text-slate-600"
-              )}
-            >
-              {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
-              <span>{Math.abs(trend).toFixed(1)}%</span>
-            </div>
+        {icon && (
+          <div className={cn("p-2 rounded-full", bgColor, iconColor)}>
+            {icon}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      {trend !== undefined && (
+        <div className="mt-2">
+          <div 
+            className={cn(
+              "text-xs inline-flex items-center",
+              isPositive ? "text-emerald-600" : 
+              isNegative ? "text-rose-600" : 
+              "text-neutral-600"
+            )}
+          >
+            {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
+            <span>{Math.abs(trend).toFixed(1)}%</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
