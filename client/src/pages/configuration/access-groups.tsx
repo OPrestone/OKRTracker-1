@@ -623,19 +623,19 @@ const AccessGroups = () => {
 
       {/* Create Access Group Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Access Group</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-slate-200 shadow-lg p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 bg-slate-50">
+            <DialogTitle className="text-xl font-semibold text-slate-900">Create Access Group</DialogTitle>
+            <DialogDescription className="text-slate-600 mt-1">
               Add a new access group and define its permissions
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-right">
-                    Group Name *
+            <div className="grid gap-5 p-6">
+              <div className="grid grid-cols-1 gap-5">
+                <div className="space-y-2.5">
+                  <Label htmlFor="name" className="text-slate-700 font-medium">
+                    Group Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
@@ -643,10 +643,11 @@ const AccessGroups = () => {
                     value={accessGroupForm.name}
                     onChange={(e) => handleFormChange("name", e.target.value)}
                     required
+                    className="border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-right">
+                <div className="space-y-2.5">
+                  <Label htmlFor="description" className="text-slate-700 font-medium">
                     Description
                   </Label>
                   <Textarea
@@ -654,24 +655,28 @@ const AccessGroups = () => {
                     placeholder="Describe the purpose of this access group"
                     value={accessGroupForm.description}
                     onChange={(e) => handleFormChange("description", e.target.value)}
-                    className="min-h-24"
+                    className="min-h-24 border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
 
               <div className="mt-6">
-                <h3 className="text-lg font-medium mb-4">Permissions</h3>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Permissions</h3>
                 
-                <div className="border rounded-lg p-4 mb-4">
-                  <h3 className="font-medium text-sm mb-3">OKR Management</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
+                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
+                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
+                    <Target className="h-4 w-4 mr-2 text-indigo-500" />
+                    OKR Management
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="create-okrs" 
                         checked={accessGroupForm.permissions.createOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createOKRs", checked as boolean)
                         }
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
                       <Label htmlFor="create-okrs" className="flex items-center">
                         <Pencil className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
@@ -751,10 +756,13 @@ const AccessGroups = () => {
                   </div>
                 </div>
                 
-                <div className="border rounded-lg p-4 mb-4">
-                  <h3 className="font-medium text-sm mb-3">System Management</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
+                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
+                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
+                    <Settings2 className="h-4 w-4 mr-2 text-amber-500" />
+                    System Management
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2.5">
                       <Checkbox 
                         id="manage-users" 
                         checked={accessGroupForm.permissions.manageUsers}
@@ -765,6 +773,7 @@ const AccessGroups = () => {
                             handlePermissionChange("viewAllOKRs", true);
                           }
                         }}
+                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
                       <Label htmlFor="manage-users" className="flex items-center">
                         <UsersRound className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
