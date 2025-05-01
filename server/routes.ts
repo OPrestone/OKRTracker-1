@@ -13,6 +13,7 @@ import { db } from "./db";
 import { or, sql } from "drizzle-orm";
 import { openAIService } from "./services/openai-service";
 import { feedbackService } from "./services/feedback-service";
+import { slackService } from "./services/slack-service";
 import { WebSocketServer, WebSocket } from "ws";
 
 export async function registerRoutes(app: Express): Promise<Server> {
