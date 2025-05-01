@@ -259,14 +259,14 @@ export function Header() {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-neutral-200">
+    <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         {/* Mobile Menu Button */}
         <button 
           onClick={toggleSidebar} 
-          className="text-neutral-500 md:hidden"
+          className="text-slate-500 hover:text-indigo-600 md:hidden"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
 
         {/* Breadcrumbs */}
