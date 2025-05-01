@@ -47,7 +47,12 @@ export default function Home() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-
+                  <DropdownMenuItem className="cursor-pointer" asChild>
+                    <Link href="/create-objective">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      <span>Create OKRs Manually</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" asChild>
                     <Link href="/create-okr-ai">
                       <Sparkles className="mr-2 h-4 w-4" />
