@@ -15,6 +15,7 @@ import Integrations from "@/pages/configuration/integrations";
 import Cadences from "@/pages/configuration/cadences";
 import Timeframes from "@/pages/configuration/timeframes";
 import StatusSettings from "@/pages/configuration/status-settings";
+import AccessGroups from "@/pages/configuration/access-groups";
 import AuthPage from "@/pages/auth-page";
 import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
@@ -137,6 +138,7 @@ function AppRoutes() {
       <ProtectedRoute path="/configuration/status-settings" component={StatusSettings} />
       <ProtectedRoute path="/configuration/cadences" component={Cadences} />
       <ProtectedRoute path="/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/configuration/access-groups" component={AccessGroups} />
       <Route component={NotFound} />
     </Switch>
   );
