@@ -328,14 +328,20 @@ export function TeamsOKRPerformance() {
                   subtitle={stat.subtitle}
                   icon={stat.icon}
                   trend={stat.trend}
-                  data={stat.chartData}
-                  chartType="area"
-                  color={
-                    stat.title.includes("Risk") 
-                      ? "#f59e0b" 
-                      : stat.title.includes("Track") 
-                        ? "#10b981" 
-                        : "#6366f1"
+                  chart={
+                    <MiniChart
+                      data={stat.chartData}
+                      dataKey="value"
+                      type="area"
+                      color={
+                        stat.title.includes("Risk") 
+                          ? "#f59e0b" 
+                          : stat.title.includes("Track") 
+                            ? "#10b981" 
+                            : "#6366f1"
+                      }
+                      height={40}
+                    />
                   }
                 />
               ))}
