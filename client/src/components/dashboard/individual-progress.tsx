@@ -905,9 +905,15 @@ export function IndividualProgress() {
                       subtitle={stat.subtitle}
                       icon={stat.icon}
                       trend={stat.trend}
-                      chartData={stat.chartData}
-                      chartType={index === 1 ? "bar" : "line"}
-                      color={index === 0 ? "indigo" : index === 1 ? "emerald" : index === 2 ? "amber" : "indigo"}
+                      chart={
+                        <MiniChart
+                          data={stat.chartData}
+                          dataKey="value"
+                          type={index === 1 ? "bar" : "line"}
+                          color={index === 0 ? "#6366f1" : index === 1 ? "#10b981" : index === 2 ? "#f59e0b" : "#6366f1"}
+                          height={40}
+                        />
+                      }
                     />
                   ))}
                 </div>
