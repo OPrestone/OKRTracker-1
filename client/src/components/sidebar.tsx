@@ -92,46 +92,54 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#162447] text-gray-200">
-      <div className="p-5 border-b border-gray-700">
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#1a1a2e] to-[#16213e] text-gray-200 shadow-lg">
+      <div className="p-5 border-b border-indigo-900/40 bg-gradient-to-r from-indigo-900/30 to-purple-900/30">
         <h1 className="text-xl font-semibold flex items-center">
-          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2" />
-          <span className="text-white">OKR System</span>
+          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2 drop-shadow-md" />
+          <span className="text-white font-bold tracking-wide">OKR System</span>
         </h1>
       </div>
       
       {/* User Profile Card */}
-      {/* <div className="p-4 mb-2 border-b border-gray-700">
+      <div className="p-4 mb-2 border-b border-indigo-900/40">
         <div className="flex items-center">
-          <Avatar className="h-10 w-10 border border-gray-600">
+          <Avatar className="h-10 w-10 border-2 border-indigo-500/50 ring-2 ring-purple-600/20 shadow-md">
             <AvatarImage src="/assets/avatar.png" alt={user?.firstName || 'User'} />
-            <AvatarFallback className="bg-indigo-900 text-indigo-200 font-medium">
+            <AvatarFallback className="bg-gradient-to-br from-indigo-700 to-purple-700 text-white font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="ml-3">
             <p className="text-sm font-medium text-white">{user?.firstName} {user?.lastName}</p>
-            <p className="text-xs text-gray-400">{user?.role}</p>
+            <p className="text-xs text-indigo-300/80">{user?.role || "Team Member"}</p>
           </div>
         </div>
-      </div> */}
+      </div>
       
       {/* Sidebar Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
-        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-5 py-3 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
+          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
           Main
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
             location === "/quick-start-guide" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
           )}
         >
           <Link href="/quick-start-guide" className="flex items-center w-full">
-            <Rocket className="mr-3 h-5 w-5 text-indigo-400" />
+            <div className={cn(
+              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
+              location === "/quick-start-guide" 
+                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
+                : "bg-indigo-900/20"
+            )}>
+              <Rocket className="h-4 w-4 text-indigo-300" />
+            </div>
             <span className="font-medium">Quick Start Guide</span>
           </Link>
         </div>
