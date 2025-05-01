@@ -544,6 +544,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 Smart Recommendations
               </Link>
             </div>
+            
+            <div className={cn(
+              "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm", 
+              location === "/import-financial" 
+                ? "text-white font-medium bg-indigo-900/40" 
+                : "text-gray-400 hover:text-white hover:bg-indigo-900/30"
+            )}>
+              <Link href="/import-financial" className="w-full flex items-center">
+                <BarChart3 className="mr-2 h-4 w-4 text-indigo-400" />
+                Import Financial Data
+              </Link>
+            </div>
           </div>
         )}
         
