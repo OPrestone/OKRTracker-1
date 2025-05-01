@@ -92,125 +92,105 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#1a1a2e] to-[#16213e] text-gray-200 shadow-lg">
-      <div className="p-5 border-b border-indigo-900/40 bg-gradient-to-r from-indigo-900/30 to-purple-900/30">
+    <div className="flex flex-col h-full bg-[#0f172a] text-gray-200 shadow-xl">
+      <div className="p-5 border-b border-slate-800/70 bg-[#1e293b]">
         <h1 className="text-xl font-semibold flex items-center">
-          <img src="/src/assets/logo.png" alt="OKR System" className="h-8 w-8 mr-2 drop-shadow-md" />
+          <div className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/20">
+            <Target className="h-5 w-5 text-white" />
+          </div>
           <span className="text-white font-bold tracking-wide">OKR System</span>
         </h1>
       </div>
       
       {/* User Profile Card */}
-      <div className="p-4 mb-2 border-b border-indigo-900/40">
+      <div className="p-4 mb-2 border-b border-slate-800/70">
         <div className="flex items-center">
-          <Avatar className="h-10 w-10 border-2 border-indigo-500/50 ring-2 ring-purple-600/20 shadow-md">
+          <Avatar className="h-10 w-10 border-2 border-indigo-500/30 shadow-md">
             <AvatarImage src="/assets/avatar.png" alt={user?.firstName || 'User'} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-700 to-purple-700 text-white font-medium">
+            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="ml-3">
             <p className="text-sm font-medium text-white">{user?.firstName} {user?.lastName}</p>
-            <p className="text-xs text-indigo-300/80">{user?.role || "Team Member"}</p>
+            <p className="text-xs text-slate-400">{user?.role || "Team Member"}</p>
           </div>
         </div>
       </div>
       
       {/* Sidebar Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2">
-        <div className="px-5 py-3 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
-          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
-          Main
+      <nav className="flex-1 overflow-y-auto pt-2 pb-4">
+        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+          Main Navigation
         </div>
         
         <div
           className={cn(
-            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/quick-start-guide" 
-              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/quick-start-guide" className="flex items-center w-full">
-            <div className={cn(
-              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
-              location === "/quick-start-guide" 
-                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
-                : "bg-indigo-900/20"
-            )}>
-              <Rocket className="h-4 w-4 text-indigo-300" />
-            </div>
-            <span className="font-medium">Quick Start Guide</span>
+            <Rocket className="h-4 w-4 mr-3" />
+            <span>Quick Start Guide</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/home" 
-              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/home" className="flex items-center w-full">
-            <div className={cn(
-              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
-              location === "/home" 
-                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
-                : "bg-indigo-900/20"
-            )}>
-              <Home className="h-4 w-4 text-indigo-300" />
-            </div>
+            <Home className="h-4 w-4 mr-3" />
             <span>Home</span>
           </Link>
         </div>
         
         <div
           className={cn(
-            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium transition-all duration-200 rounded-md", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/" 
-              ? "bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white shadow-sm" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white hover:shadow-sm"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/" className="flex items-center w-full">
-            <div className={cn(
-              "flex items-center justify-center w-6 h-6 mr-3 rounded-md",
-              location === "/" 
-                ? "bg-gradient-to-br from-indigo-500/30 to-purple-500/20" 
-                : "bg-indigo-900/20"
-            )}>
-              <BarChart3 className="h-4 w-4 text-indigo-300" />
-            </div>
+            <BarChart3 className="h-4 w-4 mr-3" />
             <span>Dashboards</span>
           </Link>
         </div>
          
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/team-leader-dashboard" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/team-leader-dashboard" className="flex items-center w-full">
-            <LayoutDashboard className="mr-3 h-5 w-5 text-indigo-400" />
+            <LayoutDashboard className="h-4 w-4 mr-3" />
             <span>Team Leader Dashboard</span>
           </Link>
         </div>
         
-        
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/mission" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/mission" className="flex items-center w-full">
-            <Compass className="mr-3 h-5 w-5 text-indigo-400" />
+            <Compass className="h-4 w-4 mr-3" />
             <span>Mission & Values</span>
           </Link>
         </div>
@@ -245,15 +225,15 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200", 
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150", 
             location === "/strategy-map" 
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500" 
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white"
+              ? "bg-indigo-600 text-white shadow-md" 
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           )}
         >
           <Link href="/strategy-map" className="flex items-center w-full">
-            <Flag className="mr-3 h-5 w-5 text-indigo-400" />
-            <span> Strategy Map</span>
+            <Flag className="h-4 w-4 mr-3" />
+            <span>Strategy Map</span>
           </Link>
         </div>
         
@@ -426,8 +406,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         </div>
         
         {/* Drag & Drop Section */}
-        <div className="px-5 py-3 mt-2 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
-          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
+        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
           Drag & Drop Interfaces
         </div>
         
@@ -568,8 +548,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         )}
         
 
-        <div className="px-5 py-3 mt-4 text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
-          <span className="bg-indigo-500/20 h-5 w-1 rounded-sm mr-2"></span>
+        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
           Administration
         </div>
         <div
@@ -706,18 +686,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       </nav>
       
       {/* User Profile */}
-      <div className="border-t border-indigo-900/40 p-4 mt-auto bg-gradient-to-r from-indigo-900/40 to-purple-900/30 shadow-inner">
+      <div className="border-t border-slate-800/70 p-4 mt-auto bg-[#1e293b] shadow-inner">
         <div className="flex items-center">
           <Link href="/user-profile">
-            <Avatar className="h-10 w-10 mr-3 border-2 border-indigo-500/40 hover:border-indigo-400 transition-colors shadow-md">
+            <Avatar className="h-10 w-10 mr-3 border-2 border-indigo-500/20 hover:border-indigo-500/60 transition-colors shadow-sm">
               <AvatarImage src="" alt="User profile" />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-700 to-purple-700 text-white font-medium">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-medium">{initials}</AvatarFallback>
             </Avatar>
           </Link>
           <div>
             <Link href="/user-profile" className="hover:text-white transition-colors">
               <p className="text-sm font-semibold text-white">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-indigo-300/80">{user?.role || "Team Member"}</p>
+              <p className="text-xs text-slate-400">{user?.role || "Team Member"}</p>
             </Link>
           </div>
           <div className="ml-auto">
@@ -725,7 +705,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               variant="ghost" 
               size="icon" 
               onClick={handleLogout}
-              className="text-indigo-300 hover:text-white hover:bg-indigo-700/30 transition-all duration-200 rounded-lg"
+              className="text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200 rounded-lg"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -738,13 +718,13 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-gradient-to-b from-[#1a1a2e] to-[#16213e] h-full shadow-xl">
+      <aside className="hidden md:flex md:flex-col w-64 bg-[#0f172a] h-full shadow-xl">
         {sidebarContent}
       </aside>
 
       {/* Mobile sidebar */}
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-gradient-to-b from-[#1a1a2e] to-[#16213e]">
+        <SheetContent side="left" className="p-0 w-72 border-r-0 bg-[#0f172a]">
           {sidebarContent}
         </SheetContent>
       </Sheet>
