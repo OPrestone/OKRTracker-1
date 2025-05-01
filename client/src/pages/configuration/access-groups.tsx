@@ -320,23 +320,26 @@ const AccessGroups = () => {
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Access Groups</h1>
-            <p className="text-gray-600">Manage permissions and access control for users</p>
+            <h1 className="text-2xl font-bold text-slate-900">Access Groups</h1>
+            <p className="text-slate-500 mt-1">Manage permissions and access control for users</p>
           </div>
           <div className="flex space-x-2">
             <div className="relative w-full md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search access groups..."
-                className="pl-8 w-full"
+                className="pl-9 w-full rounded-md border-slate-200 focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button onClick={() => {
-              setAccessGroupForm(defaultAccessGroupForm);
-              setIsCreateDialogOpen(true);
-            }}>
+            <Button 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+              onClick={() => {
+                setAccessGroupForm(defaultAccessGroupForm);
+                setIsCreateDialogOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Group
             </Button>
@@ -344,13 +347,19 @@ const AccessGroups = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="groups" className="flex items-center">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-slate-100 p-1 rounded-lg">
+          <TabsTrigger 
+            value="groups" 
+            className="flex items-center rounded-md data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm"
+          >
             <UsersRound className="h-4 w-4 mr-2" />
             Groups
           </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center">
+          <TabsTrigger 
+            value="permissions" 
+            className="flex items-center rounded-md data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm"
+          >
             <Shield className="h-4 w-4 mr-2" />
             Permission Levels
           </TabsTrigger>
@@ -376,77 +385,77 @@ const AccessGroups = () => {
           ) : filteredAccessGroups && filteredAccessGroups.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAccessGroups.map(group => (
-                <Card key={group.id} className="relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                <Card key={group.id} className="relative overflow-hidden group hover:shadow-md transition-all duration-200 border border-slate-200">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <CardTitle>{group.name}</CardTitle>
-                        <div className="flex items-center text-xs px-2 py-1 rounded-full bg-muted">
+                        <CardTitle className="text-slate-800">{group.name}</CardTitle>
+                        <div className="flex items-center text-xs px-2.5 py-1 rounded-full bg-slate-100">
                           {getPermissionLevel(group).icon}
-                          <span className="ml-1">{getPermissionLevel(group).label}</span>
+                          <span className="ml-1 font-medium">{getPermissionLevel(group).label}</span>
                         </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Settings className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-70 hover:opacity-100 hover:bg-slate-100">
+                            <Settings className="h-4 w-4 text-slate-600" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel className="text-xs font-medium text-slate-500">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleEditAccessGroup(group)}>
-                            <Edit className="h-4 w-4 mr-2" />
+                          <DropdownMenuItem onClick={() => handleEditAccessGroup(group)} className="cursor-pointer">
+                            <Edit className="h-4 w-4 mr-2 text-blue-600" />
                             Edit Group
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteAccessGroup(group)}>
-                            <Trash2 className="h-4 w-4 mr-2" />
+                          <DropdownMenuItem onClick={() => handleDeleteAccessGroup(group)} className="cursor-pointer">
+                            <Trash2 className="h-4 w-4 mr-2 text-red-600" />
                             Delete Group
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setActiveTab("users")}>
-                            <UserPlus className="h-4 w-4 mr-2" />
+                          <DropdownMenuItem onClick={() => setActiveTab("users")} className="cursor-pointer">
+                            <UserPlus className="h-4 w-4 mr-2 text-emerald-600" />
                             Manage Users
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <CardDescription>{group.description}</CardDescription>
+                    <CardDescription className="text-slate-500">{group.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex flex-col space-y-1">
-                        <h4 className="text-sm font-medium">Key Permissions:</h4>
-                        <div className="space-y-1">
+                      <div className="flex flex-col space-y-1.5">
+                        <h4 className="text-sm font-medium text-slate-700">Key Permissions:</h4>
+                        <div className="space-y-1.5">
                           {(group.permissions as any)?.createOKRs && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span>Create OKRs</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <span className="text-slate-700">Create OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.editAllOKRs && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span>Edit All OKRs</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <span className="text-slate-700">Edit All OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageUsers && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span>Manage Users</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <span className="text-slate-700">Manage Users</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageTeams && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span>Manage Teams</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <span className="text-slate-700">Manage Teams</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageSettings && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span>Manage System Settings</span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <span className="text-slate-700">Manage System Settings</span>
                             </div>
                           )}
                           {!(group.permissions as any)?.createOKRs && 
@@ -454,8 +463,8 @@ const AccessGroups = () => {
                           !(group.permissions as any)?.manageUsers && 
                           !(group.permissions as any)?.manageTeams && 
                           !(group.permissions as any)?.manageSettings && (
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                              <div className="w-2 h-2 rounded-full bg-slate-400"></div>
                               <span>Basic access only</span>
                             </div>
                           )}
@@ -463,12 +472,18 @@ const AccessGroups = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between pt-0">
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <UsersRound className="h-4 w-4 mr-1" />
+                  <CardFooter className="flex justify-between pt-0 border-t border-slate-100">
+                    <div className="text-sm text-slate-500 flex items-center">
+                      <UsersRound className="h-4 w-4 mr-1.5 text-indigo-500 opacity-80" />
                       <span>{group.userCount || 0} {group.userCount === 1 ? 'user' : 'users'}</span>
                     </div>
-                    <Button variant="ghost" size="sm" className="gap-1" onClick={() => handleEditAccessGroup(group)}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50" 
+                      onClick={() => handleEditAccessGroup(group)}
+                    >
+                      Edit
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </CardFooter>
