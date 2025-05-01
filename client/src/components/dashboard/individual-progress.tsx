@@ -895,6 +895,23 @@ export function IndividualProgress() {
               
               {/* Analytics Tab */}
               <TabsContent value="analytics" className="space-y-4 pt-4">
+                {/* Modern Stats Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {userAnalyticsStats.map((stat, index) => (
+                    <StatsCard
+                      key={index}
+                      title={stat.title}
+                      value={stat.value}
+                      subtitle={stat.subtitle}
+                      icon={stat.icon}
+                      trend={stat.trend}
+                      chartData={stat.chartData}
+                      chartType={index === 1 ? "bar" : "line"}
+                      color={index === 0 ? "indigo" : index === 1 ? "emerald" : index === 2 ? "amber" : "indigo"}
+                    />
+                  ))}
+                </div>
+                
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">Performance Trend</CardTitle>
