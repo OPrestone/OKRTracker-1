@@ -27,11 +27,23 @@ function QuickStat({
   progress, 
   description 
 }: QuickStatProps) {
-  // Generate sample chart data for the line chart
-  const chartData = Array(10).fill(0).map((_, i) => ({
-    name: `Day ${i+1}`,
-    value: Math.floor(Math.random() * 30) + 50 // Random value between 50-80
-  }));
+  // Generate smooth ascending chart data for the line chart
+  const generateChartData = () => {
+    // Base value that will be modified to create a trend
+    const baseValue = 50;
+    // Generate 12 data points representing days or weeks
+    return Array(12).fill(0).map((_, i) => {
+      // Creating a slight upward trend with some randomness for natural look
+      const trend = (i / 11) * 20; // Value increases by ~20% over the series
+      const randomFactor = Math.random() * 10 - 5; // Random variance +/- 5%
+      return {
+        name: `Point ${i+1}`,
+        value: baseValue + trend + randomFactor
+      };
+    });
+  };
+  
+  const chartData = generateChartData();
   
   // Extract trend percentage from description if available
   let trendValue: number | undefined = undefined;
@@ -41,6 +53,20 @@ function QuickStat({
   } else if (description.includes('decrease')) {
     const match = description.match(/(\d+(\.\d+)?)%\s+decrease/);
     if (match) trendValue = -parseFloat(match[1]);
+  }
+  
+  // Derive chart color based on the icon color class
+  let chartColor = "#818cf8"; // Default color (indigo)
+  if (iconColor.includes("primary")) {
+    chartColor = "#3b82f6"; // Blue for primary
+  } else if (iconColor.includes("accent")) {
+    chartColor = "#8b5cf6"; // Purple for accent
+  } else if (iconColor.includes("green")) {
+    chartColor = "#22c55e"; // Green
+  } else if (iconColor.includes("amber")) {
+    chartColor = "#f59e0b"; // Amber
+  } else if (iconColor.includes("rose")) {
+    chartColor = "#f43f5e"; // Rose/red
   }
   
   return (
@@ -55,8 +81,11 @@ function QuickStat({
           data={chartData}
           dataKey="value"
           type="line"
-          color="#818cf8"
+          color={chartColor}
           height={40}
+          showGrid={false}
+          showTooltip={false}
+          showAxis={false}
         />
       }
     />

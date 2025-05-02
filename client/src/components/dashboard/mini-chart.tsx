@@ -8,6 +8,7 @@ interface MiniChartProps {
   height?: number;
   showGrid?: boolean;
   showAxis?: boolean;
+  showTooltip?: boolean;
 }
 
 export function MiniChart({
@@ -18,6 +19,7 @@ export function MiniChart({
   height = 50,
   showGrid = false,
   showAxis = false,
+  showTooltip = true,
 }: MiniChartProps) {
   const chartProps = {
     data,
@@ -25,27 +27,28 @@ export function MiniChart({
     height,
   };
 
+  // Tooltip style configuration
+  const tooltipStyle = {
+    background: 'rgba(255, 255, 255, 0.9)',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    fontSize: '12px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+  };
+
   const renderChart = (): React.ReactElement => {
     switch (type) {
       case 'area':
         return (
           <AreaChart {...chartProps}>
-            {showAxis ? (
+            {showAxis && (
               <>
-                <XAxis dataKey="name" hide={!showAxis} />
-                <YAxis hide={!showAxis} />
+                <XAxis dataKey="name" />
+                <YAxis />
               </>
-            ) : null}
-            {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
-            <Tooltip 
-              contentStyle={{ 
-                background: 'rgba(255, 255, 255, 0.9)', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-              }} 
-            />
+            )}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+            {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
             <Area 
               type="monotone" 
               dataKey={dataKey} 
@@ -58,22 +61,14 @@ export function MiniChart({
       case 'line':
         return (
           <LineChart {...chartProps}>
-            {showAxis ? (
+            {showAxis && (
               <>
-                <XAxis dataKey="name" hide={!showAxis} />
-                <YAxis hide={!showAxis} />
+                <XAxis dataKey="name" />
+                <YAxis />
               </>
-            ) : null}
-            {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
-            <Tooltip 
-              contentStyle={{ 
-                background: 'rgba(255, 255, 255, 0.9)', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-              }} 
-            />
+            )}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+            {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
             <Line 
               type="monotone" 
               dataKey={dataKey} 
@@ -86,22 +81,14 @@ export function MiniChart({
       case 'bar':
         return (
           <BarChart {...chartProps}>
-            {showAxis ? (
+            {showAxis && (
               <>
-                <XAxis dataKey="name" hide={!showAxis} />
-                <YAxis hide={!showAxis} />
+                <XAxis dataKey="name" />
+                <YAxis />
               </>
-            ) : null}
-            {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
-            <Tooltip 
-              contentStyle={{ 
-                background: 'rgba(255, 255, 255, 0.9)', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-              }} 
-            />
+            )}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+            {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
             <Bar 
               dataKey={dataKey} 
               fill={color}
@@ -113,22 +100,14 @@ export function MiniChart({
         // Default to area chart if type is not recognized
         return (
           <AreaChart {...chartProps}>
-            {showAxis ? (
+            {showAxis && (
               <>
-                <XAxis dataKey="name" hide={!showAxis} />
-                <YAxis hide={!showAxis} />
+                <XAxis dataKey="name" />
+                <YAxis />
               </>
-            ) : null}
-            {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
-            <Tooltip 
-              contentStyle={{ 
-                background: 'rgba(255, 255, 255, 0.9)', 
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-              }} 
-            />
+            )}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+            {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
             <Area 
               type="monotone" 
               dataKey={dataKey} 
