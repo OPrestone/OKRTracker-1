@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Zap, Users, CheckCircle, Clock } from "lucide-react";
+import { Zap, Users, CheckCircle, Clock, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/dashboard/stats-card";
+import { MetricsCard } from "@/components/metrics/metrics-card";
+import { MiniChart } from "@/components/dashboard/mini-chart";
 
 // Keeping the QuickStatProps interface for backward compatibility
 interface QuickStatProps {
@@ -15,7 +17,7 @@ interface QuickStatProps {
   description: string;
 }
 
-// Using StatsCard component from stats-card.tsx instead
+// Using MetricsCard component with line chart for trend visualization
 function QuickStat({ 
   icon, 
   iconColor, 
@@ -25,22 +27,66 @@ function QuickStat({
   progress, 
   description 
 }: QuickStatProps) {
+  // Generate sample chart data for the line chart
+  const chartData = Array(10).fill(0).map((_, i) => ({
+    name: `Day ${i+1}`,
+    value: Math.floor(Math.random() * 30) + 50 // Random value between 50-80
+  }));
+  
+  // Extract trend percentage from description if available
+  let trendValue: number | undefined = undefined;
+  if (description.includes('increase')) {
+    const match = description.match(/(\d+(\.\d+)?)%\s+increase/);
+    if (match) trendValue = parseFloat(match[1]);
+  } else if (description.includes('decrease')) {
+    const match = description.match(/(\d+(\.\d+)?)%\s+decrease/);
+    if (match) trendValue = -parseFloat(match[1]);
+  }
+  
   return (
-    <StatsCard
+    <MetricsCard
       icon={icon}
       iconColor={iconColor}
-      bgColor={bgColor}
       title={title}
       value={value}
-      progressBar={true}
-      progressValue={progress}
-      subtitle={description}
+      trend={trendValue}
+      chart={
+        <MiniChart
+          data={chartData}
+          dataKey="value"
+          type="line"
+          color="#818cf8"
+          height={40}
+        />
+      }
     />
   );
 }
 
+interface DashboardData {
+  objectives: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    progress: number;
+  };
+  teamPerformance: {
+    average: number;
+    improvement: number;
+  };
+  keyResults: {
+    total: number;
+    completed: number;
+    completionRate: number;
+  };
+  timeRemaining: {
+    days: number;
+    percentage: number;
+  };
+}
+
 export function QuickStats() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ['/api/dashboard'],
   });
 
@@ -70,13 +116,17 @@ export function QuickStats() {
     return <div className="text-red-500 mb-8">Error loading dashboard data</div>;
   }
 
+  if (!data) {
+    return <div className="text-gray-500 mb-8">No data available</div>;
+  }
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <QuickStat
-        icon={<Zap className="h-6 w-6" />}
+        icon={<Target className="h-6 w-6" />}
         iconColor="text-primary-600"
         bgColor="bg-primary-100"
-        title="Company Objectives"
+        title="Total Objectives"
         value={`${data.objectives.total}`}
         progress={data.objectives.progress}
         description={`${data.objectives.inProgress} in progress, ${data.objectives.completed} completed`}
