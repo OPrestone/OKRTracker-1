@@ -25,7 +25,7 @@ export function MiniChart({
     height,
   };
 
-  const renderChart = () => {
+  const renderChart = (): React.ReactElement => {
     switch (type) {
       case 'area':
         return (
@@ -110,7 +110,34 @@ export function MiniChart({
           </BarChart>
         );
       default:
-        return null;
+        // Default to area chart if type is not recognized
+        return (
+          <AreaChart {...chartProps}>
+            {showAxis ? (
+              <>
+                <XAxis dataKey="name" hide={!showAxis} />
+                <YAxis hide={!showAxis} />
+              </>
+            ) : null}
+            {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
+            <Tooltip 
+              contentStyle={{ 
+                background: 'rgba(255, 255, 255, 0.9)', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                fontSize: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              }} 
+            />
+            <Area 
+              type="monotone" 
+              dataKey={dataKey} 
+              stroke={color} 
+              fill={`${color}20`} 
+              strokeWidth={2}
+            />
+          </AreaChart>
+        );
     }
   };
 
@@ -168,15 +195,15 @@ export function GaugeChart({ value, max = 100, color = '#6366f1' }: { value: num
     <div className="relative w-full h-32 flex items-center justify-center">
       <div className="relative w-24 h-24">
         <svg viewBox="0 0 36 36" className="w-full h-full">
+          {/* Background track */}
           <path
             className="stroke-current text-slate-200"
             fill="none"
             strokeWidth="3"
             strokeLinecap="round"
-            d="M18 2.0845
-              a 15.9155 15.9155 0 0 1 0 31.831
-              a 15.9155 15.9155 0 0 1 0 -31.831"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
           />
+          {/* Foreground progress */}
           <path
             className="stroke-current"
             fill="none"
@@ -184,11 +211,19 @@ export function GaugeChart({ value, max = 100, color = '#6366f1' }: { value: num
             strokeLinecap="round"
             strokeDasharray={`${percentage}, 100`}
             style={{ stroke: color }}
-            d="M18 2.0845
-              a 15.9155 15.9155 0 0 1 0 31.831
-              a 15.9155 15.9155 0 0 1 0 -31.831"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
           />
-          <text x="18" y="20.35" className="text-3xl font-semibold" textAnchor="middle" fill="#1e293b">{`${Math.round(percentage)}%`}</text>
+          {/* Text label */}
+          <text 
+            x="18" 
+            y="20.35" 
+            fontSize="8px"
+            fontWeight="bold" 
+            textAnchor="middle" 
+            fill="#1e293b"
+          >
+            {`${Math.round(percentage)}%`}
+          </text>
         </svg>
       </div>
     </div>
