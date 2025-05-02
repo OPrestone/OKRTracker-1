@@ -242,7 +242,7 @@ export default function TeamLeaderDashboard() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">My Overview</h1>
         <p className="text-muted-foreground">
-          Track your team's performance, progress, and pending Initiatives
+          Track your team's performance, progress, and pending tasks
         </p>
       </div>
 
@@ -262,7 +262,7 @@ export default function TeamLeaderDashboard() {
           </TabsTrigger>
           <TabsTrigger value="tasks">
             <Calendar className="h-4 w-4 mr-2" />
-            Initiatives
+            Tasks
           </TabsTrigger>
         </TabsList>
 
@@ -300,7 +300,7 @@ export default function TeamLeaderDashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Pending Initiatives
+                  Pending Tasks
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -316,7 +316,7 @@ export default function TeamLeaderDashboard() {
                     onClick={() => setActiveTab("tasks")}
                   >
                     <Clock className="h-3 w-3 mr-1 text-amber-500" />
-                    View all Initiatives
+                    View all tasks
                     <ChevronRight className="h-3 w-3 ml-1" />
                   </Button>
                 </div>
@@ -454,7 +454,7 @@ export default function TeamLeaderDashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Pending Initiatives</CardTitle>
+                  <CardTitle>Pending Tasks</CardTitle>
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -463,7 +463,7 @@ export default function TeamLeaderDashboard() {
                     View All
                   </Button>
                 </div>
-                <CardDescription>Your upcoming Initiatives and deadlines</CardDescription>
+                <CardDescription>Your upcoming tasks and deadlines</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -651,8 +651,8 @@ export default function TeamLeaderDashboard() {
             {/* Active Tasks */}
             <Card>
               <CardHeader>
-                <CardTitle>Active Objectives</CardTitle>
-                <CardDescription>Initiatives currently in progress</CardDescription>
+                <CardTitle>Active Tasks</CardTitle>
+                <CardDescription>Tasks currently in progress</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

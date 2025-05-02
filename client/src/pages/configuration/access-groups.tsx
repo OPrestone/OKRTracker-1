@@ -593,9 +593,6 @@ const AccessGroups = () => {
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           Edit Assigned OKRs
                         </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Updating Assigned OKRs
-                        </span>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           Create Check-ins
                         </span>
@@ -758,19 +755,6 @@ const AccessGroups = () => {
                       <Label htmlFor="edit-assigned-key-results" className="flex items-center">
                         <Edit className="h-3.5 w-3.5 mr-1.5 text-green-500" />
                         Edit Assigned Key Results
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-assigned-key-results" 
-                        checked={accessGroupForm.permissions.editAssignedKeyResults}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("editAssignedKeyResults", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="edit-assigned-key-results" className="flex items-center">
-                        <Edit className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-                        Update Assigned Key Results
                       </Label>
                     </div>
                   </div>
