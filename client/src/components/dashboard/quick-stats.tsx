@@ -80,7 +80,7 @@ function QuickStat({
         <MiniChart
           data={chartData}
           dataKey="value"
-          type="line"
+          type="area"
           color={chartColor}
           height={40}
           showGrid={false}
