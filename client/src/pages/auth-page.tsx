@@ -350,7 +350,7 @@ export default function AuthPage() {
                             <FormItem>
                               <FormLabel className="text-sm text-muted-foreground">
                                 <Mail className="h-3.5 w-3.5 inline-block mr-1.5 opacity-70" />
-                                Email
+                                Work Email
                               </FormLabel>
                               <FormControl>
                                 <div className="relative">

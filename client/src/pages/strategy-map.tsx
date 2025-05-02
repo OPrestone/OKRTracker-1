@@ -157,9 +157,7 @@ export default function StrategyMapPage() {
           <TabsTrigger value="alignment">Company Alignment</TabsTrigger>
           <TabsTrigger value="teams-okr">Teams OKR</TabsTrigger>
           <TabsTrigger value="key-results">Key Results Summary</TabsTrigger>
-          <TabsTrigger value="map">Visual Map</TabsTrigger>
-          <TabsTrigger value="table">Table View</TabsTrigger>
-        </TabsList>
+         </TabsList>
         
         <TabsContent value="alignment" className="pt-4">
           <Card>
@@ -193,30 +191,7 @@ export default function StrategyMapPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="map" className="pt-4">
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle>Strategic Alignment Visualization</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <StrategyMap />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="table" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Strategy Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-600 mb-4">
-                Tabular view of strategic objectives and their interconnections would be shown here.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+         
       </Tabs>
 
       <Card>
