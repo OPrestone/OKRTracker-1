@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Zap, Users, CheckCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatsCard } from "@/components/dashboard/stats-card";
 
+// Keeping the QuickStatProps interface for backward compatibility
 interface QuickStatProps {
   icon: React.ReactNode;
   iconColor: string;
@@ -13,6 +15,7 @@ interface QuickStatProps {
   description: string;
 }
 
+// Using StatsCard component from stats-card.tsx instead
 function QuickStat({ 
   icon, 
   iconColor, 
@@ -23,26 +26,16 @@ function QuickStat({
   description 
 }: QuickStatProps) {
   return (
-    <div className="bg-white rounded-lg shadow p-5 border border-neutral-100">
-      <div className="flex items-center">
-        <div className={cn("p-3 rounded-full text-primary-600", bgColor, iconColor)}>
-          {icon}
-        </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-neutral-500">{title}</p>
-          <h2 className="text-xl font-semibold text-neutral-900">{value}</h2>
-        </div>
-      </div>
-      <div className="mt-3">
-        <div className="w-full bg-neutral-200 rounded-full h-1.5">
-          <div 
-            className="bg-primary-500 h-1.5 rounded-full" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <p className="text-xs text-neutral-500 mt-1.5">{description}</p>
-      </div>
-    </div>
+    <StatsCard
+      icon={icon}
+      iconColor={iconColor}
+      bgColor={bgColor}
+      title={title}
+      value={value}
+      progressBar={true}
+      progressValue={progress}
+      subtitle={description}
+    />
   );
 }
 
