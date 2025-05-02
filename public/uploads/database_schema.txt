@@ -1,0 +1,265 @@
+-- OKR PLATFORM DATABASE SCHEMA
+
+-- Table: access_groups
+-- Purpose: Manages user access groups and permissions
+CREATE TABLE access_groups (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  permissions JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: users
+-- Purpose: Stores user information
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  email TEXT,
+  language TEXT DEFAULT 'en',
+  role TEXT DEFAULT 'user',
+  manager_id INTEGER REFERENCES users(id),
+  team_id INTEGER REFERENCES teams(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  first_login BOOLEAN DEFAULT TRUE,
+  intro_video_watched BOOLEAN DEFAULT FALSE,
+  walkthrough_completed BOOLEAN DEFAULT FALSE,
+  onboarding_progress INTEGER DEFAULT 0,
+  last_onboarding_step TEXT
+);
+
+-- Table: teams
+-- Purpose: Organizes users into teams
+CREATE TABLE teams (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  color TEXT,
+  icon TEXT,
+  parent_id INTEGER REFERENCES teams(id),
+  owner_id INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: user_access_groups
+-- Purpose: Maps users to access groups (many-to-many)
+CREATE TABLE user_access_groups (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  access_group_id INTEGER NOT NULL REFERENCES access_groups(id)
+);
+
+-- Table: cadences
+-- Purpose: Defines recurring timeframes (quarterly, yearly, etc.)
+CREATE TABLE cadences (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  period TEXT NOT NULL,
+  start_month INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: timeframes
+-- Purpose: Specific time periods for objectives (Q1, Q2, 2023, etc.)
+CREATE TABLE timeframes (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  start_date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP NOT NULL,
+  cadence_id INTEGER REFERENCES cadences(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: objectives
+-- Purpose: Main objective records
+CREATE TABLE objectives (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  level TEXT NOT NULL, -- 'company', 'team', 'individual'
+  owner_id INTEGER NOT NULL REFERENCES users(id),
+  team_id INTEGER REFERENCES teams(id),
+  timeframe_id INTEGER NOT NULL REFERENCES timeframes(id),
+  status TEXT,
+  progress INTEGER,
+  parent_id INTEGER REFERENCES objectives(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: key_results
+-- Purpose: Measurable key results associated with objectives
+CREATE TABLE key_results (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  objective_id INTEGER NOT NULL REFERENCES objectives(id),
+  assigned_to_id INTEGER REFERENCES users(id),
+  target_value TEXT,
+  current_value TEXT,
+  start_value TEXT,
+  progress INTEGER,
+  status TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: initiatives
+-- Purpose: Tasks or initiatives to complete key results
+CREATE TABLE initiatives (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  key_result_id INTEGER NOT NULL REFERENCES key_results(id),
+  assigned_to_id INTEGER REFERENCES users(id),
+  status TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: check_ins
+-- Purpose: Regular updates on objectives or key results
+CREATE TABLE check_ins (
+  id SERIAL PRIMARY KEY,
+  objective_id INTEGER REFERENCES objectives(id),
+  key_result_id INTEGER REFERENCES key_results(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  progress INTEGER,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: chat_rooms
+-- Purpose: Messaging for teams or specific OKR discussions
+CREATE TABLE chat_rooms (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  type TEXT, -- 'team', 'direct', 'objective'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER REFERENCES users(id)
+);
+
+-- Table: chat_room_members
+-- Purpose: Maps users to chat rooms
+CREATE TABLE chat_room_members (
+  id SERIAL PRIMARY KEY,
+  chat_room_id INTEGER NOT NULL REFERENCES chat_rooms(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  role TEXT,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_read TIMESTAMP
+);
+
+-- Table: messages
+-- Purpose: Chat messages in chat rooms
+CREATE TABLE messages (
+  id SERIAL PRIMARY KEY,
+  chat_room_id INTEGER NOT NULL REFERENCES chat_rooms(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  content TEXT NOT NULL,
+  type TEXT DEFAULT 'text',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP,
+  is_edited BOOLEAN DEFAULT FALSE,
+  reply_to_id INTEGER REFERENCES messages(id)
+);
+
+-- Table: attachments
+-- Purpose: File attachments for messages
+CREATE TABLE attachments (
+  id SERIAL PRIMARY KEY,
+  message_id INTEGER NOT NULL REFERENCES messages(id),
+  file_name TEXT NOT NULL,
+  file_type TEXT,
+  file_size INTEGER,
+  file_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: reactions
+-- Purpose: Emoji reactions to messages
+CREATE TABLE reactions (
+  id SERIAL PRIMARY KEY,
+  message_id INTEGER NOT NULL REFERENCES messages(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Type: feedback_type
+-- Purpose: Enumeration for feedback types
+CREATE TYPE feedback_type AS ENUM ('praise', 'suggestion', 'concern');
+
+-- Table: feedback
+-- Purpose: User feedback records
+CREATE TABLE feedback (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER NOT NULL REFERENCES users(id),
+  receiver_id INTEGER NOT NULL REFERENCES users(id),
+  type feedback_type NOT NULL,
+  title TEXT,
+  message TEXT NOT NULL,
+  visibility TEXT NOT NULL, -- 'public', 'private', 'team'
+  objective_id INTEGER REFERENCES objectives(id),
+  key_result_id INTEGER REFERENCES key_results(id),
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: badges
+-- Purpose: Achievement badges
+CREATE TABLE badges (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  icon TEXT NOT NULL,
+  color TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: user_badges
+-- Purpose: Maps users to earned badges
+CREATE TABLE user_badges (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  badge_id INTEGER NOT NULL REFERENCES badges(id),
+  awarded_by_id INTEGER REFERENCES users(id),
+  message TEXT,
+  is_public BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: highfives
+-- Purpose: High five recognitions
+CREATE TABLE highfives (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER NOT NULL REFERENCES users(id),
+  message TEXT,
+  objective_id INTEGER REFERENCES objectives(id),
+  key_result_id INTEGER REFERENCES key_results(id),
+  is_public BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: highfive_recipients
+-- Purpose: Recipients of high fives
+CREATE TABLE highfive_recipients (
+  id SERIAL PRIMARY KEY,
+  highfive_id INTEGER NOT NULL REFERENCES highfives(id),
+  recipient_id INTEGER NOT NULL REFERENCES users(id),
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: session
+-- Purpose: Manages user sessions
+CREATE TABLE session (
+  sid VARCHAR NOT NULL PRIMARY KEY,
+  sess JSON NOT NULL,
+  expire TIMESTAMP NOT NULL
+);
