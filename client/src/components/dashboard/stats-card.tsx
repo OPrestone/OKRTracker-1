@@ -34,14 +34,14 @@ export function StatsCard({
   const isNegative = trend && trend < 0;
 
   return (
-    <div className="bg-white rounded-lg shadow p-5 border border-neutral-100">
+    <div className="bg-white rounded-lg shadow border border-neutral-100">
       <div className="flex items-center">
         {icon && (
           <div className={cn("p-3 rounded-full", bgColor, iconColor)}>
             {icon}
           </div>
         )}
-        <div className={icon ? "ml-4" : ""}>
+        <div className={icon ? "ml-4 mt-4" : ""}>
           <p className="text-sm font-medium text-neutral-500">{title}</p>
           <div className="flex items-baseline">
             <h2 className="text-xl font-semibold text-neutral-900">{value}</h2>
@@ -78,7 +78,7 @@ export function StatsCard({
       {(progressBar || chart) && (
         <div className="mt-3">
           {progressBar && (
-            <>
+            <div className="p-3">
               <div className="w-full bg-neutral-200 rounded-full h-1.5">
                 <div
                   className="bg-primary-500 h-1.5 rounded-full"
@@ -88,7 +88,7 @@ export function StatsCard({
               <p className="text-xs text-neutral-500 mt-1.5">
                 {trendLabel || `${progressValue}% complete`}
               </p>
-            </>
+            </div>
           )}
           
           {chart && <div className="mt-2">{chart}</div>}
