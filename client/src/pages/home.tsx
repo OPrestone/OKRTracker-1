@@ -4,8 +4,7 @@ import { GetStartedGuide } from "@/components/quick-start/get-started-guide";
 import { SetupWorkflow } from "@/components/quick-start/setup-workflow";
 import { ProgressChart } from "@/components/dashboard/progress-chart";
 import { TeamPerformance } from "@/components/dashboard/team-performance";
-import { UpcomingMeetings } from "@/components/dashboard/upcoming-meetings";
-import { StrategyMap } from "@/components/dashboard/strategy-map";
+import { UpcomingMeetings } from "@/components/dashboard/upcoming-meetings"; 
 import { ResourcesSection } from "@/components/dashboard/resources-section";
 import { AdditionalResources } from "@/components/resources/additional-resources";
 import { MissionStatement } from "@/components/mission-statement";
@@ -18,16 +17,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PlusCircle, Sparkles, FileEdit, Menu } from "lucide-react";
 import { Link } from "wouter";
-import Sidebar from "@/components/sidebar";
+import DashboardLayout from "@/layouts/dashboard-layout";
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
+    <DashboardLayout title="Dashboard" subtitle="Manage your objectives and key results">
     <div className="flex h-screen overflow-hidden bg-[#f9fafb] text-[#495057]">
-      {/* Sidebar */}
-      <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
-      
+   
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         <div className="px-6 py-6 pb-24">
@@ -88,9 +86,7 @@ export default function Home() {
             <h2 className="text-xl font-bold text-neutral-900 mb-4">Company Mission</h2>
             <MissionStatement />
           </div>
-
-          {/* Strategy Map Preview */}
-          <StrategyMap />
+ 
 
           {/* Resources Section */}
           <ResourcesSection />
@@ -116,5 +112,6 @@ export default function Home() {
         </button>
       </div>
     </div>
+    </DashboardLayout>
   );
 }
