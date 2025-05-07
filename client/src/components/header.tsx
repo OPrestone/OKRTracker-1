@@ -149,7 +149,7 @@ const Header = ({
         fields: ["fullName", "username", "email", "role"],
         type: "user",
         getUrl: (item) => `/users/${item.id}`,
-        getTitle: (item) => item.fullName,
+        getTitle: (item) => item.firstName + ' ' + item.lastName,
         getDescription: (item) => item.role,
       }),
       ...searchInCollection(teams, searchValue, {

@@ -5,6 +5,8 @@ import Home from "@/pages/home";
 import CompanyStrategy from "@/pages/company-strategy";
 import Teams from "@/pages/teams";
 import TeamDetail from "@/pages/team-detail";
+import UserDetail from "@/pages/single-profile";
+
 import UsersPage from "@/pages/users";
 import AllUsers from "@/pages/all-users";
 import Checkins from "@/pages/checkins";
@@ -101,6 +103,7 @@ function AppRoutes() {
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />
       <ProtectedRoute path="/teams/:id" component={TeamDetail} />
+      <ProtectedRoute path="/users/:id" component={UserDetail} />
       <ProtectedRoute path="/users" component={UsersPage} />
       <ProtectedRoute path="/all-users" component={AllUsers} />
       <ProtectedRoute path="/user-profile" component={UserProfile} />
