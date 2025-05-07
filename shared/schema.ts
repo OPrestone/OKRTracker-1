@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+import { text } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 // Statuses for Objectives and Key Results
@@ -14,7 +15,7 @@ export const statusEnum = pgEnum("status", [
 
 // User Management
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   firstName: text("first_name").notNull(),
@@ -22,8 +23,8 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   language: text("language").default("en"),
   role: text("role").default("user"),
-  managerId: integer("manager_id"),
-  teamId: integer("team_id"),
+  managerId: text("manager_id"),
+  teamId: text("team_id"),
   createdAt: timestamp("created_at").defaultNow(),
   // Onboarding fields
   firstLogin: boolean("first_login").default(true),
@@ -35,13 +36,13 @@ export const users = pgTable("users", {
 
 // Teams
 export const teams = pgTable("teams", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   color: text("color").default("#3B82F6"),
   icon: text("icon").default("building"),
-  parentId: integer("parent_id"),
-  ownerId: integer("owner_id"),
+  parentId: text("parent_id"),
+  ownerId: text("owner_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -55,22 +56,22 @@ export const feedbackTypeEnum = pgEnum("feedback_type", [
 
 // Feedback 
 export const feedback = pgTable("feedback", {
-  id: serial("id").primaryKey(),
-  senderId: integer("sender_id").notNull().references(() => users.id),
-  receiverId: integer("receiver_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  senderId: text("sender_id").notNull().references(() => users.id),
+  receiverId: text("receiver_id").notNull().references(() => users.id),
   type: feedbackTypeEnum("type").notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
   visibility: text("visibility").notNull(), // public or private
-  objectiveId: integer("objective_id").references(() => objectives.id),
-  keyResultId: integer("key_result_id").references(() => keyResults.id),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  keyResultId: text("key_result_id").references(() => keyResults.id),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Recognition Badges
 export const badges = pgTable("badges", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description").notNull(),
   icon: text("icon").notNull(),
@@ -80,10 +81,10 @@ export const badges = pgTable("badges", {
 
 // User Badges - for tracking which users have earned which badges
 export const userBadges = pgTable("user_badges", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  badgeId: integer("badge_id").notNull().references(() => badges.id),
-  awardedById: integer("awarded_by_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  userId: text("user_id").notNull().references(() => users.id),
+  badgeId: text("badge_id").notNull().references(() => badges.id),
+  awardedById: text("awarded_by_id").notNull().references(() => users.id),
   message: text("message"),
   isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -91,19 +92,19 @@ export const userBadges = pgTable("user_badges", {
 
 // Highfive Recognition (existing functionality)
 export const highfives = pgTable("highfives", {
-  id: serial("id").primaryKey(),
-  senderId: integer("sender_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  senderId: text("sender_id").notNull().references(() => users.id),
   message: text("message").notNull(),
-  objectiveId: integer("objective_id").references(() => objectives.id),
-  keyResultId: integer("key_result_id").references(() => keyResults.id),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  keyResultId: text("key_result_id").references(() => keyResults.id),
   isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const highfiveRecipients = pgTable("highfive_recipients", {
-  id: serial("id").primaryKey(),
-  highfiveId: integer("highfive_id").notNull().references(() => highfives.id),
-  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  highfiveId: text("highfive_id").notNull().references(() => highfives.id),
+  recipientId: text("recipient_id").notNull().references(() => users.id),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -113,7 +114,7 @@ export const highfiveRecipients = pgTable("highfive_recipients", {
 
 // Access Groups
 export const accessGroups = pgTable("access_groups", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   permissions: json("permissions").notNull(),
@@ -122,14 +123,14 @@ export const accessGroups = pgTable("access_groups", {
 
 // Users to Access Groups
 export const userAccessGroups = pgTable("user_access_groups", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  accessGroupId: integer("access_group_id").references(() => accessGroups.id).notNull(),
+  id: text("id").primaryKey().notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  accessGroupId: text("access_group_id").references(() => accessGroups.id).notNull(),
 });
 
 // Cadences
 export const cadences = pgTable("cadences", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   period: text("period").notNull(), // quarterly, annually, etc.
@@ -139,37 +140,37 @@ export const cadences = pgTable("cadences", {
 
 // Timeframes
 export const timeframes = pgTable("timeframes", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  cadenceId: integer("cadence_id").references(() => cadences.id).notNull(),
+  cadenceId: text("cadence_id").references(() => cadences.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Objectives
 export const objectives = pgTable("objectives", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  level: text("level").notNull(), // company, department, team, individual
-  ownerId: integer("owner_id").references(() => users.id).notNull(),
-  teamId: integer("team_id").references(() => teams.id),
-  timeframeId: integer("timeframe_id").references(() => timeframes.id).notNull(),
+  level: text("level"), // company, department, team, individual
+  ownerId: text("owner_id").references(() => users.id).notNull(),
+  teamId: text("team_id").references(() => teams.id),
+  timeframeId: text("timeframe_id").references(() => timeframes.id).notNull(),
   status: text("status").default("not_started"),
   progress: integer("progress").default(0),
-  parentId: integer("parent_id"),
+  parentId: text("parent_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Key Results
 export const keyResults = pgTable("key_results", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  objectiveId: integer("objective_id").references(() => objectives.id).notNull(),
-  assignedToId: integer("assigned_to_id").references(() => users.id),
+  objectiveId: text("objective_id").references(() => objectives.id).notNull(),
+  assignedToId: text("assigned_to_id").references(() => users.id),
   targetValue: text("target_value"),
   currentValue: text("current_value"),
   startValue: text("start_value"),
@@ -180,21 +181,21 @@ export const keyResults = pgTable("key_results", {
 
 // Initiatives (projects, tasks or activities)
 export const initiatives = pgTable("initiatives", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  keyResultId: integer("key_result_id").references(() => keyResults.id).notNull(),
-  assignedToId: integer("assigned_to_id").references(() => users.id),
+  keyResultId: text("key_result_id").references(() => keyResults.id).notNull(),
+  assignedToId: text("assigned_to_id").references(() => users.id),
   status: text("status").default("not_started"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Check-ins
 export const checkIns = pgTable("check_ins", {
-  id: serial("id").primaryKey(),
-  objectiveId: integer("objective_id").references(() => objectives.id),
-  keyResultId: integer("key_result_id").references(() => keyResults.id),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  id: text("id").primaryKey().notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  keyResultId: text("key_result_id").references(() => keyResults.id),
+  userId: text("user_id").references(() => users.id).notNull(),
   progress: integer("progress"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -687,20 +688,20 @@ export const highfiveRecipientsRelations = relations(highfiveRecipients, ({ one 
 
 // Chat Rooms Table
 export const chatRooms = pgTable("chat_rooms", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   type: text("type").notNull().default("direct"), // direct, group, team
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  createdBy: integer("created_by").notNull().references(() => users.id)
+  createdBy: text("created_by").notNull().references(() => users.id)
 });
 
 // Chat Room Members Table
 export const chatRoomMembers = pgTable("chat_room_members", {
-  id: serial("id").primaryKey(),
-  chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
-  userId: integer("user_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  chatRoomId: text("chat_room_id").notNull().references(() => chatRooms.id),
+  userId: text("user_id").notNull().references(() => users.id),
   role: text("role").notNull().default("member"), // member, admin
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
   lastRead: timestamp("last_read").notNull().defaultNow()
@@ -708,22 +709,22 @@ export const chatRoomMembers = pgTable("chat_room_members", {
 
 // Messages Table
 export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
-  userId: integer("user_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  chatRoomId: text("chat_room_id").notNull().references(() => chatRooms.id),
+  userId: text("user_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   type: text("type").notNull().default("text"), // text, image, file, system
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   isEdited: boolean("is_edited").notNull().default(false),
-  replyToId: integer("reply_to_id")
+  replyToId: text("reply_to_id")
 });
 
 // Attachments Table
 export const attachments = pgTable("attachments", {
-  id: serial("id").primaryKey(),
-  messageId: integer("message_id").notNull().references(() => messages.id),
+  id: text("id").primaryKey().notNull(),
+  messageId: text("message_id").notNull().references(() => messages.id),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(), // mime type
   fileSize: integer("file_size").notNull(), // size in bytes
@@ -733,9 +734,9 @@ export const attachments = pgTable("attachments", {
 
 // Reactions Table
 export const reactions = pgTable("reactions", {
-  id: serial("id").primaryKey(),
-  messageId: integer("message_id").notNull().references(() => messages.id),
-  userId: integer("user_id").notNull().references(() => users.id),
+  id: text("id").primaryKey().notNull(),
+  messageId: text("message_id").notNull().references(() => messages.id),
+  userId: text("user_id").notNull().references(() => users.id),
   emoji: text("emoji").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
@@ -853,14 +854,14 @@ export const insertReactionSchema = createInsertSchema(reactions).pick({
 
 // Financial Data 
 export const financialData = pgTable("financial_data", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey().notNull(),
   date: timestamp("date").notNull(),
   revenue: integer("revenue"),
   expenses: integer("expenses"),
   profit: integer("profit"),
   category: text("category"),
-  objectiveId: integer("objective_id").references(() => objectives.id),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  userId: text("user_id").references(() => users.id).notNull(),
   notes: text("notes"),
   source: text("source"),
   createdAt: timestamp("created_at").defaultNow(),

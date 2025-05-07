@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { storage } from "../storage";
+import { ulid } from 'ulid';
 import { 
   users, teams, cadences, timeframes, objectives, keyResults, initiatives, checkIns,
   accessGroups, userAccessGroups, chatRooms, chatRoomMembers, messages
@@ -36,7 +37,9 @@ async function seedUsers() {
   // Check if admin user exists
   const adminUser = await storage.getUserByUsername("admin");
   if (!adminUser) {
+    const generatedId = ulid();
     await storage.createUser({
+      id: generatedId,
       username: "admin",
       firstName: "Admin",
       lastName: "User",

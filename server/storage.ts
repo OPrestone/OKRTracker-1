@@ -11,6 +11,7 @@ import connectPg from "connect-pg-simple";
 import { db } from "./db";
 import { eq, and, desc, count, inArray, isNull, gt, lt, ne } from "drizzle-orm";
 import { pool } from "./db";
+import { ulid } from 'ulid';
 
 const MemoryStore = createMemoryStore(session);
 const PostgresSessionStore = connectPg(session);
@@ -141,11 +142,13 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
+      // Generate ULID
+      const generatedId = ulid();
       // Filter out properties that might not exist in the database yet
       const { firstLogin, introVideoWatched, walkthroughCompleted, onboardingProgress, lastOnboardingStep, ...safeInsertUser } = insertUser;
       
       // Insert the user with only the essential properties
-      const [user] = await db.insert(users).values(safeInsertUser).returning();
+      const [user] = await db.insert(users).values({ id: generatedId, ...safeInsertUser}).returning();
       
       // Return the user with default onboarding values (these will be handled by localStorage on client)
       return {
@@ -207,7 +210,9 @@ export class DatabaseStorage implements IStorage {
 
   // Team Management
   async createTeam(team: InsertTeam): Promise<Team> {
-    const [newTeam] = await db.insert(teams).values(team).returning();
+    // Generate ULID
+    const generatedId = ulid();
+    const [newTeam] = await db.insert(teams).values({id: generatedId, ...team}).returning();
     return newTeam;
   }
 
@@ -238,8 +243,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Access Groups
-  async createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup> {
-    const [newAccessGroup] = await db.insert(accessGroups).values(accessGroup).returning();
+  async createAccessGroup(accessGroup: InsertAccessGroup): Promise<
+        AccessGroup> {
+    const generatedId = ulid();
+    const [newAccessGroup] = await db.insert({ id: generatedId, ...accessGroups}).values(accessGroup).returning();
     return newAccessGroup;
   }
 
@@ -266,15 +273,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignUserToAccessGroup(userId: number, accessGroupId: number): Promise<void> {
-    await db.insert(userAccessGroups).values({
+    const generatedId = ulid();
+    await db.insert({ id: generatedId, ...userAccessGroups}).values({
       userId,
       accessGroupId
     });
   }
 
   // Cadences
-  async createCadence(cadence: InsertCadence): Promise<Cadence> {
-    const [newCadence] = await db.insert(cadences).values(cadence).returning();
+  async createCadence(cadence: InsertCadence): Promise<Cadence>
+    {
+      const generatedId = ulid();
+    const [newCadence] = await db.insert({ id: generatedId, ...cadences}).values(cadence).returning();
     return newCadence;
   }
 
@@ -306,7 +316,8 @@ export class DatabaseStorage implements IStorage {
 
   // Timeframes
   async createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe> {
-    const [newTimeframe] = await db.insert(timeframes).values(timeframe).returning();
+  const generatedId = ulid();
+    const [newTimeframe] = await db.insert({ id: generatedId, ...timeframes}).values(timeframe).returning();
     return newTimeframe;
   }
 
@@ -342,7 +353,8 @@ export class DatabaseStorage implements IStorage {
 
   // Objectives
   async createObjective(objective: InsertObjective): Promise<Objective> {
-    const [newObjective] = await db.insert(objectives).values(objective).returning();
+    const generatedId = ulid();
+    const [newObjective] = await db.insert({ id: generatedId, ...objectives}).values(objective).returning();
     return newObjective;
   }
 
@@ -400,8 +412,9 @@ export class DatabaseStorage implements IStorage {
       ...keyResult,
       currentValue: keyResult.startValue || "0"
     };
-    
-    const [newKeyResult] = await db.insert(keyResults).values(values).returning();
+
+      const generatedId = ulid();
+    const [newKeyResult] = await db.insert({ id: generatedId, ...keyResults}).values(values).returning();
     return newKeyResult;
   }
 
@@ -450,7 +463,9 @@ export class DatabaseStorage implements IStorage {
 
   // Initiatives
   async createInitiative(initiative: InsertInitiative): Promise<Initiative> {
-    const [newInitiative] = await db.insert(initiatives).values(initiative).returning();
+
+    const generatedId = ulid();
+    const [newInitiative] = await db.insert({ id: generatedId, ...initiatives}).values(initiative).returning();
     return newInitiative;
   }
 
@@ -477,8 +492,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Check-ins
-  async createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn> {
-    const [newCheckIn] = await db.insert(checkIns).values(checkIn).returning();
+  async createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>{
+    const generatedId = ulid();
+    const [newCheckIn] = await db.insert({ id: generatedId, ...checkIns}).values(checkIn).returning();
     
     // Update key result progress if available
     if (newCheckIn.keyResultId && typeof newCheckIn.progress === 'number') {
@@ -523,7 +539,8 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Rooms
   async createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom> {
-    const [newChatRoom] = await db.insert(chatRooms).values(chatRoom).returning();
+    const generatedId = ulid();
+    const [newChatRoom] = await db.insert({ id: generatedId, ...chatRooms}).values(chatRoom).returning();
     return newChatRoom;
   }
 
@@ -614,7 +631,8 @@ export class DatabaseStorage implements IStorage {
   
   // Chat Room Members
   async addUserToChatRoom(chatRoomMember: InsertChatRoomMember): Promise<ChatRoomMember> {
-    const [member] = await db.insert(chatRoomMembers).values(chatRoomMember).returning();
+    const generatedId = ulid();
+    const [member] = await db.insert({ id: generatedId, ...chatRoomMembers}).values(chatRoomMember).returning();
     return member;
   }
 
@@ -658,8 +676,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Messages
-  async createMessage(message: InsertMessage): Promise<Message> {
-    const [newMessage] = await db.insert(messages).values(message).returning();
+  async createMessage(message: InsertMessage): Promise<Message>{
+
+    const generatedId = ulid();
+    const [newMessage] = await db.insert({ id: generatedId, ...messages}).values(message).returning();
     return newMessage;
   }
 
@@ -770,7 +790,8 @@ export class DatabaseStorage implements IStorage {
   
   // Attachments
   async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
-    const [newAttachment] = await db.insert(attachments).values(attachment).returning();
+    const generatedId = ulid();
+    const [newAttachment] = await db.insert({ id: generatedId, ...attachments}).values(attachment).returning();
     return newAttachment;
   }
 
@@ -801,9 +822,10 @@ export class DatabaseStorage implements IStorage {
     if (existingReaction) {
       return existingReaction;
     }
-    
+
     // Create new reaction
-    const [newReaction] = await db.insert(reactions).values(reaction).returning();
+    const generatedId = ulid();
+    const [newReaction] = await db.insert({ id: generatedId, ...reactions}).values(reaction).returning();
     return newReaction;
   }
 
