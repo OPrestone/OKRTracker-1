@@ -123,7 +123,7 @@ export default function CreateObjective() {
     <DashboardLayout>
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Add OKR</h1>
+          <h1 className="text-2xl font-bold">Add Key Result</h1>
           <button 
             onClick={handleCancel}
             className="text-gray-500 hover:text-gray-700"

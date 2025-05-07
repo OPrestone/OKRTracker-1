@@ -26,9 +26,9 @@ export function MetricsCard({
   const isNegative = trend && trend < 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-5 border border-slate-100">
-      <div className="flex justify-between mb-1">
-        <div className="text-sm font-medium text-neutral-500">{title}</div>
+    <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
+      <div className="flex justify-between mb-1 px-5">
+        <div className="text-sm font-medium text-neutral-500 ">{title}</div>
         {icon && (
           <div className={cn("w-6 h-6", iconColor)}>
             {icon}
@@ -36,7 +36,7 @@ export function MetricsCard({
         )}
       </div>
       
-      <div className="flex flex-col mb-2">
+      <div className="flex flex-col mb-2 px-5 grow">
         <div className="text-2xl font-bold text-slate-900">{value}</div>
         {showTrend && (
           <div className={cn(

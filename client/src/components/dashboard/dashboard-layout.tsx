@@ -63,15 +63,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           </div>
         </div>
       </div>
-
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="objectives">Objectives</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-6">
+ 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <StatsCard
               title="Total Objectives"
@@ -218,27 +210,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               trend={3.7}
               icon={<Users className="h-4 w-4 text-indigo-500" />}
             />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="objectives">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium mb-4">Objectives Content</h3>
-              <p className="text-slate-500">This tab would contain detailed objectives tracking information.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="team">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium mb-4">Team Performance</h3>
-              <p className="text-slate-500">This tab would contain team performance metrics and details.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </div> 
       
       {children}
     </div>
