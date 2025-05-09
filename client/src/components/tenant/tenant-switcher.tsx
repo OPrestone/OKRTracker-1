@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation, useRouter } from "wouter";
+import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, PlusCircle, Check } from "lucide-react";
@@ -37,7 +37,8 @@ export type Tenant = {
 export default function TenantSwitcher() {
   const [createTenantOpen, setCreateTenantOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [, navigate] = useRouter();
+  // wouter doesn't have useNavigate, we use window.location for navigation
+  const navigate = (path: string) => { window.location.href = path; };
   const [location] = useLocation();
 
   const { data: tenants, isLoading } = useQuery<Tenant[]>({

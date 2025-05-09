@@ -5,7 +5,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
 // UI Components
@@ -201,7 +201,9 @@ const okrTemplates = [
 export default function TenantOnboardingWizard() {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
+  // Implement custom navigate function
+  const navigate = (path: string) => { window.location.href = path; };
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
