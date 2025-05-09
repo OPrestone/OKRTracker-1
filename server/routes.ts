@@ -3309,15 +3309,7 @@ async function initializeData() {
       const adminPassword = await createPassword('admin123');
       const defaultPassword = await createPassword('password123');
 
-      // Create default tenant first
-      const defaultTenant = await storage.createTenant({
-        name: 'Default Organization',
-        slug: 'default-org',
-        settings: {},
-        enabledFeatures: ['objectives', 'key_results', 'chat', 'financial_tracking', 'moods', 'badges', 'feedback'],
-        plan: 'free'
-      });
-      
+      // First create an admin user without tenant (we'll add tenant later)
       const admin = await storage.createUser({
         username: 'admin',
         password: adminPassword,
@@ -3325,15 +3317,29 @@ async function initializeData() {
         email: 'admin@example.com',
         title: 'Administrator',
         isAdmin: true,
-        tenantId: defaultTenant.id,
-        defaultTenantId: defaultTenant.id
+        // Temporary tenant ID that will be updated after tenant creation
+        tenantId: 'temp-tenant-id',
+        defaultTenantId: null
       });
       
-      // Add admin to tenant with owner role
-      await storage.addUserToTenant({
-        userId: admin.id,
+      // Create default tenant using the tenant service
+      const tenantData = {
+        name: 'Default Organization',
+        settings: {},
+        enabledFeatures: ['objectives', 'key_results', 'chat', 'financial_tracking', 'moods', 'badges', 'feedback'],
+        plan: 'free'
+      };
+      
+      // Temporarily override the permission check (we're in bootstrap mode)
+      admin.isAdmin = true;
+      
+      // Create tenant and automatically associate with admin user
+      const { tenant: defaultTenant } = await tenantService.createTenant(tenantData, admin as any, 'owner');
+      
+      // Update the admin user with the real tenant ID
+      await storage.updateUser(admin.id, {
         tenantId: defaultTenant.id,
-        role: 'owner'
+        defaultTenantId: defaultTenant.id
       });
       
       // Create manager users for testing
