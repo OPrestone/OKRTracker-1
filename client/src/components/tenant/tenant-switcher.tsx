@@ -51,10 +51,26 @@ export default function TenantSwitcher() {
   const getCurrentTenant = useCallback(() => {
     if (!tenants || tenants.length === 0) return null;
     
-    // If the path includes /tenants/{slug}, extract the slug
-    const match = location.match(/\/tenants\/([^/]+)/);
-    if (match) {
-      const urlSlug = match[1];
+    // Check for numeric tenant ID in /tenants/{id}
+    const numericMatch = location.match(/\/tenants\/(\d+)/);
+    if (numericMatch) {
+      const tenantId = parseInt(numericMatch[1]);
+      const matchedTenant = tenants.find(t => t.id === tenantId);
+      if (matchedTenant) return matchedTenant;
+    }
+    
+    // Check for organization slug in /organization/{slug}
+    const orgMatch = location.match(/\/organization\/([^/]+)/);
+    if (orgMatch) {
+      const urlSlug = orgMatch[1];
+      const matchedTenant = tenants.find(t => t.slug === urlSlug);
+      if (matchedTenant) return matchedTenant;
+    }
+    
+    // Check for legacy tenant slug in /tenants/{slug}
+    const tenantMatch = location.match(/\/tenants\/([^/]+)/);
+    if (tenantMatch && !numericMatch) { // Ensure we're not matching a numeric ID again
+      const urlSlug = tenantMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) return matchedTenant;
     }
@@ -75,14 +91,28 @@ export default function TenantSwitcher() {
     setSelectedTenant(tenant);
     setOpen(false);
     
-    // If already on a tenant page, replace the tenant slug in the path
-    if (location.startsWith('/tenants/')) {
-      const newPath = location.replace(/\/tenants\/[^/]+/, `/tenants/${tenant.slug}`);
+    // Handle organization routes
+    if (location.startsWith('/organization/')) {
+      const newPath = location.replace(/\/organization\/[^/]+/, `/organization/${tenant.slug}`);
       navigate(newPath);
-    } else {
-      // Otherwise navigate to the tenant detail page
-      navigate(`/tenants/${tenant.slug}`);
+      return;
     }
+    
+    // Handle tenant ID-based routes
+    if (location.match(/\/tenants\/\d+/)) {
+      navigate(`/organization/${tenant.slug}`);
+      return;
+    }
+    
+    // Handle tenant slug-based routes (legacy)
+    if (location.startsWith('/tenants/')) {
+      const newPath = location.replace(/\/tenants\/[^/]+/, `/organization/${tenant.slug}`);
+      navigate(newPath);
+      return;
+    }
+    
+    // Default navigation to organization page with slug
+    navigate(`/organization/${tenant.slug}`);
   }, [location, navigate]);
 
   return (

@@ -136,8 +136,13 @@ function AppRoutes() {
       
       {/* Organizations/Tenants */}
       <ProtectedRoute path="/tenants" component={TenantsPage} />
-      <ProtectedRoute path="/tenants/:slug" component={TenantPage} />
-      <ProtectedRoute path="/tenants/:slug/subscription" component={TenantPage} />
+      {/* ID-based routes - these need to be later to avoid catching slug-based routes */}
+      <ProtectedRoute path="/tenants/:id(\d+)" component={TenantPage} />
+      <ProtectedRoute path="/tenants/:id(\d+)/subscription" component={TenantPage} />
+      {/* Slug-based routes for organizations */}
+      <ProtectedRoute path="/organization/:organisation" component={OrganizationPage} />
+      <ProtectedRoute path="/organization/:organisation/subscription" component={OrganizationPage} />
+      {/* Onboarding */}
       <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
       
       {/* Drag and Drop Interfaces */}
