@@ -17,20 +17,20 @@ const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User Management
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
-  deleteUser(id: number): Promise<void>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
-  getUsersByTeam(teamId: number): Promise<User[]>;
+  getUsersByTeam(teamId: string): Promise<User[]>;
   
   // Team Management
   createTeam(team: InsertTeam): Promise<Team>;
-  getTeam(id: number): Promise<Team | undefined>;
-  updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team>;
+  getTeam(id: string): Promise<Team | undefined>;
+  updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team>;
   getAllTeams(): Promise<Team[]>;
-  getTeamsByParent(parentId: number): Promise<Team[]>;
+  getTeamsByParent(parentId: string): Promise<Team[]>;
   
   // Access Groups
   createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup>;
@@ -130,7 +130,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User Management
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -163,7 +163,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateUser(id: number, user: Partial<InsertUser>): Promise<User> {
+  async updateUser(id: string, user: Partial<InsertUser>): Promise<User> {
     const [updatedUser] = await db.update(users)
       .set(user)
       .where(eq(users.id, id))
@@ -186,11 +186,11 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUsersByTeam(teamId: number): Promise<User[]> {
+  async getUsersByTeam(teamId: string): Promise<User[]> {
     return db.select().from(users).where(eq(users.teamId, teamId));
   }
   
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: string): Promise<void> {
     try {
       // First check if user exists
       const user = await this.getUser(id);
@@ -212,12 +212,12 @@ export class DatabaseStorage implements IStorage {
     return newTeam;
   }
 
-  async getTeam(id: number): Promise<Team | undefined> {
+  async getTeam(id: string): Promise<Team | undefined> {
     const [team] = await db.select().from(teams).where(eq(teams.id, id));
     return team;
   }
 
-  async updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team> {
+  async updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team> {
     const [updatedTeam] = await db.update(teams)
       .set(team)
       .where(eq(teams.id, id))
@@ -234,11 +234,11 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(teams);
   }
   
-  async getTeamsByTenant(tenantId: number): Promise<Team[]> {
+  async getTeamsByTenant(tenantId: string): Promise<Team[]> {
     return db.select().from(teams).where(eq(teams.tenantId, tenantId));
   }
 
-  async getTeamsByParent(parentId: number): Promise<Team[]> {
+  async getTeamsByParent(parentId: string): Promise<Team[]> {
     return db.select().from(teams).where(eq(teams.parentId, parentId));
   }
 
