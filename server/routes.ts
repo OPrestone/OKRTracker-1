@@ -784,10 +784,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/objectives", async (req, res, next) => {
+  app.post("/api/objectives", withTenant, async (req, res, next) => {
     try {
       // Make a copy of the request body to potentially modify date fields
       const requestData = { ...req.body };
+      
+      // Assign the tenant ID from middleware
+      requestData.tenantId = req.tenantId;
       
       // Convert string dates to Date objects if present
       if (requestData.startDate && typeof requestData.startDate === 'string') {
@@ -836,25 +839,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/objectives/:id", async (req, res, next) => {
+  app.get("/api/objectives/:id", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const objective = await storage.getObjective(id);
+      
       if (!objective) {
         return res.status(404).send("Objective not found");
       }
+      
+      // Ensure the objective belongs to the current tenant
+      if (objective.tenantId !== req.tenantId) {
+        return res.status(403).json({ 
+          error: "You do not have access to this objective" 
+        });
+      }
+      
       res.json(objective);
     } catch (error) {
       next(error);
     }
   });
 
-  app.patch("/api/objectives/:id", async (req, res, next) => {
+  app.patch("/api/objectives/:id", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       
+      // Check if objective exists and belongs to the current tenant
+      const objective = await storage.getObjective(id);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Ensure the objective belongs to the current tenant
+      if (objective.tenantId !== req.tenantId) {
+        return res.status(403).json({ 
+          error: "You do not have access to this objective" 
+        });
+      }
+      
       // Make a copy of the request body to potentially modify date fields
       const requestData = { ...req.body };
+      
+      // Ensure tenantId remains the same
+      requestData.tenantId = req.tenantId;
       
       // Convert string dates to Date objects if present
       if (requestData.startDate && typeof requestData.startDate === 'string') {
@@ -903,24 +931,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/objectives", async (req, res, next) => {
+  app.get("/api/users/:userId/objectives", withTenant, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
       const objectives = await storage.getObjectivesByOwner(userId);
-      res.json(objectives);
+      
+      // Filter objectives by current tenant
+      const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
+      
+      res.json(tenantObjectives);
     } catch (error) {
       next(error);
     }
   });
 
-  app.get("/api/teams/:teamId/objectives", async (req, res, next) => {
+  app.get("/api/teams/:teamId/objectives", withTenant, async (req, res, next) => {
     try {
       const teamId = parseInt(req.params.teamId);
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
       }
       const objectives = await storage.getObjectivesByTeam(teamId);
-      res.json(objectives);
+      
+      // Filter objectives by current tenant
+      const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
+      
+      res.json(tenantObjectives);
     } catch (error) {
       next(error);
     }
