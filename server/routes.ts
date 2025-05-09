@@ -7,7 +7,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
          insertMoodEntrySchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
-         statusEnum, User } from "@shared/schema";
+         moodEntries, statusEnum, User } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
@@ -1535,6 +1535,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching public badges:", error);
       res.status(500).json({ message: "Failed to fetch public badges" });
+    }
+  });
+  
+  // Wellness Pulse - Team Mood API
+  app.get("/api/mood-entries", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Fetch all mood entries with user information
+      const moodEntries = await db.query.moodEntries.findMany({
+        with: {
+          user: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              teamId: true,
+            }
+          }
+        },
+        orderBy: (moodEntries, { desc }) => [desc(moodEntries.date)]
+      });
+      
+      res.json(moodEntries);
+    } catch (error) {
+      console.error("Error fetching mood entries:", error);
+      next(error);
+    }
+  });
+  
+  app.get("/api/mood-entries/user/:userId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      
+      // Fetch mood entries for a specific user
+      const moodEntries = await db.query.moodEntries.findMany({
+        where: (moodEntries, { eq }) => eq(moodEntries.userId, userId),
+        orderBy: (moodEntries, { desc }) => [desc(moodEntries.date)]
+      });
+      
+      res.json(moodEntries);
+    } catch (error) {
+      console.error("Error fetching user mood entries:", error);
+      next(error);
+    }
+  });
+  
+  app.get("/api/mood-entries/team/:teamId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      
+      // Get users for the team
+      const teamUsers = await storage.getUsersByTeam(teamId);
+      const teamUserIds = teamUsers.map(user => user.id);
+      
+      if (teamUserIds.length === 0) {
+        return res.json([]);
+      }
+      
+      // Fetch mood entries for team members
+      const moodEntries = await db.query.moodEntries.findMany({
+        where: (moodEntries, { inArray }) => inArray(moodEntries.userId, teamUserIds),
+        with: {
+          user: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              teamId: true,
+            }
+          }
+        },
+        orderBy: (moodEntries, { desc }) => [desc(moodEntries.date)]
+      });
+      
+      res.json(moodEntries);
+    } catch (error) {
+      console.error("Error fetching team mood entries:", error);
+      next(error);
+    }
+  });
+  
+  app.post("/api/mood-entries", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const userId = (req.user as User).id;
+      const validatedData = insertMoodEntrySchema.parse({
+        ...req.body,
+        userId: userId
+      });
+      
+      const moodEntry = await db.insert(moodEntries).values(validatedData).returning();
+      
+      res.status(201).json(moodEntry[0]);
+    } catch (error) {
+      console.error("Error creating mood entry:", error);
+      next(error);
     }
   });
 
