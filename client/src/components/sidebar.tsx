@@ -797,7 +797,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/configure" className="flex items-center w-full">
+          <Link href={getLink("/configure")} className="flex items-center w-full">
             <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Configurations</span>
           </Link>
@@ -832,7 +832,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/general"
+                href={getLink("/configuration/general")}
                 className="w-full flex items-center"
               >
                 <Settings className="h-4 w-4 mr-2 text-indigo-400" />
@@ -849,7 +849,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/teams"
+                href={getLink("/configuration/teams")}
                 className="w-full flex items-center"
               >
                 <Users className="h-4 w-4 mr-2 text-indigo-400" />
@@ -866,7 +866,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/users-permissions"
+                href={getLink("/configuration/users-permissions")}
                 className="w-full flex items-center"
               >
                 <UserCog className="h-4 w-4 mr-2 text-indigo-400" />
@@ -883,7 +883,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/access-groups"
+                href={getLink("/configuration/access-groups")}
                 className="w-full flex items-center"
               >
                 <Shield className="h-4 w-4 mr-2 text-indigo-400" />
@@ -900,7 +900,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/integrations"
+                href={getLink("/configuration/integrations")}
                 className="w-full flex items-center"
               >
                 <PanelLeftOpen className="h-4 w-4 mr-2 text-indigo-400" />
@@ -917,7 +917,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/status-settings"
+                href={getLink("/configuration/status-settings")}
                 className="w-full flex items-center"
               >
                 <CheckCircle className="h-4 w-4 mr-2 text-indigo-400" />
@@ -934,7 +934,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/cadences"
+                href={getLink("/configuration/cadences")}
                 className="w-full flex items-center"
               >
                 <CalendarCheck className="h-4 w-4 mr-2 text-indigo-400" />
@@ -951,7 +951,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/configuration/timeframes"
+                href={getLink("/configuration/timeframes")}
                 className="w-full flex items-center"
               >
                 <Clock className="h-4 w-4 mr-2 text-indigo-400" />
@@ -965,7 +965,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       {/* User Profile */}
       <div className="border-t border-slate-800/70 p-4 mt-auto bg-[#1e293b] shadow-inner">
         <div className="flex items-center">
-          <Link href="/user-profile">
+          <Link href={getLink("/user-profile")}>
             <Avatar className="h-10 w-10 mr-3 border-2 border-indigo-500/20 hover:border-indigo-500/60 transition-colors shadow-sm">
               <AvatarImage src="" alt="User profile" />
               <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-medium">
@@ -975,7 +975,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
           <div>
             <Link
-              href="/user-profile"
+              href={getLink("/user-profile")}
               className="hover:text-white transition-colors"
             >
               <p className="text-sm font-semibold text-white">
