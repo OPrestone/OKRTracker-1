@@ -1525,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 1. Generate objective recommendations for teams
   app.get("/api/recommendations/objectives/:teamId", withTenant, async (req, res, next) => {
     try {
-      const teamId = parseInt(req.params.teamId);
+      const teamId = req.params.teamId;
       const count = req.query.count ? parseInt(req.query.count as string) : 3;
       const tenantId = req.tenantId;
       
@@ -1601,7 +1601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 2. Generate key result recommendations for an objective
   app.get("/api/recommendations/key-results/:objectiveId", withTenant, async (req, res, next) => {
     try {
-      const objectiveId = parseInt(req.params.objectiveId);
+      const objectiveId = req.params.objectiveId;
       const count = req.query.count ? parseInt(req.query.count as string) : 5;
       const tenantId = req.tenantId;
       
@@ -1644,7 +1644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 3. Analyze and improve an existing OKR
   app.get("/api/recommendations/improve/:objectiveId", withTenant, async (req, res, next) => {
     try {
-      const objectiveId = parseInt(req.params.objectiveId);
+      const objectiveId = req.params.objectiveId;
       const tenantId = req.tenantId;
       
       // Get objective data
@@ -1685,7 +1685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // 4. Analyze team objectives alignment with company objectives
   app.get("/api/recommendations/alignment/:teamId", withTenant, async (req, res, next) => {
     try {
-      const teamId = parseInt(req.params.teamId);
+      const teamId = req.params.teamId;
       const tenantId = req.tenantId;
       
       // Get team data
@@ -1856,7 +1856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const tenantId = req.tenantId;
-      const roomId = parseInt(req.params.id);
+      const roomId = req.params.id;
       const room = await storage.getChatRoom(roomId);
       
       if (!room) {
