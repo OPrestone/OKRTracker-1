@@ -8,8 +8,10 @@
  * 4. Renames new tables to original names
  */
 
-const { Pool } = require('pg');
-const { ulid } = require('ulid');
+import pg from 'pg';
+import { ulid } from 'ulid';
+
+const { Pool } = pg;
 
 // Connect to the database
 const pool = new Pool({
@@ -29,7 +31,7 @@ async function executeQuery(query, params = []) {
 
 async function getTableInfo(tableName) {
   const columnsQuery = `
-    SELECT column_name, data_type, is_nullable, column_default
+    SELECT column_name, data_type, is_nullable, column_default, udt_name
     FROM information_schema.columns
     WHERE table_name = $1
     ORDER BY ordinal_position;
@@ -180,22 +182,50 @@ async function main() {
     console.log('Starting migration to ULID primary keys');
     
     // First, get all tables
-    const tables = await getAllTables();
-    console.log(`Found ${tables.length} tables to migrate`);
+    const allTables = await getAllTables();
+    console.log(`Found ${allTables.length} tables to migrate`);
     
     // Create a map to store old id -> new ulid mapping
     const idMap = {};
     
+    // Define table dependencies to ensure they are migrated in the right order
+    // Tables with no foreign keys should be first
+    const baseTableNames = ['tenants', 'cadences', 'access_groups', 'badges'];
+    
+    // Tables that depend on base tables
+    const tier1TableNames = ['teams', 'users', 'timeframes'];
+    
+    // Tables that depend on tier 1 tables
+    const tier2TableNames = ['objectives', 'user_badges', 'user_access_groups', 'users_to_tenants'];
+    
+    // Remaining tables
+    const remainingTables = allTables.filter(t => 
+      !baseTableNames.includes(t) && 
+      !tier1TableNames.includes(t) && 
+      !tier2TableNames.includes(t)
+    );
+    
+    // Order of migration
+    const migrationOrder = [
+      ...baseTableNames,
+      ...tier1TableNames,
+      ...tier2TableNames,
+      ...remainingTables
+    ];
+    
+    console.log(`Migration order: ${migrationOrder.join(', ')}`);
+    
     // Disable foreign key checks
     await executeQuery('SET session_replication_role = replica;');
     
-    // Migrate all tables
-    for (const tableName of tables) {
+    // Migrate all tables in the determined order
+    for (const tableName of migrationOrder) {
       await migrateTable(tableName, idMap);
     }
     
-    // Drop old tables and rename new tables
-    for (const tableName of tables) {
+    // Drop old tables and rename new tables in reverse order
+    // to properly handle foreign key constraints
+    for (const tableName of [...migrationOrder].reverse()) {
       await executeQuery(`DROP TABLE ${tableName} CASCADE;`);
       await executeQuery(`ALTER TABLE ${tableName}_ulid RENAME TO ${tableName};`);
     }
