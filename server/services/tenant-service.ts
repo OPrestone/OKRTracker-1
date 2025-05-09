@@ -127,7 +127,7 @@ class TenantService {
         .innerJoin(usersToTenants, eq(usersToTenants.tenantId, tenants.id))
         .where(and(
           eq(usersToTenants.userId, userId),
-          eq(usersToTenants.isDefault, true)
+          sql`${usersToTenants.isDefault} = true`
         ));
       
       return result;
@@ -140,20 +140,15 @@ class TenantService {
   // Set a tenant as the default for a user
   async setDefaultTenant(userId: string, tenantId: string): Promise<void> {
     try {
-      // First, unset all defaults
-      await db
-        .update(usersToTenants)
-        .set({ isDefault: false })
-        .where(eq(usersToTenants.userId, userId));
+      // First, unset all defaults using raw SQL
+      await db.execute(
+        sql`UPDATE users_to_tenants SET is_default = false WHERE user_id = ${userId}`
+      );
       
       // Then set the new default
-      await db
-        .update(usersToTenants)
-        .set({ isDefault: true })
-        .where(and(
-          eq(usersToTenants.userId, userId),
-          eq(usersToTenants.tenantId, tenantId)
-        ));
+      await db.execute(
+        sql`UPDATE users_to_tenants SET is_default = true WHERE user_id = ${userId} AND tenant_id = ${tenantId}`
+      );
     } catch (error) {
       console.error('Error setting default tenant:', error);
       throw error;
@@ -220,10 +215,9 @@ class TenantService {
       
       // If this is the default tenant for the user, unset any existing default
       if (isDefault) {
-        await db
-          .update(usersToTenants)
-          .set({ isDefault: false })
-          .where(eq(usersToTenants.userId, userId));
+        await db.execute(
+          sql`UPDATE users_to_tenants SET is_default = false WHERE user_id = ${userId}`
+        );
       }
       
       // Add user to tenant
