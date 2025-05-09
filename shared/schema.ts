@@ -455,6 +455,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   moodEntries: many(moodEntries, {
     relationName: "user_mood_entries",
   }),
+  // Multi-tenancy relations
+  tenants: many(usersToTenants, {
+    relationName: "user_tenants",
+  }),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -908,5 +912,175 @@ export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
     fields: [moodEntries.userId],
     references: [users.id],
     relationName: "user_mood_entries",
+  }),
+}));
+
+// Multi-Tenancy Structure
+export const tenantPlans = pgEnum("tenant_plan", [
+  "free",
+  "starter",
+  "professional",
+  "enterprise"
+]);
+
+export const tenantStatuses = pgEnum("tenant_status", [
+  "active",
+  "inactive",
+  "trial",
+  "past_due",
+  "cancelled"
+]);
+
+// Tenants table to manage organizations
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  displayName: text("display_name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logo: text("logo"),
+  primaryColor: text("primary_color").default("#3B82F6"),
+  plan: tenantPlans("plan").default("free"),
+  status: tenantStatuses("status").default("trial"),
+  customDomain: text("custom_domain"),
+  maxUsers: integer("max_users").default(5),
+  trialEndsAt: timestamp("trial_ends_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Adding stripe and subscription data to users
+export const usersToTenants = pgTable("users_to_tenants", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  role: text("role").default("member"), // owner, admin, member
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Stripe customer and subscription information for tenants
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripePriceId: text("stripe_price_id"),
+  status: text("status").default("incomplete"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  canceledAt: timestamp("canceled_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payment history for subscriptions
+export const paymentHistory = pgTable("payment_history", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  subscriptionId: integer("subscription_id").references(() => subscriptions.id),
+  stripeInvoiceId: text("stripe_invoice_id"),
+  amount: integer("amount").notNull(), // in cents
+  currency: text("currency").default("usd"),
+  status: text("status").notNull(), // paid, pending, failed
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for multi-tenancy
+export const insertTenantSchema = createInsertSchema(tenants).pick({
+  name: true,
+  displayName: true,
+  slug: true,
+  logo: true,
+  primaryColor: true,
+  plan: true,
+  status: true,
+  customDomain: true,
+  maxUsers: true,
+  trialEndsAt: true,
+});
+
+export const insertUserToTenantSchema = createInsertSchema(usersToTenants).pick({
+  userId: true,
+  tenantId: true,
+  role: true,
+  isDefault: true,
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  tenantId: true,
+  stripeCustomerId: true,
+  stripeSubscriptionId: true,
+  stripePriceId: true,
+  status: true,
+  currentPeriodStart: true,
+  currentPeriodEnd: true,
+  cancelAtPeriodEnd: true,
+  canceledAt: true,
+});
+
+export const insertPaymentHistorySchema = createInsertSchema(paymentHistory).pick({
+  tenantId: true,
+  subscriptionId: true,
+  stripeInvoiceId: true,
+  amount: true,
+  currency: true,
+  status: true,
+  paidAt: true,
+});
+
+// Types for multi-tenancy
+export type InsertTenant = z.infer<typeof insertTenantSchema>;
+export type Tenant = typeof tenants.$inferSelect;
+
+export type InsertUserToTenant = z.infer<typeof insertUserToTenantSchema>;
+export type UserToTenant = typeof usersToTenants.$inferSelect;
+
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+export type InsertPaymentHistory = z.infer<typeof insertPaymentHistorySchema>;
+export type PaymentHistory = typeof paymentHistory.$inferSelect;
+
+// Relations for multi-tenancy
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  usersToTenants: many(usersToTenants, { relationName: "tenant_users" }),
+  subscriptions: many(subscriptions, { relationName: "tenant_subscriptions" }),
+  paymentHistory: many(paymentHistory, { relationName: "tenant_payments" }),
+}));
+
+export const usersToTenantsRelations = relations(usersToTenants, ({ one }) => ({
+  user: one(users, {
+    fields: [usersToTenants.userId],
+    references: [users.id],
+    relationName: "user_tenants",
+  }),
+  tenant: one(tenants, {
+    fields: [usersToTenants.tenantId],
+    references: [tenants.id],
+    relationName: "tenant_users",
+  }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [subscriptions.tenantId],
+    references: [tenants.id],
+    relationName: "tenant_subscriptions",
+  }),
+  paymentHistory: many(paymentHistory, { relationName: "subscription_payments" }),
+}));
+
+export const paymentHistoryRelations = relations(paymentHistory, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [paymentHistory.tenantId],
+    references: [tenants.id],
+    relationName: "tenant_payments",
+  }),
+  subscription: one(subscriptions, {
+    fields: [paymentHistory.subscriptionId],
+    references: [subscriptions.id],
+    relationName: "subscription_payments",
   }),
 }));
