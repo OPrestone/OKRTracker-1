@@ -42,6 +42,7 @@ import CreateObjective from "@/pages/create-objective";
 import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
+import WellnessPulse from "@/pages/wellness-pulse";
 import Configure from "@/pages/configure";
 
 // Import new drag-and-drop pages
@@ -123,6 +124,9 @@ function AppRoutes() {
       {/* Communication */}
       <ProtectedRoute path="/chat" component={ChatPage} />
       <ProtectedRoute path="/feedback-wall" component={FeedbackWall} />
+      
+      {/* Wellness */}
+      <ProtectedRoute path="/wellness-pulse" component={WellnessPulse} />
       
       {/* Drag and Drop Interfaces */}
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
