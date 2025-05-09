@@ -42,6 +42,7 @@ export const teams = pgTable("teams", {
   icon: text("icon").default("building"),
   parentId: integer("parent_id"),
   ownerId: integer("owner_id"),
+  tenantId: integer("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -66,6 +67,7 @@ export const feedback = pgTable("feedback", {
   keyResultId: integer("key_result_id").references(() => keyResults.id),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  tenantId: integer("tenant_id").references(() => tenants.id),
 });
 
 // Recognition Badges
@@ -98,6 +100,7 @@ export const highfives = pgTable("highfives", {
   keyResultId: integer("key_result_id").references(() => keyResults.id),
   isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  tenantId: integer("tenant_id").references(() => tenants.id),
 });
 
 export const highfiveRecipients = pgTable("highfive_recipients", {
@@ -160,6 +163,7 @@ export const objectives = pgTable("objectives", {
   status: text("status").default("not_started"),
   progress: integer("progress").default(0),
   parentId: integer("parent_id"),
+  tenantId: integer("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -225,6 +229,7 @@ export const insertTeamSchema = createInsertSchema(teams).pick({
   icon: true,
   parentId: true,
   ownerId: true,
+  tenantId: true,
 });
 
 export const insertAccessGroupSchema = createInsertSchema(accessGroups).pick({
@@ -256,6 +261,7 @@ export const insertObjectiveSchema = createInsertSchema(objectives).pick({
   timeframeId: true,
   status: true,
   parentId: true,
+  tenantId: true,
 });
 
 export const insertKeyResultSchema = createInsertSchema(keyResults).pick({
@@ -295,6 +301,7 @@ export const insertFeedbackSchema = createInsertSchema(feedback).pick({
   objectiveId: true,
   keyResultId: true,
   isRead: true,
+  tenantId: true,
 });
 
 export const insertBadgeSchema = createInsertSchema(badges).pick({
@@ -319,6 +326,7 @@ export const insertHighfiveSchema = createInsertSchema(highfives).pick({
   objectiveId: true,
   keyResultId: true,
   isPublic: true,
+  tenantId: true,
 });
 
 export const insertHighfiveRecipientSchema = createInsertSchema(highfiveRecipients).pick({
