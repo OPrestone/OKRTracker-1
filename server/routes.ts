@@ -3398,102 +3398,87 @@ async function initializeData() {
       const quarterlyCadence = await storage.createCadence({
         name: 'Quarterly',
         description: 'Quarterly cadence for tracking OKRs on a 3-month basis',
-        period: 'quarterly',
-        startMonth: 1
+        periodDays: 90, // 90 days for quarterly
+        tenantId: defaultTenant.id
       });
 
       const annualCadence = await storage.createCadence({
         name: 'Annual',
         description: 'Annual cadence for tracking yearly goals',
-        period: 'annual',
-        startMonth: 1
+        periodDays: 365, // 365 days for annual
+        tenantId: defaultTenant.id
       });
 
       // Create sample timeframes
       const q3Timeframe = await storage.createTimeframe({
         name: 'Q3 2023',
+        description: 'Third quarter of 2023',
         startDate: new Date('2023-07-01'),
         endDate: new Date('2023-09-30'),
-        cadenceId: quarterlyCadence.id
+        cadenceId: quarterlyCadence.id,
+        tenantId: defaultTenant.id
       });
 
       const q4Timeframe = await storage.createTimeframe({
         name: 'Q4 2023',
+        description: 'Fourth quarter of 2023',
         startDate: new Date('2023-10-01'),
         endDate: new Date('2023-12-31'),
-        cadenceId: quarterlyCadence.id
+        cadenceId: quarterlyCadence.id,
+        tenantId: defaultTenant.id
       });
 
       const annual2023Timeframe = await storage.createTimeframe({
         name: 'Annual 2023',
+        description: 'Full year 2023',
         startDate: new Date('2023-01-01'),
         endDate: new Date('2023-12-31'),
-        cadenceId: annualCadence.id
+        cadenceId: annualCadence.id,
+        tenantId: defaultTenant.id
       });
 
       // Create sample teams
       const marketingTeam = await storage.createTeam({
         name: 'Marketing Team',
         description: 'Team responsible for all marketing activities',
-        color: '#3B82F6',
-        icon: 'building'
+        type: 'team',
+        tenantId: defaultTenant.id
       });
 
       const productTeam = await storage.createTeam({
         name: 'Product Team',
         description: 'Team responsible for product development',
-        color: '#8B5CF6',
-        icon: 'code-box'
+        type: 'team',
+        tenantId: defaultTenant.id
       });
 
       const salesTeam = await storage.createTeam({
         name: 'Sales Team',
         description: 'Team responsible for sales and revenue generation',
-        color: '#10B981',
-        icon: 'line-chart'
+        type: 'team',
+        tenantId: defaultTenant.id
       });
 
       // Create access groups
       const adminGroup = await storage.createAccessGroup({
         name: 'Admin',
         description: 'Full system access',
-        permissions: {
-          createOKRs: true,
-          editAllOKRs: true,
-          deleteOKRs: true,
-          viewAllOKRs: true,
-          manageUsers: true,
-          manageTeams: true,
-          manageSettings: true
-        }
+        permissions: ['create_okrs', 'edit_all_okrs', 'delete_okrs', 'view_all_okrs', 'manage_users', 'manage_teams', 'manage_settings'],
+        tenantId: defaultTenant.id
       });
 
       const managerGroup = await storage.createAccessGroup({
         name: 'Manager',
         description: 'Team management access',
-        permissions: {
-          createOKRs: true,
-          editAllOKRs: false,
-          deleteOKRs: false,
-          viewAllOKRs: true,
-          manageUsers: false,
-          manageTeams: false,
-          manageSettings: false
-        }
+        permissions: ['create_okrs', 'view_all_okrs'],
+        tenantId: defaultTenant.id
       });
 
       const userGroup = await storage.createAccessGroup({
         name: 'User',
         description: 'Basic user access',
-        permissions: {
-          createOKRs: false,
-          editAllOKRs: false,
-          deleteOKRs: false,
-          viewAllOKRs: true,
-          manageUsers: false,
-          manageTeams: false,
-          manageSettings: false
-        }
+        permissions: ['view_all_okrs'],
+        tenantId: defaultTenant.id
       });
 
       // Assign users to access groups
