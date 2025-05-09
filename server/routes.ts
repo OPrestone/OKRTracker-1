@@ -548,12 +548,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Users API
-  app.get("/api/users", async (req, res) => {
+  app.get("/api/users", ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
+      // Get users belonging to current tenant
+      const usersList = await db
+        .select({
+          user: users
+        })
+        .from(usersToTenants)
+        .innerJoin(users, eq(users.id, usersToTenants.userId))
+        .where(eq(usersToTenants.tenantId, req.tenantId));
+      
+      // Extract just the user data
+      const tenantUsers = usersList.map(item => item.user);
       
       // Add default onboarding properties if missing
-      const enhancedUsers = users.map(user => {
+      const enhancedUsers = tenantUsers.map(user => {
         const { password, ...userWithoutPassword } = user;
         return {
           ...userWithoutPassword,
@@ -574,13 +584,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const user = await storage.getUser(id);
+      
       if (!user) {
         return res.status(404).send("User not found");
       }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, id),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
+      }
+      
       // Don't return the password and add missing onboarding properties
       const { password, ...userWithoutPassword } = user;
       const enhancedUser = {
@@ -600,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update user profile
-  app.put("/api/users/:id", async (req, res) => {
+  app.put("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -608,6 +634,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingUser = await storage.getUser(id);
       if (!existingUser) {
         return res.status(404).send("User not found");
+      }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, id),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
       }
       
       // Check if user is authorized (can only edit own profile unless admin)
@@ -675,10 +715,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Assign user to team
-  app.post("/api/users/:userId/team", async (req, res, next) => {
+  app.post("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
       const { teamId } = z.object({ teamId: z.number() }).parse(req.body);
+      
+      // Verify user exists and belongs to current tenant
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
+      }
+      
+      // Verify team exists and belongs to current tenant
+      if (teamId) {
+        const team = await storage.getTeam(teamId);
+        if (!team) {
+          return res.status(404).json({ error: "Team not found" });
+        }
+        
+        if (team.tenantId !== req.tenantId) {
+          return res.status(403).json({ error: "Team does not belong to current tenant" });
+        }
+      }
       
       // Update the user's team
       const updatedUser = await storage.updateUser(userId, { teamId });
@@ -696,9 +768,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Remove user from team
-  app.delete("/api/users/:userId/team", async (req, res, next) => {
+  app.delete("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
+      
+      // Verify user exists and belongs to current tenant
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
+      }
       
       // Set teamId to null to remove the user from their team
       const updatedUser = await storage.updateUser(userId, { teamId: null });
@@ -2876,20 +2968,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Team users endpoint
-  app.get("/api/teams/:teamId/users", async (req, res, next) => {
+  app.get("/api/teams/:teamId/users", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const teamId = parseInt(req.params.teamId);
       if (isNaN(teamId)) {
         return res.status(400).json({ error: "Invalid team ID" });
       }
       
+      // Get the team
       const team = await storage.getTeam(teamId);
       if (!team) {
         return res.status(404).json({ error: "Team not found" });
       }
       
+      // Verify team belongs to current tenant
+      if (team.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Team not found in current tenant" });
+      }
+      
+      // Get users for team
       const users = await storage.getUsersByTeam(teamId);
-      res.json(users);
+      
+      // Filter out sensitive information
+      const safeUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(safeUsers);
     } catch (error) {
       next(error);
     }

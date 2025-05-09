@@ -233,6 +233,10 @@ export class DatabaseStorage implements IStorage {
   async getAllTeams(): Promise<Team[]> {
     return db.select().from(teams);
   }
+  
+  async getTeamsByTenant(tenantId: number): Promise<Team[]> {
+    return db.select().from(teams).where(eq(teams.tenantId, tenantId));
+  }
 
   async getTeamsByParent(parentId: number): Promise<Team[]> {
     return db.select().from(teams).where(eq(teams.parentId, parentId));
