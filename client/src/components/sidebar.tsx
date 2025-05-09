@@ -620,7 +620,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/project-kanban" className="flex items-center w-full">
+          <Link href={getLink("/project-kanban")} className="flex items-center w-full">
             <LayoutDashboard className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Project Kanban</span>
           </Link>
@@ -635,7 +635,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link
-            href="/objectives-organizer"
+            href={getLink("/objectives-organizer")}
             className="flex items-center w-full"
           >
             <Target className="mr-3 h-5 w-5 text-indigo-400" />
@@ -651,7 +651,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/timeline-editor" className="flex items-center w-full">
+          <Link href={getLink("/timeline-editor")} className="flex items-center w-full">
             <Calendar className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Timeline Editor</span>
           </Link>
@@ -665,7 +665,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/custom-dashboard" className="flex items-center w-full">
+          <Link href={getLink("/custom-dashboard")} className="flex items-center w-full">
             <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Custom Dashboard</span>
           </Link>
@@ -704,7 +704,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/reports" className="w-full">
+              <Link href={getLink("/reports")} className="w-full">
                 Overview Dashboard
               </Link>
             </div>
@@ -717,7 +717,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/okr-reports" className="w-full">
+              <Link href={getLink("/okr-reports")} className="w-full">
                 OKR Performance
               </Link>
             </div>
@@ -730,7 +730,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/export-reports" className="w-full flex items-center">
+              <Link href={getLink("/export-reports")} className="w-full flex items-center">
                 <FileOutput className="mr-2 h-4 w-4 text-indigo-400" />
                 Export Reports
               </Link>
@@ -744,7 +744,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/team-performance" className="w-full">
+              <Link href={getLink("/team-performance")} className="w-full">
                 Team Performance
               </Link>
             </div>
@@ -758,7 +758,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/ai-recommendations"
+                href={getLink("/ai-recommendations")}
                 className="w-full flex items-center"
               >
                 <Brain className="mr-2 h-4 w-4 text-indigo-400" />
@@ -775,7 +775,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               )}
             >
               <Link
-                href="/import-financial"
+                href={getLink("/import-financial")}
                 className="w-full flex items-center"
               >
                 <BarChart3 className="mr-2 h-4 w-4 text-indigo-400" />
