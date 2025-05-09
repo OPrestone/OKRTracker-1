@@ -1041,9 +1041,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/key-results", async (req, res, next) => {
+  app.post("/api/key-results", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertKeyResultSchema.parse(req.body);
+      const validatedData = insertKeyResultSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
       const keyResult = await storage.createKeyResult(validatedData);
       res.status(201).json(keyResult);
     } catch (error) {
@@ -1064,9 +1067,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/key-results/:id", async (req, res, next) => {
+  app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the key result to check tenant access
+      const keyResult = await storage.getKeyResult(id);
+      if (!keyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      if (keyResult.tenantId && keyResult.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
       const validatedData = insertKeyResultSchema.partial().parse(req.body);
       const updatedKeyResult = await storage.updateKeyResult(id, validatedData);
       res.json(updatedKeyResult);
@@ -1075,9 +1089,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/key-results/:id/progress", async (req, res, next) => {
+  app.patch("/api/key-results/:id/progress", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the key result to check tenant access
+      const keyResult = await storage.getKeyResult(id);
+      if (!keyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      if (keyResult.tenantId && keyResult.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
       const { progress } = z.object({ progress: z.number().min(0).max(100) }).parse(req.body);
       const updatedKeyResult = await storage.updateKeyResultProgress(id, progress);
       res.json(updatedKeyResult);
@@ -1099,7 +1124,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/initiatives", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertInitiativeSchema.parse(req.body);
+      const validatedData = insertInitiativeSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
       const initiative = await storage.createInitiative(validatedData);
       res.status(201).json(initiative);
     } catch (error) {
@@ -1144,7 +1172,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/check-ins", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertCheckInSchema.parse(req.body);
+      const validatedData = insertCheckInSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
       const checkIn = await storage.createCheckIn(validatedData);
       res.status(201).json(checkIn);
     } catch (error) {
