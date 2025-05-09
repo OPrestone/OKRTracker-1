@@ -33,7 +33,7 @@ import {
   Calendar,
   Award,
   Activity,
-  Buildings,
+  /* Buildings, */
   CreditCard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -484,7 +484,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Buildings className="mr-3 h-5 w-5 text-indigo-400" />
+          <Building className="mr-3 h-5 w-5 text-indigo-400" />
           <span>Organizations</span>
           {tenantsExpanded ? (
             <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
