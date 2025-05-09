@@ -1087,7 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initiatives API
-  app.get("/api/key-results/:keyResultId/initiatives", async (req, res, next) => {
+  app.get("/api/key-results/:keyResultId/initiatives", withTenant, async (req, res, next) => {
     try {
       const keyResultId = parseInt(req.params.keyResultId);
       const initiatives = await storage.getInitiativesByKeyResult(keyResultId);
@@ -1097,7 +1097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/initiatives", async (req, res, next) => {
+  app.post("/api/initiatives", withTenant, async (req, res, next) => {
     try {
       const validatedData = insertInitiativeSchema.parse(req.body);
       const initiative = await storage.createInitiative(validatedData);
@@ -1107,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/initiatives/:id", async (req, res, next) => {
+  app.patch("/api/initiatives/:id", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertInitiativeSchema.partial().parse(req.body);
@@ -1142,7 +1142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/check-ins", async (req, res, next) => {
+  app.post("/api/check-ins", withTenant, async (req, res, next) => {
     try {
       const validatedData = insertCheckInSchema.parse(req.body);
       const checkIn = await storage.createCheckIn(validatedData);
