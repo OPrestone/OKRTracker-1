@@ -3309,66 +3309,83 @@ async function initializeData() {
       const adminPassword = await createPassword('admin123');
       const defaultPassword = await createPassword('password123');
 
+      // Create default tenant first
+      const defaultTenant = await storage.createTenant({
+        name: 'Default Organization',
+        slug: 'default-org',
+        settings: {},
+        enabledFeatures: ['objectives', 'key_results', 'chat', 'financial_tracking', 'moods', 'badges', 'feedback'],
+        plan: 'free'
+      });
+      
       const admin = await storage.createUser({
         username: 'admin',
         password: adminPassword,
-        firstName: 'Admin',
-        lastName: 'User',
+        name: 'Admin User',
         email: 'admin@example.com',
-        role: 'admin',
-        language: 'en'
+        title: 'Administrator',
+        isAdmin: true,
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
+      });
+      
+      // Add admin to tenant with owner role
+      await storage.addUserToTenant({
+        userId: admin.id,
+        tenantId: defaultTenant.id,
+        role: 'owner'
       });
       
       // Create manager users for testing
       await storage.createUser({
         username: 'jsmith',
         password: defaultPassword,
-        firstName: 'John',
-        lastName: 'Smith',
+        name: 'John Smith',
         email: 'john.smith@example.com',
-        role: 'manager',
-        language: 'en'
+        title: 'Manager',
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
       });
       
       await storage.createUser({
         username: 'mwilliams',
         password: defaultPassword,
-        firstName: 'Michelle',
-        lastName: 'Williams',
+        name: 'Michelle Williams',
         email: 'michelle.williams@example.com',
-        role: 'manager',
-        language: 'en'
+        title: 'Manager',
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
       });
       
       // Create regular users for testing
       await storage.createUser({
         username: 'agarcia',
         password: defaultPassword,
-        firstName: 'Alex',
-        lastName: 'Garcia',
+        name: 'Alex Garcia',
         email: 'alex.garcia@example.com',
-        role: 'user',
-        language: 'es'
+        title: 'Marketing Specialist',
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
       });
       
       await storage.createUser({
         username: 'lchen',
         password: defaultPassword,
-        firstName: 'Li',
-        lastName: 'Chen',
+        name: 'Li Chen',
         email: 'li.chen@example.com',
-        role: 'user',
-        language: 'en'
+        title: 'Product Designer',
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
       });
       
       await storage.createUser({
         username: 'rpatel',
         password: defaultPassword,
-        firstName: 'Raj',
-        lastName: 'Patel',
+        name: 'Raj Patel',
         email: 'raj.patel@example.com',
-        role: 'user',
-        language: 'en'
+        title: 'Sales Representative',
+        tenantId: defaultTenant.id,
+        defaultTenantId: defaultTenant.id
       });
 
       // Create sample cadence
