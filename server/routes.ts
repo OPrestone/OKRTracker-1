@@ -120,6 +120,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get tenant by slug - IMPORTANT: This must come before /:id route
+  app.get("/api/tenants/slug/:slug", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const { slug } = req.params;
+      const tenant = await tenantService.getTenantBySlug(slug);
+      
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Check if user has access to this tenant
+      const userId = (req.user as User).id;
+      const userTenants = await tenantService.getUserTenants(userId);
+      const hasAccess = userTenants.some(t => t.id === tenant.id);
+      
+      if (!hasAccess && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      res.json(tenant);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Create a new tenant
   app.post("/api/tenants", ensureAuthenticated, async (req, res, next) => {
     try {
@@ -278,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get members of a tenant
+  // Get members of a tenant by ID
   app.get("/api/tenants/:id/users", ensureAuthenticated, async (req, res, next) => {
     try {
       const tenantId = parseInt(req.params.id);
@@ -293,6 +318,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const members = await tenantService.getTenantMembers(tenantId);
+      
+      res.json(members);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get members of a tenant by slug
+  app.get("/api/tenants/slug/:slug/users", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const { slug } = req.params;
+      const userId = (req.user as User).id;
+      
+      // Get the tenant by slug
+      const tenant = await tenantService.getTenantBySlug(slug);
+      
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Check if user is member of this tenant
+      const userTenants = await tenantService.getUserTenants(userId);
+      const isMember = userTenants.some(t => t.id === tenant.id);
+      
+      if (!isMember && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      const members = await tenantService.getTenantMembers(tenant.id);
       
       res.json(members);
     } catch (error) {

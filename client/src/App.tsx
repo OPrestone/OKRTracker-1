@@ -48,6 +48,7 @@ import Configure from "@/pages/configure";
 // Import tenant-related pages
 import TenantsPage from "@/pages/tenants-page";
 import TenantPage from "@/pages/tenant-page";
+import OrganizationPage from "@/pages/organization-page";
 import TenantOnboardingPage from "@/pages/tenant-onboarding-page";
 
 // Import new drag-and-drop pages
