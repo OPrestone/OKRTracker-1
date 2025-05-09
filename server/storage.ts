@@ -34,85 +34,85 @@ export interface IStorage {
   
   // Access Groups
   createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup>;
-  getAccessGroup(id: number): Promise<AccessGroup | undefined>;
-  updateAccessGroup(id: number, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup>;
+  getAccessGroup(id: string): Promise<AccessGroup | undefined>;
+  updateAccessGroup(id: string, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup>;
   getAllAccessGroups(): Promise<AccessGroup[]>;
-  assignUserToAccessGroup(userId: number, accessGroupId: number): Promise<void>;
+  assignUserToAccessGroup(userId: string, accessGroupId: string): Promise<void>;
   
   // Cadences
   createCadence(cadence: InsertCadence): Promise<Cadence>;
-  getCadence(id: number): Promise<Cadence | undefined>;
+  getCadence(id: string): Promise<Cadence | undefined>;
   getAllCadences(): Promise<Cadence[]>;
   
   // Timeframes
   createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe>;
-  getTimeframe(id: number): Promise<Timeframe | undefined>;
+  getTimeframe(id: string): Promise<Timeframe | undefined>;
   getAllTimeframes(): Promise<Timeframe[]>;
-  getTimeframesByCadence(cadenceId: number): Promise<Timeframe[]>;
+  getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]>;
   
   // Objectives
   createObjective(objective: InsertObjective): Promise<Objective>;
-  getObjective(id: number): Promise<Objective | undefined>;
-  updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective>;
+  getObjective(id: string): Promise<Objective | undefined>;
+  updateObjective(id: string, objective: Partial<InsertObjective>): Promise<Objective>;
   getAllObjectives(): Promise<Objective[]>;
-  getObjectivesByOwner(ownerId: number): Promise<Objective[]>;
-  getObjectivesByTeam(teamId: number): Promise<Objective[]>;
-  getObjectivesByTimeframe(timeframeId: number): Promise<Objective[]>;
-  getObjectivesByTenant(tenantId: number): Promise<Objective[]>;
-  updateObjectiveProgress(id: number, progress: number): Promise<Objective>;
+  getObjectivesByOwner(ownerId: string): Promise<Objective[]>;
+  getObjectivesByTeam(teamId: string): Promise<Objective[]>;
+  getObjectivesByTimeframe(timeframeId: string): Promise<Objective[]>;
+  getObjectivesByTenant(tenantId: string): Promise<Objective[]>;
+  updateObjectiveProgress(id: string, progress: number): Promise<Objective>;
   
   // Key Results
   createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult>;
-  getKeyResult(id: number): Promise<KeyResult | undefined>;
-  updateKeyResult(id: number, keyResult: Partial<InsertKeyResult>): Promise<KeyResult>;
-  getKeyResultsByObjective(objectiveId: number): Promise<KeyResult[]>;
-  updateKeyResultProgress(id: number, progress: number): Promise<KeyResult>;
+  getKeyResult(id: string): Promise<KeyResult | undefined>;
+  updateKeyResult(id: string, keyResult: Partial<InsertKeyResult>): Promise<KeyResult>;
+  getKeyResultsByObjective(objectiveId: string): Promise<KeyResult[]>;
+  updateKeyResultProgress(id: string, progress: number): Promise<KeyResult>;
   
   // Initiatives
   createInitiative(initiative: InsertInitiative): Promise<Initiative>;
-  getInitiative(id: number): Promise<Initiative | undefined>;
-  updateInitiative(id: number, initiative: Partial<InsertInitiative>): Promise<Initiative>;
-  getInitiativesByKeyResult(keyResultId: number): Promise<Initiative[]>;
+  getInitiative(id: string): Promise<Initiative | undefined>;
+  updateInitiative(id: string, initiative: Partial<InsertInitiative>): Promise<Initiative>;
+  getInitiativesByKeyResult(keyResultId: string): Promise<Initiative[]>;
   
   // Check-ins
   createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>;
-  getCheckIn(id: number): Promise<CheckIn | undefined>;
-  getCheckInsByUser(userId: number): Promise<CheckIn[]>;
-  getCheckInsByObjective(objectiveId: number): Promise<CheckIn[]>;
-  getCheckInsByKeyResult(keyResultId: number): Promise<CheckIn[]>;
+  getCheckIn(id: string): Promise<CheckIn | undefined>;
+  getCheckInsByUser(userId: string): Promise<CheckIn[]>;
+  getCheckInsByObjective(objectiveId: string): Promise<CheckIn[]>;
+  getCheckInsByKeyResult(keyResultId: string): Promise<CheckIn[]>;
   getRecentCheckIns(limit: number): Promise<CheckIn[]>;
   
   // Chat Rooms
   createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom>;
-  getChatRoom(id: number): Promise<ChatRoom | undefined>;
-  updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom>;
+  getChatRoom(id: string): Promise<ChatRoom | undefined>;
+  updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom>;
   getAllChatRooms(): Promise<ChatRoom[]>;
-  getChatRoomsByUser(userId: number): Promise<ChatRoom[]>;
-  getUserChatRooms(userId: number): Promise<(ChatRoom & { unreadCount: number })[]>;
+  getChatRoomsByUser(userId: string): Promise<ChatRoom[]>;
+  getUserChatRooms(userId: string): Promise<(ChatRoom & { unreadCount: number })[]>;
   getChatRoomsByType(type: string): Promise<ChatRoom[]>;
   
   // Chat Room Members
   addUserToChatRoom(chatRoomMember: InsertChatRoomMember): Promise<ChatRoomMember>;
-  removeUserFromChatRoom(userId: number, chatRoomId: number): Promise<void>;
-  getChatRoomMembers(chatRoomId: number): Promise<(ChatRoomMember & { user: User })[]>;
-  updateLastRead(userId: number, chatRoomId: number): Promise<void>;
+  removeUserFromChatRoom(userId: string, chatRoomId: string): Promise<void>;
+  getChatRoomMembers(chatRoomId: string): Promise<(ChatRoomMember & { user: User })[]>;
+  updateLastRead(userId: string, chatRoomId: string): Promise<void>;
   
   // Messages
   createMessage(message: InsertMessage): Promise<Message>;
-  getMessage(id: number): Promise<Message | undefined>;
-  updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message>;
-  deleteMessage(id: number): Promise<void>;
-  getMessagesByChatRoom(chatRoomId: number, limit?: number, before?: number): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]>;
+  getMessage(id: string): Promise<Message | undefined>;
+  updateMessage(id: string, message: Partial<InsertMessage>): Promise<Message>;
+  deleteMessage(id: string): Promise<void>;
+  getMessagesByChatRoom(chatRoomId: string, limit?: number, before?: string): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]>;
   
   // Attachments
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
-  getAttachment(id: number): Promise<Attachment | undefined>;
-  getAttachmentsByMessage(messageId: number): Promise<Attachment[]>;
+  getAttachment(id: string): Promise<Attachment | undefined>;
+  getAttachmentsByMessage(messageId: string): Promise<Attachment[]>;
   
   // Reactions
   addReaction(reaction: InsertReaction): Promise<Reaction>;
-  removeReaction(userId: number, messageId: number, emoji: string): Promise<void>;
-  getReactionsByMessage(messageId: number): Promise<(Reaction & { user: User })[]>;
+  removeReaction(userId: string, messageId: string, emoji: string): Promise<void>;
+  getReactionsByMessage(messageId: string): Promise<(Reaction & { user: User })[]>;
   
   // Session Store
   sessionStore: any; // Using any for session store type compatibility

@@ -20,18 +20,6 @@ export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "pending
 
 // TABLE SCHEMAS
 
-export const tenants = pgTableWithUlid("tenants", {
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  logoUrl: text("logo_url"),
-  settings: jsonb("settings").default({}).notNull(),
-  plan: text("plan").default("free").notNull(),
-  domain: text("domain"),
-  enabledFeatures: jsonb("enabled_features").default([]).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
 export const users = pgTableWithUlid("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -239,7 +227,18 @@ export const userBadges = pgTable("user_badges", {
   pk: primaryKey({ columns: [t.userId, t.badgeId] })
 }));
 
-// Table definition moved to top of schema
+export const tenants = pgTableWithUlid("tenants", {
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  logoUrl: text("logo_url"),
+  settings: jsonb("settings").default({}).notNull(),
+  plan: text("plan").default("free").notNull(),
+  domain: text("domain"),
+  enabledFeatures: jsonb("enabled_features").default([]).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const subscriptions = pgTableWithUlid("subscriptions", {
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   stripeSubscriptionId: text("stripe_subscription_id").notNull().unique(),
