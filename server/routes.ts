@@ -49,14 +49,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let tenantId: number | null = null;
       
       if (req.query.tenantId) {
-        tenantId = parseInt(req.query.tenantId as string);
+        const parsed = parseInt(req.query.tenantId as string);
+        if (!isNaN(parsed)) {
+          tenantId = parsed;
+        }
       } else if (req.params.tenantId) {
-        tenantId = parseInt(req.params.tenantId);
+        const parsed = parseInt(req.params.tenantId);
+        if (!isNaN(parsed)) {
+          tenantId = parsed;
+        }
       } else if (req.path.includes('/tenants/')) {
         // Extract tenant ID from path like /tenants/123/something
         const match = req.path.match(/\/tenants\/(\d+)/);
         if (match && match[1]) {
-          tenantId = parseInt(match[1]);
+          const parsed = parseInt(match[1]);
+          if (!isNaN(parsed)) {
+            tenantId = parsed;
+          }
         }
       }
       
@@ -68,9 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // If we still don't have a tenant ID, return error
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
+      // If we still don't have a valid tenant ID, return error
+      if (!tenantId || isNaN(tenantId)) {
+        return res.status(400).json({ error: "Valid tenant ID is required" });
       }
       
       // Check if user has access to this tenant
@@ -166,8 +175,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get tenant by ID
   app.get("/api/tenants/:id", ensureAuthenticated, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
-      const tenant = await tenantService.getTenantById(id);
+      const parsedId = parseInt(req.params.id);
+      
+      if (isNaN(parsedId)) {
+        return res.status(400).json({ error: "Invalid tenant ID format" });
+      }
+      
+      const tenant = await tenantService.getTenantById(parsedId);
       
       if (!tenant) {
         return res.status(404).json({ error: "Tenant not found" });
@@ -176,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has access to this tenant
       const userId = (req.user as User).id;
       const userTenants = await tenantService.getUserTenants(userId);
-      const hasAccess = userTenants.some(t => t.id === id);
+      const hasAccess = userTenants.some(t => t.id === parsedId);
       
       if (!hasAccess && (req.user as User).role !== "admin") {
         return res.status(403).json({ error: "You do not have access to this tenant" });
@@ -184,6 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(tenant);
     } catch (error) {
+      console.error("Error getting tenant by ID:", error);
       next(error);
     }
   });
@@ -808,12 +823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete user
-  app.delete("/api/users/:userId", async (req, res, next) => {
+  app.delete("/api/users/:userId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
       const currentUser = req.user as User;
       if (currentUser.role !== "admin") {
         return res.status(403).json({ error: "Forbidden - Admin access required to delete users" });
@@ -824,6 +835,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prevent deleting yourself
       if (userId === currentUser.id) {
         return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+      
+      // Verify user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
+      }
+      
+      // User can only be deleted by an admin of the same tenant
+      // First, check if current user is admin in this tenant
+      const adminInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, currentUser.id),
+          eq(usersToTenants.tenantId, req.tenantId),
+          eq(usersToTenants.role, "admin")
+        ))
+        .limit(1);
+      
+      if (adminInTenant.length === 0) {
+        return res.status(403).json({ error: "You do not have admin permissions in this tenant" });
       }
       
       await storage.deleteUser(userId);

@@ -71,6 +71,12 @@ class TenantService {
   // Get tenant by ID
   async getTenantById(id: number): Promise<Tenant | undefined> {
     try {
+      // Input validation - ensure id is a valid number
+      if (isNaN(id) || id <= 0) {
+        console.error(`Invalid tenant ID: ${id}`);
+        return undefined;
+      }
+
       const [tenant] = await db.select().from(tenants).where(eq(tenants.id, id));
       return tenant;
     } catch (error) {
