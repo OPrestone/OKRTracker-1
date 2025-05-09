@@ -38,6 +38,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import type { Tenant } from "./tenant/tenant-switcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -122,15 +124,71 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   // Check if any tenant management paths are active to auto-expand organization menu
-  const isTenantPathActive = ["/tenants", "/tenants/"].some(
+  const isTenantPathActive = ["/tenants", "/tenants/", "/organization/"].some(
     (path) => location === path || location.startsWith(path)
   );
   const [tenantsExpanded, setTenantsExpanded] = useState(isTenantPathActive);
+  
+  // Fetch the current tenant list
+  const { data: tenants } = useQuery<Tenant[]>({
+    queryKey: ["/api/tenants"],
+  });
+  
+  // Get selected tenant from location
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  
+  // Find and set the current tenant based on URL path
+  useEffect(() => {
+    if (!tenants || tenants.length === 0) return;
+    
+    // Check for numeric tenant ID in /tenants/{id}
+    const numericMatch = location.match(/\/tenants\/(\d+)/);
+    if (numericMatch) {
+      const tenantId = parseInt(numericMatch[1]);
+      const matchedTenant = tenants.find(t => t.id === tenantId);
+      if (matchedTenant) {
+        setSelectedTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Check for organization slug in /organization/{slug}
+    const orgMatch = location.match(/\/organization\/([^/]+)/);
+    if (orgMatch) {
+      const urlSlug = orgMatch[1];
+      const matchedTenant = tenants.find(t => t.slug === urlSlug);
+      if (matchedTenant) {
+        setSelectedTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Check for legacy tenant slug in /tenants/{slug}
+    const tenantMatch = location.match(/\/tenants\/([^/]+)/);
+    if (tenantMatch && !numericMatch) { // Ensure we're not matching a numeric ID again
+      const urlSlug = tenantMatch[1];
+      const matchedTenant = tenants.find(t => t.slug === urlSlug);
+      if (matchedTenant) {
+        setSelectedTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Otherwise, use default tenant or first one
+    const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
+    setSelectedTenant(defaultTenant);
+  }, [tenants, location]);
 
   // Update expanded states when location changes
   useEffect(() => {
     setTenantsExpanded(isTenantPathActive);
   }, [location, isTenantPathActive]);
+  
+  // Helper function to generate links with tenant context if available
+  const getLink = (path: string) => {
+    if (!selectedTenant) return path;
+    return `/organization/${selectedTenant.slug}${path}`;
+  };
   
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#0f172a] text-gray-200 shadow-xl">
@@ -148,6 +206,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <div className="mt-3">
           <TenantSwitcher />
         </div>
+        
+        {/* Current Tenant Display */}
+        {selectedTenant && (
+          <div className="mt-3 text-sm font-medium text-indigo-300 flex items-center">
+            <Building className="h-4 w-4 mr-2 text-indigo-400" />
+            <span>Organization: {selectedTenant.displayName || selectedTenant.name}</span>
+          </div>
+        )}
       </div>
 
       {/* Sidebar Navigation */}
@@ -165,7 +231,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href="/quick-start-guide" className="flex items-center w-full">
+          <Link href={getLink("/quick-start-guide")} className="flex items-center w-full">
             <Rocket className="h-4 w-4 mr-3" />
             <span>Quick Start Guide</span>
           </Link>
@@ -179,7 +245,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href="/home" className="flex items-center w-full">
+          <Link href={getLink("/home")} className="flex items-center w-full">
             <Home className="h-4 w-4 mr-3" />
             <span>Home</span>
           </Link>
@@ -193,7 +259,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href="/" className="flex items-center w-full">
+          <Link href={getLink("/")} className="flex items-center w-full">
             <BarChart3 className="h-4 w-4 mr-3" />
             <span>Dashboards</span>
           </Link>
@@ -208,7 +274,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link
-            href="/team-leader-dashboard"
+            href={getLink("/team-leader-dashboard")}
             className="flex items-center w-full"
           >
             <LayoutDashboard className="h-4 w-4 mr-3" />
@@ -224,7 +290,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href="/mission" className="flex items-center w-full">
+          <Link href={getLink("/mission")} className="flex items-center w-full">
             <Compass className="h-4 w-4 mr-3" />
             <span>Mission & Values</span>
           </Link>
@@ -266,7 +332,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href="/strategy-map" className="flex items-center w-full">
+          <Link href={getLink("/strategy-map")} className="flex items-center w-full">
             <Flag className="h-4 w-4 mr-3" />
             <span>Strategy Map</span>
           </Link>
@@ -304,7 +370,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/my-okrs" className="w-full">
+              <Link href={getLink("/my-okrs")} className="w-full">
                 My OKRs
               </Link>
             </div>
