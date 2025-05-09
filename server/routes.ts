@@ -2160,24 +2160,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Badge routes
-  app.get("/api/badges", async (req, res, next) => {
+  app.get("/api/badges", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      const tenantId = req.tenantId;
+      
       // Import the feedback service
       const { getAllBadges } = await import("./services/feedback-service");
       
-      const badges = await getAllBadges();
-      res.json(badges);
+      // Get all badges
+      const allBadges = await getAllBadges();
+      
+      // Filter badges to only include those from the current tenant or global badges
+      const tenantBadges = allBadges.filter(badge => 
+        badge.tenantId === tenantId || badge.tenantId === null
+      );
+      
+      res.json(tenantBadges);
     } catch (error) {
       console.error("Error fetching badges:", error);
       res.status(500).json({ message: "Failed to fetch badges" });
     }
   });
 
-  app.post("/api/badges", async (req, res, next) => {
+  app.post("/api/badges", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -2188,7 +2197,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to create badges" });
       }
       
-      const badgeData = req.body;
+      const tenantId = req.tenantId;
+      
+      // Verify user belongs to this tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.user.id)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).json({ 
+          message: "You do not have permission to create badges in this organization" 
+        });
+      }
+      
+      // Add tenant ID to the badge data
+      const badgeData = {
+        ...req.body,
+        tenantId: tenantId
+      };
       
       // Import the feedback service
       const { createBadge } = await import("./services/feedback-service");
@@ -2201,7 +2233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/badges/award", async (req, res, next) => {
+  app.post("/api/badges/award", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -2212,9 +2244,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to award badges" });
       }
       
+      const tenantId = req.tenantId;
+      
+      // Verify user belongs to this tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.user.id)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).json({ 
+          message: "You do not have permission to award badges in this organization" 
+        });
+      }
+      
+      // Verify recipient belongs to this tenant
+      const isRecipientInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.body.userId)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isRecipientInTenant) {
+        return res.status(403).json({ 
+          message: "The recipient user doesn't belong to this organization" 
+        });
+      }
+      
+      // Also verify that the badge belongs to this tenant or is a global badge
+      const badge = await db.select()
+        .from(badges)
+        .where(eq(badges.id, req.body.badgeId))
+        .then(result => result[0]);
+      
+      if (!badge) {
+        return res.status(404).json({ message: "Badge not found" });
+      }
+      
+      if (badge.tenantId !== null && badge.tenantId !== tenantId) {
+        return res.status(403).json({ message: "You don't have access to this badge" });
+      }
+      
       const awardData = {
         ...req.body,
         awardedById: req.user.id,
+        tenantId: tenantId
       };
       
       // Import the feedback service
@@ -2228,36 +2311,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/badges", async (req, res, next) => {
+  app.get("/api/users/:userId/badges", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
       const userId = parseInt(req.params.userId);
+      const tenantId = req.tenantId;
+      
+      // Verify the requested user belongs to this tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, userId)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).json({ 
+          message: "The requested user doesn't belong to this organization" 
+        });
+      }
       
       // Import the feedback service
       const { getUserBadges } = await import("./services/feedback-service");
       
-      const userBadges = await getUserBadges(userId);
-      res.json(userBadges);
+      // Get all user badges
+      const allUserBadges = await getUserBadges(userId);
+      
+      // Filter badges to only include those from the current tenant
+      const tenantUserBadges = allUserBadges.filter(badge => 
+        badge.tenantId === tenantId || badge.tenantId === null
+      );
+      
+      res.json(tenantUserBadges);
     } catch (error) {
       console.error("Error fetching user badges:", error);
       res.status(500).json({ message: "Failed to fetch user badges" });
     }
   });
 
-  app.get("/api/badges/public", async (req, res, next) => {
+  app.get("/api/badges/public", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      const tenantId = req.tenantId;
+      
       // Import the feedback service
       const { getPublicUserBadges } = await import("./services/feedback-service");
       
-      const publicBadges = await getPublicUserBadges();
-      res.json(publicBadges);
+      // Get all public user badges
+      const allPublicBadges = await getPublicUserBadges();
+      
+      // Get users who belong to this tenant
+      const tenantUsers = await db.select({ userId: usersToTenants.userId })
+        .from(usersToTenants)
+        .where(eq(usersToTenants.tenantId, tenantId))
+        .then(result => result.map(item => item.userId));
+      
+      // Filter public badges to only include those from users in the current tenant
+      // and badges that belong to the current tenant or are global
+      const tenantPublicBadges = allPublicBadges.filter(badge => 
+        tenantUsers.includes(badge.userId) && 
+        (badge.tenantId === tenantId || badge.tenantId === null)
+      );
+      
+      res.json(tenantPublicBadges);
     } catch (error) {
       console.error("Error fetching public badges:", error);
       res.status(500).json({ message: "Failed to fetch public badges" });
@@ -2306,13 +2431,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/mood-entries/user/:userId", async (req, res, next) => {
+  app.get("/api/mood-entries/user/:userId", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
       const userId = parseInt(req.params.userId);
+      const tenantId = req.tenantId;
+      
+      // Check if user belongs to this tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, userId)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).json({ 
+          error: "The requested user doesn't belong to the current organization" 
+        });
+      }
       
       // Fetch mood entries for a specific user
       const moodEntries = await db.query.moodEntries.findMany({
@@ -2327,23 +2470,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/mood-entries/team/:teamId", async (req, res, next) => {
+  app.get("/api/mood-entries/team/:teamId", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
       const teamId = parseInt(req.params.teamId);
+      const tenantId = req.tenantId;
       
-      // Get users for the team
+      // Get users for the team who also belong to this tenant
       const teamUsers = await storage.getUsersByTeam(teamId);
-      const teamUserIds = teamUsers.map(user => user.id);
+      
+      // Filter team users to those who belong to the current tenant
+      const tenantUserIds = await db.select({ userId: usersToTenants.userId })
+        .from(usersToTenants)
+        .where(eq(usersToTenants.tenantId, tenantId))
+        .then(result => result.map(item => item.userId));
+      
+      // Intersection of team users and tenant users
+      const teamUserIds = teamUsers
+        .map(user => user.id)
+        .filter(id => tenantUserIds.includes(id));
       
       if (teamUserIds.length === 0) {
         return res.json([]);
       }
       
-      // Fetch mood entries for team members
+      // Fetch mood entries for team members who are in this tenant
       const moodEntries = await db.query.moodEntries.findMany({
         where: (moodEntries, { inArray }) => inArray(moodEntries.userId, teamUserIds),
         with: {
@@ -2366,16 +2520,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/mood-entries", async (req, res, next) => {
+  app.post("/api/mood-entries", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
       const userId = (req.user as User).id;
+      const tenantId = req.tenantId;
+      
+      // Verify user belongs to this tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, userId)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).json({ 
+          error: "You do not have permission to create entries in this organization" 
+        });
+      }
+      
       const validatedData = insertMoodEntrySchema.parse({
         ...req.body,
-        userId: userId
+        userId: userId,
+        tenantId: tenantId // Add tenant ID to the mood entry
       });
       
       const moodEntry = await db.insert(moodEntries).values(validatedData).returning();
