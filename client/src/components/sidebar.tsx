@@ -383,7 +383,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/draft-okrs" className="w-full">
+              <Link href={getLink("/draft-okrs")} className="w-full">
                 Draft OKRs
               </Link>
             </div>
@@ -396,7 +396,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/approved-okrs" className="w-full">
+              <Link href={getLink("/approved-okrs")} className="w-full">
                 Approved OKRs
               </Link>
             </div>
@@ -409,7 +409,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/company-okrs" className="w-full">
+              <Link href={getLink("/company-okrs")} className="w-full">
                 Company OKRs
               </Link>
             </div>
@@ -447,7 +447,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/teams" className="w-full">
+              <Link href={getLink("/teams")} className="w-full">
                 Teams
               </Link>
             </div>
@@ -460,7 +460,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
             >
-              <Link href="/all-users" className="w-full">
+              <Link href={getLink("/all-users")} className="w-full">
                 Users
               </Link>
             </div>
@@ -475,7 +475,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/checkins" className="flex items-center w-full">
+          <Link href={getLink("/checkins")} className="flex items-center w-full">
             <CalendarCheck className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Check-ins</span>
           </Link>
@@ -490,7 +490,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           )}
         >
           <Link
-            href="/one-on-one-meetings"
+            href={getLink("/one-on-one-meetings")}
             className="flex items-center w-full"
           >
             <Users className="mr-3 h-5 w-5 text-indigo-400" />
@@ -506,7 +506,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/chat" className="flex items-center w-full">
+          <Link href={getLink("/chat")} className="flex items-center w-full">
             <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Chat</span>
           </Link>
@@ -520,7 +520,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/feedback-wall" className="flex items-center w-full">
+          <Link href={getLink("/feedback-wall")} className="flex items-center w-full">
             <Award className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Feedback Wall</span>
           </Link>
@@ -534,7 +534,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
         >
-          <Link href="/wellness-pulse" className="flex items-center w-full">
+          <Link href={getLink("/wellness-pulse")} className="flex items-center w-full">
             <Activity className="mr-3 h-5 w-5 text-indigo-400" />
             <span>Wellness Pulse</span>
           </Link>
