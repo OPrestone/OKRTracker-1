@@ -477,18 +477,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teams API
-  app.get("/api/teams", async (req, res, next) => {
+  app.get("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const teams = await storage.getAllTeams();
+      // Get teams for current tenant
+      const teams = await storage.getTeamsByTenant(req.tenantId);
       res.json(teams);
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/teams", async (req, res, next) => {
+  app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertTeamSchema.parse(req.body);
+      // Add tenant ID to team data
+      const validatedData = insertTeamSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
       const team = await storage.createTeam(validatedData);
       res.status(201).json(team);
     } catch (error) {
@@ -496,23 +501,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/teams/:id", async (req, res, next) => {
+  app.get("/api/teams/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const team = await storage.getTeam(id);
+      
       if (!team) {
         return res.status(404).send("Team not found");
       }
+      
+      // Verify team belongs to current tenant
+      if (team.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Team not found in current tenant" });
+      }
+      
       res.json(team);
     } catch (error) {
       next(error);
     }
   });
 
-  app.patch("/api/teams/:id", async (req, res, next) => {
+  app.patch("/api/teams/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Verify team belongs to current tenant
+      const team = await storage.getTeam(id);
+      if (!team) {
+        return res.status(404).send("Team not found");
+      }
+      
+      if (team.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Team not found in current tenant" });
+      }
+      
       const validatedData = insertTeamSchema.partial().parse(req.body);
+      
+      // Ensure tenantId can't be changed
+      delete validatedData.tenantId;
+      
       const updatedTeam = await storage.updateTeam(id, validatedData);
       res.json(updatedTeam);
     } catch (error) {
