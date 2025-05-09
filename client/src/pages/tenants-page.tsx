@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Building, Loader2, PlusCircle, Settings, Users } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { 
+  Building, 
+  Loader2, 
+  PlusCircle, 
+  Settings, 
+  Users,
+  Sparkles, 
+  ChevronRight 
+} from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,6 +22,12 @@ import {
 import CreateTenantDialog from "@/components/tenant/create-tenant-dialog";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type Tenant = {
   id: number;
@@ -29,6 +43,7 @@ export type Tenant = {
 export default function TenantsPage() {
   const { user } = useAuth();
   const [showNewTenantDialog, setShowNewTenantDialog] = useState(false);
+  const [_, navigate] = useLocation();
 
   // Fetch the tenants for the current user
   const { data: tenants = [], isLoading } = useQuery({
@@ -55,10 +70,25 @@ export default function TenantsPage() {
                 Manage your organizations and teams.
               </p>
             </div>
-            <Button onClick={() => setShowNewTenantDialog(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Create Organization
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Organization
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowNewTenantDialog(true)}>
+                  <Building className="h-4 w-4 mr-2" />
+                  <span>Quick Create</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/tenant-onboarding")}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  <span>Guided Setup</span>
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {tenants.length === 0 ? (
@@ -69,10 +99,19 @@ export default function TenantsPage() {
                 You haven't created or joined any organizations yet. 
                 Create your first organization to get started.
               </p>
-              <Button onClick={() => setShowNewTenantDialog(true)}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Create Organization
-              </Button>
+              <div className="flex flex-col gap-3 items-center">
+                <Button 
+                  onClick={() => navigate("/tenant-onboarding")}
+                  className="bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Guided Setup (Recommended)
+                </Button>
+                <Button variant="outline" onClick={() => setShowNewTenantDialog(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Quick Create
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

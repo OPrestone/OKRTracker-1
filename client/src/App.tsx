@@ -48,6 +48,7 @@ import Configure from "@/pages/configure";
 // Import tenant-related pages
 import TenantsPage from "@/pages/tenants-page";
 import TenantPage from "@/pages/tenant-page";
+import TenantOnboardingPage from "@/pages/tenant-onboarding-page";
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
@@ -136,6 +137,7 @@ function AppRoutes() {
       <ProtectedRoute path="/tenants" component={TenantsPage} />
       <ProtectedRoute path="/tenants/:slug" component={TenantPage} />
       <ProtectedRoute path="/tenants/:slug/subscription" component={TenantPage} />
+      <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
       
       {/* Drag and Drop Interfaces */}
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
