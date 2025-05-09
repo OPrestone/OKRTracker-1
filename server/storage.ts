@@ -248,12 +248,12 @@ export class DatabaseStorage implements IStorage {
     return newAccessGroup;
   }
 
-  async getAccessGroup(id: number): Promise<AccessGroup | undefined> {
+  async getAccessGroup(id: string): Promise<AccessGroup | undefined> {
     const [accessGroup] = await db.select().from(accessGroups).where(eq(accessGroups.id, id));
     return accessGroup;
   }
 
-  async updateAccessGroup(id: number, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup> {
+  async updateAccessGroup(id: string, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup> {
     const [updatedAccessGroup] = await db.update(accessGroups)
       .set(accessGroup)
       .where(eq(accessGroups.id, id))
@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(accessGroups);
   }
 
-  async assignUserToAccessGroup(userId: number, accessGroupId: number): Promise<void> {
+  async assignUserToAccessGroup(userId: string, accessGroupId: string): Promise<void> {
     await db.insert(userAccessGroups).values({
       userId,
       accessGroupId
@@ -283,7 +283,7 @@ export class DatabaseStorage implements IStorage {
     return newCadence;
   }
 
-  async getCadence(id: number): Promise<Cadence | undefined> {
+  async getCadence(id: string): Promise<Cadence | undefined> {
     const [cadence] = await db.select().from(cadences).where(eq(cadences.id, id));
     return cadence;
   }
@@ -292,7 +292,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(cadences);
   }
   
-  async updateCadence(id: number, cadence: Partial<InsertCadence>): Promise<Cadence> {
+  async updateCadence(id: string, cadence: Partial<InsertCadence>): Promise<Cadence> {
     const [updatedCadence] = await db.update(cadences)
       .set(cadence)
       .where(eq(cadences.id, id))
@@ -305,7 +305,7 @@ export class DatabaseStorage implements IStorage {
     return updatedCadence;
   }
   
-  async deleteCadence(id: number): Promise<void> {
+  async deleteCadence(id: string): Promise<void> {
     await db.delete(cadences).where(eq(cadences.id, id));
   }
 
@@ -315,7 +315,7 @@ export class DatabaseStorage implements IStorage {
     return newTimeframe;
   }
 
-  async getTimeframe(id: number): Promise<Timeframe | undefined> {
+  async getTimeframe(id: string): Promise<Timeframe | undefined> {
     const [timeframe] = await db.select().from(timeframes).where(eq(timeframes.id, id));
     return timeframe;
   }
@@ -324,11 +324,11 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(timeframes);
   }
 
-  async getTimeframesByCadence(cadenceId: number): Promise<Timeframe[]> {
+  async getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]> {
     return db.select().from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
   }
   
-  async updateTimeframe(id: number, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
+  async updateTimeframe(id: string, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
     const [updatedTimeframe] = await db.update(timeframes)
       .set(timeframe)
       .where(eq(timeframes.id, id))
@@ -341,7 +341,7 @@ export class DatabaseStorage implements IStorage {
     return updatedTimeframe;
   }
   
-  async deleteTimeframe(id: number): Promise<void> {
+  async deleteTimeframe(id: string): Promise<void> {
     await db.delete(timeframes).where(eq(timeframes.id, id));
   }
 
@@ -351,12 +351,12 @@ export class DatabaseStorage implements IStorage {
     return newObjective;
   }
 
-  async getObjective(id: number): Promise<Objective | undefined> {
+  async getObjective(id: string): Promise<Objective | undefined> {
     const [objective] = await db.select().from(objectives).where(eq(objectives.id, id));
     return objective;
   }
 
-  async updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective> {
+  async updateObjective(id: string, objective: Partial<InsertObjective>): Promise<Objective> {
     const [updatedObjective] = await db.update(objectives)
       .set(objective)
       .where(eq(objectives.id, id))
@@ -373,23 +373,23 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(objectives);
   }
 
-  async getObjectivesByOwner(ownerId: number): Promise<Objective[]> {
+  async getObjectivesByOwner(ownerId: string): Promise<Objective[]> {
     return db.select().from(objectives).where(eq(objectives.ownerId, ownerId));
   }
 
-  async getObjectivesByTeam(teamId: number): Promise<Objective[]> {
+  async getObjectivesByTeam(teamId: string): Promise<Objective[]> {
     return db.select().from(objectives).where(eq(objectives.teamId, teamId));
   }
 
-  async getObjectivesByTimeframe(timeframeId: number): Promise<Objective[]> {
+  async getObjectivesByTimeframe(timeframeId: string): Promise<Objective[]> {
     return db.select().from(objectives).where(eq(objectives.timeframeId, timeframeId));
   }
   
-  async getObjectivesByTenant(tenantId: number): Promise<Objective[]> {
+  async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
     return db.select().from(objectives).where(eq(objectives.tenantId, tenantId));
   }
 
-  async updateObjectiveProgress(id: number, progress: number): Promise<Objective> {
+  async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
     const [updatedObjective] = await db.update(objectives)
       .set({ progress })
       .where(eq(objectives.id, id))
@@ -414,12 +414,12 @@ export class DatabaseStorage implements IStorage {
     return newKeyResult;
   }
 
-  async getKeyResult(id: number): Promise<KeyResult | undefined> {
+  async getKeyResult(id: string): Promise<KeyResult | undefined> {
     const [keyResult] = await db.select().from(keyResults).where(eq(keyResults.id, id));
     return keyResult;
   }
 
-  async updateKeyResult(id: number, keyResult: Partial<InsertKeyResult>): Promise<KeyResult> {
+  async updateKeyResult(id: string, keyResult: Partial<InsertKeyResult>): Promise<KeyResult> {
     const [updatedKeyResult] = await db.update(keyResults)
       .set(keyResult)
       .where(eq(keyResults.id, id))
@@ -432,11 +432,11 @@ export class DatabaseStorage implements IStorage {
     return updatedKeyResult;
   }
 
-  async getKeyResultsByObjective(objectiveId: number): Promise<KeyResult[]> {
+  async getKeyResultsByObjective(objectiveId: string): Promise<KeyResult[]> {
     return db.select().from(keyResults).where(eq(keyResults.objectiveId, objectiveId));
   }
 
-  async updateKeyResultProgress(id: number, progress: number): Promise<KeyResult> {
+  async updateKeyResultProgress(id: string, progress: number): Promise<KeyResult> {
     const [updatedKeyResult] = await db.update(keyResults)
       .set({ progress })
       .where(eq(keyResults.id, id))
@@ -463,12 +463,12 @@ export class DatabaseStorage implements IStorage {
     return newInitiative;
   }
 
-  async getInitiative(id: number): Promise<Initiative | undefined> {
+  async getInitiative(id: string): Promise<Initiative | undefined> {
     const [initiative] = await db.select().from(initiatives).where(eq(initiatives.id, id));
     return initiative;
   }
 
-  async updateInitiative(id: number, initiative: Partial<InsertInitiative>): Promise<Initiative> {
+  async updateInitiative(id: string, initiative: Partial<InsertInitiative>): Promise<Initiative> {
     const [updatedInitiative] = await db.update(initiatives)
       .set(initiative)
       .where(eq(initiatives.id, id))
@@ -481,7 +481,7 @@ export class DatabaseStorage implements IStorage {
     return updatedInitiative;
   }
 
-  async getInitiativesByKeyResult(keyResultId: number): Promise<Initiative[]> {
+  async getInitiativesByKeyResult(keyResultId: string): Promise<Initiative[]> {
     return db.select().from(initiatives).where(eq(initiatives.keyResultId, keyResultId));
   }
 
@@ -497,26 +497,26 @@ export class DatabaseStorage implements IStorage {
     return newCheckIn;
   }
 
-  async getCheckIn(id: number): Promise<CheckIn | undefined> {
+  async getCheckIn(id: string): Promise<CheckIn | undefined> {
     const [checkIn] = await db.select().from(checkIns).where(eq(checkIns.id, id));
     return checkIn;
   }
 
-  async getCheckInsByUser(userId: number): Promise<CheckIn[]> {
+  async getCheckInsByUser(userId: string): Promise<CheckIn[]> {
     return db.select()
       .from(checkIns)
       .where(eq(checkIns.userId, userId))
       .orderBy(desc(checkIns.createdAt));
   }
 
-  async getCheckInsByObjective(objectiveId: number): Promise<CheckIn[]> {
+  async getCheckInsByObjective(objectiveId: string): Promise<CheckIn[]> {
     return db.select()
       .from(checkIns)
       .where(eq(checkIns.objectiveId, objectiveId))
       .orderBy(desc(checkIns.createdAt));
   }
 
-  async getCheckInsByKeyResult(keyResultId: number): Promise<CheckIn[]> {
+  async getCheckInsByKeyResult(keyResultId: string): Promise<CheckIn[]> {
     return db.select()
       .from(checkIns)
       .where(eq(checkIns.keyResultId, keyResultId))
@@ -536,12 +536,12 @@ export class DatabaseStorage implements IStorage {
     return newChatRoom;
   }
 
-  async getChatRoom(id: number): Promise<ChatRoom | undefined> {
+  async getChatRoom(id: string): Promise<ChatRoom | undefined> {
     const [room] = await db.select().from(chatRooms).where(eq(chatRooms.id, id));
     return room;
   }
 
-  async updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
+  async updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
     const [updatedRoom] = await db.update(chatRooms)
       .set({
         ...chatRoom,
@@ -561,7 +561,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(chatRooms);
   }
 
-  async getChatRoomsByUser(userId: number): Promise<ChatRoom[]> {
+  async getChatRoomsByUser(userId: string): Promise<ChatRoom[]> {
     // Get all chat rooms where the user is a member
     const memberRooms = await db.select({
       chatRoomId: chatRoomMembers.chatRoomId
@@ -580,7 +580,7 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(chatRooms.id, roomIds));
   }
 
-  async getUserChatRooms(userId: number): Promise<(ChatRoom & { unreadCount: number })[]> {
+  async getUserChatRooms(userId: string): Promise<(ChatRoom & { unreadCount: number })[]> {
     // Get all chat rooms where the user is a member
     const members = await db.select()
       .from(chatRoomMembers)
@@ -627,7 +627,7 @@ export class DatabaseStorage implements IStorage {
     return member;
   }
 
-  async removeUserFromChatRoom(userId: number, chatRoomId: number): Promise<void> {
+  async removeUserFromChatRoom(userId: string, chatRoomId: string): Promise<void> {
     await db.delete(chatRoomMembers)
       .where(
         and(
@@ -637,7 +637,7 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getChatRoomMembers(chatRoomId: number): Promise<(ChatRoomMember & { user: User })[]> {
+  async getChatRoomMembers(chatRoomId: string): Promise<(ChatRoomMember & { user: User })[]> {
     // Using JOIN to get user details with each chat room member
     const members = await db.select({
       id: chatRoomMembers.id,
@@ -655,7 +655,7 @@ export class DatabaseStorage implements IStorage {
     return members;
   }
 
-  async updateLastRead(userId: number, chatRoomId: number): Promise<void> {
+  async updateLastRead(userId: string, chatRoomId: string): Promise<void> {
     await db.update(chatRoomMembers)
       .set({ lastRead: new Date() })
       .where(
