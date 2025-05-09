@@ -773,9 +773,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Objectives API
-  app.get("/api/objectives", async (req, res, next) => {
+  app.get("/api/objectives", withTenant, async (req, res, next) => {
     try {
-      const objectives = await storage.getAllObjectives();
+      // Filter objectives by current tenant ID
+      const tenantId = req.tenantId;
+      const objectives = await storage.getObjectivesByTenant(tenantId);
       res.json(objectives);
     } catch (error) {
       next(error);

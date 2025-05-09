@@ -58,6 +58,7 @@ export interface IStorage {
   getObjectivesByOwner(ownerId: number): Promise<Objective[]>;
   getObjectivesByTeam(teamId: number): Promise<Objective[]>;
   getObjectivesByTimeframe(timeframeId: number): Promise<Objective[]>;
+  getObjectivesByTenant(tenantId: number): Promise<Objective[]>;
   updateObjectiveProgress(id: number, progress: number): Promise<Objective>;
   
   // Key Results
@@ -378,6 +379,10 @@ export class DatabaseStorage implements IStorage {
 
   async getObjectivesByTimeframe(timeframeId: number): Promise<Objective[]> {
     return db.select().from(objectives).where(eq(objectives.timeframeId, timeframeId));
+  }
+  
+  async getObjectivesByTenant(tenantId: number): Promise<Objective[]> {
+    return db.select().from(objectives).where(eq(objectives.tenantId, tenantId));
   }
 
   async updateObjectiveProgress(id: number, progress: number): Promise<Objective> {
