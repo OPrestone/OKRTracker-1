@@ -33,6 +33,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(401).json({ error: "Unauthorized" });
   };
   
+  // Middleware to extract the current tenant ID from request and ensure user has access
+  const withTenant = async (req: Request, res: any, next: any) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const user = req.user as User;
+      
+      // Try to get tenant ID from:
+      // 1. Query parameter: ?tenantId=123
+      // 2. URL path parameter in routes like /tenants/:tenantId/...
+      // 3. User's default tenant
+      let tenantId: number | null = null;
+      
+      if (req.query.tenantId) {
+        tenantId = parseInt(req.query.tenantId as string);
+      } else if (req.params.tenantId) {
+        tenantId = parseInt(req.params.tenantId);
+      } else if (req.path.includes('/tenants/')) {
+        // Extract tenant ID from path like /tenants/123/something
+        const match = req.path.match(/\/tenants\/(\d+)/);
+        if (match && match[1]) {
+          tenantId = parseInt(match[1]);
+        }
+      }
+      
+      // If no tenant ID found, get user's default tenant
+      if (!tenantId) {
+        const defaultTenant = await tenantService.getUserDefaultTenant(user.id);
+        if (defaultTenant) {
+          tenantId = defaultTenant.id;
+        }
+      }
+      
+      // If we still don't have a tenant ID, return error
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      // Check if user has access to this tenant
+      const userTenants = await tenantService.getUserTenants(user.id);
+      const hasTenantAccess = userTenants.some(t => t.id === tenantId) || user.role === "admin";
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      // Store tenant ID in request for use in route handlers
+      req.tenantId = tenantId;
+      
+      next();
+    } catch (error) {
+      console.error("Error in tenant middleware:", error);
+      res.status(500).json({ error: "Failed to process tenant context" });
+    }
+  };
+  
   // Multi-tenancy API Endpoints
   
   // Get all tenants for the current user
