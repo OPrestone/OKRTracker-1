@@ -1051,7 +1051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/key-results/:id", async (req, res, next) => {
+  app.get("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const keyResult = await storage.getKeyResult(id);
