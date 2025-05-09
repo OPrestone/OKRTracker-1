@@ -166,13 +166,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get tenant by ID
   app.get("/api/tenants/:id", ensureAuthenticated, async (req, res, next) => {
     try {
-      const parsedId = parseInt(req.params.id);
+      const tenantId = req.params.id;
       
-      if (isNaN(parsedId)) {
-        return res.status(400).json({ error: "Invalid tenant ID format" });
-      }
-      
-      const tenant = await tenantService.getTenantById(parsedId);
+      const tenant = await tenantService.getTenantById(tenantId);
       
       if (!tenant) {
         return res.status(404).json({ error: "Tenant not found" });
@@ -181,9 +177,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has access to this tenant
       const userId = (req.user as User).id;
       const userTenants = await tenantService.getUserTenants(userId);
-      const hasAccess = userTenants.some(t => t.id === parsedId);
+      const hasAccess = userTenants.some(t => t.id === tenantId);
       
-      if (!hasAccess && (req.user as User).role !== "admin") {
+      if (!hasAccess && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
@@ -197,23 +193,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update tenant
   app.patch("/api/tenants/:id", ensureAuthenticated, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const userId = (req.user as User).id;
       
       // Check if user is owner or admin of this tenant
       const userTenants = await tenantService.getUserTenants(userId);
-      const userTenant = userTenants.find(t => t.id === id);
+      const userTenant = userTenants.find(t => t.id === tenantId);
       
-      if (!userTenant && (req.user as User).role !== "admin") {
+      if (!userTenant && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
-      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have permission to update this tenant" });
       }
       
       const validatedData = insertTenantSchema.partial().omit({ slug: true }).parse(req.body);
-      const updatedTenant = await tenantService.updateTenant(id, validatedData);
+      const updatedTenant = await tenantService.updateTenant(tenantId, validatedData);
       
       res.json(updatedTenant);
     } catch (error) {
@@ -224,18 +220,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set default tenant for user
   app.post("/api/tenants/:id/set-default", ensureAuthenticated, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const userId = (req.user as User).id;
       
       // Check if user is member of this tenant
       const userTenants = await tenantService.getUserTenants(userId);
-      const isMember = userTenants.some(t => t.id === id);
+      const isMember = userTenants.some(t => t.id === tenantId);
       
       if (!isMember) {
         return res.status(403).json({ error: "You are not a member of this tenant" });
       }
       
-      await tenantService.setDefaultTenant(userId, id);
+      await tenantService.setDefaultTenant(userId, tenantId);
       
       res.status(200).json({ success: true, message: "Default tenant updated" });
     } catch (error) {
@@ -246,23 +242,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add user to tenant
   app.post("/api/tenants/:id/users", ensureAuthenticated, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const userId = (req.user as User).id;
       
       // Check if user is owner or admin of this tenant
       const userTenants = await tenantService.getUserTenants(userId);
-      const userTenant = userTenants.find(t => t.id === id);
+      const userTenant = userTenants.find(t => t.id === tenantId);
       
-      if (!userTenant && (req.user as User).role !== "admin") {
+      if (!userTenant && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
-      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have permission to add users to this tenant" });
       }
       
       const { userId: newUserId, role = "member" } = z.object({
-        userId: z.number(),
+        userId: z.string(),
         role: z.enum(["owner", "admin", "member"]).optional()
       }).parse(req.body);
       
@@ -272,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
       
-      const userToTenant = await tenantService.addUserToTenant(newUserId, id, role as "owner" | "admin" | "member");
+      const userToTenant = await tenantService.addUserToTenant(newUserId, tenantId, role as "owner" | "admin" | "member");
       
       res.status(201).json(userToTenant);
     } catch (error) {
@@ -283,21 +279,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Remove user from tenant
   app.delete("/api/tenants/:id/users/:userId", ensureAuthenticated, async (req, res, next) => {
     try {
-      const tenantId = parseInt(req.params.id);
-      const userIdToRemove = parseInt(req.params.userId);
+      const tenantId = req.params.id;
+      const userIdToRemove = req.params.userId;
       const currentUserId = (req.user as User).id;
       
       // Check if current user is owner or admin of this tenant
       const userTenants = await tenantService.getUserTenants(currentUserId);
       const userTenant = userTenants.find(t => t.id === tenantId);
       
-      if (!userTenant && (req.user as User).role !== "admin") {
+      if (!userTenant && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
       // Check if current user is owner/admin or is removing themselves
       const isSelfRemoval = currentUserId === userIdToRemove;
-      if (!isSelfRemoval && userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+      if (!isSelfRemoval && userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have permission to remove users from this tenant" });
       }
       
@@ -312,14 +308,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get members of a tenant by ID
   app.get("/api/tenants/:id/users", ensureAuthenticated, async (req, res, next) => {
     try {
-      const tenantId = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const userId = (req.user as User).id;
       
       // Check if user is member of this tenant
       const userTenants = await tenantService.getUserTenants(userId);
       const isMember = userTenants.some(t => t.id === tenantId);
       
-      if (!isMember && (req.user as User).role !== "admin") {
+      if (!isMember && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
@@ -348,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userTenants = await tenantService.getUserTenants(userId);
       const isMember = userTenants.some(t => t.id === tenant.id);
       
-      if (!isMember && (req.user as User).role !== "admin") {
+      if (!isMember && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
@@ -365,18 +361,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a subscription for a tenant
   app.post("/api/tenants/:id/subscription", ensureAuthenticated, async (req, res, next) => {
     try {
-      const tenantId = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const user = req.user as User;
       
       // Check if user is owner or admin of this tenant
       const userTenants = await tenantService.getUserTenants(user.id);
       const userTenant = userTenants.find(t => t.id === tenantId);
       
-      if (!userTenant && user.role !== "admin") {
+      if (!userTenant && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
-      if (userTenant && userTenant.userRole !== "owner" && user.role !== "admin") {
+      if (userTenant && userTenant.userRole !== "owner" && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "Only tenant owners can manage subscriptions" });
       }
       
@@ -395,18 +391,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a subscription plan
   app.patch("/api/tenants/:id/subscription", ensureAuthenticated, async (req, res, next) => {
     try {
-      const tenantId = parseInt(req.params.id);
+      const tenantId = req.params.id;
       const user = req.user as User;
       
       // Check if user is owner or admin of this tenant
       const userTenants = await tenantService.getUserTenants(user.id);
       const userTenant = userTenants.find(t => t.id === tenantId);
       
-      if (!userTenant && user.role !== "admin") {
+      if (!userTenant && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
       }
       
-      if (userTenant && userTenant.userRole !== "owner" && user.role !== "admin") {
+      if (userTenant && userTenant.userRole !== "owner" && !(req.user as User).isAdmin) {
         return res.status(403).json({ error: "Only tenant owners can manage subscriptions" });
       }
       
@@ -509,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/teams/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const team = await storage.getTeam(id);
       
       if (!team) {
@@ -529,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/teams/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Verify team belongs to current tenant
       const team = await storage.getTeam(id);
@@ -592,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const user = await storage.getUser(id);
       
       if (!user) {
@@ -634,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.put("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Verify user exists
       const existingUser = await storage.getUser(id);
@@ -657,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is authorized (can only edit own profile unless admin)
-      if (req.user?.id !== id && req.user?.role !== 'admin') {
+      if (req.user?.id !== id && !(req.user as User).isAdmin) {
         return res.status(403).send("Not authorized to update this user");
       }
       
@@ -723,8 +719,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assign user to team
   app.post("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const { teamId } = z.object({ teamId: z.number() }).parse(req.body);
+      const userId = req.params.userId;
+      const { teamId } = z.object({ teamId: z.string() }).parse(req.body);
       
       // Verify user exists and belongs to current tenant
       const user = await storage.getUser(userId);
@@ -776,7 +772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Remove user from team
   app.delete("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       
       // Verify user exists and belongs to current tenant
       const user = await storage.getUser(userId);
@@ -817,11 +813,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/users/:userId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const currentUser = req.user as User;
-      if (currentUser.role !== "admin") {
+      if (!(currentUser.isAdmin || currentUser.role === "admin")) {
         return res.status(403).json({ error: "Forbidden - Admin access required to delete users" });
       }
       
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       
       // Prevent deleting yourself
       if (userId === currentUser.id) {
@@ -860,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ))
         .limit(1);
       
-      if (adminInTenant.length === 0) {
+      if (adminInTenant.length === 0 && !currentUser.isAdmin) {
         return res.status(403).json({ error: "You do not have admin permissions in this tenant" });
       }
       
