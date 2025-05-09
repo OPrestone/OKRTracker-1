@@ -7,10 +7,10 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
          insertMoodEntrySchema, insertTenantSchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
-         moodEntries, statusEnum, User, tenantPlans, tenantStatuses } from "@shared/schema";
+         moodEntries, statusEnum, User, tenantPlans, tenantStatuses, usersToTenants } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
-import { or, sql } from "drizzle-orm";
+import { or, sql, and, eq, inArray } from "drizzle-orm";
 import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";
 import { stripeService } from "./services/stripe-service";
@@ -962,11 +962,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/timeframes/:timeframeId/objectives", async (req, res, next) => {
+  app.get("/api/timeframes/:timeframeId/objectives", withTenant, async (req, res, next) => {
     try {
       const timeframeId = parseInt(req.params.timeframeId);
       const objectives = await storage.getObjectivesByTimeframe(timeframeId);
-      res.json(objectives);
+      
+      // Filter objectives by current tenant
+      const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
+      
+      res.json(tenantObjectives);
     } catch (error) {
       next(error);
     }
@@ -1061,11 +1065,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check-ins API
-  app.get("/api/check-ins", async (req, res, next) => {
+  app.get("/api/check-ins", withTenant, async (req, res, next) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       const checkIns = await storage.getRecentCheckIns(limit);
-      res.json(checkIns);
+      
+      // Filter check-ins by objectives that belong to the current tenant
+      // We need to get the objectives first
+      const objectives = await storage.getAllObjectives();
+      const tenantObjectiveIds = objectives
+        .filter(obj => obj.tenantId === req.tenantId)
+        .map(obj => obj.id);
+      
+      // Now filter check-ins by these objective IDs
+      const tenantCheckIns = checkIns.filter(checkIn => 
+        checkIn.objectiveId && tenantObjectiveIds.includes(checkIn.objectiveId)
+      );
+      
+      res.json(tenantCheckIns);
     } catch (error) {
       next(error);
     }
@@ -1081,19 +1098,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/check-ins", async (req, res, next) => {
+  app.get("/api/users/:userId/check-ins", withTenant, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.userId);
       const checkIns = await storage.getCheckInsByUser(userId);
-      res.json(checkIns);
+      
+      // Filter check-ins by objectives that belong to the current tenant
+      const objectives = await storage.getAllObjectives();
+      const tenantObjectiveIds = objectives
+        .filter(obj => obj.tenantId === req.tenantId)
+        .map(obj => obj.id);
+      
+      // Now filter check-ins by these objective IDs
+      const tenantCheckIns = checkIns.filter(checkIn => 
+        checkIn.objectiveId && tenantObjectiveIds.includes(checkIn.objectiveId)
+      );
+      
+      res.json(tenantCheckIns);
     } catch (error) {
       next(error);
     }
   });
 
-  app.get("/api/objectives/:objectiveId/check-ins", async (req, res, next) => {
+  app.get("/api/objectives/:objectiveId/check-ins", withTenant, async (req, res, next) => {
     try {
       const objectiveId = parseInt(req.params.objectiveId);
+      
+      // First, make sure the objective belongs to the current tenant
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      if (objective.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      // Now that we've verified this objective belongs to the tenant, get its check-ins
       const checkIns = await storage.getCheckInsByObjective(objectiveId);
       res.json(checkIns);
     } catch (error) {
@@ -1101,9 +1142,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/key-results/:keyResultId/check-ins", async (req, res, next) => {
+  app.get("/api/key-results/:keyResultId/check-ins", withTenant, async (req, res, next) => {
     try {
       const keyResultId = parseInt(req.params.keyResultId);
+      
+      // First, get the key result to find its associated objective
+      const keyResult = await storage.getKeyResult(keyResultId);
+      if (!keyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      // Get the associated objective to check tenant access
+      const objective = keyResult.objectiveId 
+        ? await storage.getObjective(keyResult.objectiveId)
+        : null;
+      
+      if (!objective) {
+        return res.status(404).json({ error: "Associated objective not found" });
+      }
+      
+      // Check if the objective belongs to the current tenant
+      if (objective.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
+      // Now that we've verified this key result belongs to the tenant, get its check-ins
       const checkIns = await storage.getCheckInsByKeyResult(keyResultId);
       res.json(checkIns);
     } catch (error) {
@@ -1112,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Search API
-  app.get("/api/search", async (req, res, next) => {
+  app.get("/api/search", withTenant, async (req, res, next) => {
     try {
       const query = req.query.q as string;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
@@ -1127,41 +1190,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const searchTerm = query.toLowerCase();
+      const tenantId = req.tenantId;
       
-      // Search objectives
+      // Search objectives with tenant filter
       const objectivesResult = await db.select()
         .from(objectivesTable)
         .where(
-          or(
-            sql`LOWER(${objectivesTable.title}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${objectivesTable.description}) LIKE ${'%' + searchTerm + '%'}`
+          and(
+            eq(objectivesTable.tenantId, tenantId),
+            or(
+              sql`LOWER(${objectivesTable.title}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${objectivesTable.description}) LIKE ${'%' + searchTerm + '%'}`
+            )
           )
         )
         .limit(limit);
       
-      // Search key results
-      const keyResultsResult = await db.select()
+      // Get all key results and filter by objective tenant
+      const keyResultsResult = await db.select({
+        keyResult: keyResultsTable,
+        objective: objectivesTable
+      })
         .from(keyResultsTable)
+        .leftJoin(objectivesTable, eq(keyResultsTable.objectiveId, objectivesTable.id))
         .where(
-          or(
-            sql`LOWER(${keyResultsTable.title}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${keyResultsTable.description}) LIKE ${'%' + searchTerm + '%'}`
+          and(
+            eq(objectivesTable.tenantId, tenantId),
+            or(
+              sql`LOWER(${keyResultsTable.title}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${keyResultsTable.description}) LIKE ${'%' + searchTerm + '%'}`
+            )
           )
         )
-        .limit(limit);
+        .limit(limit)
+        .then(results => results.map(r => r.keyResult));
       
-      // Search teams
-      const teamsResult = await db.select()
+      // Get all teams associated with this tenant through users_to_tenants
+      const tenantTeams = await db.select({
+        team: teams,
+      })
         .from(teams)
+        .innerJoin(users, eq(users.teamId, teams.id))
+        .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
         .where(
-          or(
-            sql`LOWER(${teams.name}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${teams.description}) LIKE ${'%' + searchTerm + '%'}`
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            or(
+              sql`LOWER(${teams.name}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${teams.description}) LIKE ${'%' + searchTerm + '%'}`
+            )
           )
         )
-        .limit(limit);
+        .limit(limit)
+        .then(results => results.map(r => r.team));
       
-      // Search users
+      // Deduplicate teams (in case multiple users from same team)
+      const uniqueTeams = tenantTeams.filter((team, index, self) => 
+        index === self.findIndex(t => t.id === team.id)
+      );
+      
+      // Get all users associated with this tenant
       const usersResult = await db.select({
         id: users.id,
         username: users.username,
@@ -1172,12 +1260,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teamId: users.teamId
       })
         .from(users)
+        .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
         .where(
-          or(
-            sql`LOWER(${users.firstName}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${users.lastName}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${users.username}) LIKE ${'%' + searchTerm + '%'}`,
-            sql`LOWER(${users.email}) LIKE ${'%' + searchTerm + '%'}`
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            or(
+              sql`LOWER(${users.firstName}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${users.lastName}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${users.username}) LIKE ${'%' + searchTerm + '%'}`,
+              sql`LOWER(${users.email}) LIKE ${'%' + searchTerm + '%'}`
+            )
           )
         )
         .limit(limit);
@@ -1185,7 +1277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         objectives: objectivesResult,
         keyResults: keyResultsResult,
-        teams: teamsResult,
+        teams: uniqueTeams,
         users: usersResult
       });
     } catch (error) {
@@ -1196,10 +1288,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Recommendations API
   
   // 1. Generate objective recommendations for teams
-  app.get("/api/recommendations/objectives/:teamId", async (req, res, next) => {
+  app.get("/api/recommendations/objectives/:teamId", withTenant, async (req, res, next) => {
     try {
       const teamId = parseInt(req.params.teamId);
       const count = req.query.count ? parseInt(req.query.count as string) : 3;
+      const tenantId = req.tenantId;
       
       // Get team data
       const team = await storage.getTeam(teamId);
@@ -1207,19 +1300,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Team not found" });
       }
       
+      // Verify this team belongs to the current tenant
+      // We'll check if any user from this team belongs to the current tenant
+      const teamUsers = await db.select()
+        .from(users)
+        .where(eq(users.teamId, teamId));
+      
+      const teamUserIds = teamUsers.map(user => user.id);
+      
+      if (teamUserIds.length === 0) {
+        return res.status(404).json({ error: "No users found for this team" });
+      }
+      
+      // Check if any of these users belong to the current tenant
+      const tenantUserCount = await db.select({ count: sql`count(*)` })
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            inArray(usersToTenants.userId, teamUserIds)
+          )
+        )
+        .then(result => Number(result[0]?.count || 0));
+      
+      if (tenantUserCount === 0) {
+        return res.status(403).json({ error: "Access denied to this team" });
+      }
+      
       // Get existing team objectives 
       const teamObjectives = await storage.getObjectivesByTeam(teamId);
       
-      // Get company objectives for alignment
-      const companyObjectives = await storage.getAllObjectives().then(
-        objectives => objectives.filter(obj => obj.level === 'company')
-      );
+      // Filter objectives to only include those from this tenant
+      const tenantTeamObjectives = teamObjectives.filter(obj => obj.tenantId === tenantId);
+      
+      // Get company objectives for alignment, but only from this tenant
+      const companyObjectives = await storage.getAllObjectives()
+        .then(objectives => objectives.filter(obj => 
+          obj.level === 'company' && obj.tenantId === tenantId
+        ));
       
       // Generate recommendations
       const recommendations = await openAIService.generateObjectiveRecommendations(
         teamId, 
         team, 
-        teamObjectives, 
+        tenantTeamObjectives, 
         companyObjectives,
         count
       );
