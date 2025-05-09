@@ -707,8 +707,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/users/:userId/access-groups/:accessGroupId", async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const accessGroupId = parseInt(req.params.accessGroupId);
+      const userId = req.params.userId;
+      const accessGroupId = req.params.accessGroupId;
       await storage.assignUserToAccessGroup(userId, accessGroupId);
       res.status(201).send("User assigned to access group");
     } catch (error) {
@@ -891,7 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.patch("/api/cadences/:id", async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const validatedData = insertCadenceSchema.partial().parse(req.body);
       const updatedCadence = await storage.updateCadence(id, validatedData);
       res.json(updatedCadence);
@@ -902,7 +902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.delete("/api/cadences/:id", async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Check if cadence has timeframes
       const timeframes = await storage.getTimeframesByCadence(id);
@@ -941,7 +941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.patch("/api/timeframes/:id", async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const validatedData = insertTimeframeSchema.partial().parse(req.body);
       const updatedTimeframe = await storage.updateTimeframe(id, validatedData);
       res.json(updatedTimeframe);
@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.delete("/api/timeframes/:id", async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Check if timeframe has objectives
       const objectives = await storage.getObjectivesByTimeframe(id);
@@ -971,7 +971,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/cadences/:cadenceId/timeframes", async (req, res, next) => {
     try {
-      const cadenceId = parseInt(req.params.cadenceId);
+      const cadenceId = req.params.cadenceId;
       const timeframes = await storage.getTimeframesByCadence(cadenceId);
       res.json(timeframes);
     } catch (error) {
@@ -1048,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/objectives/:id", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const objective = await storage.getObjective(id);
       
       if (!objective) {
@@ -1070,7 +1070,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/objectives/:id", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Check if objective exists and belongs to the current tenant
       const objective = await storage.getObjective(id);
@@ -1140,7 +1140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:userId/objectives", withTenant, async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const objectives = await storage.getObjectivesByOwner(userId);
       
       // Filter objectives by current tenant
@@ -1154,10 +1154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/teams/:teamId/objectives", withTenant, async (req, res, next) => {
     try {
-      const teamId = parseInt(req.params.teamId);
-      if (isNaN(teamId)) {
-        return res.status(400).json({ error: "Invalid team ID" });
-      }
+      const teamId = req.params.teamId;
       const objectives = await storage.getObjectivesByTeam(teamId);
       
       // Filter objectives by current tenant
@@ -1171,7 +1168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/timeframes/:timeframeId/objectives", withTenant, async (req, res, next) => {
     try {
-      const timeframeId = parseInt(req.params.timeframeId);
+      const timeframeId = req.params.timeframeId;
       const objectives = await storage.getObjectivesByTimeframe(timeframeId);
       
       // Filter objectives by current tenant
@@ -1186,7 +1183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Key Results API
   app.get("/api/objectives/:objectiveId/key-results", async (req, res, next) => {
     try {
-      const objectiveId = parseInt(req.params.objectiveId);
+      const objectiveId = req.params.objectiveId;
       const keyResults = await storage.getKeyResultsByObjective(objectiveId);
       res.json(keyResults);
     } catch (error) {
@@ -1209,7 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const keyResult = await storage.getKeyResult(id);
       if (!keyResult) {
         return res.status(404).send("Key Result not found");
@@ -1222,7 +1219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Get the key result to check tenant access
       const keyResult = await storage.getKeyResult(id);
@@ -1244,7 +1241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/key-results/:id/progress", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       
       // Get the key result to check tenant access
       const keyResult = await storage.getKeyResult(id);
@@ -1267,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiatives API
   app.get("/api/key-results/:keyResultId/initiatives", withTenant, async (req, res, next) => {
     try {
-      const keyResultId = parseInt(req.params.keyResultId);
+      const keyResultId = req.params.keyResultId;
       const initiatives = await storage.getInitiativesByKeyResult(keyResultId);
       res.json(initiatives);
     } catch (error) {
@@ -1290,7 +1287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/initiatives/:id", withTenant, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const validatedData = insertInitiativeSchema.partial().parse(req.body);
       const updatedInitiative = await storage.updateInitiative(id, validatedData);
       res.json(updatedInitiative);
@@ -1338,7 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:userId/check-ins", withTenant, async (req, res, next) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const checkIns = await storage.getCheckInsByUser(userId);
       
       // Filter check-ins by objectives that belong to the current tenant
@@ -1360,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/objectives/:objectiveId/check-ins", withTenant, async (req, res, next) => {
     try {
-      const objectiveId = parseInt(req.params.objectiveId);
+      const objectiveId = req.params.objectiveId;
       
       // First, make sure the objective belongs to the current tenant
       const objective = await storage.getObjective(objectiveId);
@@ -1382,7 +1379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/key-results/:keyResultId/check-ins", withTenant, async (req, res, next) => {
     try {
-      const keyResultId = parseInt(req.params.keyResultId);
+      const keyResultId = req.params.keyResultId;
       
       // First, get the key result to find its associated objective
       const keyResult = await storage.getKeyResult(keyResultId);
