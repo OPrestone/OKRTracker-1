@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
-import { User, Tenant, insertPaymentHistorySchema, insertSubscriptionSchema } from '@shared/schema';
+import { User, Tenant, insertPaymentSchema, insertSubscriptionSchema } from '@shared/schema';
 import { db } from '../db';
-import { subscriptions, paymentHistory, usersToTenants, tenants } from '@shared/schema';
+import { subscriptions, payments, usersToTenants, tenants } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -327,7 +327,7 @@ class StripeService {
       if (!subscription) return;
 
       // Record payment in payment history
-      const paymentData = insertPaymentHistorySchema.parse({
+      const paymentData = insertPaymentSchema.parse({
         tenantId: subscription.tenantId,
         subscriptionId: subscription.id,
         stripeInvoiceId: invoice.id,
@@ -337,7 +337,7 @@ class StripeService {
         paidAt: new Date(invoice.status_transitions?.paid_at || Date.now())
       });
 
-      await db.insert(paymentHistory).values(paymentData);
+      await db.insert(payments).values(paymentData);
 
       // Update subscription status if needed
       if (subscription.status !== 'active') {
@@ -373,7 +373,7 @@ class StripeService {
       if (!subscription) return;
 
       // Record failed payment in payment history
-      const paymentData = insertPaymentHistorySchema.parse({
+      const paymentData = insertPaymentSchema.parse({
         tenantId: subscription.tenantId,
         subscriptionId: subscription.id,
         stripeInvoiceId: invoice.id,
@@ -383,7 +383,7 @@ class StripeService {
         paidAt: null
       });
 
-      await db.insert(paymentHistory).values(paymentData);
+      await db.insert(payments).values(paymentData);
 
       // Update subscription status
       await db.update(subscriptions)

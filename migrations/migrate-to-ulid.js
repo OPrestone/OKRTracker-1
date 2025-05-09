@@ -80,101 +80,133 @@ async function getAllTables() {
 async function migrateTable(tableName, idMap) {
   console.log(`Migrating table: ${tableName}`);
   
-  // Get table information
-  const tableInfo = await getTableInfo(tableName);
-  const columns = tableInfo.columns;
-  const foreignKeys = tableInfo.foreignKeys;
-  
-  // Create column definitions for new table
-  const columnDefs = columns.map(col => {
-    if (col.column_name === 'id') {
-      return `id TEXT PRIMARY KEY`; // Change id to TEXT
-    } else if (col.column_name.endsWith('_id') && !col.column_name.includes('stripe')) {
-      // Foreign key reference
-      return `${col.column_name} TEXT${col.is_nullable === 'NO' ? ' NOT NULL' : ''}`;
-    } else {
-      let type = col.data_type;
-      if (type === 'USER-DEFINED') {
-        // Handle enum types
-        type = `"${col.udt_name}"`;
-      }
-      
-      let def = `${col.column_name} ${type}`;
-      if (col.is_nullable === 'NO') {
-        def += ' NOT NULL';
-      }
-      if (col.column_default && !col.column_default.includes('nextval')) {
-        def += ` DEFAULT ${col.column_default}`;
-      }
-      return def;
-    }
-  }).join(',\n  ');
-  
-  // Create new table
-  const newTableName = `${tableName}_ulid`;
-  await executeQuery(`
-    CREATE TABLE ${newTableName} (
-      ${columnDefs}
-    );
-  `);
-  
-  // Retrieve data from old table
-  const oldData = await executeQuery(`SELECT * FROM ${tableName};`);
-  
-  // Generate ULIDs for each row and store in the map
-  const tableIdMap = {};
-  for (const row of oldData.rows) {
-    const oldId = row.id;
-    const newId = ulid();
-    tableIdMap[oldId] = newId;
-  }
-  
-  // Store the ID map for this table
-  idMap[tableName] = tableIdMap;
-  
-  // Insert data into new table
-  for (const row of oldData.rows) {
-    const oldId = row.id;
-    const newId = tableIdMap[oldId];
+  try {
+    // Get table information
+    const tableInfo = await getTableInfo(tableName);
+    const columns = tableInfo.columns;
+    const foreignKeys = tableInfo.foreignKeys;
     
-    // Build column names and values
-    const columnNames = [];
-    const values = [];
-    const placeholders = [];
-    let paramCount = 1;
-    
-    for (const col of columns) {
-      const colName = col.column_name;
-      let value = row[colName];
-      
-      // Convert IDs to ULIDs
-      if (colName === 'id') {
-        value = newId;
-      } else if (colName.endsWith('_id') && !colName.includes('stripe') && value !== null) {
-        // Look up foreign key in the idMap
-        const refTable = foreignKeys.find(fk => fk.column_name === colName)?.foreign_table_name;
-        if (refTable && idMap[refTable] && idMap[refTable][value]) {
-          value = idMap[refTable][value];
+    // Create column definitions for new table
+    const columnDefs = columns.map(col => {
+      if (col.column_name === 'id') {
+        return `id TEXT PRIMARY KEY`; // Change id to TEXT
+      } else if (col.column_name.endsWith('_id') && !col.column_name.includes('stripe')) {
+        // Foreign key reference
+        return `${col.column_name} TEXT${col.is_nullable === 'NO' ? ' NOT NULL' : ''}`;
+      } else {
+        let type = col.data_type;
+        if (type === 'USER-DEFINED') {
+          // Handle enum types
+          type = `"${col.udt_name}"`;
         }
+        
+        let def = `${col.column_name} ${type}`;
+        if (col.is_nullable === 'NO') {
+          def += ' NOT NULL';
+        }
+        if (col.column_default && !col.column_default.includes('nextval')) {
+          def += ` DEFAULT ${col.column_default}`;
+        }
+        return def;
       }
-      
-      columnNames.push(colName);
-      values.push(value);
-      placeholders.push(`$${paramCount++}`);
+    }).join(',\n  ');
+    
+    // Create new table
+    const newTableName = `${tableName}_ulid`;
+    
+    // Check if the new table already exists and drop it if it does
+    try {
+      await executeQuery(`DROP TABLE IF EXISTS ${newTableName} CASCADE;`);
+    } catch (dropError) {
+      console.log(`Warning: Unable to drop existing table ${newTableName}. Attempting to proceed anyway.`);
     }
     
-    // Insert the row
-    const insertQuery = `
-      INSERT INTO ${newTableName} (${columnNames.join(', ')})
-      VALUES (${placeholders.join(', ')});
-    `;
+    await executeQuery(`
+      CREATE TABLE ${newTableName} (
+        ${columnDefs}
+      );
+    `);
     
-    await executeQuery(insertQuery, values);
+    // Retrieve data from old table
+    const oldData = await executeQuery(`SELECT * FROM ${tableName};`);
+    
+    // If there's no data, just record the table was migrated with empty map
+    if (oldData.rows.length === 0) {
+      console.log(`Table ${tableName} has no data to migrate.`);
+      idMap[tableName] = {};
+      return {};
+    }
+    
+    // Generate ULIDs for each row and store in the map
+    const tableIdMap = {};
+    for (const row of oldData.rows) {
+      const oldId = row.id;
+      if (oldId) { // Make sure id is not null or undefined
+        const newId = ulid();
+        tableIdMap[oldId] = newId;
+      }
+    }
+    
+    // Store the ID map for this table
+    idMap[tableName] = tableIdMap;
+    
+    // Insert data into new table
+    for (const row of oldData.rows) {
+      const oldId = row.id;
+      if (!oldId) {
+        console.log(`Warning: Row in table ${tableName} has no id, skipping`);
+        continue;
+      }
+      
+      const newId = tableIdMap[oldId];
+      
+      // Build column names and values
+      const columnNames = [];
+      const values = [];
+      const placeholders = [];
+      let paramCount = 1;
+      
+      for (const col of columns) {
+        const colName = col.column_name;
+        let value = row[colName];
+        
+        // Convert IDs to ULIDs
+        if (colName === 'id') {
+          value = newId;
+        } else if (colName.endsWith('_id') && !colName.includes('stripe') && value !== null) {
+          // Look up foreign key in the idMap
+          const refTable = foreignKeys.find(fk => fk.column_name === colName)?.foreign_table_name;
+          if (refTable && idMap[refTable] && idMap[refTable][value]) {
+            value = idMap[refTable][value];
+          }
+        }
+        
+        columnNames.push(colName);
+        values.push(value);
+        placeholders.push(`$${paramCount++}`);
+      }
+      
+      // Insert the row
+      const insertQuery = `
+        INSERT INTO ${newTableName} (${columnNames.join(', ')})
+        VALUES (${placeholders.join(', ')});
+      `;
+      
+      try {
+        await executeQuery(insertQuery, values);
+      } catch (insertError) {
+        console.error(`Error inserting row into ${newTableName}:`, insertError);
+        throw insertError;
+      }
+    }
+    
+    console.log(`Migrated table ${tableName}: ${oldData.rows.length} rows`);
+    
+    return tableIdMap;
+  } catch (error) {
+    console.error(`Error migrating table ${tableName}:`, error);
+    throw error;
   }
-  
-  console.log(`Migrated table ${tableName}: ${oldData.rows.length} rows`);
-  
-  return tableIdMap;
 }
 
 async function main() {
@@ -215,23 +247,43 @@ async function main() {
     
     console.log(`Migration order: ${migrationOrder.join(', ')}`);
     
-    // Disable foreign key checks
-    await executeQuery('SET session_replication_role = replica;');
+    try {
+      // Try to disable foreign key checks, but proceed even if it fails
+      await executeQuery('SET session_replication_role = replica;');
+    } catch (error) {
+      console.log('Warning: Unable to disable foreign key constraints. Migration will try to proceed anyway.');
+      console.log('This may require manual intervention if foreign key constraints block the migration.');
+    }
     
     // Migrate all tables in the determined order
     for (const tableName of migrationOrder) {
-      await migrateTable(tableName, idMap);
+      try {
+        await migrateTable(tableName, idMap);
+      } catch (error) {
+        console.error(`Error migrating table ${tableName}:`, error);
+        throw error;
+      }
     }
     
     // Drop old tables and rename new tables in reverse order
     // to properly handle foreign key constraints
     for (const tableName of [...migrationOrder].reverse()) {
-      await executeQuery(`DROP TABLE ${tableName} CASCADE;`);
-      await executeQuery(`ALTER TABLE ${tableName}_ulid RENAME TO ${tableName};`);
+      try {
+        // Use CASCADE to force dropping the table regardless of dependencies
+        await executeQuery(`DROP TABLE IF EXISTS ${tableName} CASCADE;`);
+        await executeQuery(`ALTER TABLE IF EXISTS ${tableName}_ulid RENAME TO ${tableName};`);
+      } catch (error) {
+        console.error(`Error finalizing table ${tableName}:`, error);
+        throw error;
+      }
     }
     
-    // Re-enable foreign key checks
-    await executeQuery('SET session_replication_role = DEFAULT;');
+    try {
+      // Try to re-enable foreign key checks
+      await executeQuery('SET session_replication_role = DEFAULT;');
+    } catch (error) {
+      console.log('Warning: Unable to re-enable foreign key constraints. This is okay if they were never disabled.');
+    }
     
     console.log('Migration completed successfully');
   } catch (error) {

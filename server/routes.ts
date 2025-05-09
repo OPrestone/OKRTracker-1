@@ -6,8 +6,8 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
-         insertMoodEntrySchema, insertTenantSchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
-         moodEntries, statusEnum, User, tenantPlans, tenantStatuses, usersToTenants } from "@shared/schema";
+         insertTeamMoodSchema, insertTenantSchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
+         teamMoods, objectiveStatusEnum, User, usersToTenants } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -3505,7 +3505,7 @@ async function initializeData() {
         ownerId: 2, // John Smith
         timeframeId: q3Timeframe.id,
         progress: 65,
-        status: statusEnum.enumValues[0], // on_track
+        status: objectiveStatusEnum.enumValues[0], // draft
         priority: "high"
       });
       
@@ -3541,7 +3541,7 @@ async function initializeData() {
         ownerId: 3, // Michelle Williams
         timeframeId: q3Timeframe.id,
         progress: 40,
-        status: statusEnum.enumValues[1], // at_risk
+        status: objectiveStatusEnum.enumValues[1], // active
         priority: "medium"
       });
       
