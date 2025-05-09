@@ -6,7 +6,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
-         users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
+         insertMoodEntrySchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
          statusEnum, User } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

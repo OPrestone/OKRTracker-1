@@ -451,6 +451,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   awardedBadges: many(userBadges, {
     relationName: "badge_awarder",
   }),
+  // Wellness Pulse - Mood tracking
+  moodEntries: many(moodEntries, {
+    relationName: "user_mood_entries",
+  }),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -812,7 +816,9 @@ export const usersRelationsWithChat = relations(users, ({ one, many }) => ({
   createdChatRooms: many(chatRooms, { relationName: "created_chat_rooms" }),
   chatMemberships: many(chatRoomMembers, { relationName: "user_chat_memberships" }),
   messages: many(messages, { relationName: "user_messages" }),
-  reactions: many(reactions, { relationName: "user_reactions" })
+  reactions: many(reactions, { relationName: "user_reactions" }),
+  // Wellness Pulse - Mood tracking
+  moodEntries: many(moodEntries, { relationName: "user_mood_entries" })
 }));
 
 // Add chat feature insert schemas
@@ -876,3 +882,31 @@ export const insertFinancialDataSchema = createInsertSchema(financialData).pick(
   notes: true,
   source: true,
 });
+
+// Wellness Pulse - Team Mood Tracking
+export const moodEntries = pgTable("mood_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  moodScore: integer("mood_score").notNull(),
+  notes: text("notes"),
+  date: timestamp("date").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMoodEntrySchema = createInsertSchema(moodEntries).pick({
+  userId: true,
+  moodScore: true,
+  notes: true,
+  date: true,
+});
+
+export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
+export type MoodEntry = typeof moodEntries.$inferSelect;
+
+export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [moodEntries.userId],
+    references: [users.id],
+    relationName: "user_mood_entries",
+  }),
+}));
