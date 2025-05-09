@@ -43,7 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
-import { TenantSwitcher } from "@/components/tenant/tenant-switcher";
+import TenantSwitcher from "@/components/tenant/tenant-switcher";
 
 interface SidebarProps {
   open: boolean;

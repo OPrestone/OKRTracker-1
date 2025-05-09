@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { useState, useEffect, useCallback } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BuildingIcon } from "lucide-react";
+import { Building as BuildingIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreateTenantDialog from "./create-tenant-dialog";
 
