@@ -179,6 +179,7 @@ export const keyResults = pgTable("key_results", {
   startValue: text("start_value"),
   progress: integer("progress").default(0),
   status: text("status").default("not_started"),
+  tenantId: integer("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -190,6 +191,7 @@ export const initiatives = pgTable("initiatives", {
   keyResultId: integer("key_result_id").references(() => keyResults.id).notNull(),
   assignedToId: integer("assigned_to_id").references(() => users.id),
   status: text("status").default("not_started"),
+  tenantId: integer("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -201,6 +203,7 @@ export const checkIns = pgTable("check_ins", {
   userId: integer("user_id").references(() => users.id).notNull(),
   progress: integer("progress"),
   notes: text("notes"),
+  tenantId: integer("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -272,6 +275,7 @@ export const insertKeyResultSchema = createInsertSchema(keyResults).pick({
   targetValue: true,
   startValue: true,
   status: true,
+  tenantId: true,
 });
 
 export const insertInitiativeSchema = createInsertSchema(initiatives).pick({
@@ -280,6 +284,7 @@ export const insertInitiativeSchema = createInsertSchema(initiatives).pick({
   keyResultId: true,
   assignedToId: true,
   status: true,
+  tenantId: true,
 });
 
 export const insertCheckInSchema = createInsertSchema(checkIns).pick({
@@ -288,6 +293,7 @@ export const insertCheckInSchema = createInsertSchema(checkIns).pick({
   userId: true,
   progress: true,
   notes: true,
+  tenantId: true,
 });
 
 // Feedback and Recognition schemas
