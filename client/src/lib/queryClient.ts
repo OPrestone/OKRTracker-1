@@ -1,5 +1,19 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Function to get the current tenant ID from the URL
+function getCurrentTenantFromUrl(): number | null {
+  // Check for numeric tenant ID in /tenants/{id} pattern
+  const numericMatch = window.location.pathname.match(/\/tenants\/(\d+)/);
+  if (numericMatch) {
+    return parseInt(numericMatch[1]);
+  }
+  
+  // For organization slug routes, we need to rely on session storage
+  // This will be set when switching tenants in the TenantProvider
+  const storedTenantId = sessionStorage.getItem('currentTenantId');
+  return storedTenantId ? parseInt(storedTenantId) : null;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,7 +26,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Add tenant query parameter if available
+  const tenantId = getCurrentTenantFromUrl();
+  const urlObj = new URL(url, window.location.origin);
+  
+  // Only add tenantId if it exists
+  if (tenantId) {
+    urlObj.searchParams.append('tenantId', tenantId.toString());
+  }
+  
+  const res = await fetch(urlObj.toString(), {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -30,7 +53,17 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      const res = await fetch(queryKey[0] as string, {
+      // Add tenant query parameter if available
+      const tenantId = getCurrentTenantFromUrl();
+      const urlKey = queryKey[0] as string;
+      const urlObj = new URL(urlKey, window.location.origin);
+      
+      // Only add tenantId if it exists and not already in the URL
+      if (tenantId && !urlObj.searchParams.has('tenantId')) {
+        urlObj.searchParams.append('tenantId', tenantId.toString());
+      }
+      
+      const res = await fetch(urlObj.toString(), {
         credentials: "include", // Important for session cookies
       });
 

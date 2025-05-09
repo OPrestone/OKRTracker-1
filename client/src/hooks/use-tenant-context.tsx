@@ -38,9 +38,33 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     enabled: true,
   });
 
-  // Find and set the current tenant based on URL path
+  // Initialize from session storage on component mount
+  useEffect(() => {
+    const storedTenantId = sessionStorage.getItem('currentTenantId');
+    if (storedTenantId) {
+      // We have a stored tenant ID, but we'll wait for the tenants to load
+      // before we can fully restore the tenant object with all its properties
+      console.log('Found stored tenant ID:', storedTenantId);
+    }
+  }, []);
+
+  // Find and set the current tenant based on URL path or session storage
   useEffect(() => {
     if (!tenants || tenants.length === 0) return;
+    
+    // First priority: Check for stored tenant ID from session storage
+    // This ensures tenant context persists after page reloads
+    const storedTenantId = sessionStorage.getItem('currentTenantId');
+    if (storedTenantId) {
+      const tenantId = parseInt(storedTenantId);
+      const matchedTenant = tenants.find(t => t.id === tenantId);
+      if (matchedTenant) {
+        setCurrentTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Second priority: Check URL paths
     
     // Check for numeric tenant ID in /tenants/{id}
     const numericMatch = location.match(/\/tenants\/(\d+)/);
@@ -49,6 +73,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const matchedTenant = tenants.find(t => t.id === tenantId);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
+        // Update session storage to match URL
+        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
+        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
       }
     }
@@ -60,6 +88,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
+        // Update session storage to match URL
+        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
+        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
       }
     }
@@ -71,19 +103,37 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
+        // Update session storage to match URL
+        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
+        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
       }
     }
     
     // Otherwise, use default tenant or first one
     const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
-    setCurrentTenant(defaultTenant);
+    if (defaultTenant) {
+      setCurrentTenant(defaultTenant);
+      // Update session storage with default tenant
+      sessionStorage.setItem('currentTenantId', defaultTenant.id.toString());
+      sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
+      sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+    }
   }, [tenants, location]);
 
   // Function to switch tenant with full page reload
   const switchTenant = (tenant: Tenant) => {
     // First, update the context
     setCurrentTenant(tenant);
+    
+    // Store the tenant ID in session storage to make it available after page reload
+    // This is used by the queryClient to add tenantId to API requests
+    sessionStorage.setItem('currentTenantId', tenant.id.toString());
+    
+    // Also store other important tenant data that might be needed before API calls
+    sessionStorage.setItem('currentTenantSlug', tenant.slug);
+    sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
     
     // Determine the URL to navigate to
     let newUrl = '';
@@ -103,6 +153,17 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // Default navigation to organization page with slug
     else {
       newUrl = `/organization/${tenant.slug}`;
+    }
+    
+    // Invalidate all queries before reloading to ensure fresh data
+    // for the new tenant context
+    try {
+      const queryClient = window.__REACT_QUERY_GLOBAL_CLIENT__;
+      if (queryClient) {
+        queryClient.invalidateQueries();
+      }
+    } catch (e) {
+      console.warn('Could not invalidate queries before tenant switch:', e);
     }
     
     // Force a full page reload to reset app state

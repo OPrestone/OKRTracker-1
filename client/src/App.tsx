@@ -58,6 +58,7 @@ import CustomDashboard from "@/pages/custom-dashboard";
 import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { TenantProvider } from "@/hooks/use-tenant-context";
 import { FeatureTour } from "@/components/help/feature-tour";
 import { Loader2 } from "lucide-react";
 // Import onboarding components
@@ -185,14 +186,16 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
-        <HelpProvider>
-          <OnboardingProvider>
-            <LocationTracker />
-            <FeatureTour />
-            <OnboardingController />
-            <AppRoutes />
-          </OnboardingProvider>
-        </HelpProvider>
+        <TenantProvider>
+          <HelpProvider>
+            <OnboardingProvider>
+              <LocationTracker />
+              <FeatureTour />
+              <OnboardingController />
+              <AppRoutes />
+            </OnboardingProvider>
+          </HelpProvider>
+        </TenantProvider>
       </ThemeProvider>
     </AuthProvider>
   );

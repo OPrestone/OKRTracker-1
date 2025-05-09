@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, PlusCircle, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, PlusCircle, Check, RefreshCw } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -21,99 +21,46 @@ import { useState, useEffect, useCallback } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Building as BuildingIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import CreateTenantDialog from "./create-tenant-dialog";
-
-export type Tenant = {
-  id: number;
-  name: string;
-  displayName: string;
-  slug: string;
-  userRole: string;
-  isDefault?: boolean;
-  plan?: string;
-  status?: string;
-};
+import { useTenantContext, Tenant } from "@/hooks/use-tenant-context";
 
 export default function TenantSwitcher() {
   const [createTenantOpen, setCreateTenantOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  // wouter doesn't have useNavigate, we use window.location for navigation
-  const navigate = (path: string) => { window.location.href = path; };
+  const [isSwitching, setIsSwitching] = useState(false);
   const [location] = useLocation();
+  const { toast } = useToast();
 
-  const { data: tenants, isLoading } = useQuery<Tenant[]>({
+  // Use the tenant context instead of local state
+  const { 
+    currentTenant: selectedTenant, 
+    switchTenant, 
+    isLoading 
+  } = useTenantContext();
+  
+  // Get tenants from the API
+  const { data: tenants } = useQuery<Tenant[]>({
     queryKey: ["/api/tenants"],
   });
-  
-  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-  
-  // Find the current tenant based on URL path
-  const getCurrentTenant = useCallback(() => {
-    if (!tenants || tenants.length === 0) return null;
-    
-    // Check for numeric tenant ID in /tenants/{id}
-    const numericMatch = location.match(/\/tenants\/(\d+)/);
-    if (numericMatch) {
-      const tenantId = parseInt(numericMatch[1]);
-      const matchedTenant = tenants.find(t => t.id === tenantId);
-      if (matchedTenant) return matchedTenant;
-    }
-    
-    // Check for organization slug in /organization/{slug}
-    const orgMatch = location.match(/\/organization\/([^/]+)/);
-    if (orgMatch) {
-      const urlSlug = orgMatch[1];
-      const matchedTenant = tenants.find(t => t.slug === urlSlug);
-      if (matchedTenant) return matchedTenant;
-    }
-    
-    // Check for legacy tenant slug in /tenants/{slug}
-    const tenantMatch = location.match(/\/tenants\/([^/]+)/);
-    if (tenantMatch && !numericMatch) { // Ensure we're not matching a numeric ID again
-      const urlSlug = tenantMatch[1];
-      const matchedTenant = tenants.find(t => t.slug === urlSlug);
-      if (matchedTenant) return matchedTenant;
-    }
-    
-    // Otherwise, return default tenant or first one
-    const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
-    return defaultTenant;
-  }, [tenants, location]);
-
-  // Update selected tenant when tenants data is loaded or location changes
-  useEffect(() => {
-    if (tenants && tenants.length > 0) {
-      setSelectedTenant(getCurrentTenant());
-    }
-  }, [tenants, location, getCurrentTenant]);
 
   const onTenantSelect = useCallback((tenant: Tenant) => {
-    setSelectedTenant(tenant);
     setOpen(false);
+    setIsSwitching(true);
     
-    // Handle organization routes
-    if (location.startsWith('/organization/')) {
-      const newPath = location.replace(/\/organization\/[^/]+/, `/organization/${tenant.slug}`);
-      navigate(newPath);
-      return;
-    }
+    // Show toast to indicate tenant switch is happening
+    toast({
+      title: "Switching organization",
+      description: `Loading data for ${tenant.displayName}...`,
+      duration: 3000,
+    });
     
-    // Handle tenant ID-based routes
-    if (location.match(/\/tenants\/\d+/)) {
-      navigate(`/organization/${tenant.slug}`);
-      return;
-    }
-    
-    // Handle tenant slug-based routes (legacy)
-    if (location.startsWith('/tenants/')) {
-      const newPath = location.replace(/\/tenants\/[^/]+/, `/organization/${tenant.slug}`);
-      navigate(newPath);
-      return;
-    }
-    
-    // Default navigation to organization page with slug
-    navigate(`/organization/${tenant.slug}`);
-  }, [location, navigate]);
+    // Small delay to show loading state before reload
+    setTimeout(() => {
+      // Use the switchTenant function from context which handles full page reload
+      switchTenant(tenant);
+    }, 500);
+  }, [switchTenant, toast]);
 
   return (
     <>
