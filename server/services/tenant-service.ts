@@ -22,6 +22,11 @@ class TenantService {
     userRole: 'owner' | 'admin' | 'member' = 'owner'
   ): Promise<{ tenant: Tenant, userToTenant: UserToTenant }> {
     try {
+      // Check if user has permission to create tenants (only admins can)
+      if (user.role !== 'admin') {
+        throw new Error('Only administrators can create organizations');
+      }
+      
       // Generate a slug from the name
       const slug = slugify(tenantData.name, { 
         lower: true, 
