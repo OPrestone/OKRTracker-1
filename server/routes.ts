@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -6,15 +6,17 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
-         insertMoodEntrySchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
-         moodEntries, statusEnum, User } from "@shared/schema";
+         insertMoodEntrySchema, insertTenantSchema, users, teams, objectives as objectivesTable, keyResults as keyResultsTable, 
+         moodEntries, statusEnum, User, tenantPlans, tenantStatuses } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql } from "drizzle-orm";
 import { openAIService } from "./services/openai-service";
-import { feedbackService } from "./services/feedback-service";
 import { slackService } from "./services/slack-service";
+import { stripeService } from "./services/stripe-service";
+import { tenantService } from "./services/tenant-service";
 import { WebSocketServer, WebSocket } from "ws";
+import Stripe from "stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -22,6 +24,345 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize data
   initializeData();
+  
+  // Middleware to ensure user is authenticated
+  const ensureAuthenticated = (req: Request, res: any, next: any) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ error: "Unauthorized" });
+  };
+  
+  // Multi-tenancy API Endpoints
+  
+  // Get all tenants for the current user
+  app.get("/api/tenants", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as User).id;
+      const tenants = await tenantService.getUserTenants(userId);
+      res.json(tenants);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get user's default tenant
+  app.get("/api/tenants/default", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as User).id;
+      const tenant = await tenantService.getUserDefaultTenant(userId);
+      
+      if (!tenant) {
+        return res.status(404).json({ error: "No default tenant found" });
+      }
+      
+      res.json(tenant);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create a new tenant
+  app.post("/api/tenants", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const validatedData = insertTenantSchema.omit({ slug: true }).parse(req.body);
+      
+      const { tenant, userToTenant } = await tenantService.createTenant(
+        validatedData,
+        user,
+        "owner"
+      );
+      
+      res.status(201).json({ tenant, userToTenant });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get tenant by ID
+  app.get("/api/tenants/:id", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tenant = await tenantService.getTenantById(id);
+      
+      if (!tenant) {
+        return res.status(404).json({ error: "Tenant not found" });
+      }
+      
+      // Check if user has access to this tenant
+      const userId = (req.user as User).id;
+      const userTenants = await tenantService.getUserTenants(userId);
+      const hasAccess = userTenants.some(t => t.id === id);
+      
+      if (!hasAccess && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      res.json(tenant);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update tenant
+  app.patch("/api/tenants/:id", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as User).id;
+      
+      // Check if user is owner or admin of this tenant
+      const userTenants = await tenantService.getUserTenants(userId);
+      const userTenant = userTenants.find(t => t.id === id);
+      
+      if (!userTenant && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have permission to update this tenant" });
+      }
+      
+      const validatedData = insertTenantSchema.partial().omit({ slug: true }).parse(req.body);
+      const updatedTenant = await tenantService.updateTenant(id, validatedData);
+      
+      res.json(updatedTenant);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Set default tenant for user
+  app.post("/api/tenants/:id/set-default", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as User).id;
+      
+      // Check if user is member of this tenant
+      const userTenants = await tenantService.getUserTenants(userId);
+      const isMember = userTenants.some(t => t.id === id);
+      
+      if (!isMember) {
+        return res.status(403).json({ error: "You are not a member of this tenant" });
+      }
+      
+      await tenantService.setDefaultTenant(userId, id);
+      
+      res.status(200).json({ success: true, message: "Default tenant updated" });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Add user to tenant
+  app.post("/api/tenants/:id/users", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as User).id;
+      
+      // Check if user is owner or admin of this tenant
+      const userTenants = await tenantService.getUserTenants(userId);
+      const userTenant = userTenants.find(t => t.id === id);
+      
+      if (!userTenant && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      if (userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have permission to add users to this tenant" });
+      }
+      
+      const { userId: newUserId, role = "member" } = z.object({
+        userId: z.number(),
+        role: z.enum(["owner", "admin", "member"]).optional()
+      }).parse(req.body);
+      
+      // Check if user exists
+      const user = await storage.getUser(newUserId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      const userToTenant = await tenantService.addUserToTenant(newUserId, id, role as "owner" | "admin" | "member");
+      
+      res.status(201).json(userToTenant);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Remove user from tenant
+  app.delete("/api/tenants/:id/users/:userId", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = parseInt(req.params.id);
+      const userIdToRemove = parseInt(req.params.userId);
+      const currentUserId = (req.user as User).id;
+      
+      // Check if current user is owner or admin of this tenant
+      const userTenants = await tenantService.getUserTenants(currentUserId);
+      const userTenant = userTenants.find(t => t.id === tenantId);
+      
+      if (!userTenant && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      // Check if current user is owner/admin or is removing themselves
+      const isSelfRemoval = currentUserId === userIdToRemove;
+      if (!isSelfRemoval && userTenant && userTenant.userRole !== "owner" && userTenant.userRole !== "admin" && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have permission to remove users from this tenant" });
+      }
+      
+      await tenantService.removeUserFromTenant(userIdToRemove, tenantId);
+      
+      res.status(200).json({ success: true, message: "User removed from tenant" });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get members of a tenant
+  app.get("/api/tenants/:id/users", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = parseInt(req.params.id);
+      const userId = (req.user as User).id;
+      
+      // Check if user is member of this tenant
+      const userTenants = await tenantService.getUserTenants(userId);
+      const isMember = userTenants.some(t => t.id === tenantId);
+      
+      if (!isMember && (req.user as User).role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      const members = await tenantService.getTenantMembers(tenantId);
+      
+      res.json(members);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Subscription Related Endpoints
+  
+  // Create a subscription for a tenant
+  app.post("/api/tenants/:id/subscription", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = parseInt(req.params.id);
+      const user = req.user as User;
+      
+      // Check if user is owner or admin of this tenant
+      const userTenants = await tenantService.getUserTenants(user.id);
+      const userTenant = userTenants.find(t => t.id === tenantId);
+      
+      if (!userTenant && user.role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      if (userTenant && userTenant.userRole !== "owner" && user.role !== "admin") {
+        return res.status(403).json({ error: "Only tenant owners can manage subscriptions" });
+      }
+      
+      const { plan } = z.object({
+        plan: z.enum(["free", "starter", "professional", "enterprise"])
+      }).parse(req.body);
+      
+      const result = await tenantService.createSubscription(tenantId, plan, user);
+      
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update a subscription plan
+  app.patch("/api/tenants/:id/subscription", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = parseInt(req.params.id);
+      const user = req.user as User;
+      
+      // Check if user is owner or admin of this tenant
+      const userTenants = await tenantService.getUserTenants(user.id);
+      const userTenant = userTenants.find(t => t.id === tenantId);
+      
+      if (!userTenant && user.role !== "admin") {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
+      if (userTenant && userTenant.userRole !== "owner" && user.role !== "admin") {
+        return res.status(403).json({ error: "Only tenant owners can manage subscriptions" });
+      }
+      
+      const { plan } = z.object({
+        plan: z.enum(["free", "starter", "professional", "enterprise"])
+      }).parse(req.body);
+      
+      const result = await tenantService.updateSubscriptionPlan(tenantId, plan);
+      
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create Payment Intent for subscription
+  app.post("/api/create-payment-intent", ensureAuthenticated, async (req, res, next) => {
+    try {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ error: "Stripe is not configured" });
+      }
+      
+      const { amount, customerId, metadata = {} } = z.object({
+        amount: z.number().min(1),
+        customerId: z.string(),
+        metadata: z.record(z.string()).optional()
+      }).parse(req.body);
+      
+      const paymentIntent = await stripeService.createPaymentIntent(
+        amount,
+        customerId,
+        metadata
+      );
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Stripe webhook endpoint for events
+  app.post("/api/webhook", async (req, res) => {
+    const stripe = process.env.STRIPE_SECRET_KEY 
+      ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+      : null;
+    
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe is not configured" });
+    }
+    
+    const payload = req.body;
+    const sig = req.headers['stripe-signature'] as string;
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    let event;
+    
+    try {
+      if (endpointSecret) {
+        // Verify webhook signature if secret is set
+        event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
+      } else {
+        // If no secret is set (development mode), just use the payload directly
+        event = payload;
+      }
+      
+      // Handle the event
+      await stripeService.handleWebhookEvent(event);
+      
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error('Webhook Error:', error.message);
+      res.status(400).send(`Webhook Error: ${error.message}`);
+    }
+  });
 
   // Teams API
   app.get("/api/teams", async (req, res, next) => {
