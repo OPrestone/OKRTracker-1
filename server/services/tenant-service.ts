@@ -23,7 +23,7 @@ class TenantService {
   ): Promise<{ tenant: Tenant, userToTenant: UserToTenant }> {
     try {
       // Check if user has permission to create tenants (only admins can)
-      if (user.role !== 'admin') {
+      if (!user.isAdmin) {
         throw new Error('Only administrators can create organizations');
       }
       
@@ -69,10 +69,10 @@ class TenantService {
   }
   
   // Get tenant by ID
-  async getTenantById(id: number): Promise<Tenant | undefined> {
+  async getTenantById(id: string): Promise<Tenant | undefined> {
     try {
-      // Input validation - ensure id is a valid number
-      if (isNaN(id) || id <= 0) {
+      // Input validation - ensure id is not empty
+      if (!id) {
         console.error(`Invalid tenant ID: ${id}`);
         return undefined;
       }
@@ -97,7 +97,7 @@ class TenantService {
   }
   
   // Get all tenants for a user
-  async getUserTenants(userId: number): Promise<(Tenant & { userRole: string })[]> {
+  async getUserTenants(userId: string): Promise<(Tenant & { userRole: string })[]> {
     try {
       const result = await db
         .select({
@@ -116,7 +116,7 @@ class TenantService {
   }
   
   // Get user's default tenant
-  async getUserDefaultTenant(userId: number): Promise<(Tenant & { userRole: string }) | undefined> {
+  async getUserDefaultTenant(userId: string): Promise<(Tenant & { userRole: string }) | undefined> {
     try {
       const [result] = await db
         .select({
@@ -138,7 +138,7 @@ class TenantService {
   }
   
   // Set a tenant as the default for a user
-  async setDefaultTenant(userId: number, tenantId: number): Promise<void> {
+  async setDefaultTenant(userId: string, tenantId: string): Promise<void> {
     try {
       // First, unset all defaults
       await db
@@ -161,7 +161,7 @@ class TenantService {
   }
   
   // Update tenant
-  async updateTenant(id: number, data: Partial<InsertTenant>): Promise<Tenant> {
+  async updateTenant(id: string, data: Partial<InsertTenant>): Promise<Tenant> {
     try {
       // Don't allow updating the slug directly
       const { slug, ...updateData } = data;
@@ -184,8 +184,8 @@ class TenantService {
   
   // Add a user to a tenant
   async addUserToTenant(
-    userId: number, 
-    tenantId: number, 
+    userId: string, 
+    tenantId: string, 
     role: 'owner' | 'admin' | 'member' = 'member',
     isDefault = false
   ): Promise<UserToTenant> {
@@ -247,7 +247,7 @@ class TenantService {
   }
   
   // Remove a user from a tenant
-  async removeUserFromTenant(userId: number, tenantId: number): Promise<void> {
+  async removeUserFromTenant(userId: string, tenantId: string): Promise<void> {
     try {
       // Check if user is the owner of the tenant
       const [userMembership] = await db
@@ -307,7 +307,7 @@ class TenantService {
   
   // Create subscription for a tenant
   async createSubscription(
-    tenantId: number, 
+    tenantId: string, 
     plan: 'free' | 'starter' | 'professional' | 'enterprise',
     user: User
   ) {
@@ -355,7 +355,7 @@ class TenantService {
   
   // Update tenant subscription plan
   async updateSubscriptionPlan(
-    tenantId: number,
+    tenantId: string,
     newPlan: 'free' | 'starter' | 'professional' | 'enterprise'
   ) {
     try {
@@ -407,7 +407,7 @@ class TenantService {
   }
   
   // Get tenant members
-  async getTenantMembers(tenantId: number) {
+  async getTenantMembers(tenantId: string) {
     try {
       const members = await db
         .select({
@@ -419,13 +419,12 @@ class TenantService {
           user: {
             id: users.id,
             username: users.username,
-            firstName: users.firstName,
-            lastName: users.lastName,
+            name: users.name,
             email: users.email
           }
         })
         .from(usersToTenants)
-        .innerJoin('users', eq(usersToTenants.userId, users.id))
+        .innerJoin(users, eq(usersToTenants.userId, users.id))
         .where(eq(usersToTenants.tenantId, tenantId));
       
       return members;
