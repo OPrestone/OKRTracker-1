@@ -67,28 +67,32 @@ export default function TenantsPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
               <p className="text-muted-foreground mt-1">
-                Manage your organizations and teams.
+                {user?.role === 'admin' 
+                  ? "Create and manage organizations for your users."
+                  : "View and access your organizations."}
               </p>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Organization
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setShowNewTenantDialog(true)}>
-                  <Building className="h-4 w-4 mr-2" />
-                  <span>Quick Create</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/tenant-onboarding")}>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  <span>Guided Setup</span>
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {user?.role === 'admin' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Organization
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setShowNewTenantDialog(true)}>
+                    <Building className="h-4 w-4 mr-2" />
+                    <span>Quick Create</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/tenant-onboarding")}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    <span>Guided Setup</span>
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {tenants.length === 0 ? (
@@ -96,22 +100,25 @@ export default function TenantsPage() {
               <Building className="h-12 w-12 text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">No Organizations</h2>
               <p className="text-muted-foreground text-center max-w-md mb-6">
-                You haven't created or joined any organizations yet. 
-                Create your first organization to get started.
+                {user?.role === 'admin' 
+                  ? "You haven't created any organizations yet. Create your first organization to get started."
+                  : "You don't have access to any organizations yet. An administrator needs to give you access."}
               </p>
-              <div className="flex flex-col gap-3 items-center">
-                <Button 
-                  onClick={() => navigate("/tenant-onboarding")}
-                  className="bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Guided Setup (Recommended)
-                </Button>
-                <Button variant="outline" onClick={() => setShowNewTenantDialog(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Quick Create
-                </Button>
-              </div>
+              {user?.role === 'admin' && (
+                <div className="flex flex-col gap-3 items-center">
+                  <Button 
+                    onClick={() => navigate("/tenant-onboarding")}
+                    className="bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Guided Setup (Recommended)
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowNewTenantDialog(true)}>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Quick Create
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
