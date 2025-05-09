@@ -47,7 +47,7 @@ export default function TenantSwitcher() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   
   // Find the current tenant based on URL path
-  const getCurrentTenant = () => {
+  const getCurrentTenant = useCallback(() => {
     if (!tenants || tenants.length === 0) return null;
     
     // If the path includes /tenants/{slug}, extract the slug
@@ -61,16 +61,16 @@ export default function TenantSwitcher() {
     // Otherwise, return default tenant or first one
     const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
     return defaultTenant;
-  };
+  }, [tenants, location]);
 
   // Update selected tenant when tenants data is loaded or location changes
   useEffect(() => {
     if (tenants && tenants.length > 0) {
       setSelectedTenant(getCurrentTenant());
     }
-  }, [tenants, location]);
+  }, [tenants, location, getCurrentTenant]);
 
-  const onTenantSelect = (tenant: Tenant) => {
+  const onTenantSelect = useCallback((tenant: Tenant) => {
     setSelectedTenant(tenant);
     setOpen(false);
     
@@ -82,7 +82,7 @@ export default function TenantSwitcher() {
       // Otherwise navigate to the tenant detail page
       navigate(`/tenants/${tenant.slug}`);
     }
-  };
+  }, [location, navigate]);
 
   return (
     <>

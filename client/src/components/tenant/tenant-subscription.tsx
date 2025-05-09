@@ -2,6 +2,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Check, CreditCard, Loader2, Lock } from "lucide-react";
 import { z } from "zod";
+import { StripeElementsWrapper } from "./stripe-elements-wrapper";
+import { PaymentForm } from "./payment-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -122,10 +124,17 @@ export function TenantSubscription({ tenantId }: TenantSubscriptionProps) {
   const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   // Fetch the tenant
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['/api/tenants', tenantId],
+    enabled: !!tenantId,
+  });
+  
+  // Fetch subscription info
+  const subscriptionQuery = useQuery({
+    queryKey: ['/api/tenants', tenantId, 'subscription'],
     enabled: !!tenantId,
   });
 
@@ -141,7 +150,7 @@ export function TenantSubscription({ tenantId }: TenantSubscriptionProps) {
     user?.role === "admin";
 
   // Check if Stripe is configured
-  const stripeConfigured = false; // We'll need to use the VITE_STRIPE_PUBLIC_KEY env var here when available
+  const stripeConfigured = !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 
   // Update subscription plan mutation
   const updateSubscriptionMutation = useMutation({
@@ -330,9 +339,37 @@ export function TenantSubscription({ tenantId }: TenantSubscriptionProps) {
               </div>
               
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Payment functionality will be integrated when Stripe is configured.
-                </p>
+                {stripeConfigured ? (
+                  <div className="rounded-lg border p-4">
+                    <h4 className="font-medium mb-2">Payment Details</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Your payment information is processed securely by Stripe.
+                    </p>
+                    
+                    <div className="p-4 border rounded-md">
+                      <StripeElementsWrapper clientSecret={clientSecret}>
+                        <PaymentForm 
+                          clientSecret={clientSecret}
+                          onPaymentComplete={(success) => {
+                            if (success) {
+                              toast({
+                                title: "Payment successful",
+                                description: "Your subscription has been updated",
+                              });
+                              setShowPaymentDialog(false);
+                              // Refresh subscription data
+                              subscriptionQuery.refetch();
+                            }
+                          }}
+                        />
+                      </StripeElementsWrapper>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Payment functionality will be integrated with Stripe.
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>

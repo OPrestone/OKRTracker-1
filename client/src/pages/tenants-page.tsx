@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CreateTenantDialog } from "@/components/tenant/create-tenant-dialog";
+import CreateTenantDialog from "@/components/tenant/create-tenant-dialog";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 

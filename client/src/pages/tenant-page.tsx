@@ -14,18 +14,18 @@ export default function TenantPage() {
   const { user } = useAuth();
 
   // Fetch the tenant
-  const { data: tenant, isLoading: loadingTenant } = useQuery({
+  const { data: tenant, isLoading: loadingTenant } = useQuery<any>({
     queryKey: ['/api/tenants', tenantId],
     enabled: !!tenantId && !!user,
   });
 
   // Fetch user's role in this tenant
-  const { data: tenantUsers = [], isLoading: loadingUsers } = useQuery({
+  const { data: tenantUsers = [], isLoading: loadingUsers } = useQuery<any[]>({
     queryKey: ['/api/tenants', tenantId, 'users'],
     enabled: !!tenantId && !!user?.id,
   });
 
-  const currentUserRole = tenantUsers.find((tu: any) => tu.id === user?.id)?.userRole;
+  const currentUserRole = tenantUsers.find(tu => tu.id === user?.id)?.userRole;
   const isOwnerOrAdmin = 
     currentUserRole === "owner" || 
     currentUserRole === "admin" || 
