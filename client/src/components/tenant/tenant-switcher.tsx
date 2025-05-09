@@ -1,8 +1,8 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation, useRouter } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, PlusCircle, Check } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -17,17 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { CreateTenantDialog } from "./create-tenant-dialog";
-
-type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>;
-
-interface TenantSwitcherProps extends PopoverTriggerProps {
-  className?: string;
-}
+import { useState, useEffect, useCallback } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { BuildingIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import CreateTenantDialog from "./create-tenant-dialog";
 
 export type Tenant = {
   id: number;
@@ -36,91 +30,120 @@ export type Tenant = {
   slug: string;
   userRole: string;
   isDefault?: boolean;
+  plan?: string;
+  status?: string;
 };
 
-export function TenantSwitcher({ className }: TenantSwitcherProps) {
+export default function TenantSwitcher() {
+  const [createTenantOpen, setCreateTenantOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [showNewTeamDialog, setShowNewTeamDialog] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [, navigate] = useRouter();
+  const [location] = useLocation();
 
-  // Fetch the tenants for the current user
-  const { data: tenants = [], isLoading: loadingTenants } = useQuery({
-    queryKey: ['/api/tenants'],
-    enabled: !!user,
+  const { data: tenants, isLoading } = useQuery<Tenant[]>({
+    queryKey: ["/api/tenants"],
   });
+  
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  
+  // Find the current tenant based on URL path
+  const getCurrentTenant = () => {
+    if (!tenants || tenants.length === 0) return null;
+    
+    // If the path includes /tenants/{slug}, extract the slug
+    const match = location.match(/\/tenants\/([^/]+)/);
+    if (match) {
+      const urlSlug = match[1];
+      const matchedTenant = tenants.find(t => t.slug === urlSlug);
+      if (matchedTenant) return matchedTenant;
+    }
+    
+    // Otherwise, return default tenant or first one
+    const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
+    return defaultTenant;
+  };
 
-  // Fetch the current (default) tenant
-  const { data: currentTenant, isLoading: loadingCurrentTenant } = useQuery({
-    queryKey: ['/api/tenants/default'],
-    enabled: !!user,
-  });
+  // Update selected tenant when tenants data is loaded or location changes
+  useEffect(() => {
+    if (tenants && tenants.length > 0) {
+      setSelectedTenant(getCurrentTenant());
+    }
+  }, [tenants, location]);
 
-  // Mutation to set the default tenant
-  const setDefaultTenantMutation = useMutation({
-    mutationFn: async (tenantId: number) => {
-      const res = await apiRequest("POST", `/api/tenants/${tenantId}/set-default`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tenants/default'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tenants'] });
-      toast({
-        title: "Default tenant updated",
-        description: "Your default tenant has been updated.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update default tenant",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSelect = (tenant: Tenant) => {
-    setDefaultTenantMutation.mutate(tenant.id);
+  const onTenantSelect = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
     setOpen(false);
+    
+    // If already on a tenant page, replace the tenant slug in the path
+    if (location.startsWith('/tenants/')) {
+      const newPath = location.replace(/\/tenants\/[^/]+/, `/tenants/${tenant.slug}`);
+      navigate(newPath);
+    } else {
+      // Otherwise navigate to the tenant detail page
+      navigate(`/tenants/${tenant.slug}`);
+    }
   };
 
   return (
-    <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
+    <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            aria-label="Select a tenant"
-            className={cn("w-[220px] justify-between", className)}
-            disabled={loadingTenants || loadingCurrentTenant}
+            aria-label="Select organization"
+            className="w-full justify-between bg-slate-800/70 border-slate-700 text-white hover:bg-slate-700 hover:text-white"
           >
-            {loadingCurrentTenant || !currentTenant ? (
-              "Select tenant..."
+            {isLoading ? (
+              <Skeleton className="h-5 w-[120px]" />
+            ) : selectedTenant ? (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-5 w-5 bg-slate-700">
+                  <AvatarFallback className="text-xs text-slate-300">
+                    {selectedTenant.displayName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">{selectedTenant.displayName}</span>
+              </div>
             ) : (
-              <span className="truncate">
-                {currentTenant.displayName || currentTenant.name}
-              </span>
+              <div className="flex items-center gap-2">
+                <BuildingIcon className="h-4 w-4" />
+                <span>Select organization</span>
+              </div>
             )}
-            <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            {open ? (
+              <ChevronUp className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            ) : (
+              <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[220px] p-0">
+        <PopoverContent className="w-[240px] p-0">
           <Command>
             <CommandList>
-              <CommandInput placeholder="Search tenant..." />
-              <CommandEmpty>No tenant found.</CommandEmpty>
-              {tenants.length > 0 && (
-                <CommandGroup heading="Organizations">
-                  {tenants.map((tenant: Tenant) => (
+              <CommandInput placeholder="Search organization..." />
+              <CommandEmpty>No organization found.</CommandEmpty>
+              {isLoading ? (
+                <div className="p-2 space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : (
+                <CommandGroup>
+                  {tenants?.map((tenant) => (
                     <CommandItem
                       key={tenant.id}
-                      onSelect={() => handleSelect(tenant)}
-                      className="text-sm"
+                      onSelect={() => onTenantSelect(tenant)}
+                      className="text-sm flex items-center gap-2"
                     >
-                      <span className="truncate">{tenant.displayName || tenant.name}</span>
-                      {currentTenant?.id === tenant.id && (
+                      <Avatar className="h-5 w-5 bg-slate-700">
+                        <AvatarFallback className="text-xs text-slate-300">
+                          {tenant.displayName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{tenant.displayName}</span>
+                      {tenant.id === selectedTenant?.id && (
                         <Check className="ml-auto h-4 w-4" />
                       )}
                     </CommandItem>
@@ -131,26 +154,26 @@ export function TenantSwitcher({ className }: TenantSwitcherProps) {
             <CommandSeparator />
             <CommandList>
               <CommandGroup>
-                <DialogTrigger asChild>
-                  <CommandItem
-                    onSelect={() => {
-                      setOpen(false);
-                      setShowNewTeamDialog(true);
-                    }}
-                  >
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    Create Organization
-                  </CommandItem>
-                </DialogTrigger>
+                <CommandItem
+                  onSelect={() => {
+                    setOpen(false);
+                    setCreateTenantOpen(true);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Create Organization
+                </CommandItem>
               </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+      
       <CreateTenantDialog 
-        open={showNewTeamDialog} 
-        onOpenChange={setShowNewTeamDialog} 
+        open={createTenantOpen} 
+        onOpenChange={setCreateTenantOpen} 
       />
-    </Dialog>
+    </>
   );
 }

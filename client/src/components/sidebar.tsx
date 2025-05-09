@@ -33,6 +33,8 @@ import {
   Calendar,
   Award,
   Activity,
+  Buildings,
+  CreditCard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
+import { TenantSwitcher } from "@/components/tenant/tenant-switcher";
 
 interface SidebarProps {
   open: boolean;
@@ -118,6 +121,17 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     });
   };
 
+  // Check if any tenant management paths are active to auto-expand organization menu
+  const isTenantPathActive = ["/tenants", "/tenants/"].some(
+    (path) => location === path || location.startsWith(path)
+  );
+  const [tenantsExpanded, setTenantsExpanded] = useState(isTenantPathActive);
+
+  // Update expanded states when location changes
+  useEffect(() => {
+    setTenantsExpanded(isTenantPathActive);
+  }, [location, isTenantPathActive]);
+  
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#0f172a] text-gray-200 shadow-xl">
       <div className="p-5 border-b border-slate-800/70 bg-[#1e293b]">
@@ -129,6 +143,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             Pinnacle OKR{" "}
           </span>
         </h1>
+        
+        {/* Tenant Switcher */}
+        <div className="mt-3">
+          <TenantSwitcher />
+        </div>
       </div>
 
       {/* Sidebar Navigation */}
@@ -454,6 +473,55 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             <span>Wellness Pulse</span>
           </Link>
         </div>
+        
+        {/* Organizations Menu */}
+        <button
+          onClick={() => setTenantsExpanded(!tenantsExpanded)}
+          className={cn(
+            "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            location === "/tenants" || location.startsWith("/tenants/")
+              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
+              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+          )}
+        >
+          <Buildings className="mr-3 h-5 w-5 text-indigo-400" />
+          <span>Organizations</span>
+          {tenantsExpanded ? (
+            <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
+          ) : (
+            <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
+          )}
+        </button>
+
+        {tenantsExpanded && (
+          <div className="pl-11 mt-1 mb-1">
+            <div
+              className={cn(
+                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                location === "/tenants"
+                  ? "text-white font-medium bg-indigo-900/40"
+                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+              )}
+            >
+              <Link href="/tenants" className="w-full">
+                All Organizations
+              </Link>
+            </div>
+            
+            <div
+              className={cn(
+                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                location.startsWith("/tenants/") && location.includes("/subscription")
+                  ? "text-white font-medium bg-indigo-900/40"
+                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+              )}
+            >
+              <Link href="/tenants/default/subscription" className="w-full">
+                Subscription
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Drag & Drop Section */}
         <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">

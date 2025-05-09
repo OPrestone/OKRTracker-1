@@ -45,6 +45,10 @@ import FeedbackWall from "@/pages/feedback-wall";
 import WellnessPulse from "@/pages/wellness-pulse";
 import Configure from "@/pages/configure";
 
+// Import tenant-related pages
+import TenantsPage from "@/pages/tenants-page";
+import TenantPage from "@/pages/tenant-page";
+
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
 import TimelineEditor from "@/pages/timeline-editor";
@@ -127,6 +131,11 @@ function AppRoutes() {
       
       {/* Wellness */}
       <ProtectedRoute path="/wellness-pulse" component={WellnessPulse} />
+      
+      {/* Organizations/Tenants */}
+      <ProtectedRoute path="/tenants" component={TenantsPage} />
+      <ProtectedRoute path="/tenants/:slug" component={TenantPage} />
+      <ProtectedRoute path="/tenants/:slug/subscription" component={TenantPage} />
       
       {/* Drag and Drop Interfaces */}
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
