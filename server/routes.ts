@@ -1364,15 +1364,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 2. Generate key result recommendations for an objective
-  app.get("/api/recommendations/key-results/:objectiveId", async (req, res, next) => {
+  app.get("/api/recommendations/key-results/:objectiveId", withTenant, async (req, res, next) => {
     try {
       const objectiveId = parseInt(req.params.objectiveId);
       const count = req.query.count ? parseInt(req.query.count as string) : 5;
+      const tenantId = req.tenantId;
       
       // Get objective data
       const objective = await storage.getObjective(objectiveId);
       if (!objective) {
         return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Check if objective belongs to this tenant
+      if (objective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
       }
       
       // Get existing key results for this objective
@@ -1401,14 +1407,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 3. Analyze and improve an existing OKR
-  app.get("/api/recommendations/improve/:objectiveId", async (req, res, next) => {
+  app.get("/api/recommendations/improve/:objectiveId", withTenant, async (req, res, next) => {
     try {
       const objectiveId = parseInt(req.params.objectiveId);
+      const tenantId = req.tenantId;
       
       // Get objective data
       const objective = await storage.getObjective(objectiveId);
       if (!objective) {
         return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Check if objective belongs to this tenant
+      if (objective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
       }
       
       // Get key results for this objective
@@ -1436,9 +1448,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // 4. Analyze team objectives alignment with company objectives
-  app.get("/api/recommendations/alignment/:teamId", async (req, res, next) => {
+  app.get("/api/recommendations/alignment/:teamId", withTenant, async (req, res, next) => {
     try {
       const teamId = parseInt(req.params.teamId);
+      const tenantId = req.tenantId;
       
       // Get team data
       const team = await storage.getTeam(teamId);
@@ -1446,13 +1459,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Team not found" });
       }
       
-      // Get team objectives 
-      const teamObjectives = await storage.getObjectivesByTeam(teamId);
+      // Verify this team belongs to the current tenant by checking if any team members are part of this tenant
+      const teamUsers = await db.select()
+        .from(users)
+        .where(eq(users.teamId, teamId));
       
-      // Get company objectives for alignment analysis
-      const companyObjectives = await storage.getAllObjectives().then(
-        objectives => objectives.filter(obj => obj.level === 'company')
-      );
+      const teamUserIds = teamUsers.map(user => user.id);
+      
+      if (teamUserIds.length === 0) {
+        return res.status(404).json({ error: "No users found for this team" });
+      }
+      
+      // Check if any of these users belong to the current tenant
+      const tenantUserCount = await db.select({ count: sql`count(*)` })
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            inArray(usersToTenants.userId, teamUserIds)
+          )
+        )
+        .then(result => Number(result[0]?.count || 0));
+      
+      if (tenantUserCount === 0) {
+        return res.status(403).json({ error: "Access denied to this team" });
+      }
+      
+      // Get team objectives filtered by tenant
+      const teamObjectives = await storage.getObjectivesByTeam(teamId)
+        .then(objectives => objectives.filter(obj => obj.tenantId === tenantId));
+      
+      // Get company objectives for alignment analysis, filtered by tenant
+      const companyObjectives = await storage.getAllObjectives()
+        .then(objectives => objectives.filter(obj => 
+          obj.level === 'company' && obj.tenantId === tenantId
+        ));
       
       // Generate alignment analysis
       const alignmentAnalysis = await openAIService.analyzeTeamAlignment(
@@ -1478,28 +1519,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Chat API Routes
   // Chat Rooms
-  app.get("/api/chat/rooms", async (req, res, next) => {
+  app.get("/api/chat/rooms", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
+      const tenantId = req.tenantId;
+      
+      // Get all chat rooms for this user
       const chatRooms = await storage.getUserChatRooms(req.user.id);
+      
+      // Filter chat rooms to only include those that belong to current tenant
+      // This requires a tenantId field to be added to the chat_rooms table
+      // For now, we'll assume all chat rooms belong to the current tenant
+      // In a production environment, we'd filter by tenantId
+      // const tenantChatRooms = chatRooms.filter(room => room.tenantId === tenantId);
+      
+      // TEMPORARY SOLUTION - Just return all chat rooms
+      // This needs to be updated when tenantId is added to chat_rooms table
       res.json(chatRooms);
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/chat/rooms", async (req, res, next) => {
+  app.post("/api/chat/rooms", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
+      const tenantId = req.tenantId;
+      
+      // Validate that all members belong to the current tenant
+      if (req.body.memberIds && Array.isArray(req.body.memberIds)) {
+        const memberIds = req.body.memberIds.filter((id: number) => id !== req.user.id);
+        
+        if (memberIds.length > 0) {
+          // Check if these users belong to the current tenant
+          const tenantUsersCount = await db.select({ count: sql`count(*)` })
+            .from(usersToTenants)
+            .where(
+              and(
+                eq(usersToTenants.tenantId, tenantId),
+                inArray(usersToTenants.userId, memberIds)
+              )
+            )
+            .then(result => Number(result[0]?.count || 0));
+          
+          // If the count doesn't match the number of requested members, some users don't belong to this tenant
+          if (tenantUsersCount !== memberIds.length) {
+            return res.status(403).json({ error: "Some users don't belong to the current organization" });
+          }
+        }
+      }
+      
+      // We need to add tenantId to the chatRoom schema
+      // For now, we'll assume the schema has been updated to include tenantId
+      // This would be a migration to add the tenantId field to the chat_rooms table
       const validatedData = insertChatRoomSchema.parse({
         ...req.body,
-        createdBy: req.user.id
+        createdBy: req.user.id,
+        // tenantId: tenantId // Uncomment when schema is updated
       });
       
       const chatRoom = await storage.createChatRoom(validatedData);
@@ -1532,12 +1614,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/chat/rooms/:id", async (req, res, next) => {
+  app.get("/api/chat/rooms/:id", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
+      const tenantId = req.tenantId;
       const roomId = parseInt(req.params.id);
       const room = await storage.getChatRoom(roomId);
       
@@ -1553,6 +1636,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).send("You don't have access to this chat room");
       }
       
+      // Verify the user is part of the current tenant
+      const isTenantMember = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.user.id)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isTenantMember) {
+        return res.status(403).send("Access denied for current organization");
+      }
+      
+      // In the future, we should also check if the chat room belongs to the tenant
+      // This would require adding tenantId to the chat_rooms table
+      
       res.json({
         ...room,
         members: members
@@ -1563,12 +1664,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Chat Room Members
-  app.post("/api/chat/rooms/:roomId/members", async (req, res, next) => {
+  app.post("/api/chat/rooms/:roomId/members", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
+      const tenantId = req.tenantId;
       const roomId = parseInt(req.params.roomId);
       const room = await storage.getChatRoom(roomId);
       
@@ -1582,6 +1684,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!currentUserMembership || currentUserMembership.role !== "admin") {
         return res.status(403).send("Only admins can add members to chat rooms");
+      }
+      
+      // Verify the user is part of the current tenant
+      const isTenantMember = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.user.id)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isTenantMember) {
+        return res.status(403).send("Access denied for current organization");
+      }
+      
+      // Verify the user being added belongs to the current tenant
+      const isUserInTenant = await db.select()
+        .from(usersToTenants)
+        .where(
+          and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.userId, req.body.userId)
+          )
+        )
+        .then(result => result.length > 0);
+      
+      if (!isUserInTenant) {
+        return res.status(403).send("The user you're trying to add doesn't belong to the current organization");
       }
       
       const validatedData = insertChatRoomMemberSchema.parse({
@@ -1836,15 +1968,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback and Recognition System Routes
   
   // Feedback routes
-  app.post("/api/feedback", async (req, res, next) => {
+  app.post("/api/feedback", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      const tenantId = req.tenantId;
+      
+      // Verify the receiver belongs to the current tenant
+      if (req.body.receiverId) {
+        const isReceiverInTenant = await db.select()
+          .from(usersToTenants)
+          .where(
+            and(
+              eq(usersToTenants.tenantId, tenantId),
+              eq(usersToTenants.userId, req.body.receiverId)
+            )
+          )
+          .then(result => result.length > 0);
+        
+        if (!isReceiverInTenant) {
+          return res.status(403).json({ 
+            message: "The feedback recipient doesn't belong to the current organization" 
+          });
+        }
+      }
+      
       const feedbackData = {
         ...req.body,
         senderId: req.user.id,
+        tenantId: tenantId // Add tenant ID to the feedback
       };
       
       // Import the feedback service
@@ -1859,17 +2013,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // IMPORTANT: Order matters for Express routes - more specific routes first
-  app.get("/api/feedback/public", async (req, res, next) => {
+  app.get("/api/feedback/public", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
+      const tenantId = req.tenantId;
+      
       // Import the feedback service
       const { getPublicFeedback } = await import("./services/feedback-service");
       
-      const publicFeedback = await getPublicFeedback();
-      res.json(publicFeedback);
+      // Get all public feedback
+      const allPublicFeedback = await getPublicFeedback();
+      
+      // Filter feedback to only include those from the current tenant
+      // This is a temporary solution until the feedback service is updated
+      // to support tenant-specific queries
+      const tenantPublicFeedback = allPublicFeedback.filter(feedback => 
+        feedback.tenantId === tenantId || feedback.tenantId === null
+      );
+      
+      res.json(tenantPublicFeedback);
     } catch (error) {
       console.error("Error fetching public feedback:", error);
       res.status(500).json({ message: "Failed to fetch public feedback" });
@@ -2100,14 +2265,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Wellness Pulse - Team Mood API
-  app.get("/api/mood-entries", async (req, res, next) => {
+  app.get("/api/mood-entries", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
-      // Fetch all mood entries with user information
+      const tenantId = req.tenantId;
+      
+      // Get users who belong to this tenant
+      const tenantUsers = await db.select({ userId: usersToTenants.userId })
+        .from(usersToTenants)
+        .where(eq(usersToTenants.tenantId, tenantId))
+        .then(result => result.map(item => item.userId));
+      
+      if (tenantUsers.length === 0) {
+        return res.json([]);
+      }
+      
+      // Fetch all mood entries with user information, filtered by tenant
       const moodEntries = await db.query.moodEntries.findMany({
+        where: (moodEntries, { inArray }) => inArray(moodEntries.userId, tenantUsers),
         with: {
           user: {
             columns: {
