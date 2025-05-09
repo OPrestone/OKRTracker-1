@@ -43,29 +43,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as User;
       
       // Try to get tenant ID from:
-      // 1. Query parameter: ?tenantId=123
+      // 1. Query parameter: ?tenantId=ABC123
       // 2. URL path parameter in routes like /tenants/:tenantId/...
       // 3. User's default tenant
-      let tenantId: number | null = null;
+      let tenantId: string | null = null;
       
       if (req.query.tenantId) {
-        const parsed = parseInt(req.query.tenantId as string);
-        if (!isNaN(parsed)) {
-          tenantId = parsed;
-        }
+        tenantId = req.query.tenantId as string;
       } else if (req.params.tenantId) {
-        const parsed = parseInt(req.params.tenantId);
-        if (!isNaN(parsed)) {
-          tenantId = parsed;
-        }
+        tenantId = req.params.tenantId;
       } else if (req.path.includes('/tenants/')) {
-        // Extract tenant ID from path like /tenants/123/something
-        const match = req.path.match(/\/tenants\/(\d+)/);
+        // Extract tenant ID from path like /tenants/ABC123/something
+        const match = req.path.match(/\/tenants\/([^\/]+)/);
         if (match && match[1]) {
-          const parsed = parseInt(match[1]);
-          if (!isNaN(parsed)) {
-            tenantId = parsed;
-          }
+          tenantId = match[1];
         }
       }
       
@@ -78,13 +69,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If we still don't have a valid tenant ID, return error
-      if (!tenantId || isNaN(tenantId)) {
+      if (!tenantId) {
         return res.status(400).json({ error: "Valid tenant ID is required" });
       }
       
       // Check if user has access to this tenant
       const userTenants = await tenantService.getUserTenants(user.id);
-      const hasTenantAccess = userTenants.some(t => t.id === tenantId) || user.role === "admin";
+      const hasTenantAccess = userTenants.some(t => t.id === tenantId) || user.isAdmin;
       
       if (!hasTenantAccess) {
         return res.status(403).json({ error: "You do not have access to this tenant" });
