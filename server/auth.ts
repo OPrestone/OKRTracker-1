@@ -49,23 +49,53 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        // Add debugging for authentication issues
+        console.log("Attempting login for user:", username);
+        
+        if (!user) {
+          console.log("User not found:", username);
           return done(null, false);
-        } else {
-          return done(null, user);
         }
+        
+        if (!user.password) {
+          console.log("User has no password:", username);
+          return done(null, false);
+        }
+        
+        const passwordMatches = await comparePasswords(password, user.password);
+        if (!passwordMatches) {
+          console.log("Password mismatch for user:", username);
+          return done(null, false);
+        }
+        
+        console.log("Login successful for user:", username);
+        return done(null, user);
       } catch (error) {
+        console.error("Error during authentication:", error);
         return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log("Serializing user:", user.id);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log("Deserializing user ID:", id);
       const user = await storage.getUser(id);
+      
+      if (!user) {
+        console.log("User not found during deserialization:", id);
+        return done(null, false);
+      }
+      
+      console.log("User deserialized successfully:", id);
       done(null, user);
     } catch (error) {
+      console.error("Error deserializing user:", error);
       done(error);
     }
   });

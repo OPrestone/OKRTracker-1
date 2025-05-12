@@ -231,7 +231,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersByTeam(teamId: string): Promise<User[]> {
-    return db.select().from(users).where(eq(users.teamId, teamId));
+    // Select specific columns to avoid issues with missing columns
+    return db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      email: users.email,
+      name: users.name,
+      title: users.title,
+      bio: users.bio,
+      teamId: users.teamId,
+      level: users.level,
+      timezone: users.timezone,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      tenantId: users.tenantId,
+      defaultTenantId: users.defaultTenantId,
+      isEnabled: users.isEnabled,
+      isAdmin: users.isAdmin,
+      lastLoginAt: users.lastLoginAt,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId
+    }).from(users).where(eq(users.teamId, teamId));
   }
   
   async deleteUser(id: string): Promise<void> {
