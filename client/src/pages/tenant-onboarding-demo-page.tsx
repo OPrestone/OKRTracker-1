@@ -1,5 +1,5 @@
-import TenantOnboardingStep4Demo from "@/components/tenant/tenant-onboarding-wizard-step4";
+import TenantOnboardingWizard from "@/components/tenant/tenant-onboarding-wizard";
 
 export default function TenantOnboardingDemoPage() {
-  return <TenantOnboardingStep4Demo />;
+  return <TenantOnboardingWizard />;
 }
