@@ -26,20 +26,32 @@ export function RecognitionWall() {
   const { data: publicFeedback, isLoading, refetch } = useQuery({
     queryKey: ["/api/feedback/public"],
     select: (data) => {
-      // First apply type filter if not "all"
+      // First apply type filter if not "all", with null checks
       let filtered = filter === "all" 
         ? [...data] 
-        : data.filter((item) => item.type === filter);
+        : data.filter((item) => item?.type && item.type === filter);
       
       // Then apply search if present
       if (search.trim()) {
         const searchLower = search.toLowerCase();
-        filtered = filtered.filter((item) => 
-          item.title.toLowerCase().includes(searchLower) || 
-          item.message.toLowerCase().includes(searchLower) ||
-          `${item.sender.firstName} ${item.sender.lastName}`.toLowerCase().includes(searchLower) ||
-          `${item.receiver.firstName} ${item.receiver.lastName}`.toLowerCase().includes(searchLower)
-        );
+        filtered = filtered.filter((item) => {
+          const title = item.title?.toLowerCase() || '';
+          const message = item.message?.toLowerCase() || '';
+          
+          // Safely access sender and receiver names
+          const senderFirstName = item.sender?.firstName || '';
+          const senderLastName = item.sender?.lastName || '';
+          const receiverFirstName = item.receiver?.firstName || '';
+          const receiverLastName = item.receiver?.lastName || '';
+          
+          const senderFullName = `${senderFirstName} ${senderLastName}`.toLowerCase();
+          const receiverFullName = `${receiverFirstName} ${receiverLastName}`.toLowerCase();
+          
+          return title.includes(searchLower) || 
+                 message.includes(searchLower) ||
+                 senderFullName.includes(searchLower) ||
+                 receiverFullName.includes(searchLower);
+        });
       }
       
       return filtered;

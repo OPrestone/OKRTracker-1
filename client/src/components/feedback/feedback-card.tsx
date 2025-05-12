@@ -61,11 +61,17 @@ export function FeedbackCard({ feedback, variant = "expanded" }: FeedbackCardPro
   
   // Create avatar fallback from user initials
   const getSenderInitials = () => {
-    return `${sender.firstName.charAt(0)}${sender.lastName.charAt(0)}`;
+    const firstName = sender?.firstName;
+    const lastName = sender?.lastName;
+    if (!firstName || !lastName || firstName.length === 0 || lastName.length === 0) return 'S'; // Default fallback
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
   const getReceiverInitials = () => {
-    return `${receiver.firstName.charAt(0)}${receiver.lastName.charAt(0)}`;
+    const firstName = receiver?.firstName;
+    const lastName = receiver?.lastName;
+    if (!firstName || !lastName || firstName.length === 0 || lastName.length === 0) return 'R'; // Default fallback
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
   return (

@@ -53,13 +53,17 @@ export function UserBadgeDisplay({
   
   // Create avatar fallback from user initials with null checks
   const getUserInitials = () => {
-    if (!user.firstName || !user.lastName) return 'U'; // Default fallback
-    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+    const firstName = user?.firstName;
+    const lastName = user?.lastName;
+    if (!firstName || !lastName || firstName.length === 0 || lastName.length === 0) return 'U'; // Default fallback
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
   const getAwarderInitials = () => {
-    if (!awardedBy.firstName || !awardedBy.lastName) return 'A'; // Default fallback
-    return `${awardedBy.firstName.charAt(0)}${awardedBy.lastName.charAt(0)}`;
+    const firstName = awardedBy?.firstName;
+    const lastName = awardedBy?.lastName;
+    if (!firstName || !lastName || firstName.length === 0 || lastName.length === 0) return 'A'; // Default fallback
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
   if (!showDetails) {
