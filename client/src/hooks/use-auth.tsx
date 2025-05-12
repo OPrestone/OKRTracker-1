@@ -1,23 +1,31 @@
-import { createContext, ReactNode, useContext, useCallback } from "react";
+import { createContext, ReactNode, useContext, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   useQuery,
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { insertUserSchema, User as SelectUser, InsertUser, Tenant } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getRedirectPath, clearRedirectPath } from "@/lib/redirect-service";
+import { useTenantContext } from "./use-tenant-context";
+
+// Enhanced user type with tenant information
+interface EnhancedUser extends SelectUser {
+  tenants?: Array<Tenant & { userRole?: string }>;
+  defaultTenant?: string;
+}
 
 type AuthContextType = {
-  user: SelectUser | null;
+  user: EnhancedUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<EnhancedUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  registerMutation: UseMutationResult<EnhancedUser, Error, InsertUser>;
   refetchUser: () => Promise<void>;
+  hasTenantsAccess: boolean;
 };
 
 type LoginData = {
@@ -29,16 +37,33 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { setCurrentTenant } = useTenantContext();
   
   const {
     data: user,
     error,
     isLoading,
     refetch
-  } = useQuery<SelectUser | undefined, Error>({
+  } = useQuery<EnhancedUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  // Check if user has access to any tenants
+  const hasTenantsAccess = !!(user?.tenants && user.tenants.length > 0);
+
+  // When user data is loaded, update tenant information if available
+  useEffect(() => {
+    if (user?.tenants && user.tenants.length > 0 && user.defaultTenant) {
+      // Find the default tenant object
+      const defaultTenant = user.tenants.find(tenant => tenant.id === user.defaultTenant);
+      if (defaultTenant) {
+        // Update the current tenant in TenantContext
+        setCurrentTenant(defaultTenant);
+        console.log("Set default tenant from user data:", defaultTenant.name);
+      }
+    }
+  }, [user, setCurrentTenant]);
 
   const refetchUser = useCallback(async () => {
     await refetch();
@@ -49,8 +74,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (user: EnhancedUser) => {
+      // Update user data in the query cache
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Set default tenant if available
+      if (user.tenants && user.tenants.length > 0) {
+        // Find the user's default tenant
+        const defaultTenantId = user.defaultTenant;
+        const defaultTenant = defaultTenantId 
+          ? user.tenants.find(t => t.id === defaultTenantId)
+          : user.tenants[0];
+          
+        if (defaultTenant) {
+          // Update tenant info in session storage
+          sessionStorage.setItem('currentTenantId', defaultTenant.id);
+          sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
+          sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+          
+          // Also trigger tenant refresh in tenant context
+          setCurrentTenant(defaultTenant);
+        }
+      }
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.name}!`,
@@ -76,8 +122,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (user: EnhancedUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Check if user has tenant information after registration
+      if (user.tenants && user.tenants.length > 0) {
+        // Find the user's default tenant
+        const defaultTenantId = user.defaultTenant;
+        const defaultTenant = defaultTenantId 
+          ? user.tenants.find(t => t.id === defaultTenantId)
+          : user.tenants[0];
+          
+        if (defaultTenant) {
+          // Update tenant info in session storage
+          sessionStorage.setItem('currentTenantId', defaultTenant.id);
+          sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
+          sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+          
+          // Also trigger tenant refresh in tenant context
+          setCurrentTenant(defaultTenant);
+        }
+      }
+      
       toast({
         title: "Registration successful",
         description: `Welcome, ${user.name}!`,
@@ -109,6 +175,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Then set the user to null
       queryClient.setQueryData(["/api/user"], null);
       
+      // Clear tenant information from session storage
+      sessionStorage.removeItem('currentTenantId');
+      sessionStorage.removeItem('currentTenantSlug');
+      sessionStorage.removeItem('currentTenantName');
+      
+      // Reset tenant context
+      setCurrentTenant(null);
+      
       // Clear any redirect paths
       clearRedirectPath();
       
@@ -138,7 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
-        refetchUser
+        refetchUser,
+        hasTenantsAccess
       }}
     >
       {children}
