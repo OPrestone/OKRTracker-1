@@ -105,9 +105,9 @@ function AppRoutes() {
       <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
-      <Route path="/strategy-map" component={StrategyMap} />
-                                        <Route path="/create-objective" component={CreateObjective} />
-                                        
+      <ProtectedRoute path="/strategy-map" component={StrategyMap} />
+      <ProtectedRoute path="/create-objective" component={CreateObjective} />
+      
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />
       <ProtectedRoute path="/teams/:id" component={TeamDetail} />
