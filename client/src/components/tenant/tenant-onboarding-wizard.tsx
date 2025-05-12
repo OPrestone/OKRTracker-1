@@ -755,23 +755,44 @@ export default function TenantOnboardingWizard() {
                 
                 {/* Step 3: Team Members */}
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="text-lg font-semibold mb-4">Invite Team Members</div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="team.users"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormLabel>Available Users</FormLabel>
-                          <FormControl>
-                            <div className="border rounded-md overflow-hidden">
-                              <div className="px-4 py-3 bg-muted font-medium text-sm grid grid-cols-5">
-                                <div className="col-span-2">User</div>
-                                <div>Role</div>
-                                <div>Department</div>
-                                <div className="text-right">Add</div>
-                              </div>
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <Users className="h-5 w-5 mr-2 text-primary" />
+                          Invite Your Team
+                        </h3>
+                        <p className="text-gray-600 mt-1">Add team members to collaborate on objectives and key results</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="team.users"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <FormLabel className="text-gray-800 font-medium text-base">Available Users</FormLabel>
+                              
+                              <Select defaultValue="all">
+                                <SelectTrigger className="h-9 w-[180px]">
+                                  <SelectValue placeholder="Filter users" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Users</SelectItem>
+                                  <SelectItem value="selected">Selected Only</SelectItem>
+                                  <SelectItem value="unselected">Unselected Only</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <FormControl>
+                              <div className="border rounded-lg overflow-hidden shadow-sm">
+                                <div className="px-4 py-3 bg-gray-50 font-medium text-sm grid grid-cols-5 border-b">
+                                  <div className="col-span-2">User</div>
+                                  <div>Role</div>
+                                  <div>Department</div>
+                                  <div className="text-right">Add</div>
+                                </div>
                               <div className="divide-y">
                                 {availableUsers.length > 0 ? (
                                   availableUsers.map((availableUser: any, index: number) => {
@@ -797,17 +818,22 @@ export default function TenantOnboardingWizard() {
                                     };
                                     
                                     return (
-                                      <div key={availableUser.id} className="px-4 py-3 grid grid-cols-5 items-center">
+                                      <div 
+                                        key={availableUser.id || index} 
+                                        className={`px-4 py-3 grid grid-cols-5 items-center hover:bg-gray-50 transition-colors
+                                          ${userInForm.selected ? "bg-blue-50/70 hover:bg-blue-50/90" : ""}`
+                                        }
+                                      >
                                         <div className="col-span-2 flex items-center gap-3">
-                                          <Avatar className="h-8 w-8">
+                                          <Avatar className="h-10 w-10 border">
                                             <AvatarImage src={availableUser.avatar} alt={availableUser.name} />
-                                            <AvatarFallback>
-                                              {availableUser.name?.charAt(0) || availableUser.email?.charAt(0)}
+                                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                              {availableUser.name?.charAt(0) || availableUser.email?.charAt(0).toUpperCase()}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div>
-                                            <div className="font-medium">{availableUser.name}</div>
-                                            <div className="text-sm text-muted-foreground">{availableUser.email}</div>
+                                            <div className="font-medium text-gray-800">{availableUser.name || "Unnamed User"}</div>
+                                            <div className="text-sm text-gray-500">{availableUser.email}</div>
                                           </div>
                                         </div>
                                         <div>
@@ -815,7 +841,7 @@ export default function TenantOnboardingWizard() {
                                             value={userInForm.role} 
                                             onValueChange={(value) => updateUser({ role: value as any })}
                                           >
-                                            <SelectTrigger className="h-8 w-28">
+                                            <SelectTrigger className="h-9 w-28 focus:ring-2 focus:ring-primary/20">
                                               <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -825,23 +851,40 @@ export default function TenantOnboardingWizard() {
                                             </SelectContent>
                                           </Select>
                                         </div>
-                                        <div className="text-sm text-muted-foreground">
+                                        <div className="text-sm text-gray-600">
                                           {availableUser.department || "-"}
                                         </div>
                                         <div className="text-right">
-                                          <Checkbox
-                                            checked={userInForm.selected}
-                                            onCheckedChange={(checked) => 
-                                              updateUser({ selected: !!checked })
-                                            }
-                                          />
+                                          <div className="flex justify-end">
+                                            <Button
+                                              type="button"
+                                              variant={userInForm.selected ? "destructive" : "outline"}
+                                              size="sm"
+                                              className={`px-3 ${userInForm.selected ? "" : "border-primary text-primary hover:bg-primary/5"}`}
+                                              onClick={() => updateUser({ selected: !userInForm.selected })}
+                                            >
+                                              {userInForm.selected ? (
+                                                <>
+                                                  <X className="h-4 w-4 mr-1" />
+                                                  Remove
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Plus className="h-4 w-4 mr-1" />
+                                                  Add
+                                                </>
+                                              )}
+                                            </Button>
+                                          </div>
                                         </div>
                                       </div>
                                     );
                                   })
                                 ) : (
-                                  <div className="px-4 py-8 text-center text-muted-foreground">
-                                    No users available. You'll be the only member of this organization.
+                                  <div className="p-6 text-center text-gray-500">
+                                    <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                    <p className="font-medium text-gray-700 mb-1">No users available</p>
+                                    <p className="text-sm">You'll be the only member of this organization. Invite others below.</p>
                                   </div>
                                 )}
                               </div>
@@ -855,81 +898,135 @@ export default function TenantOnboardingWizard() {
                       )}
                     />
                     
-                    <Alert>
-                      <UserPlus className="h-4 w-4" />
-                      <AlertTitle>No users to invite?</AlertTitle>
-                      <AlertDescription>
-                        You can invite team members later from the organization settings page.
-                      </AlertDescription>
-                    </Alert>
+                    <div className="mt-8 border border-blue-100 rounded-lg bg-blue-50/50 p-4">
+                      <div className="flex gap-3 items-start">
+                        <div className="rounded-full bg-blue-100 p-2 text-blue-600 mt-0.5">
+                          <UserPlus className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-800 mb-1">Invite team members via email</h4>
+                          <p className="text-sm text-blue-700 mb-3">
+                            Don't see someone you need to add? Send them an invitation directly.
+                          </p>
+                          
+                          <div className="flex gap-2 mb-2">
+                            <Input 
+                              type="email" 
+                              placeholder="colleague@example.com" 
+                              className="max-w-sm h-9 bg-white border-blue-200 focus-visible:ring-blue-400"
+                            />
+                            <Select defaultValue="member">
+                              <SelectTrigger className="h-9 w-28 bg-white border-blue-200 focus:ring-blue-400">
+                                <SelectValue placeholder="Role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="member">Member</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button type="button" size="sm" className="h-9 bg-blue-600 hover:bg-blue-700">
+                              <Mail className="h-4 w-4 mr-1" />
+                              Invite
+                            </Button>
+                          </div>
+                          
+                          <p className="text-xs text-blue-600">
+                            You can also manage team members later from the organization settings.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
                 {/* Step 4: Initial Setup */}
                 {step === 4 && (
-                  <div className="space-y-6">
-                    <div className="text-lg font-semibold mb-4">Initial Setup</div>
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <Check className="h-5 w-5 mr-2 text-primary" />
+                          Initial Setup
+                        </h3>
+                        <p className="text-gray-600 mt-1">Configure initial OKR settings for your organization</p>
+                      </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="setup.createInitialOKRs"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              Create initial OKRs from a template
-                            </FormLabel>
-                            <FormDescription>
-                              Start with a set of pre-defined objectives and key results
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {form.watch("setup.createInitialOKRs") && (
                       <FormField
                         control={form.control}
-                        name="setup.selectedTemplate"
+                        name="setup.createInitialOKRs"
                         render={({ field }) => (
-                          <FormItem className="ml-7 mt-4">
-                            <FormLabel>Select a Template</FormLabel>
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {okrTemplates.map((template) => (
-                                  <div 
-                                    key={template.id}
-                                    className={`border rounded-md p-3 cursor-pointer hover:border-primary transition-colors ${
-                                      field.value === template.id ? "border-primary bg-primary/5" : ""
-                                    }`}
-                                    onClick={() => field.onChange(template.id)}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div className="font-medium">{template.name}</div>
-                                      <Badge variant="outline">{template.objectives} objectives</Badge>
-                                    </div>
-                                    <div className="mt-1 text-sm text-muted-foreground">
-                                      {template.description}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
                             </FormControl>
-                            <FormMessage />
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="text-gray-700 font-medium">
+                                Create initial OKRs from a template
+                              </FormLabel>
+                              <FormDescription className="text-gray-500">
+                                Jump-start your OKR process with a pre-configured template
+                              </FormDescription>
+                            </div>
                           </FormItem>
                         )}
                       />
-                    )}
-                    
-                    <Separator className="my-6" />
+                      
+                      {form.watch("setup.createInitialOKRs") && (
+                        <FormField
+                          control={form.control}
+                          name="setup.template"
+                          render={({ field }) => (
+                            <FormItem className="ml-7 mt-4">
+                              <FormLabel>Select a Template</FormLabel>
+                              <FormControl>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {okrTemplates.map((template) => (
+                                    <div 
+                                      key={template.id}
+                                      className={`border rounded-md p-3 cursor-pointer transition-all ${
+                                        field.value === template.id 
+                                          ? "border-primary bg-primary/5"
+                                          : "hover:border-gray-300"
+                                      }`}
+                                      onClick={() => field.onChange(template.id)}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="font-medium">{template.name}</div>
+                                        {field.value === template.id && <Check className="h-4 w-4 text-primary" />}
+                                      </div>
+                                      <div className="mt-1 text-sm text-muted-foreground">
+                                        {template.description}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
                     
                     <div className="rounded-lg border p-6 bg-muted/40">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-primary/10 text-primary rounded-full p-3">
+                          <AlertCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-lg mb-2">Ready to Create Your Organization</h4>
+                          <p className="text-muted-foreground">
+                            Click the "Create Organization" button below to finish setting up your organization. You can always update these settings later.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                       <div className="flex items-center gap-4">
                         <div className="bg-primary/10 text-primary rounded-full p-3">
                           <Sparkles className="h-6 w-6" />
@@ -988,7 +1085,8 @@ export default function TenantOnboardingWizard() {
               Back
             </Button>
           ) : (
-            <div></div> // Empty div to maintain spacing
+            {/* Empty div to maintain spacing */}
+            <div></div>
           )}
           
           <div className="flex gap-2">
