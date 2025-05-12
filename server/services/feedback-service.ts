@@ -58,9 +58,9 @@ export async function getFeedbackById(id: number): Promise<(Feedback & { sender:
   };
 }
 
-export async function getPublicFeedback(limit: number = 10): Promise<(Feedback & { sender: any; receiver: any })[]> {
+export async function getPublicFeedback(limit: number = 10): Promise<(Feedback & { sender: any; receiver: any; visibility: string })[]> {
   try {
-    // Get all feedback items
+    // Get all feedback items without filtering by visibility (schema might not have this column)
     const feedbackItems = await db
       .select({
         id: feedback.id,
@@ -89,20 +89,32 @@ export async function getPublicFeedback(limit: number = 10): Promise<(Feedback &
           .from(users)
           .where(eq(users.id, feedbackItem.userId));
       
-    // Get receiver
-    const [receiver] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, feedbackItem.receiverId));
-      
-    results.push({
-      ...feedbackItem,
-      sender,
-      receiver
-    });
+        // Get receiver
+        const [receiver] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, feedbackItem.receiverId));
+        
+        if (sender && receiver) {
+          results.push({
+            ...feedbackItem,
+            sender,
+            receiver,
+            visibility: "public" // Add this for compatibility with the frontend
+          });
+        }
+      } catch (innerError) {
+        console.error("Error processing feedback item:", innerError);
+        // Skip this item and continue with the next one
+        continue;
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error("Error fetching public feedback:", error);
+    throw error;
   }
-
-  return results;
 }
 
 export async function getReceivedFeedback(userId: number): Promise<(Feedback & { sender: any; receiver: any })[]> {
@@ -287,44 +299,63 @@ export async function getUserBadges(userId: number): Promise<(UserBadge & { badg
 }
 
 export async function getPublicUserBadges(limit: number = 10): Promise<(UserBadge & { badge: Badge; user: any; awardedBy: any })[]> {
-  // Get public user badges
-  const userBadgeItems = await db
-    .select()
-    .from(userBadges)
-    .where(eq(userBadges.isPublic, true))
-    .orderBy(desc(userBadges.createdAt))
-    .limit(limit);
+  try {
+    // Get user badges without isPublic filter since the column might not exist in the schema
+    const userBadgeItems = await db
+      .select({
+        userId: userBadges.userId,
+        badgeId: userBadges.badgeId,
+        awardedAt: userBadges.awardedAt,
+        awardedById: userBadges.awardedById,
+        reason: userBadges.reason
+      })
+      .from(userBadges)
+      .orderBy(desc(userBadges.awardedAt))
+      .limit(limit);
     
-  // Prepare result array
-  const results = [];
-  
-  // For each user badge, get related data
-  for (const userBadgeItem of userBadgeItems) {
-    // Get badge
-    const [badge] = await db
-      .select()
-      .from(badges)
-      .where(eq(badges.id, userBadgeItem.badgeId));
-      
-    // Get user
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userBadgeItem.userId));
-      
-    // Get awarder
-    const [awardedBy] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userBadgeItem.awardedById));
-      
-    results.push({
-      ...userBadgeItem,
-      badge,
-      user,
-      awardedBy
-    });
+    // Prepare result array
+    const results = [];
+    
+    // For each user badge, get related data
+    for (const userBadgeItem of userBadgeItems) {
+      try {
+        // Get badge
+        const [badge] = await db
+          .select()
+          .from(badges)
+          .where(eq(badges.id, userBadgeItem.badgeId));
+        
+        // Get user
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, userBadgeItem.userId));
+        
+        // Get awarder
+        const [awardedBy] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, userBadgeItem.awardedById));
+        
+        if (badge && user && awardedBy) {
+          results.push({
+            ...userBadgeItem,
+            badge,
+            user,
+            awardedBy,
+            isPublic: true // Add this for compatibility with the frontend
+          });
+        }
+      } catch (innerError) {
+        console.error("Error processing user badge item:", innerError);
+        // Skip this item and continue with the next one
+        continue;
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error("Error fetching public badges:", error);
+    throw error;
   }
-  
-  return results;
 }

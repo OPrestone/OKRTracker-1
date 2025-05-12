@@ -88,8 +88,10 @@ export default function FeedbackWall() {
   };
 
   // Get user initials for avatar
-  const getUserInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+  const getUserInitials = (firstName: string | undefined, lastName: string | undefined) => {
+    const firstInitial = firstName && firstName.length > 0 ? firstName.charAt(0) : '';
+    const lastInitial = lastName && lastName.length > 0 ? lastName.charAt(0) : '';
+    return `${firstInitial}${lastInitial}`;
   };
 
   // Check if user is admin or manager (can award badges)

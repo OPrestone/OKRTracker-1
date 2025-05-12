@@ -137,8 +137,10 @@ export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
   }
 
   // Helper to get user initials
-  const getUserInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+  const getUserInitials = (firstName: string | undefined, lastName: string | undefined) => {
+    const firstInitial = firstName && firstName.length > 0 ? firstName.charAt(0) : '';
+    const lastInitial = lastName && lastName.length > 0 ? lastName.charAt(0) : '';
+    return `${firstInitial}${lastInitial}`;
   };
 
   // Function to render the feedback type help text
