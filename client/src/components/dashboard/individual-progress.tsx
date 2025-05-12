@@ -146,7 +146,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-06-30",
       priority: 'high',
       teamId: "product",
-      ownerId: "1",
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr1",
@@ -186,7 +186,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-07-15",
       priority: 'medium',
       teamId: "product",
-      ownerId: "1",
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr4",
@@ -217,7 +217,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-05-30",
       priority: 'high',
       teamId: "product",
-      ownerId: "1",
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr6",
@@ -259,7 +259,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-08-15",
       priority: 'high',
       teamId: "marketing",
-      ownerId: "2",
+      ownerId: "201JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr9",
@@ -292,7 +292,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-05-10",
       priority: 'high',
       teamId: "development",
-      ownerId: "3",
+      ownerId: "301JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr11",
@@ -325,7 +325,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-06-20",
       priority: 'high',
       teamId: "support",
-      ownerId: "4",
+      ownerId: "401JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr13",
@@ -358,7 +358,7 @@ const MOCK_OBJECTIVES: Record<string, ObjectiveType[]> = {
       dueDate: "2025-09-30",
       priority: 'high',
       teamId: "sales",
-      ownerId: "5",
+      ownerId: "501JTNBTGMVG80Q0QPKYGGT032G",
       keyResults: [
         {
           id: "kr15",

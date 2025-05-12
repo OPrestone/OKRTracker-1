@@ -47,9 +47,9 @@ interface Objective {
   type?: string;
   progress: number;
   status: string;
-  teamId?: number;
+  teamId?: string;
   teamName?: string;
-  ownerId: number;
+  ownerId: string;
   ownerName?: string;
   keyResults: KeyResult[];
   startDate?: string;

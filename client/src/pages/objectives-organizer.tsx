@@ -32,12 +32,12 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 interface Objective {
-  id: number;
+  id: string;
   title: string;
   description: string | null;
   level: string;
-  ownerId: number;
-  teamId: number | null;
+  ownerId: string;
+  teamId: string | null;
   timeframeId: number;
   status: string | null;
   progress: number | null;

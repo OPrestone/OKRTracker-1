@@ -63,6 +63,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {useAuth} from "@/hooks/use-auth.tsx";
 
 // Define TeamObjective interface
 interface TeamObjective {
@@ -223,6 +224,7 @@ const Teams = () => {
   const [newTeamIcon, setNewTeamIcon] = useState("building");
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [newTeamParent, setNewTeamParent] = useState("");
+  const { user } = useAuth();
   
   // View state (table or cards)
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -320,7 +322,7 @@ const Teams = () => {
       accessorKey: "ownerId",
       header: "Owner",
       cell: ({ row }) => {
-        const ownerId = row.getValue("ownerId") as number;
+        const ownerId = row.getValue("ownerId") as string;
         return (
           <div className="flex items-center">
             <Avatar className="h-8 w-8 mr-2">
@@ -413,9 +415,10 @@ const Teams = () => {
         color: newTeamColor,
         icon: newTeamIcon,
         parentId: newTeamParent ? parseInt(newTeamParent) : null,
-        ownerId: 1 // Default to admin for this example
+        ownerId: user?.id  // Default to admin for this example
       };
 
+      //console.log("New team data:", newTeam, newTeamOwnerId, user);
       await apiRequest("POST", "/api/teams", newTeam);
       
       // Invalidate and refetch teams

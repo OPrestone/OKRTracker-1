@@ -222,7 +222,7 @@ const AIRecommendations = () => {
       description: recommendation.description,
       level: recommendation.level,
       teamId: selectedTeamObj.id,
-      ownerId: 1, // Default to admin or should prompt to select owner
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G", // Default to admin or should prompt to select owner
       timeframeId: 1, // Default to first timeframe - should prompt to select in real app
       status: "draft"
     });
@@ -247,7 +247,7 @@ const AIRecommendations = () => {
       currentValue: "0",
       startValue: "0",
       format: "percentage",
-      ownerId: 1 // Default to admin or should prompt to select owner
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G" // Default to admin or should prompt to select owner
     });
   };
   

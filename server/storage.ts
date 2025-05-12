@@ -18,65 +18,65 @@ const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User Management
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
-  deleteUser(id: number): Promise<void>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getUsersByTeam(teamId: number): Promise<User[]>;
   
   // Team Management
   createTeam(team: InsertTeam): Promise<Team>;
-  getTeam(id: number): Promise<Team | undefined>;
-  updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team>;
+  getTeam(id: string): Promise<Team | undefined>;
+  updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team>;
   getAllTeams(): Promise<Team[]>;
   getTeamsByParent(parentId: number): Promise<Team[]>;
   
   // Access Groups
   createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup>;
-  getAccessGroup(id: number): Promise<AccessGroup | undefined>;
-  updateAccessGroup(id: number, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup>;
+  getAccessGroup(id: string): Promise<AccessGroup | undefined>;
+  updateAccessGroup(id: string, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup>;
   getAllAccessGroups(): Promise<AccessGroup[]>;
   assignUserToAccessGroup(userId: number, accessGroupId: number): Promise<void>;
   
   // Cadences
   createCadence(cadence: InsertCadence): Promise<Cadence>;
-  getCadence(id: number): Promise<Cadence | undefined>;
+  getCadence(id: string): Promise<Cadence | undefined>;
   getAllCadences(): Promise<Cadence[]>;
   
   // Timeframes
   createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe>;
-  getTimeframe(id: number): Promise<Timeframe | undefined>;
+  getTimeframe(id: string): Promise<Timeframe | undefined>;
   getAllTimeframes(): Promise<Timeframe[]>;
   getTimeframesByCadence(cadenceId: number): Promise<Timeframe[]>;
   
   // Objectives
   createObjective(objective: InsertObjective): Promise<Objective>;
-  getObjective(id: number): Promise<Objective | undefined>;
-  updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective>;
+  getObjective(id: string): Promise<Objective | undefined>;
+  updateObjective(id: string, objective: Partial<InsertObjective>): Promise<Objective>;
   getAllObjectives(): Promise<Objective[]>;
-  getObjectivesByOwner(ownerId: number): Promise<Objective[]>;
-  getObjectivesByTeam(teamId: number): Promise<Objective[]>;
+  getObjectivesByOwner(ownerId: string): Promise<Objective[]>;
+  getObjectivesByTeam(teamId: string): Promise<Objective[]>;
   getObjectivesByTimeframe(timeframeId: number): Promise<Objective[]>;
-  updateObjectiveProgress(id: number, progress: number): Promise<Objective>;
+  updateObjectiveProgress(id: string, progress: number): Promise<Objective>;
   
   // Key Results
   createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult>;
-  getKeyResult(id: number): Promise<KeyResult | undefined>;
-  updateKeyResult(id: number, keyResult: Partial<InsertKeyResult>): Promise<KeyResult>;
+  getKeyResult(id: string): Promise<KeyResult | undefined>;
+  updateKeyResult(id: string, keyResult: Partial<InsertKeyResult>): Promise<KeyResult>;
   getKeyResultsByObjective(objectiveId: number): Promise<KeyResult[]>;
-  updateKeyResultProgress(id: number, progress: number): Promise<KeyResult>;
+  updateKeyResultProgress(id: string, progress: number): Promise<KeyResult>;
   
   // Initiatives
   createInitiative(initiative: InsertInitiative): Promise<Initiative>;
-  getInitiative(id: number): Promise<Initiative | undefined>;
-  updateInitiative(id: number, initiative: Partial<InsertInitiative>): Promise<Initiative>;
+  getInitiative(id: string): Promise<Initiative | undefined>;
+  updateInitiative(id: string, initiative: Partial<InsertInitiative>): Promise<Initiative>;
   getInitiativesByKeyResult(keyResultId: number): Promise<Initiative[]>;
   
   // Check-ins
   createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>;
-  getCheckIn(id: number): Promise<CheckIn | undefined>;
+  getCheckIn(id: string): Promise<CheckIn | undefined>;
   getCheckInsByUser(userId: number): Promise<CheckIn[]>;
   getCheckInsByObjective(objectiveId: number): Promise<CheckIn[]>;
   getCheckInsByKeyResult(keyResultId: number): Promise<CheckIn[]>;
@@ -84,8 +84,8 @@ export interface IStorage {
   
   // Chat Rooms
   createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom>;
-  getChatRoom(id: number): Promise<ChatRoom | undefined>;
-  updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom>;
+  getChatRoom(id: string): Promise<ChatRoom | undefined>;
+  updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom>;
   getAllChatRooms(): Promise<ChatRoom[]>;
   getChatRoomsByUser(userId: number): Promise<ChatRoom[]>;
   getUserChatRooms(userId: number): Promise<(ChatRoom & { unreadCount: number })[]>;
@@ -99,14 +99,14 @@ export interface IStorage {
   
   // Messages
   createMessage(message: InsertMessage): Promise<Message>;
-  getMessage(id: number): Promise<Message | undefined>;
-  updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message>;
-  deleteMessage(id: number): Promise<void>;
+  getMessage(id: string): Promise<Message | undefined>;
+  updateMessage(id: string, message: Partial<InsertMessage>): Promise<Message>;
+  deleteMessage(id: string): Promise<void>;
   getMessagesByChatRoom(chatRoomId: number, limit?: number, before?: number): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]>;
   
   // Attachments
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
-  getAttachment(id: number): Promise<Attachment | undefined>;
+  getAttachment(id: string): Promise<Attachment | undefined>;
   getAttachmentsByMessage(messageId: number): Promise<Attachment[]>;
   
   // Reactions
@@ -130,7 +130,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User Management
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -165,7 +165,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateUser(id: number, user: Partial<InsertUser>): Promise<User> {
+  async updateUser(id: string, user: Partial<InsertUser>): Promise<User> {
     const [updatedUser] = await db.update(users)
       .set(user)
       .where(eq(users.id, id))
@@ -192,7 +192,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).where(eq(users.teamId, teamId));
   }
   
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: string): Promise<void> {
     try {
       // First check if user exists
       const user = await this.getUser(id);
@@ -216,12 +216,12 @@ export class DatabaseStorage implements IStorage {
     return newTeam;
   }
 
-  async getTeam(id: number): Promise<Team | undefined> {
+  async getTeam(id: string): Promise<Team | undefined> {
     const [team] = await db.select().from(teams).where(eq(teams.id, id));
     return team;
   }
 
-  async updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team> {
+  async updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team> {
     const [updatedTeam] = await db.update(teams)
       .set(team)
       .where(eq(teams.id, id))
@@ -250,12 +250,12 @@ export class DatabaseStorage implements IStorage {
     return newAccessGroup;
   }
 
-  async getAccessGroup(id: number): Promise<AccessGroup | undefined> {
+  async getAccessGroup(id: string): Promise<AccessGroup | undefined> {
     const [accessGroup] = await db.select().from(accessGroups).where(eq(accessGroups.id, id));
     return accessGroup;
   }
 
-  async updateAccessGroup(id: number, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup> {
+  async updateAccessGroup(id: string, accessGroup: Partial<InsertAccessGroup>): Promise<AccessGroup> {
     const [updatedAccessGroup] = await db.update(accessGroups)
       .set(accessGroup)
       .where(eq(accessGroups.id, id))
@@ -288,7 +288,7 @@ export class DatabaseStorage implements IStorage {
     return newCadence;
   }
 
-  async getCadence(id: number): Promise<Cadence | undefined> {
+  async getCadence(id: string): Promise<Cadence | undefined> {
     const [cadence] = await db.select().from(cadences).where(eq(cadences.id, id));
     return cadence;
   }
@@ -297,7 +297,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(cadences);
   }
   
-  async updateCadence(id: number, cadence: Partial<InsertCadence>): Promise<Cadence> {
+  async updateCadence(id: string, cadence: Partial<InsertCadence>): Promise<Cadence> {
     const [updatedCadence] = await db.update(cadences)
       .set(cadence)
       .where(eq(cadences.id, id))
@@ -310,7 +310,7 @@ export class DatabaseStorage implements IStorage {
     return updatedCadence;
   }
   
-  async deleteCadence(id: number): Promise<void> {
+  async deleteCadence(id: string): Promise<void> {
     await db.delete(cadences).where(eq(cadences.id, id));
   }
 
@@ -321,7 +321,7 @@ export class DatabaseStorage implements IStorage {
     return newTimeframe;
   }
 
-  async getTimeframe(id: number): Promise<Timeframe | undefined> {
+  async getTimeframe(id: string): Promise<Timeframe | undefined> {
     const [timeframe] = await db.select().from(timeframes).where(eq(timeframes.id, id));
     return timeframe;
   }
@@ -334,7 +334,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
   }
   
-  async updateTimeframe(id: number, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
+  async updateTimeframe(id: string, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
     const [updatedTimeframe] = await db.update(timeframes)
       .set(timeframe)
       .where(eq(timeframes.id, id))
@@ -347,7 +347,7 @@ export class DatabaseStorage implements IStorage {
     return updatedTimeframe;
   }
   
-  async deleteTimeframe(id: number): Promise<void> {
+  async deleteTimeframe(id: string): Promise<void> {
     await db.delete(timeframes).where(eq(timeframes.id, id));
   }
 
@@ -358,12 +358,12 @@ export class DatabaseStorage implements IStorage {
     return newObjective;
   }
 
-  async getObjective(id: number): Promise<Objective | undefined> {
+  async getObjective(id: string): Promise<Objective | undefined> {
     const [objective] = await db.select().from(objectives).where(eq(objectives.id, id));
     return objective;
   }
 
-  async updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective> {
+  async updateObjective(id: string, objective: Partial<InsertObjective>): Promise<Objective> {
     const [updatedObjective] = await db.update(objectives)
       .set(objective)
       .where(eq(objectives.id, id))
@@ -392,7 +392,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(objectives).where(eq(objectives.timeframeId, timeframeId));
   }
 
-  async updateObjectiveProgress(id: number, progress: number): Promise<Objective> {
+  async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
     const [updatedObjective] = await db.update(objectives)
       .set({ progress })
       .where(eq(objectives.id, id))
@@ -418,12 +418,12 @@ export class DatabaseStorage implements IStorage {
     return newKeyResult;
   }
 
-  async getKeyResult(id: number): Promise<KeyResult | undefined> {
+  async getKeyResult(id: string): Promise<KeyResult | undefined> {
     const [keyResult] = await db.select().from(keyResults).where(eq(keyResults.id, id));
     return keyResult;
   }
 
-  async updateKeyResult(id: number, keyResult: Partial<InsertKeyResult>): Promise<KeyResult> {
+  async updateKeyResult(id: string, keyResult: Partial<InsertKeyResult>): Promise<KeyResult> {
     const [updatedKeyResult] = await db.update(keyResults)
       .set(keyResult)
       .where(eq(keyResults.id, id))
@@ -440,7 +440,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(keyResults).where(eq(keyResults.objectiveId, objectiveId));
   }
 
-  async updateKeyResultProgress(id: number, progress: number): Promise<KeyResult> {
+  async updateKeyResultProgress(id: string, progress: number): Promise<KeyResult> {
     const [updatedKeyResult] = await db.update(keyResults)
       .set({ progress })
       .where(eq(keyResults.id, id))
@@ -469,12 +469,12 @@ export class DatabaseStorage implements IStorage {
     return newInitiative;
   }
 
-  async getInitiative(id: number): Promise<Initiative | undefined> {
+  async getInitiative(id: string): Promise<Initiative | undefined> {
     const [initiative] = await db.select().from(initiatives).where(eq(initiatives.id, id));
     return initiative;
   }
 
-  async updateInitiative(id: number, initiative: Partial<InsertInitiative>): Promise<Initiative> {
+  async updateInitiative(id: string, initiative: Partial<InsertInitiative>): Promise<Initiative> {
     const [updatedInitiative] = await db.update(initiatives)
       .set(initiative)
       .where(eq(initiatives.id, id))
@@ -504,7 +504,7 @@ export class DatabaseStorage implements IStorage {
     return newCheckIn;
   }
 
-  async getCheckIn(id: number): Promise<CheckIn | undefined> {
+  async getCheckIn(id: string): Promise<CheckIn | undefined> {
     const [checkIn] = await db.select().from(checkIns).where(eq(checkIns.id, id));
     return checkIn;
   }
@@ -544,12 +544,12 @@ export class DatabaseStorage implements IStorage {
     return newChatRoom;
   }
 
-  async getChatRoom(id: number): Promise<ChatRoom | undefined> {
+  async getChatRoom(id: string): Promise<ChatRoom | undefined> {
     const [room] = await db.select().from(chatRooms).where(eq(chatRooms.id, id));
     return room;
   }
 
-  async updateChatRoom(id: number, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
+  async updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
     const [updatedRoom] = await db.update(chatRooms)
       .set({
         ...chatRoom,
@@ -683,12 +683,12 @@ export class DatabaseStorage implements IStorage {
     return newMessage;
   }
 
-  async getMessage(id: number): Promise<Message | undefined> {
+  async getMessage(id: string): Promise<Message | undefined> {
     const [message] = await db.select().from(messages).where(eq(messages.id, id));
     return message;
   }
 
-  async updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message> {
+  async updateMessage(id: string, message: Partial<InsertMessage>): Promise<Message> {
     const [updatedMessage] = await db.update(messages)
       .set({
         ...message,
@@ -705,7 +705,7 @@ export class DatabaseStorage implements IStorage {
     return updatedMessage;
   }
 
-  async deleteMessage(id: number): Promise<void> {
+  async deleteMessage(id: string): Promise<void> {
     // Soft delete - just mark as deleted
     await db.update(messages)
       .set({
@@ -795,7 +795,7 @@ export class DatabaseStorage implements IStorage {
     return newAttachment;
   }
 
-  async getAttachment(id: number): Promise<Attachment | undefined> {
+  async getAttachment(id: string): Promise<Attachment | undefined> {
     const [attachment] = await db.select().from(attachments).where(eq(attachments.id, id));
     return attachment;
   }

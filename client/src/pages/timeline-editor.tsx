@@ -43,12 +43,12 @@ interface Timeframe {
 }
 
 interface Objective {
-  id: number;
+  id: string;
   title: string;
   description: string | null;
   level: string;
-  ownerId: number;
-  teamId: number | null;
+  ownerId: string;
+  teamId: string | null;
   timeframeId: number;
   status: string | null;
   progress: number | null;
@@ -189,7 +189,7 @@ export default function TimelineEditor() {
           title: "Improve Customer Satisfaction",
           description: "Increase NPS score by 15 points",
           level: "company",
-          ownerId: 1,
+          ownerId: "01JTNBTGMVG80Q0QPKYGGT032G",
           teamId: null,
           timeframeId: 1,
           status: "in_progress",
@@ -202,7 +202,7 @@ export default function TimelineEditor() {
           title: "Launch Mobile App v2",
           description: "Release new version with improved UX",
           level: "team",
-          ownerId: 2,
+          ownerId: "201JTNBTGMVG80Q0QPKYGGT032G",
           teamId: 3,
           timeframeId: 1,
           status: "in_progress",
@@ -226,7 +226,7 @@ export default function TimelineEditor() {
           title: "Expand Market Reach",
           description: "Enter 3 new geographic markets",
           level: "company",
-          ownerId: 1,
+          ownerId: "01JTNBTGMVG80Q0QPKYGGT032G",
           teamId: null,
           timeframeId: 2,
           status: "not_started",

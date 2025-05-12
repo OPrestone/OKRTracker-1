@@ -2214,7 +2214,7 @@ async function initializeData() {
         title: "Increase brand awareness",
         description: "Increase overall brand awareness among target demographics",
         teamId: marketingTeam.id,
-        ownerId: 2, // John Smith
+        ownerId: "201JTNBTGMVG80Q0QPKYGGT032G", // John Smith
         timeframeId: q3Timeframe.id,
         progress: 65,
         status: statusEnum.enumValues[0], // on_track
@@ -2225,7 +2225,7 @@ async function initializeData() {
         title: "Increase social media followers",
         description: "Increase social media followers by 30% across all platforms",
         objectiveId: marketingObjective.id,
-        ownerId: 4, // Alex Garcia
+        ownerId: "401JTNBTGMVG80Q0QPKYGGT032G", // Alex Garcia
         targetValue: 30,
         currentValue: 18,
         startValue: 0,
@@ -2237,7 +2237,7 @@ async function initializeData() {
         title: "Launch content marketing campaign",
         description: "Create and publish 12 high-quality blog posts",
         objectiveId: marketingObjective.id,
-        ownerId: 2, // John Smith
+        ownerId: "201JTNBTGMVG80Q0QPKYGGT032G", // John Smith
         targetValue: 12,
         currentValue: 8,
         startValue: 0,
@@ -2250,7 +2250,7 @@ async function initializeData() {
         title: "Improve product usability",
         description: "Enhance user experience across our product platform",
         teamId: productTeam.id,
-        ownerId: 3, // Michelle Williams
+        ownerId: "301JTNBTGMVG80Q0QPKYGGT032G", // Michelle Williams
         timeframeId: q3Timeframe.id,
         progress: 40,
         status: statusEnum.enumValues[1], // at_risk
@@ -2261,7 +2261,7 @@ async function initializeData() {
         title: "Reduce UI friction points",
         description: "Identify and fix the top 10 user friction points",
         objectiveId: productObjective.id,
-        ownerId: 5, // Li Chen
+        ownerId: "501JTNBTGMVG80Q0QPKYGGT032G", // Li Chen
         targetValue: 10,
         currentValue: 4,
         startValue: 0,
@@ -2273,7 +2273,7 @@ async function initializeData() {
         title: "Improve user satisfaction score",
         description: "Increase user satisfaction score from 7.5 to 8.5",
         objectiveId: productObjective.id,
-        ownerId: 3, // Michelle Williams
+        ownerId: "301JTNBTGMVG80Q0QPKYGGT032G", // Michelle Williams
         targetValue: 8.5,
         currentValue: 7.8,
         startValue: 7.5,

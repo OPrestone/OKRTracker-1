@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useParams } from 'react-router-dom';
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/layouts/dashboard-layout";

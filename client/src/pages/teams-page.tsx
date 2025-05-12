@@ -83,7 +83,7 @@ export default function TeamsPage() {
       accessorKey: "ownerId",
       header: "Owner",
       cell: ({ row }) => {
-        const ownerId = row.getValue("ownerId") as number;
+        const ownerId = row.getValue("ownerId") as string;
         return (
           <div className="flex items-center">
             <Avatar className="h-8 w-8 mr-2">

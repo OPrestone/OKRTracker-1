@@ -412,6 +412,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     relationName: "team_members",
   }),
   managedUsers: many(users, {
+
     relationName: "manager",
   }),
   ownedTeams: many(teams, {

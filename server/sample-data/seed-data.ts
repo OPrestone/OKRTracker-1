@@ -387,7 +387,7 @@ async function seedObjectivesAndKeyResults() {
       title: "Increase Annual Revenue",
       description: "Achieve a 20% increase in annual revenue compared to the previous year",
       level: "company",
-      ownerId: 1, // Admin
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G", // Admin
       status: "in_progress",
       progress: 35,
       timeframeId: annualTimeframe.id,
@@ -396,7 +396,7 @@ async function seedObjectivesAndKeyResults() {
       title: "Improve Customer Satisfaction",
       description: "Increase overall customer satisfaction score from 8.2 to 9.0",
       level: "company",
-      ownerId: 1, // Admin
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G", // Admin
       status: "in_progress",
       progress: 42,
       timeframeId: annualTimeframe.id,
@@ -405,7 +405,7 @@ async function seedObjectivesAndKeyResults() {
       title: "Launch New Product Line",
       description: "Successfully launch the new product line by end of Q3",
       level: "company",
-      ownerId: 1, // Admin
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G", // Admin
       status: "in_progress",
       progress: 20,
       timeframeId: annualTimeframe.id,

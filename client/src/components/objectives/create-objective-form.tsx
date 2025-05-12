@@ -87,7 +87,7 @@ export function CreateObjectiveForm({ onSuccess, onCancel }: CreateObjectiveForm
       title: "",
       description: "",
       level: "individual",
-      ownerId: 1, // Default to the current user
+      ownerId: "01JTNBTGMVG80Q0QPKYGGT032G", // Default to the current user
       teamId: null,
       timeframeId: 1, // Default to the first timeframe 
       status: "not_started",
