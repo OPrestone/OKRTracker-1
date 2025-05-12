@@ -153,6 +153,8 @@ function AppRoutes() {
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams" component={Teams} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/users" component={UsersPage} />
@@ -163,6 +165,13 @@ function AppRoutes() {
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/feedback-wall" component={FeedbackWall} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/wellness-pulse" component={WellnessPulse} />
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configure" component={Configure} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/checkins" component={Checkins} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/one-on-one-meetings" component={OneOnOneMeetings} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/objectives-organizer" component={ObjectivesOrganizer} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/timeline-editor" component={TimelineEditor} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/custom-dashboard" component={CustomDashboard} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/project-kanban" component={ProjectKanban} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/import-financial" component={FinancePage} />
       
       {/* Configuration routes for organizations with ULID */}
       <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/general" component={General} />
