@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
 import path from 'path';
 
 dotenv.config();
