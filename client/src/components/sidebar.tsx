@@ -505,10 +505,16 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
 
+        {/* Team Engagement Menu */}
+        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+          Team Engagement
+        </div>
+        
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/checkins"
+            location === "/checkins" || location.includes("/checkins")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
@@ -519,10 +525,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* One-on-One Meetings */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/one-on-one-meetings"
+            location === "/one-on-one-meetings" || location.includes("/one-on-one-meetings")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
@@ -536,10 +543,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* Team Communication */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/chat"
+            location === "/chat" || location.includes("/chat")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
@@ -550,10 +558,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* Team Feedback */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/feedback-wall"
+            location === "/feedback-wall" || location.includes("/feedback-wall")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
@@ -564,10 +573,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* Team Wellness */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/wellness-pulse"
+            location === "/wellness-pulse" || location.includes("/wellness-pulse")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
@@ -578,12 +588,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
+        {/* Administrative Section */}
+        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+          Administration
+        </div>
+
         {/* Organizations Menu */}
         <button
           onClick={() => setTenantsExpanded(!tenantsExpanded)}
           className={cn(
             "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/tenants" || location.startsWith("/tenants/")
+            location === "/tenants" || location.startsWith("/tenants/") || location.includes("/organization/")
               ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
               : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
           )}
