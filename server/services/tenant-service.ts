@@ -13,6 +13,7 @@ import {
 import { db } from '../db';
 import { eq, and, sql } from 'drizzle-orm';
 import slugify from 'slugify';
+import { ulid } from 'ulid';
 import { stripeService } from './stripe-service';
 
 class TenantService {
@@ -51,10 +52,14 @@ class TenantService {
         finalSlug = `${slug}-${Math.floor(Math.random() * 1000)}`;
       }
       
+      // Generate ULID for the tenant ID
+      const tenantId = ulid();
+      
       // Create the tenant - use the direct SQL query to avoid type issues
       const { rows: [tenant] } = await db.execute(
-        sql`INSERT INTO tenants (name, slug, plan, status, max_users, domain, logo_url, settings, enabled_features)
+        sql`INSERT INTO tenants (id, name, slug, plan, status, max_users, domain, logo_url, settings, enabled_features)
             VALUES (
+              ${tenantId},
               ${tenantData.name}, 
               ${finalSlug}, 
               ${tenantData.plan || 'free'}, 
