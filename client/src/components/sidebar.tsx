@@ -615,6 +615,11 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
         {tenantsExpanded && (
           <div className="pl-11 mt-1 mb-1">
+            {/* Organization Management Section */}
+            <div className="mb-2">
+              <div className="text-xs font-semibold text-indigo-300 uppercase tracking-wide mb-1">
+                Organization Management
+              </div>
             {/* Global Organization Management */}
             <div
               className={cn(
@@ -629,9 +634,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               </Link>
             </div>
             
+            </div>
+
             {/* Current Organization Settings */}
             {selectedTenant && (
-              <>
+              <div className="mb-2">
+                <div className="text-xs font-semibold text-indigo-300 uppercase tracking-wide mb-1">
+                  {selectedTenant.name}
+                </div>
                 <div
                   className={cn(
                     "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -658,7 +668,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                     Subscription
                   </Link>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
