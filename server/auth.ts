@@ -174,12 +174,15 @@ export function setupAuth(app: Express) {
 
       const userData = {
         ...req.body,
-        name,
+        name: req.body.firstName && req.body.lastName ? `${req.body.firstName} ${req.body.lastName}` : name,
+        first_name: req.body.firstName || name.split(' ')[0], // Ensure first_name is filled
+        last_name: req.body.lastName || name.split(' ')[1] || '', // Ensure last_name has a value
         password: await hashPassword(req.body.password),
         tenantId: tenantId,
       };
       
       console.log("Creating new user with tenant:", req.body.username, tenantId);
+      console.log("User data:", { ...userData, password: '***' });
       const user = await storage.createUser(userData);
       console.log("User created successfully:", user.id);
       
