@@ -60,7 +60,7 @@ import {
   FileText,
   Loader2,
   Sparkles,
-  TargetIcon,
+  Target as TargetIcon,
   UserPlus,
   Users,
 } from "lucide-react";
