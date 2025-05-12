@@ -30,7 +30,7 @@ import {
 import { TenantUsers } from "./tenant-users";
 
 interface TenantSettingsProps {
-  tenantId: number;
+  tenantId: string;
 }
 
 const updateTenantSchema = z.object({

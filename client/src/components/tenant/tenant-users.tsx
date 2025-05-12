@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/card";
 
 interface User {
-  id: number;
+  id: string;
   username: string;
   name?: string;
   email?: string;
@@ -58,14 +58,14 @@ interface TenantUser extends User {
 }
 
 interface TenantUsersProps {
-  tenantId: number;
+  tenantId: string;
 }
 
 export function TenantUsers({ tenantId }: TenantUsersProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isAddingUser, setIsAddingUser] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>("member");
 
   // Fetch the users for the current tenant
@@ -87,7 +87,7 @@ export function TenantUsers({ tenantId }: TenantUsersProps) {
 
   // Add user to tenant mutation
   const addUserMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
       const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { userId, role });
       return await res.json();
     },
@@ -112,7 +112,7 @@ export function TenantUsers({ tenantId }: TenantUsersProps) {
 
   // Remove user from tenant mutation
   const removeUserMutation = useMutation({
-    mutationFn: async (userId: number) => {
+    mutationFn: async (userId: string) => {
       const res = await apiRequest("DELETE", `/api/tenants/${tenantId}/users/${userId}`);
       return await res.json();
     },
