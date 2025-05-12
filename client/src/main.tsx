@@ -8,15 +8,17 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 
+// Reversed provider order with AuthProvider before TenantProvider
+// This solves the circular dependency problem
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider defaultTheme="light" storageKey="okr-theme">
     <QueryClientProvider client={queryClient}>
-      <TenantProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <TenantProvider>
           <App />
           <Toaster />
-        </AuthProvider>
-      </TenantProvider>
+        </TenantProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ThemeProvider>
 );

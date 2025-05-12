@@ -287,21 +287,33 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     
-    console.log("Returning user data for authenticated user:", req.user?.id);
+    if (!req.user) {
+      console.log("Missing user in request despite authentication");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    console.log("Returning user data for authenticated user:", req.user.id);
     
     try {
       // If tenants are not already loaded in user object, load them
       if (!req.user.tenants) {
         const userId = req.user.id;
-        const userTenants = await storage.getUserTenants(userId);
-        
-        // Get default tenant if any
-        const defaultTenant = userTenants.find(t => t.isDefault);
-        const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
-        
-        // Add tenant information to user object
-        req.user.tenants = userTenants;
-        req.user.defaultTenant = defaultTenantId;
+        try {
+          const userTenants = await storage.getUserTenants(userId);
+          
+          // Get default tenant if any
+          const defaultTenant = userTenants.find(t => t.isDefault);
+          const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
+          
+          // Add tenant information to user object
+          req.user.tenants = userTenants;
+          req.user.defaultTenant = defaultTenantId;
+        } catch (tenantError) {
+          console.error("Error loading tenants, continuing with basic user data:", tenantError);
+          // Continue with base user info if tenant loading fails
+          req.user.tenants = [];
+          req.user.defaultTenant = undefined;
+        }
       }
       
       // Handle the case where password might exist in the user object
@@ -313,7 +325,7 @@ export function setupAuth(app: Express) {
       res.status(200).json(userWithoutPassword);
     }
     catch (error) {
-      console.error("Error loading user tenants:", error);
+      console.error("Error loading user data:", error);
       
       // Return user without tenant information in case of error
       const basicUserData = { ...req.user };
