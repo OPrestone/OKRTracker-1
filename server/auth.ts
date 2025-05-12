@@ -102,30 +102,54 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("Registration attempt for username:", req.body.username);
+      
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log("Registration failed - username already exists:", req.body.username);
         return res.status(400).send("Username already exists");
       }
 
-      const user = await storage.createUser({
+      const userData = {
         ...req.body,
         password: await hashPassword(req.body.password),
-      });
+      };
+      
+      console.log("Creating new user:", req.body.username);
+      const user = await storage.createUser(userData);
+      console.log("User created successfully:", user.id);
 
       req.login(user, (err) => {
-        if (err) return next(err);
-        // Don't return the password
-        const { password, ...userWithoutPassword } = user;
+        if (err) {
+          console.error("Error during login after registration:", err);
+          return next(err);
+        }
+        
+        console.log("User logged in after registration:", user.id);
+        
+        // Handle the case where password might not exist in the user object
+        const userWithoutPassword = { ...user };
+        if (userWithoutPassword && 'password' in userWithoutPassword) {
+          delete userWithoutPassword.password;
+        }
+        
         res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
+      console.error("Error during registration:", error);
       next(error);
     }
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    // Don't return the password
-    const { password, ...userWithoutPassword } = req.user!;
+    console.log("Login successful, returning user data");
+    
+    // Handle the case where password might not exist in the user object
+    const userWithoutPassword = { ...req.user };
+    if (userWithoutPassword && 'password' in userWithoutPassword) {
+      delete userWithoutPassword.password;
+    }
+    
     res.status(200).json(userWithoutPassword);
   });
 
@@ -137,9 +161,19 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // Don't return the password
-    const { password, ...userWithoutPassword } = req.user!;
-    res.json(userWithoutPassword);
+    if (!req.isAuthenticated()) {
+      console.log("Unauthorized access to /api/user");
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    console.log("Returning user data for authenticated user:", req.user?.id);
+    
+    // Handle the case where password might not exist in the user object
+    const userWithoutPassword = { ...req.user };
+    if (userWithoutPassword && 'password' in userWithoutPassword) {
+      delete userWithoutPassword.password;
+    }
+    
+    res.status(200).json(userWithoutPassword);
   });
 }
