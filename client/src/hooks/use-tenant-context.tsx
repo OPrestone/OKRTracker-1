@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 // Define tenant type (should match what comes from the API)
 export type Tenant = {
-  id: number;
+  id: string; // Changed from number to string to match ULID format
   name: string;
   displayName: string;
   slug: string;
@@ -56,8 +56,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // This ensures tenant context persists after page reloads
     const storedTenantId = sessionStorage.getItem('currentTenantId');
     if (storedTenantId) {
-      const tenantId = parseInt(storedTenantId);
-      const matchedTenant = tenants.find(t => t.id === tenantId);
+      // No need to parse as int since IDs are now strings (ULIDs)
+      const matchedTenant = tenants.find(t => t.id === storedTenantId);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
         return;
@@ -66,15 +66,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     
     // Second priority: Check URL paths
     
-    // Check for numeric tenant ID in /tenants/{id}
-    const numericMatch = location.match(/\/tenants\/(\d+)/);
-    if (numericMatch) {
-      const tenantId = parseInt(numericMatch[1]);
+    // Check for tenant ID in /tenants/{id} - now looking for ULID pattern
+    // ULIDs are 26 characters, alphanumeric, all uppercase
+    const idMatch = location.match(/\/tenants\/([A-Z0-9]{26})/);
+    if (idMatch) {
+      const tenantId = idMatch[1];
       const matchedTenant = tenants.find(t => t.id === tenantId);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
         // Update session storage to match URL
-        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
         sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
@@ -89,7 +90,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
         // Update session storage to match URL
-        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
         sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
@@ -98,13 +99,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     
     // Check for legacy tenant slug in /tenants/{slug}
     const tenantMatch = location.match(/\/tenants\/([^/]+)/);
-    if (tenantMatch && !numericMatch) { // Ensure we're not matching a numeric ID again
+    if (tenantMatch && !idMatch) { // Ensure we're not matching a ULID again
       const urlSlug = tenantMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
         setCurrentTenant(matchedTenant);
         // Update session storage to match URL
-        sessionStorage.setItem('currentTenantId', matchedTenant.id.toString());
+        sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
         sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
         return;
@@ -116,7 +117,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     if (defaultTenant) {
       setCurrentTenant(defaultTenant);
       // Update session storage with default tenant
-      sessionStorage.setItem('currentTenantId', defaultTenant.id.toString());
+      sessionStorage.setItem('currentTenantId', defaultTenant.id); // No need for toString as it's already a string
       sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
       sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
     }
