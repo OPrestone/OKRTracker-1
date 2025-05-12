@@ -66,17 +66,17 @@ import {
 
 // Define TeamObjective interface
 interface TeamObjective {
-  id: number;
+  id: string;
   title: string;  // Primary title field
   name: string;   // Alternative name field (some components may use this)
   description: string;
   level: string;
-  ownerId: number;
-  teamId: number;
-  timeframeId: number;
+  ownerId: string;
+  teamId: string;
+  timeframeId: string;
   status: "on_track" | "at_risk" | "behind" | "completed";
   progress: number;
-  parentId: number | null;
+  parentId: string | null;
   createdAt: string;
 }
 
