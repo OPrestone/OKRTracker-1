@@ -1,6 +1,15 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient"; // Import queryClient directly
+
+// Add global declarations for window.__queryClient__ property
+declare global {
+  interface Window {
+    __queryClient__?: any;
+    __TANSTACK_QUERY_CLIENT__?: any;
+  }
+}
 
 // Define tenant type (should match what comes from the API)
 export type Tenant = {
@@ -130,7 +139,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     
     // Store the tenant ID in session storage to make it available after page reload
     // This is used by the queryClient to add tenantId to API requests
-    sessionStorage.setItem('currentTenantId', tenant.id.toString());
+    sessionStorage.setItem('currentTenantId', tenant.id); // No need for toString as it's already a string ULID
     
     // Also store other important tenant data that might be needed before API calls
     sessionStorage.setItem('currentTenantSlug', tenant.slug);
@@ -143,8 +152,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     if (location.startsWith('/organization/')) {
       newUrl = location.replace(/\/organization\/[^/]+/, `/organization/${tenant.slug}`);
     } 
-    // Handle tenant ID-based routes
-    else if (location.match(/\/tenants\/\d+/)) {
+    // Handle tenant ID-based routes - updated pattern for ULIDs
+    else if (location.match(/\/tenants\/[A-Z0-9]{26}/)) {
       newUrl = `/organization/${tenant.slug}`;
     } 
     // Handle tenant slug-based routes (legacy)
@@ -157,12 +166,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
     
     // Invalidate all queries before reloading to ensure fresh data
-    // for the new tenant context
     try {
-      const queryClient = window.__REACT_QUERY_GLOBAL_CLIENT__;
-      if (queryClient) {
-        queryClient.invalidateQueries();
-      }
+      // Use the imported queryClient directly
+      queryClient.invalidateQueries({ queryKey: [] }); // Invalidate all queries
     } catch (e) {
       console.warn('Could not invalidate queries before tenant switch:', e);
     }
