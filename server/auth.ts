@@ -5,7 +5,8 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser, Tenant } from "@shared/schema";
+import { db } from "./db";
+import { User as SelectUser, Tenant, tenants as tenantsTable, usersToTenants } from "@shared/schema";
 
 declare global {
   namespace Express {
@@ -137,14 +138,63 @@ export function setupAuth(app: Express) {
         return res.status(400).send("Username already exists");
       }
 
+      // Ensure we have a name field from firstName and lastName
+      const name = `${req.body.firstName || ''} ${req.body.lastName || ''}`.trim() || req.body.username;
+      
+      // Get a default tenant if one isn't provided
+      let tenantId = req.body.tenantId;
+      if (!tenantId) {
+        // Find or create a default tenant
+        try {
+          // Try to find an existing tenant
+          const existingTenants = await db.select().from(tenantsTable);
+          if (existingTenants && existingTenants.length > 0) {
+            tenantId = existingTenants[0].id;
+            console.log("Using existing tenant for registration:", tenantId);
+          } else {
+            // Create a default tenant if none exists
+            console.log("No tenants found, creating a default tenant");
+            const [defaultTenant] = await db.insert(tenantsTable).values({
+              name: "Default Organization",
+              slug: "default-org",
+              plan: "free",
+              settings: {},
+              enabledFeatures: ["objectives", "key_results", "chat"]
+            }).returning();
+            tenantId = defaultTenant.id;
+            console.log("Created default tenant:", tenantId);
+          }
+        } catch (err) {
+          console.error("Error finding/creating default tenant:", err);
+          // Fallback to a static ID only as last resort
+          tenantId = "01JTTH6MTJE4DHTH63RV7H21G0"; // Use an existing tenant ID if possible
+          console.log("Using fallback tenant ID:", tenantId);
+        }
+      }
+
       const userData = {
         ...req.body,
+        name,
         password: await hashPassword(req.body.password),
+        tenantId: tenantId,
       };
       
-      console.log("Creating new user:", req.body.username);
+      console.log("Creating new user with tenant:", req.body.username, tenantId);
       const user = await storage.createUser(userData);
       console.log("User created successfully:", user.id);
+      
+      // Create user-tenant relationship if not already created
+      try {
+        await db.insert(usersToTenants).values({
+          userId: user.id,
+          tenantId: tenantId,
+          role: "member"
+        }).onConflictDoNothing();
+        console.log("User-tenant relationship created");
+      } catch (err) {
+        console.error("Error creating user-tenant relationship:", err);
+        // Non-critical error, continue with registration
+      }
 
       req.login(user, (err) => {
         if (err) {
@@ -172,8 +222,12 @@ export function setupAuth(app: Express) {
     console.log("Login successful, returning user data");
     
     try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication failed" });
+      }
+      
       // Enhance user object with tenant information on login
-      const userId = req.user?.id;
+      const userId = req.user.id;
       
       // Get user's tenants and roles if they weren't already included
       if (!req.user.tenants) {
@@ -205,6 +259,10 @@ export function setupAuth(app: Express) {
       res.status(200).json(userWithoutPassword);
     } catch (error) {
       console.error("Error enhancing user data on login:", error);
+      
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication failed" });
+      }
       
       // Return basic user data without tenant info in case of error
       const basicUserData = { ...req.user };
