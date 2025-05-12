@@ -90,8 +90,22 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         return;
       }
     }
+    // Check for ULID in /ulid/{id} (new format)
+    const ulidMatch = location.match(/\/ulid\/([A-Z0-9]{26})/);
+    if (ulidMatch) {
+      const tenantId = ulidMatch[1];
+      const matchedTenant = tenants.find(t => t.id === tenantId);
+      if (matchedTenant) {
+        setCurrentTenant(matchedTenant);
+        // Update session storage to match URL
+        sessionStorage.setItem('currentTenantId', matchedTenant.id);
+        sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
+        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
+        return;
+      }
+    }
     
-    // Check for organization slug in /organization/{slug}
+    // Check for organization slug in /organization/{slug} (legacy format)
     const orgMatch = location.match(/\/organization\/([^/]+)/);
     if (orgMatch) {
       const urlSlug = orgMatch[1];
@@ -108,7 +122,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     
     // Check for legacy tenant slug in /tenants/{slug}
     const tenantMatch = location.match(/\/tenants\/([^/]+)/);
-    if (tenantMatch && !idMatch) { // Ensure we're not matching a ULID again
+    if (tenantMatch && !idMatch && !ulidMatch) { // Ensure we're not matching a ULID or numeric ID again
       const urlSlug = tenantMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
@@ -148,21 +162,25 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // Determine the URL to navigate to
     let newUrl = '';
     
-    // Handle organization routes
-    if (location.startsWith('/organization/')) {
-      newUrl = location.replace(/\/organization\/[^/]+/, `/organization/${tenant.slug}`);
+    // Handle new ULID-based routes
+    if (location.startsWith('/ulid/')) {
+      newUrl = location.replace(/\/ulid\/[A-Z0-9]{26}/, `/ulid/${tenant.id}`);
+    }
+    // Handle organization routes (legacy format)
+    else if (location.startsWith('/organization/')) {
+      newUrl = location.replace(/\/organization\/[^/]+/, `/ulid/${tenant.id}`);
     } 
     // Handle tenant ID-based routes - updated pattern for ULIDs
     else if (location.match(/\/tenants\/[A-Z0-9]{26}/)) {
-      newUrl = `/organization/${tenant.slug}`;
+      newUrl = `/ulid/${tenant.id}`;
     } 
     // Handle tenant slug-based routes (legacy)
     else if (location.startsWith('/tenants/')) {
-      newUrl = location.replace(/\/tenants\/[^/]+/, `/organization/${tenant.slug}`);
+      newUrl = location.replace(/\/tenants\/[^/]+/, `/ulid/${tenant.id}`);
     } 
-    // Default navigation to organization page with slug
+    // Default navigation to new ULID-based format
     else {
-      newUrl = `/organization/${tenant.slug}`;
+      newUrl = `/ulid/${tenant.id}`;
     }
     
     // Invalidate all queries before reloading to ensure fresh data

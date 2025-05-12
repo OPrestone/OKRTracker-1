@@ -141,7 +141,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   // Check if any tenant management paths are active to auto-expand organization menu
-  const isTenantPathActive = ["/tenants", "/tenants/", "/organization/"].some(
+  const isTenantPathActive = ["/tenants", "/tenants/", "/ulid/"].some(
     (path) => locationPath === path || locationPath.startsWith(path)
   );
   const [tenantsExpanded, setTenantsExpanded] = useState(isTenantPathActive);
@@ -182,7 +182,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       }
     }
     
-    // Check for organization slug in /organization/{slug}
+    // Check for ULID in /ulid/{id}
+    const ulidDirectMatch = locationPath.match(/\/ulid\/([A-Z0-9]{26})/);
+    if (ulidDirectMatch) {
+      const tenantId = ulidDirectMatch[1];
+      const matchedTenant = tenants.find(t => t.id === tenantId);
+      if (matchedTenant) {
+        setSelectedTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Legacy: Check for organization slug in /organization/{slug}
     const orgMatch = locationPath.match(/\/organization\/([^/]+)/);
     if (orgMatch) {
       const urlSlug = orgMatch[1];
@@ -195,7 +206,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     
     // Check for legacy tenant slug in /tenants/{slug}
     const tenantMatch = locationPath.match(/\/tenants\/([^/]+)/);
-    if (tenantMatch && !numericMatch && !ulidMatch) { // Ensure we're not matching a numeric ID or ULID again
+    if (tenantMatch && !numericMatch && !ulidDirectMatch) { // Ensure we're not matching a numeric ID or ULID again
       const urlSlug = tenantMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
@@ -217,7 +228,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   // Helper function to generate links with tenant context if available
   const getLink = (path: string) => {
     if (!selectedTenant) return path;
-    return `/organization/${selectedTenant.slug}${path}`;
+    return `/ulid/${selectedTenant.id}${path}`;
   };
   
   const sidebarContent = (
@@ -645,12 +656,12 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 <div
                   className={cn(
                     "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
-                    (location.startsWith(`/organization/${selectedTenant.slug}`) && !location.includes("/subscription"))
+                    (location.startsWith(`/ulid/${selectedTenant.id}`) && !location.includes("/subscription"))
                       ? "text-white font-medium bg-indigo-900/40"
                       : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
                   )}
                 >
-                  <Link href={`/organization/${selectedTenant.slug}`} className="w-full">
+                  <Link href={`/ulid/${selectedTenant.id}`} className="w-full">
                     Organization Settings
                   </Link>
                 </div>
@@ -664,7 +675,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                       : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
                   )}
                 >
-                  <Link href={`/organization/${selectedTenant.slug}/subscription`} className="w-full">
+                  <Link href={`/ulid/${selectedTenant.id}/subscription`} className="w-full">
                     Subscription
                   </Link>
                 </div>

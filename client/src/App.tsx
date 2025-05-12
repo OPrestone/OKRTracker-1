@@ -137,10 +137,49 @@ function AppRoutes() {
       
       {/* Organizations/Tenants */}
       <ProtectedRoute path="/tenants" component={TenantsPage} />
+      
+      {/* ULID-based routes for organizations (new format using ULIDs directly) */}
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})" component={OrganizationPage} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/strategy-map" component={StrategyMap} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
+      
+      {/* Main organization section routes with ULID */}
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/my-okrs" component={MyOKRs} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/draft-okrs" component={DraftOKRs} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams" component={Teams} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/users" component={UsersPage} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/user-profile" component={UserProfile} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/reports" component={Reports} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/chat" component={ChatPage} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/feedback-wall" component={FeedbackWall} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/wellness-pulse" component={WellnessPulse} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configure" component={Configure} />
+      
+      {/* Configuration routes for organizations with ULID */}
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/general" component={General} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/teams" component={TeamsConfig} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/users-permissions" component={UsersPermissions} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/integrations" component={Integrations} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/status-settings" component={StatusSettings} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/cadences" component={Cadences} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/access-groups" component={AccessGroups} />
+      
+      {/* Legacy routes - keep for backward compatibility */}
       {/* ID-based routes - these need to be later to avoid catching slug-based routes */}
       <ProtectedRoute path="/tenants/:id(\d+)" component={TenantPage} />
       <ProtectedRoute path="/tenants/:id(\d+)/subscription" component={TenantPage} />
-      {/* Slug-based routes for organizations */}
+      
+      {/* Legacy slug-based routes for organizations */}
       <ProtectedRoute path="/organization/:organisation" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/home" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/subscription" component={OrganizationPage} />
@@ -149,7 +188,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/organization/:organisation/team-leader-dashboard" component={TeamLeaderDashboard} />
       
-      {/* Main organization section routes */}
+      {/* Legacy main organization section routes */}
       <ProtectedRoute path="/organization/:organisation/my-okrs" component={MyOKRs} />
       <ProtectedRoute path="/organization/:organisation/draft-okrs" component={DraftOKRs} />
       <ProtectedRoute path="/organization/:organisation/approved-okrs" component={ApprovedOKRs} />
@@ -166,7 +205,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/wellness-pulse" component={WellnessPulse} />
       <ProtectedRoute path="/organization/:organisation/configure" component={Configure} />
       
-      {/* Configuration routes for organizations */}
+      {/* Legacy configuration routes for organizations */}
       <ProtectedRoute path="/organization/:organisation/configuration/general" component={General} />
       <ProtectedRoute path="/organization/:organisation/configuration/teams" component={TeamsConfig} />
       <ProtectedRoute path="/organization/:organisation/configuration/users-permissions" component={UsersPermissions} />
