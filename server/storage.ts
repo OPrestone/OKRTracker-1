@@ -131,12 +131,56 @@ export class DatabaseStorage implements IStorage {
 
   // User Management
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    // Select specific columns to avoid issues with missing columns
+    const [user] = await db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      email: users.email,
+      name: users.name,
+      title: users.title,
+      bio: users.bio,
+      teamId: users.teamId,
+      level: users.level,
+      timezone: users.timezone,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      tenantId: users.tenantId,
+      defaultTenantId: users.defaultTenantId,
+      isEnabled: users.isEnabled,
+      isAdmin: users.isAdmin,
+      lastLoginAt: users.lastLoginAt,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId
+    }).from(users).where(eq(users.id, id));
+    
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    // Select specific columns to avoid issues with missing columns
+    const [user] = await db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      email: users.email,
+      name: users.name,
+      title: users.title,
+      bio: users.bio,
+      teamId: users.teamId,
+      level: users.level,
+      timezone: users.timezone,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      tenantId: users.tenantId,
+      defaultTenantId: users.defaultTenantId,
+      isEnabled: users.isEnabled,
+      isAdmin: users.isAdmin,
+      lastLoginAt: users.lastLoginAt,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId
+    }).from(users).where(eq(users.username, username));
+    
     return user;
   }
 
@@ -396,7 +440,21 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
-    return db.select().from(objectives).where(eq(objectives.tenantId, tenantId));
+    // Select specific columns, excluding statusReason which might be missing in the database
+    return db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      updatedAt: objectives.updatedAt
+    }).from(objectives).where(eq(objectives.tenantId, tenantId));
   }
 
   async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
