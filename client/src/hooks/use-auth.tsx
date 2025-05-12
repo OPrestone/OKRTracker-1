@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
           
           // Also trigger tenant refresh in tenant context
-          setCurrentTenant(defaultTenant);
+          tenantContext.setCurrentTenant(defaultTenant);
         }
       }
       
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
           
           // Also trigger tenant refresh in tenant context
-          setCurrentTenant(defaultTenant);
+          tenantContext.setCurrentTenant(defaultTenant);
         }
       }
       
@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('currentTenantName');
       
       // Reset tenant context
-      setCurrentTenant(null);
+      tenantContext.setCurrentTenant(null);
       
       // Clear any redirect paths
       clearRedirectPath();
