@@ -39,13 +39,13 @@ import {
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import type { Tenant } from "./tenant/tenant-switcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
 import TenantSwitcher from "@/components/tenant/tenant-switcher";
+import { Tenant } from "@/hooks/use-tenant-context";
 
 interface SidebarProps {
   open: boolean;
@@ -207,12 +207,12 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     // Otherwise, use default tenant or first one
     const defaultTenant = tenants.find(t => t.isDefault) || tenants[0];
     setSelectedTenant(defaultTenant);
-  }, [tenants, location]);
+  }, [tenants, locationPath]);
 
   // Update expanded states when location changes
   useEffect(() => {
     setTenantsExpanded(isTenantPathActive);
-  }, [location, isTenantPathActive]);
+  }, [locationPath, isTenantPathActive]);
   
   // Helper function to generate links with tenant context if available
   const getLink = (path: string) => {
