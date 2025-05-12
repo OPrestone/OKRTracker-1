@@ -145,6 +145,33 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/home" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/quick-start-guide" component={QuickStartGuide} />
+      
+      {/* Main organization section routes */}
+      <ProtectedRoute path="/organization/:organisation/my-okrs" component={MyOKRs} />
+      <ProtectedRoute path="/organization/:organisation/draft-okrs" component={DraftOKRs} />
+      <ProtectedRoute path="/organization/:organisation/approved-okrs" component={ApprovedOKRs} />
+      <ProtectedRoute path="/organization/:organisation/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/organization/:organisation/company-strategy" component={CompanyStrategy} />
+      <ProtectedRoute path="/organization/:organisation/teams" component={Teams} />
+      <ProtectedRoute path="/organization/:organisation/teams/:id" component={TeamDetail} />
+      <ProtectedRoute path="/organization/:organisation/users" component={UsersPage} />
+      <ProtectedRoute path="/organization/:organisation/all-users" component={AllUsers} />
+      <ProtectedRoute path="/organization/:organisation/user-profile" component={UserProfile} />
+      <ProtectedRoute path="/organization/:organisation/reports" component={Reports} />
+      <ProtectedRoute path="/organization/:organisation/chat" component={ChatPage} />
+      <ProtectedRoute path="/organization/:organisation/feedback-wall" component={FeedbackWall} />
+      <ProtectedRoute path="/organization/:organisation/wellness-pulse" component={WellnessPulse} />
+      <ProtectedRoute path="/organization/:organisation/configure" component={Configure} />
+      
+      {/* Configuration routes for organizations */}
+      <ProtectedRoute path="/organization/:organisation/configuration/general" component={General} />
+      <ProtectedRoute path="/organization/:organisation/configuration/teams" component={TeamsConfig} />
+      <ProtectedRoute path="/organization/:organisation/configuration/users-permissions" component={UsersPermissions} />
+      <ProtectedRoute path="/organization/:organisation/configuration/integrations" component={Integrations} />
+      <ProtectedRoute path="/organization/:organisation/configuration/status-settings" component={StatusSettings} />
+      <ProtectedRoute path="/organization/:organisation/configuration/cadences" component={Cadences} />
+      <ProtectedRoute path="/organization/:organisation/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/organization/:organisation/configuration/access-groups" component={AccessGroups} />
       {/* Onboarding */}
       <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
       
