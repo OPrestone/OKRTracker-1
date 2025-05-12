@@ -423,6 +423,10 @@ export const userAccessGroupsRelations = relations(userAccessGroups, ({ one }) =
   accessGroup: one(accessGroups, {
     fields: [userAccessGroups.accessGroupId],
     references: [accessGroups.id]
+  }),
+  tenant: one(tenants, {
+    fields: [userAccessGroups.tenantId],
+    references: [tenants.id]
   })
 }));
 
@@ -556,6 +560,10 @@ export const chatRoomMembersRelations = relations(chatRoomMembers, ({ one }) => 
   chatRoom: one(chatRooms, {
     fields: [chatRoomMembers.chatRoomId],
     references: [chatRooms.id]
+  }),
+  tenant: one(tenants, {
+    fields: [chatRoomMembers.tenantId],
+    references: [tenants.id]
   })
 }));
 
@@ -595,6 +603,10 @@ export const reactionsRelations = relations(reactions, ({ one }) => ({
   message: one(messages, {
     fields: [reactions.messageId],
     references: [messages.id]
+  }),
+  tenant: one(tenants, {
+    fields: [reactions.tenantId],
+    references: [tenants.id]
   })
 }));
 
@@ -618,6 +630,10 @@ export const userBadgesRelations = relations(userBadges, ({ one }) => ({
   awardedBy: one(users, {
     fields: [userBadges.awardedById],
     references: [users.id]
+  }),
+  tenant: one(tenants, {
+    fields: [userBadges.tenantId],
+    references: [tenants.id]
   })
 }));
 
