@@ -34,10 +34,28 @@ type LoginData = {
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
+// Create a specialized version of AuthProvider that doesn't depend directly on TenantContext
+// This avoids circular dependency issues
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { setCurrentTenant } = useTenantContext();
+  
+  // Get tenant context safely - if it fails, provide fallback functions
+  const tenantContext = (() => {
+    try {
+      return useTenantContext();
+    } catch (e) {
+      // Provide empty implementation if TenantContext is not available
+      console.warn("TenantContext not available in AuthProvider");
+      return {
+        setCurrentTenant: () => {},
+        currentTenant: null,
+        switchTenant: () => {},
+        isLoading: false,
+        error: null
+      };
+    }
+  })();
   
   const {
     data: user,
@@ -59,11 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const defaultTenant = user.tenants.find(tenant => tenant.id === user.defaultTenant);
       if (defaultTenant) {
         // Update the current tenant in TenantContext
-        setCurrentTenant(defaultTenant);
+        tenantContext.setCurrentTenant(defaultTenant);
         console.log("Set default tenant from user data:", defaultTenant.name);
       }
     }
-  }, [user, setCurrentTenant]);
+  }, [user, tenantContext]);
 
   const refetchUser = useCallback(async () => {
     await refetch();

@@ -2836,8 +2836,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup WebSocket server for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     console.log('WebSocket client connected');
+    
+    // Extract tenant ID from the connection URL query parameters
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const tenantId = url.searchParams.get('tenantId');
+    
+    // Store the tenant ID in the WebSocket connection for tenant isolation
+    (ws as any).tenantId = tenantId;
+    console.log(`WebSocket client connected with tenantId: ${tenantId || 'none'}`);
     
     ws.on('message', async (message) => {
       try {
@@ -2847,9 +2855,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Store the room ID in the WebSocket connection
           (ws as any).roomId = data.roomId;
         } else if (data.type === 'new_message' && data.message) {
-          // Broadcast the message to all clients in the same room
+          // Broadcast the message to all clients in the same room AND same tenant
           wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN && (client as any).roomId === (ws as any).roomId) {
+            if (client !== ws && 
+                client.readyState === WebSocket.OPEN && 
+                (client as any).roomId === (ws as any).roomId &&
+                (client as any).tenantId === (ws as any).tenantId) {
               client.send(JSON.stringify({
                 type: 'new_message',
                 message: data.message
@@ -2857,9 +2868,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
         } else if (data.type === 'typing') {
-          // Broadcast typing status to all clients in the same room
+          // Broadcast typing status to all clients in the same room AND same tenant
           wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === WebSocket.OPEN && (client as any).roomId === (ws as any).roomId) {
+            if (client !== ws && 
+                client.readyState === WebSocket.OPEN && 
+                (client as any).roomId === (ws as any).roomId &&
+                (client as any).tenantId === (ws as any).tenantId) {
               client.send(JSON.stringify({
                 type: 'typing',
                 userId: data.userId

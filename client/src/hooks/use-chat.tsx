@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // Types for Chat API
 type User = {
-  id: number;
+  id: string | number;
   username: string;
   firstName: string;
   lastName: string;
@@ -168,7 +168,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Setup WebSocket
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  
+  // Get tenant ID from session storage or URL for WebSocket connection
+  const getCurrentTenantId = () => {
+    // First priority: Check for ULID in new /ulid/{id} format
+    const newUlidMatch = window.location.pathname.match(/\/ulid\/([A-Z0-9]{26})/);
+    if (newUlidMatch) {
+      return newUlidMatch[1];
+    }
+    
+    // Second priority: Check for ULID tenant ID in /tenants/{id} pattern
+    const tenantsUlidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
+    if (tenantsUlidMatch) {
+      return tenantsUlidMatch[1];
+    }
+    
+    // Third priority: Use session storage
+    return sessionStorage.getItem('currentTenantId');
+  };
+  
+  const tenantId = getCurrentTenantId();
+  const wsUrl = `${protocol}//${window.location.host}/ws${tenantId ? `?tenantId=${tenantId}` : ''}`;
   
   const handleWebSocketMessage = useCallback((data: any) => {
     if (data.type === 'new_message' && data.message && data.message.chatRoomId === currentRoomId) {
@@ -209,18 +229,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Fetch chat rooms
   const { 
-    data: chatRooms = [], 
+    data: chatRooms = [] as ChatRoom[], 
     isLoading: isLoadingRooms 
-  } = useQuery({
+  } = useQuery<ChatRoom[]>({
     queryKey: ['/api/chat/rooms'],
     enabled: !!user,
   });
   
   // Fetch current room
   const { 
-    data: currentRoom = null,
+    data: currentRoom = null as ChatRoomWithMembers | null,
     isLoading: isLoadingRoom 
-  } = useQuery({
+  } = useQuery<ChatRoomWithMembers | null>({
     queryKey: ['/api/chat/rooms', currentRoomId],
     enabled: !!currentRoomId,
   });
@@ -230,7 +250,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     data: fetchedMessages,
     isLoading: isLoadingMessages,
     refetch: refetchMessages
-  } = useQuery({
+  } = useQuery<Message[]>({
     queryKey: ['/api/chat/rooms', currentRoomId, 'messages', oldestMessageId],
     enabled: !!currentRoomId,
     queryFn: async ({ queryKey }) => {
@@ -240,7 +260,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
-      return response.json();
+      return response.json() as Promise<Message[]>;
     }
   });
   
@@ -471,7 +491,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           return {
             ...msg,
             reactions: msg.reactions.filter(r => 
-              !(r.userId === user.id && r.emoji === emoji)
+              !(r.userId === Number(user.id) && r.emoji === emoji)
             )
           };
         }

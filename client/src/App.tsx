@@ -264,9 +264,9 @@ function OnboardingController() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
-        <TenantProvider>
+    <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
+      <TenantProvider>
+        <AuthProvider>
           <HelpProvider>
             <OnboardingProvider>
               <LocationTracker />
@@ -275,9 +275,9 @@ function App() {
               <AppRoutes />
             </OnboardingProvider>
           </HelpProvider>
-        </TenantProvider>
-      </ThemeProvider>
-    </AuthProvider>
+        </AuthProvider>
+      </TenantProvider>
+    </ThemeProvider>
   );
 }
 

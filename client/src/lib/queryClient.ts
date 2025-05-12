@@ -2,14 +2,20 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Function to get the current tenant ID from the URL
 function getCurrentTenantFromUrl(): string | null {
-  // Check for ULID tenant ID in /tenants/{id} pattern - ULIDs are 26 characters, uppercase letters and numbers
-  const ulidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
-  if (ulidMatch) {
-    return ulidMatch[1];
+  // First priority: Check for ULID in new /ulid/{id} format
+  const newUlidMatch = window.location.pathname.match(/\/ulid\/([A-Z0-9]{26})/);
+  if (newUlidMatch) {
+    return newUlidMatch[1];
   }
   
-  // For organization slug routes, we need to rely on session storage
-  // This will be set when switching tenants in the TenantProvider
+  // Second priority: Check for ULID tenant ID in /tenants/{id} pattern
+  const tenantsUlidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
+  if (tenantsUlidMatch) {
+    return tenantsUlidMatch[1];
+  }
+  
+  // Third priority: For organization slug routes or non-URL encoded routes, 
+  // rely on session storage which is set when switching tenants in the TenantProvider
   const storedTenantId = sessionStorage.getItem('currentTenantId');
   return storedTenantId || null;
 }

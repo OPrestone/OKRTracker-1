@@ -4,7 +4,7 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
          chatRooms, ChatRoom, InsertChatRoom, chatRoomMembers, ChatRoomMember, InsertChatRoomMember,
          messages, Message, InsertMessage, attachments, Attachment, InsertAttachment,
-         reactions, Reaction, InsertReaction } from "@shared/schema";
+         reactions, Reaction, InsertReaction, tenants, Tenant, usersToTenants } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -261,25 +261,39 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Getting tenants for user:", userId);
       
-      // Get all tenants the user has access to along with their role
-      const result = await db
-        .select({
-          tenant: tenants,
-          userRole: usersToTenants.role,
-          isDefault: usersToTenants.isDefault
-        })
+      // First, check if we have any user-tenant relationships
+      const userTenantConnections = await db
+        .select()
         .from(usersToTenants)
-        .innerJoin(tenants, eq(tenants.id, usersToTenants.tenantId))
         .where(eq(usersToTenants.userId, userId));
       
-      console.log(`Found ${result.length} tenants for user ${userId}`);
+      if (!userTenantConnections || userTenantConnections.length === 0) {
+        console.log(`No tenant connections found for user ${userId}, returning empty array`);
+        return [];
+      }
       
-      // Transform the result to match the expected return type
-      return result.map(record => ({
-        ...record.tenant,
-        userRole: record.userRole,
-        isDefault: record.isDefault
-      }));
+      // Get all tenants the user has access to along with their role
+      const tenantIds = userTenantConnections.map(utc => utc.tenantId);
+      
+      // Fetch the actual tenant records
+      const tenantRecords = await db
+        .select()
+        .from(tenants)
+        .where(inArray(tenants.id, tenantIds));
+      
+      // Map the records with role information
+      const enhancedTenants = tenantRecords.map(tenant => {
+        const connection = userTenantConnections.find(utc => utc.tenantId === tenant.id);
+        return {
+          ...tenant,
+          userRole: connection?.role || 'member',
+          isDefault: connection?.isDefault || false
+        };
+      });
+      
+      console.log(`Found ${enhancedTenants.length} tenants for user ${userId}`);
+      return enhancedTenants;
+      
     } catch (error) {
       console.error("Error getting user tenants:", error);
       return [];
