@@ -253,17 +253,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           Core Features
         </div>
 
+        {/* Home & Dashboards (Always at the top) */}
         <div
           className={cn(
             "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
-            location === "/quick-start-guide"
+            location === "/"
               ? "bg-indigo-600 text-white shadow-md"
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
           )}
         >
-          <Link href={getLink("/quick-start-guide")} className="flex items-center w-full">
-            <Rocket className="h-4 w-4 mr-3" />
-            <span>Quick Start Guide</span>
+          <Link href={getLink("/")} className="flex items-center w-full">
+            <BarChart3 className="h-4 w-4 mr-3" />
+            <span>Dashboards</span>
           </Link>
         </div>
 
@@ -284,20 +285,6 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <div
           className={cn(
             "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
-            location === "/"
-              ? "bg-indigo-600 text-white shadow-md"
-              : "text-slate-300 hover:bg-slate-800 hover:text-white",
-          )}
-        >
-          <Link href={getLink("/")} className="flex items-center w-full">
-            <BarChart3 className="h-4 w-4 mr-3" />
-            <span>Dashboards</span>
-          </Link>
-        </div>
-
-        <div
-          className={cn(
-            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
             location === "/team-leader-dashboard"
               ? "bg-indigo-600 text-white shadow-md"
               : "text-slate-300 hover:bg-slate-800 hover:text-white",
@@ -312,6 +299,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* Strategy & Mission */}
         <div
           className={cn(
             "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
@@ -323,6 +311,21 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <Link href={getLink("/mission")} className="flex items-center w-full">
             <Compass className="h-4 w-4 mr-3" />
             <span>Mission & Values</span>
+          </Link>
+        </div>
+
+        {/* Onboarding Resources */}
+        <div
+          className={cn(
+            "flex items-center mx-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
+            location === "/quick-start-guide"
+              ? "bg-indigo-600 text-white shadow-md"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white",
+          )}
+        >
+          <Link href={getLink("/quick-start-guide")} className="flex items-center w-full">
+            <Rocket className="h-4 w-4 mr-3" />
+            <span>Quick Start Guide</span>
           </Link>
         </div>
         {/*         
@@ -392,6 +395,21 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
         {okrsExpanded && (
           <div className="pl-11 mt-1 mb-1">
+            {/* Organization Level First */}
+            <div
+              className={cn(
+                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                location === "/company-okrs"
+                  ? "text-white font-medium bg-indigo-900/40"
+                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+              )}
+            >
+              <Link href={getLink("/company-okrs")} className="w-full">
+                Company OKRs
+              </Link>
+            </div>
+
+            {/* Personal Level */}
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -405,6 +423,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               </Link>
             </div>
 
+            {/* Workflow-based Items */}
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -428,19 +447,6 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             >
               <Link href={getLink("/approved-okrs")} className="w-full">
                 Approved OKRs
-              </Link>
-            </div>
-
-            <div
-              className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
-                location === "/company-okrs"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
-              )}
-            >
-              <Link href={getLink("/company-okrs")} className="w-full">
-                Company OKRs
               </Link>
             </div>
           </div>
@@ -469,6 +475,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
         {userManagementExpanded && (
           <div className="pl-11 mt-1 mb-1">
+            {/* Organization Structure */}
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -481,7 +488,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 Teams
               </Link>
             </div>
-
+            
+            {/* User Management */}
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -591,6 +599,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
         {tenantsExpanded && (
           <div className="pl-11 mt-1 mb-1">
+            {/* Global Organization Management */}
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -604,6 +613,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               </Link>
             </div>
             
+            {/* Current Organization Settings */}
             {selectedTenant && (
               <>
                 <div
@@ -619,6 +629,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                   </Link>
                 </div>
                 
+                {/* Billing & Subscription */}
                 <div
                   className={cn(
                     "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
@@ -642,6 +653,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           Drag & Drop Interfaces
         </div>
 
+        {/* Project Management */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
@@ -656,6 +668,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* OKR Management */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
@@ -673,6 +686,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
+        {/* Time-based Management */}
         <div
           className={cn(
             "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
