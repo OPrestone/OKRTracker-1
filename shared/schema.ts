@@ -278,10 +278,16 @@ export const onboarding = pgTableWithUlid("onboarding", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const feedbackTypeEnum = pgEnum("feedback_type", ["positive", "constructive", "recognition", "general"]);
+
 export const feedback = pgTableWithUlid("feedback", {
   userId: text("user_id").references(() => users.id).notNull(),
   receiverId: text("receiver_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
+  title: text("title").notNull(),
+  type: feedbackTypeEnum("type").default("general").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
   rating: integer("rating"), // 1-5 rating
   objectiveId: text("objective_id").references(() => objectives.id),
   keyResultId: text("key_result_id").references(() => keyResults.id),
@@ -295,6 +301,15 @@ export const teamMoods = pgTableWithUlid("team_moods", {
   mood: integer("mood").notNull(), // 1-5 rating
   note: text("note"),
   submittedBy: text("submitted_by").references(() => users.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const moodEntries = pgTableWithUlid("mood_entries", {
+  userId: text("user_id").references(() => users.id).notNull(),
+  moodScore: integer("mood_score").notNull(), // 1-5 rating
+  notes: text("notes"),
+  date: timestamp("date").defaultNow().notNull(),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
