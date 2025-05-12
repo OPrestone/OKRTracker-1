@@ -56,30 +56,47 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
 
   // Check if any submenu paths are currently active to auto-expand parent menus
-  const isOkrPathActive = [
-    "/my-okrs",
-    "/draft-okrs",
-    "/approved-okrs",
-    "/company-okrs",
-  ].includes(location);
-  const isUserManagementPathActive = [
-    "/teams",
-    "/all-users",
-    "/users",
-  ].includes(location);
-  const isReportPathActive = [
-    "/activity-report",
-    "/alignment-report",
-    "/completion-report",
-    "/progress-report",
-  ].includes(location);
-  const isConfigPathActive = [
-    "/configure",
-    "/system-settings",
-    "/integrations",
-    "/billing-settings",
-    "/security-settings",
-  ].includes(location);
+  // Use regex patterns to match both direct paths and organization-prefixed paths
+  const okrPaths = [
+    "my-okrs",
+    "draft-okrs",
+    "approved-okrs",
+    "company-okrs",
+  ];
+  const userManagementPaths = [
+    "teams",
+    "all-users",
+    "users",
+  ];
+  const reportPaths = [
+    "activity-report",
+    "alignment-report",
+    "completion-report",
+    "progress-report",
+  ];
+  const configPaths = [
+    "configure",
+    "system-settings",
+    "integrations",
+    "billing-settings",
+  ];
+  
+  // Ensure location is treated as string for proper matching
+  const locationPath = location.toString();
+  
+  // Check if location contains any of these paths, whether directly or after organization prefix
+  const isOkrPathActive = okrPaths.some(path => 
+    locationPath === `/${path}` || locationPath.includes(`/organization/`) && locationPath.includes(`/${path}`)
+  );
+  const isUserManagementPathActive = userManagementPaths.some(path => 
+    locationPath === `/${path}` || locationPath.includes(`/organization/`) && locationPath.includes(`/${path}`)
+  );
+  const isReportPathActive = reportPaths.some(path => 
+    locationPath === `/${path}` || locationPath.includes(`/organization/`) && locationPath.includes(`/${path}`)
+  );
+  const isConfigPathActive = configPaths.some(path => 
+    locationPath === `/${path}` || locationPath.includes(`/organization/`) && locationPath.includes(`/${path}`)
+  );
 
   // Initialize expanded states based on current location
   const [configExpanded, setConfigExpanded] = useState(isConfigPathActive);
@@ -125,7 +142,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
   // Check if any tenant management paths are active to auto-expand organization menu
   const isTenantPathActive = ["/tenants", "/tenants/", "/organization/"].some(
-    (path) => location === path || location.startsWith(path)
+    (path) => locationPath === path || locationPath.startsWith(path)
   );
   const [tenantsExpanded, setTenantsExpanded] = useState(isTenantPathActive);
   
@@ -141,10 +158,23 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   useEffect(() => {
     if (!tenants || tenants.length === 0) return;
     
+    // Use locationPath for matching to avoid type issues
+    
     // Check for numeric tenant ID in /tenants/{id}
-    const numericMatch = location.match(/\/tenants\/(\d+)/);
+    const numericMatch = locationPath.match(/\/tenants\/(\d+)/);
     if (numericMatch) {
       const tenantId = parseInt(numericMatch[1]);
+      const matchedTenant = tenants.find(t => parseInt(t.id) === tenantId);
+      if (matchedTenant) {
+        setSelectedTenant(matchedTenant);
+        return;
+      }
+    }
+    
+    // Check for ULID tenant ID in /tenants/{id} - ULIDs are 26 characters
+    const ulidMatch = locationPath.match(/\/tenants\/([A-Z0-9]{26})/);
+    if (ulidMatch) {
+      const tenantId = ulidMatch[1];
       const matchedTenant = tenants.find(t => t.id === tenantId);
       if (matchedTenant) {
         setSelectedTenant(matchedTenant);
@@ -153,7 +183,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     }
     
     // Check for organization slug in /organization/{slug}
-    const orgMatch = location.match(/\/organization\/([^/]+)/);
+    const orgMatch = locationPath.match(/\/organization\/([^/]+)/);
     if (orgMatch) {
       const urlSlug = orgMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
@@ -164,8 +194,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     }
     
     // Check for legacy tenant slug in /tenants/{slug}
-    const tenantMatch = location.match(/\/tenants\/([^/]+)/);
-    if (tenantMatch && !numericMatch) { // Ensure we're not matching a numeric ID again
+    const tenantMatch = locationPath.match(/\/tenants\/([^/]+)/);
+    if (tenantMatch && !numericMatch && !ulidMatch) { // Ensure we're not matching a numeric ID or ULID again
       const urlSlug = tenantMatch[1];
       const matchedTenant = tenants.find(t => t.slug === urlSlug);
       if (matchedTenant) {
