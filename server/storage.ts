@@ -188,41 +188,31 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
-      // Filter out properties that might not exist in the database yet
-      const { 
-        firstLogin, 
-        introVideoWatched, 
-        walkthroughCompleted, 
-        onboardingProgress, 
-        lastOnboardingStep, 
-        firstName, 
-        lastName,
-        ...otherProps 
-      } = insertUser;
+      // Since we've updated the schema to match the database, we don't need to transform field names anymore
+      // We're just making sure data is well-formed before insertion
       
-      // Map fields to match database schema
-      const safeInsertUser = {
-        ...otherProps,
-        // If we get first_name and last_name directly, use them
-        // Otherwise, use the firstName/lastName properties from the form
-        first_name: insertUser.first_name || firstName,
-        last_name: insertUser.last_name || lastName
+      // Makes sure we have required fields properly set
+      const userData = {
+        ...insertUser,
+        // Ensure these fields have sensible defaults if they don't exist
+        firstName: insertUser.firstName || '',
+        lastName: insertUser.lastName || '',
+        language: insertUser.language || 'en',
+        role: insertUser.role || 'user',
+        firstLogin: insertUser.firstLogin !== undefined ? insertUser.firstLogin : true,
+        introVideoWatched: insertUser.introVideoWatched !== undefined ? insertUser.introVideoWatched : false,
+        walkthroughCompleted: insertUser.walkthroughCompleted !== undefined ? insertUser.walkthroughCompleted : false,
+        onboardingProgress: insertUser.onboardingProgress !== undefined ? insertUser.onboardingProgress : 0,
       };
       
-      console.log("Final insert data:", { ...safeInsertUser, password: '***' });
+      // For debugging
+      console.log("Final user data for insertion:", { ...userData, password: '***' });
       
-      // Insert the user with only the essential properties
-      const [user] = await db.insert(users).values(safeInsertUser).returning();
+      // Insert the user
+      const [user] = await db.insert(users).values(userData).returning();
       
-      // Return the user with default onboarding values (these will be handled by localStorage on client)
-      return {
-        ...user,
-        firstLogin: true,
-        introVideoWatched: false,
-        walkthroughCompleted: false,
-        onboardingProgress: 0,
-        lastOnboardingStep: null
-      };
+      // Return the user
+      return user;
     } catch (error) {
       console.error("Error creating user:", error);
       throw error;

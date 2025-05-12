@@ -23,12 +23,17 @@ export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "pending
 export const users = pgTableWithUlid("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name").notNull(), // Add this field to match DB
+  lastName: text("last_name").notNull(), // Add this field to match DB
   email: text("email").notNull().unique(),
+  language: text("language").default("en"), // Add this field to match DB
+  role: text("role").default("user"), // Add this field to match DB
   name: text("name").notNull(),
   title: text("title"),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   teamId: text("team_id").references(() => teams.id),
+  managerId: text("manager_id"), // Add this field to match DB
   level: userLevelEnum("level").default("beginner"),
   timezone: text("timezone").default("UTC"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -37,6 +42,11 @@ export const users = pgTableWithUlid("users", {
   defaultTenantId: text("default_tenant_id").references(() => tenants.id),
   isEnabled: boolean("is_enabled").default(true).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  firstLogin: boolean("first_login").default(true), // Add this field to match DB
+  introVideoWatched: boolean("intro_video_watched").default(false), // Add this field to match DB
+  walkthroughCompleted: boolean("walkthrough_completed").default(false), // Add this field to match DB
+  onboardingProgress: integer("onboarding_progress").default(0), // Add this field to match DB
+  lastOnboardingStep: text("last_onboarding_step"), // Add this field to match DB
   lastLoginAt: timestamp("last_login_at"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
