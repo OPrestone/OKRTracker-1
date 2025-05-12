@@ -51,7 +51,7 @@ export default function TenantSwitcher() {
     // Show toast to indicate tenant switch is happening
     toast({
       title: "Switching organization",
-      description: `Loading data for ${tenant.displayName}...`,
+      description: `Loading data for ${tenant.displayName || tenant.name || 'Organization'}...`,
       duration: 3000,
     });
     
@@ -79,10 +79,10 @@ export default function TenantSwitcher() {
               <div className="flex items-center gap-2">
                 <Avatar className="h-5 w-5 bg-slate-700">
                   <AvatarFallback className="text-xs text-slate-300">
-                    {selectedTenant.displayName.charAt(0)}
+                    {(selectedTenant.displayName || selectedTenant.name || '?').charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate">{selectedTenant.displayName}</span>
+                <span className="truncate">{selectedTenant.displayName || selectedTenant.name || 'Organization'}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -117,10 +117,10 @@ export default function TenantSwitcher() {
                     >
                       <Avatar className="h-5 w-5 bg-slate-700">
                         <AvatarFallback className="text-xs text-slate-300">
-                          {tenant.displayName.charAt(0)}
+                          {(tenant.displayName || tenant.name || '?').charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{tenant.displayName}</span>
+                      <span>{tenant.displayName || tenant.name || 'Organization'}</span>
                       {tenant.id === selectedTenant?.id && (
                         <Check className="ml-auto h-4 w-4" />
                       )}
