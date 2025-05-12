@@ -24,6 +24,8 @@ export interface IStorage {
   deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getUsersByTeam(teamId: string): Promise<User[]>;
+  getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>>;
+  updateLastLogin(userId: string): Promise<void>;
   
   // Team Management
   createTeam(team: InsertTeam): Promise<Team>;
@@ -253,6 +255,54 @@ export class DatabaseStorage implements IStorage {
       stripeCustomerId: users.stripeCustomerId,
       stripeSubscriptionId: users.stripeSubscriptionId
     }).from(users).where(eq(users.teamId, teamId));
+  }
+
+  async getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>> {
+    try {
+      console.log("Getting tenants for user:", userId);
+      
+      // Get all tenants the user has access to along with their role
+      const result = await db
+        .select({
+          tenant: tenants,
+          userRole: usersToTenants.role,
+          isDefault: usersToTenants.isDefault
+        })
+        .from(usersToTenants)
+        .innerJoin(tenants, eq(tenants.id, usersToTenants.tenantId))
+        .where(eq(usersToTenants.userId, userId));
+      
+      console.log(`Found ${result.length} tenants for user ${userId}`);
+      
+      // Transform the result to match the expected return type
+      return result.map(record => ({
+        ...record.tenant,
+        userRole: record.userRole,
+        isDefault: record.isDefault
+      }));
+    } catch (error) {
+      console.error("Error getting user tenants:", error);
+      return [];
+    }
+  }
+  
+  async updateLastLogin(userId: string): Promise<void> {
+    try {
+      console.log("Updating last login time for user:", userId);
+      
+      // Update the last login timestamp for the user
+      await db
+        .update(users)
+        .set({
+          lastLoginAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      console.log("Updated last login time for user:", userId);
+    } catch (error) {
+      console.error("Error updating last login time:", error);
+      throw error;
+    }
   }
   
   async deleteUser(id: string): Promise<void> {

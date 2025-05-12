@@ -1,15 +1,21 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, Tenant } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser {
+      tenants?: Array<Tenant & { userRole?: string }>;
+      defaultTenant?: string;
+    }
+    interface Request {
+      tenantId?: string;
+    }
   }
 }
 
@@ -92,8 +98,29 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
-      console.log("User deserialized successfully:", id);
-      done(null, user);
+      // Enhance user with tenants information
+      try {
+        // Get user's tenants and roles
+        const userTenants = await storage.getUserTenants(id);
+        
+        // Get default tenant if any
+        const defaultTenant = userTenants.find(t => t.isDefault);
+        const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
+        
+        // Add tenant information to user object
+        const enhancedUser = {
+          ...user,
+          tenants: userTenants,
+          defaultTenant: defaultTenantId
+        };
+        
+        console.log("User deserialized successfully with tenants:", id);
+        done(null, enhancedUser);
+      } catch (tenantError) {
+        console.error("Error loading user tenants, continuing with basic user:", tenantError);
+        console.log("User deserialized successfully (without tenants):", id);
+        done(null, user);
+      }
     } catch (error) {
       console.error("Error deserializing user:", error);
       done(error);
@@ -141,16 +168,52 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
     console.log("Login successful, returning user data");
     
-    // Handle the case where password might not exist in the user object
-    const userWithoutPassword = { ...req.user };
-    if (userWithoutPassword && 'password' in userWithoutPassword) {
-      delete userWithoutPassword.password;
+    try {
+      // Enhance user object with tenant information on login
+      const userId = req.user?.id;
+      
+      // Get user's tenants and roles if they weren't already included
+      if (!req.user.tenants) {
+        const userTenants = await storage.getUserTenants(userId);
+        
+        // Get default tenant if any
+        const defaultTenant = userTenants.find(t => t.isDefault);
+        const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
+        
+        // Add tenant information to user object
+        req.user.tenants = userTenants;
+        req.user.defaultTenant = defaultTenantId;
+      }
+      
+      // Handle the case where password might exist in the user object
+      const userWithoutPassword = { ...req.user };
+      if (userWithoutPassword && 'password' in userWithoutPassword) {
+        delete userWithoutPassword.password;
+      }
+
+      // After login, update last login timestamp
+      try {
+        await storage.updateLastLogin(userId);
+      } catch (error) {
+        console.error("Failed to update last login time:", error);
+        // Continue despite error - non-critical
+      }
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error enhancing user data on login:", error);
+      
+      // Return basic user data without tenant info in case of error
+      const basicUserData = { ...req.user };
+      if (basicUserData && 'password' in basicUserData) {
+        delete basicUserData.password;
+      }
+      
+      res.status(200).json(basicUserData);
     }
-    
-    res.status(200).json(userWithoutPassword);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -160,7 +223,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     if (!req.isAuthenticated()) {
       console.log("Unauthorized access to /api/user");
       return res.status(401).json({ error: "Unauthorized" });
@@ -168,12 +231,39 @@ export function setupAuth(app: Express) {
     
     console.log("Returning user data for authenticated user:", req.user?.id);
     
-    // Handle the case where password might not exist in the user object
-    const userWithoutPassword = { ...req.user };
-    if (userWithoutPassword && 'password' in userWithoutPassword) {
-      delete userWithoutPassword.password;
+    try {
+      // If tenants are not already loaded in user object, load them
+      if (!req.user.tenants) {
+        const userId = req.user.id;
+        const userTenants = await storage.getUserTenants(userId);
+        
+        // Get default tenant if any
+        const defaultTenant = userTenants.find(t => t.isDefault);
+        const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
+        
+        // Add tenant information to user object
+        req.user.tenants = userTenants;
+        req.user.defaultTenant = defaultTenantId;
+      }
+      
+      // Handle the case where password might exist in the user object
+      const userWithoutPassword = { ...req.user };
+      if (userWithoutPassword && 'password' in userWithoutPassword) {
+        delete userWithoutPassword.password;
+      }
+      
+      res.status(200).json(userWithoutPassword);
     }
-    
-    res.status(200).json(userWithoutPassword);
+    catch (error) {
+      console.error("Error loading user tenants:", error);
+      
+      // Return user without tenant information in case of error
+      const basicUserData = { ...req.user };
+      if (basicUserData && 'password' in basicUserData) {
+        delete basicUserData.password;
+      }
+      
+      res.status(200).json(basicUserData);
+    }
   });
 }
