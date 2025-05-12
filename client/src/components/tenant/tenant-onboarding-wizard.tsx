@@ -81,67 +81,106 @@ const okrTemplates = [
   },
 ];
 
-// Example price tiers for the subscription plans
+// Subscription plans with detailed features
 const priceTiers = [
   {
     id: "free",
     name: "Free",
     description: "Basic features for small teams",
     price: 0,
+    popular: false,
     features: [
       "Up to 10 users",
+      "3 teams maximum",
       "Basic OKR tracking",
-      "Standard templates",
-      "Email support",
-      "7-day history",
+      "Default OKR templates",
+      "Weekly check-ins",
+      "Email support (48hr response)",
+      "7-day history retention",
+      "Public dashboard sharing",
+      "Basic progress reporting",
+      "1 Admin user"
     ],
     maxUsers: 10,
+    recommended: false,
+    buttonText: "Start Free Plan"
   },
   {
     id: "starter",
     name: "Starter",
     description: "Great for small teams getting started",
     price: 9.99,
+    popular: true,
     features: [
       "Up to 25 users",
-      "Advanced OKR tracking",
-      "Custom templates",
-      "Priority support",
-      "30-day history",
-      "Basic analytics",
+      "10 teams maximum",
+      "Comprehensive OKR tracking",
+      "Custom OKR templates",
+      "Daily & weekly check-ins",
+      "Priority email support (24hr response)",
+      "30-day history retention",
+      "Custom dashboard layouts",
+      "Team analytics dashboard",
+      "Up to 3 Admin users",
+      "Progress tracking notifications",
+      "Engagement metrics"
     ],
     maxUsers: 25,
+    recommended: true,
+    buttonText: "Select Starter Plan"
   },
   {
     id: "professional",
     name: "Professional",
     description: "Enhanced features for growing teams",
     price: 29.99,
+    popular: false,
     features: [
       "Up to 100 users",
-      "Advanced OKR tracking",
-      "Custom reporting",
-      "Advanced analytics",
-      "Priority support",
-      "API access",
+      "Unlimited teams",
+      "Advanced OKR tracking & alignment",
+      "Custom templates library",
+      "Scheduled & ad-hoc check-ins",
+      "Priority support with dedicated account manager",
+      "90-day history retention",
+      "Advanced reporting & export",
+      "Team & individual analytics",
+      "Unlimited Admin users",
+      "API access for integrations",
+      "SSO authentication",
+      "Custom branding options",
+      "Team engagement scores"
     ],
     maxUsers: 100,
+    recommended: false,
+    buttonText: "Select Professional Plan"
   },
   {
     id: "enterprise",
     name: "Enterprise",
     description: "Full-featured solution for large organizations",
     price: 99.99,
+    popular: false,
     features: [
       "Unlimited users",
-      "Advanced OKR tracking",
-      "Custom reporting & templates",
-      "Advanced analytics & insights",
-      "Dedicated support manager",
-      "API access & custom integrations",
-      "SSO & advanced security",
+      "Unlimited teams with hierarchical structure",
+      "Advanced OKR tracking with multi-level alignment",
+      "Custom reporting & template library",
+      "Advanced analytics & insights dashboard",
+      "Dedicated account manager & premium support",
+      "Unlimited history retention",
+      "Enterprise-grade security & compliance",
+      "Full API access with developer support",
+      "SSO & advanced security features",
+      "Custom integrations with your tools",
+      "AI-powered OKR recommendations",
+      "Executive dashboards & insights",
+      "Advanced engagement analytics",
+      "Team performance benchmarking"
     ],
     maxUsers: Infinity,
+    recommended: false,
+    buttonText: "Contact Sales"
   },
 ];
 
@@ -465,6 +504,337 @@ export default function TenantOnboardingWizard() {
                             </FormItem>
                           )}
                         />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Step 2: Subscription Plan */}
+                {step === 2 && (
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <CreditCard className="h-5 w-5 mr-2 text-primary" />
+                          Choose a Plan
+                        </h3>
+                        <p className="text-gray-600 mt-1">Select the subscription plan that works best for your team</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="plan.plan"
+                        render={({ field }) => (
+                          <FormItem className="space-y-6">
+                            <FormControl>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {priceTiers.map((tier) => (
+                                  <div
+                                    key={tier.id}
+                                    className={`relative rounded-lg border ${
+                                      field.value === tier.id
+                                        ? "border-2 border-primary"
+                                        : tier.recommended ? "border-2 border-blue-300" : "border-gray-200"
+                                    } p-4 cursor-pointer transition-all hover:border-primary/70 hover:shadow-md`}
+                                    onClick={() => field.onChange(tier.id)}
+                                  >
+                                    {/* Recommended badge */}
+                                    {tier.recommended && (
+                                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                        Recommended
+                                      </div>
+                                    )}
+                                    
+                                    {/* Popular badge */}
+                                    {tier.popular && (
+                                      <div className="absolute -top-3 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                        Popular
+                                      </div>
+                                    )}
+                                    
+                                    <input 
+                                      type="radio" 
+                                      id={tier.id} 
+                                      checked={field.value === tier.id} 
+                                      onChange={() => field.onChange(tier.id)} 
+                                      className="sr-only"
+                                    />
+                                    
+                                    <div className="flex flex-col h-full">
+                                      <div className="mb-4">
+                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-2 ${
+                                          field.value === tier.id 
+                                            ? "bg-primary text-white" 
+                                            : "bg-primary/10 text-primary"
+                                        }`}>
+                                          {tier.name}
+                                        </span>
+                                        <div className="font-bold text-2xl mb-1">
+                                          ${tier.price}
+                                          <span className="text-sm text-gray-500 font-normal">
+                                            {tier.price > 0 ? "/month" : " forever"}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                          {tier.description}
+                                        </p>
+                                      </div>
+                                      
+                                      <div className="space-y-2 mt-2 mb-4">
+                                        {tier.features.slice(0, 5).map((feature, i) => (
+                                          <div key={i} className="flex items-center text-sm">
+                                            <Check className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+                                            <span>{feature}</span>
+                                          </div>
+                                        ))}
+                                        
+                                        {tier.features.length > 5 && (
+                                          <details className="mt-1">
+                                            <summary className="text-sm text-primary cursor-pointer">
+                                              +{tier.features.length - 5} more features
+                                            </summary>
+                                            <div className="mt-2 pl-1 space-y-2">
+                                              {tier.features.slice(5).map((feature, i) => (
+                                                <div key={i} className="flex items-center text-sm">
+                                                  <Check className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+                                                  <span>{feature}</span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </details>
+                                        )}
+                                      </div>
+                                      
+                                      <div className="mt-auto pt-3 border-t border-gray-100">
+                                        <Button
+                                          type="button"
+                                          variant={field.value === tier.id ? "default" : "outline"}
+                                          className="w-full"
+                                          onClick={() => field.onChange(tier.id)}
+                                        >
+                                          {tier.buttonText || `Select ${tier.name}`}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="plan.agreeToTerms"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-6">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="text-gray-700">
+                                I agree to the terms and conditions
+                              </FormLabel>
+                              <FormDescription className="text-gray-500 text-xs">
+                                By checking this box, you agree to our Terms of Service and Privacy Policy.
+                              </FormDescription>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Step 3: Team Members */}
+                {step === 3 && (
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <Users className="h-5 w-5 mr-2 text-primary" />
+                          Invite Your Team
+                        </h3>
+                        <p className="text-gray-600 mt-1">Add team members to collaborate on objectives and key results</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="team.users"
+                        render={({ field }) => (
+                          <FormItem className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <FormLabel className="text-gray-800 font-medium text-base">Available Users</FormLabel>
+                              
+                              <Select defaultValue="all">
+                                <SelectTrigger className="h-9 w-[180px]">
+                                  <SelectValue placeholder="Filter users" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Users</SelectItem>
+                                  <SelectItem value="selected">Selected Only</SelectItem>
+                                  <SelectItem value="unselected">Unselected Only</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <FormControl>
+                              <div className="border rounded-lg overflow-hidden shadow-sm">
+                                <div className="px-4 py-3 bg-gray-50 font-medium text-sm grid grid-cols-5 border-b">
+                                  <div className="col-span-2">User</div>
+                                  <div>Role</div>
+                                  <div>Department</div>
+                                  <div className="text-right">Add</div>
+                                </div>
+                                <div className="divide-y">
+                                  {availableUsers.length > 0 ? (
+                                    availableUsers.map((availableUser: any, index: number) => {
+                                      // Find this user in our form state or create a new entry
+                                      const existingUserIndex = field.value?.findIndex(
+                                        (u: any) => u.email === availableUser.email
+                                      ) ?? -1;
+                                      
+                                      const userInForm = existingUserIndex >= 0
+                                        ? field.value?.[existingUserIndex]
+                                        : { email: availableUser.email, role: "member", selected: false };
+                                      
+                                      const updateUser = (updates: Partial<typeof userInForm>) => {
+                                        const newUsers = [...(field.value || [])];
+                                        
+                                        if (existingUserIndex >= 0) {
+                                          newUsers[existingUserIndex] = { ...userInForm, ...updates };
+                                        } else {
+                                          newUsers.push({ ...userInForm, ...updates });
+                                        }
+                                        
+                                        field.onChange(newUsers);
+                                      };
+                                      
+                                      return (
+                                        <div 
+                                          key={availableUser.id || index} 
+                                          className={`px-4 py-3 grid grid-cols-5 items-center hover:bg-gray-50 transition-colors
+                                            ${userInForm.selected ? "bg-blue-50/70 hover:bg-blue-50/90" : ""}`
+                                          }
+                                        >
+                                          <div className="col-span-2 flex items-center gap-3">
+                                            <Avatar className="h-10 w-10 border">
+                                              <AvatarImage src={availableUser.avatar} alt={availableUser.name} />
+                                              <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                                {availableUser.name?.charAt(0) || availableUser.email?.charAt(0).toUpperCase()}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <div className="font-medium text-gray-800">{availableUser.name || "Unnamed User"}</div>
+                                              <div className="text-sm text-gray-500">{availableUser.email}</div>
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <Select 
+                                              value={userInForm.role} 
+                                              onValueChange={(value) => updateUser({ role: value as any })}
+                                            >
+                                              <SelectTrigger className="h-9 w-28 focus:ring-2 focus:ring-primary/20">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                                <SelectItem value="member">Member</SelectItem>
+                                                <SelectItem value="viewer">Viewer</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div className="text-sm text-gray-600">
+                                            {availableUser.department || "-"}
+                                          </div>
+                                          <div className="text-right">
+                                            <div className="flex justify-end">
+                                              <Button
+                                                type="button"
+                                                variant={userInForm.selected ? "destructive" : "outline"}
+                                                size="sm"
+                                                className={`px-3 ${userInForm.selected ? "" : "border-primary text-primary hover:bg-primary/5"}`}
+                                                onClick={() => updateUser({ selected: !userInForm.selected })}
+                                              >
+                                                {userInForm.selected ? (
+                                                  <>
+                                                    <X className="h-4 w-4 mr-1" />
+                                                    Remove
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Plus className="h-4 w-4 mr-1" />
+                                                    Add
+                                                  </>
+                                                )}
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="p-6 text-center text-gray-500">
+                                      <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                      <p className="font-medium text-gray-700 mb-1">No users available</p>
+                                      <p className="text-sm">You'll be the only member of this organization. Invite others below.</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              Select users to add to your organization. You can manage this later.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="mt-8 border border-blue-100 rounded-lg bg-blue-50/50 p-4">
+                        <div className="flex gap-3 items-start">
+                          <div className="rounded-full bg-blue-100 p-2 text-blue-600 mt-0.5">
+                            <UserPlus className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-semibold text-blue-800 mb-1">Invite team members via email</h4>
+                            <p className="text-sm text-blue-700 mb-3">
+                              Don't see someone you need to add? Send them an invitation directly.
+                            </p>
+                            
+                            <div className="flex gap-2 mb-2">
+                              <Input 
+                                type="email" 
+                                placeholder="colleague@example.com" 
+                                className="max-w-sm h-9 bg-white border-blue-200 focus-visible:ring-blue-400"
+                              />
+                              <Select defaultValue="member">
+                                <SelectTrigger className="h-9 w-28 bg-white border-blue-200 focus:ring-blue-400">
+                                  <SelectValue placeholder="Role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="viewer">Viewer</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button type="button" size="sm" className="h-9 bg-blue-600 hover:bg-blue-700">
+                                <Mail className="h-4 w-4 mr-1" />
+                                Invite
+                              </Button>
+                            </div>
+                            
+                            <p className="text-xs text-blue-600">
+                              You can also manage team members later from the organization settings.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
