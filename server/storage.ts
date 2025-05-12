@@ -235,7 +235,17 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTeamsByTenant(tenantId: string): Promise<Team[]> {
-    return db.select().from(teams).where(eq(teams.tenantId, tenantId));
+    // Select specific columns, excluding avatarUrl which might be missing in the database
+    return db.select({
+      id: teams.id,
+      name: teams.name,
+      description: teams.description,
+      type: teams.type,
+      parentId: teams.parentId,
+      tenantId: teams.tenantId,
+      createdAt: teams.createdAt,
+      updatedAt: teams.updatedAt
+    }).from(teams).where(eq(teams.tenantId, tenantId));
   }
 
   async getTeamsByParent(parentId: string): Promise<Team[]> {
