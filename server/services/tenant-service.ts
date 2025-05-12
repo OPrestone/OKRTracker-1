@@ -23,9 +23,12 @@ class TenantService {
     userRole: 'owner' | 'admin' | 'member' = 'owner'
   ): Promise<{ tenant: any, userToTenant: any }> {
     try {
-      // Check if user has permission to create tenants (only admins can)
-      if (!user.isAdmin) {
-        throw new Error('Only administrators can create organizations');
+      // Check if user has any tenant connections already
+      const userTenants = await this.getUserTenants(user.id);
+      
+      // Allow users to create their first tenant, but restrict additional tenants to admins
+      if (userTenants.length > 0 && !user.isAdmin && !user.role?.includes('admin')) {
+        throw new Error('Only administrators can create additional organizations');
       }
       
       // Generate a slug from the name

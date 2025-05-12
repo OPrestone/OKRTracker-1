@@ -31,3 +31,5 @@ export function Toaster() {
     </ToastProvider>
   )
 }
+
+// Create a new line at the end of the file to fix the EOF issue
