@@ -394,27 +394,47 @@ export default function TenantOnboardingWizard() {
   // Show success screen if organization was created
   if (creationSuccess && newTenantId) {
     return (
-      <div className="container max-w-5xl py-8">
-        <Card className="border-none shadow-none">
-          <CardHeader>
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                <Check className="h-8 w-8" />
-              </div>
+      <div className="container max-w-5xl py-12">
+        <Card className="border shadow-lg overflow-hidden">
+          <div className="bg-green-50 py-8 px-6 flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-green-100 border-4 border-green-200 flex items-center justify-center text-green-600 mb-4 shadow-sm">
+              <Check className="h-10 w-10" />
             </div>
-            <CardTitle className="text-2xl font-bold text-center">Organization Created Successfully!</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-3xl font-bold text-center text-green-800">Organization Created Successfully!</CardTitle>
+            <CardDescription className="text-center text-green-700 text-lg mt-2">
               Your organization has been set up and is ready to use
             </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
+          </div>
+          <CardContent className="flex flex-col items-center py-8 px-6">
             <div className="max-w-md text-center mb-8">
-              <p className="mb-4">
-                You can now start setting up your objectives and key results, invite team members, and track your progress.
+              <p className="mb-6 text-gray-700 text-lg leading-relaxed">
+                You can now start setting up your objectives and key results, invite team members, and track your progress toward your goals.
               </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start">
+                  <TargetIcon className="text-blue-500 mt-1 mr-3 h-5 w-5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-blue-800">Create Your First OKR</h3>
+                    <p className="text-sm text-blue-700">Define your objectives and key results</p>
+                  </div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 flex items-start">
+                  <Users className="text-purple-500 mt-1 mr-3 h-5 w-5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-purple-800">Invite Your Team</h3>
+                    <p className="text-sm text-purple-700">Get your team on board</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <Button size="lg" onClick={goToNewTenant} className="min-w-[200px]">
+            <Button 
+              size="lg" 
+              onClick={goToNewTenant} 
+              className="min-w-[250px] py-6 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-md"
+            >
               Go to Organization Dashboard
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </CardContent>
         </Card>
@@ -423,56 +443,61 @@ export default function TenantOnboardingWizard() {
   }
 
   return (
-    <div className="container max-w-5xl py-8">
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-bold">Set Up Your Organization</CardTitle>
-          <CardDescription>
-            Create your organization for OKR tracking in just a few steps
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Progress bar and steps indicator */}
-          <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Step {step} of {totalSteps}</span>
-              <span className="text-sm font-medium">{Math.round(progress)}%</span>
+    <div className="container max-w-5xl py-12">
+      <Card className="border shadow-md overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center mb-2">
+              <Building2 className="h-7 w-7 text-primary mr-3" />
+              <CardTitle className="text-3xl font-bold text-gray-800">Set Up Your Organization</CardTitle>
             </div>
-            <Progress value={progress} className="h-2" />
+            <CardDescription className="text-gray-600 text-lg">
+              Create your organization for OKR tracking in just a few steps
+            </CardDescription>
+          </div>
+        </div>
+        <CardContent className="pt-8 px-6">
+          {/* Progress bar and steps indicator */}
+          <div className="mb-8 max-w-3xl mx-auto">
+            <div className="flex justify-between mb-3">
+              <span className="text-sm font-medium text-primary">Step {step} of {totalSteps}</span>
+              <span className="text-sm font-medium">{Math.round(progress)}% Complete</span>
+            </div>
+            <Progress value={progress} className="h-2.5 bg-gray-100" />
             
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-between mt-8">
               <div className={`flex flex-col items-center ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 1 ? <Check className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 1 ? <Check className="h-6 w-6" /> : <Building2 className="h-6 w-6" />}
                 </div>
-                <span className="text-xs mt-2">Organization</span>
+                <span className="text-sm font-medium mt-2">Organization</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 2 ? <Check className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 2 ? <Check className="h-6 w-6" /> : <CreditCard className="h-6 w-6" />}
                 </div>
-                <span className="text-xs mt-2">Plan</span>
+                <span className="text-sm font-medium mt-2">Plan</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 3 ? <Check className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 3 ? <Check className="h-6 w-6" /> : <Users className="h-6 w-6" />}
                 </div>
-                <span className="text-xs mt-2">Team</span>
+                <span className="text-sm font-medium mt-2">Team</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 4 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 4 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <TargetIcon className="h-5 w-5" />
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 4 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  <TargetIcon className="h-6 w-6" />
                 </div>
-                <span className="text-xs mt-2">Setup</span>
+                <span className="text-sm font-medium mt-2">Setup</span>
               </div>
             </div>
             
             {step === 1 && (
-              <Alert className="mt-6 bg-blue-50 border-blue-200">
-                <FileText className="h-4 w-4" />
-                <AlertTitle>Quick start available</AlertTitle>
-                <AlertDescription>
-                  You can create your organization with just the basic details and set up the rest later.
+              <Alert className="mt-8 bg-blue-50 border border-blue-200 shadow-sm">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+                <AlertTitle className="text-blue-800 font-medium">Quick Setup Available</AlertTitle>
+                <AlertDescription className="text-blue-700">
+                  You can create your organization with just the basic details and configure additional settings later.
                 </AlertDescription>
               </Alert>
             )}
