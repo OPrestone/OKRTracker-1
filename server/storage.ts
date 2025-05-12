@@ -189,7 +189,27 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
       // Filter out properties that might not exist in the database yet
-      const { firstLogin, introVideoWatched, walkthroughCompleted, onboardingProgress, lastOnboardingStep, ...safeInsertUser } = insertUser;
+      const { 
+        firstLogin, 
+        introVideoWatched, 
+        walkthroughCompleted, 
+        onboardingProgress, 
+        lastOnboardingStep, 
+        firstName, 
+        lastName,
+        ...otherProps 
+      } = insertUser;
+      
+      // Map fields to match database schema
+      const safeInsertUser = {
+        ...otherProps,
+        // If we get first_name and last_name directly, use them
+        // Otherwise, use the firstName/lastName properties from the form
+        first_name: insertUser.first_name || firstName,
+        last_name: insertUser.last_name || lastName
+      };
+      
+      console.log("Final insert data:", { ...safeInsertUser, password: '***' });
       
       // Insert the user with only the essential properties
       const [user] = await db.insert(users).values(safeInsertUser).returning();
