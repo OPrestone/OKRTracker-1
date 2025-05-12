@@ -144,23 +144,13 @@ export const initiatives = pgTableWithUlid("initiatives", {
 });
 
 export const checkIns = pgTableWithUlid("check_ins", {
-  content: text("content"),
   userId: text("user_id").references(() => users.id).notNull(),
   objectiveId: text("objective_id").references(() => objectives.id),
   keyResultId: text("key_result_id").references(() => keyResults.id),
   progress: integer("progress"),
   notes: text("notes"),
-  confidenceLevel: text("confidence_level"),
-  template: text("template"),
-  focusLastWeek: text("focus_last_week"),
-  goalsThisWeek: text("goals_this_week"),
-  challenges: text("challenges"),
-  needsForOKRs: text("needs_for_okrs"),
-  confidence: integer("confidence"), // 1-5 rating
-  previousValue: integer("previous_value"),
-  newValue: integer("new_value"),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const chatRooms = pgTableWithUlid("chat_rooms", {
