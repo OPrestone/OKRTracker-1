@@ -32,7 +32,25 @@ interface TeamKeyResult {
 }
 
 export const TeamsOKRView: React.FC = () => {
-  // Categories of OKRs with mock data based on the image
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
+  
+  // Build tenant-specific endpoint for API calls
+  const organizationId = params?.organisation || currentTenant?.id;
+  
+  // Fetch team data from API
+  const { data: teamData = [] } = useQuery({
+    queryKey: ['/api/teams', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+  
+  // Fetch objectives data from API
+  const { data: objectivesData = [] } = useQuery({
+    queryKey: ['/api/objectives', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+  
+  // Create categories based on API data or use sample data if not available
   const [categories, setCategories] = useState<TeamOKRCategory[]>([
     {
       id: 'market-expansion',

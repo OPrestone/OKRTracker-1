@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 // Types for our map data
 interface TeamTag {
@@ -26,14 +28,21 @@ interface MapNode {
 
 export function CompanyAlignmentMap() {
   const [zoomLevel, setZoomLevel] = useState(100);
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
+  
+  // Build tenant-specific endpoint for API calls
+  const organizationId = params?.organisation || currentTenant?.id;
   
   // Fetch data from API
   const { data: objectivesData = [] } = useQuery({
-    queryKey: ['/api/objectives'],
+    queryKey: ['/api/objectives', organizationId],
+    enabled: !!organizationId,
   }) as { data: any[] };
   
   const { data: teamsData = [] } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams', organizationId],
+    enabled: !!organizationId,
   }) as { data: any[] };
 
   // Create a sample map data structure based on the image

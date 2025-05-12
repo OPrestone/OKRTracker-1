@@ -4,6 +4,9 @@ import {
   LineChart, Line, CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { useParams } from 'wouter';
+import { useTenantContext } from '@/hooks/use-tenant-context';
+import { useQuery } from '@tanstack/react-query';
 
 const keyResultsDistribution = [
   { range: '0-10%', count: 5 },
@@ -123,6 +126,24 @@ const getStatusColor = (status: string) => {
 };
 
 const KeyResultSummary: React.FC = () => {
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
+  
+  // Build tenant-specific endpoint for API calls
+  const organizationId = params?.organisation || currentTenant?.id;
+  
+  // Fetch key results data
+  const { data: keyResultsData = [] } = useQuery({
+    queryKey: ['/api/key-results', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+  
+  // Fetch objectives data
+  const { data: objectivesData = [] } = useQuery({
+    queryKey: ['/api/objectives', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+  
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Summary</h2>
