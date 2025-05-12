@@ -7,6 +7,18 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { 
+  Check, 
+  Building2, 
+  CreditCard, 
+  Users, 
+  Target as TargetIcon, 
+  ArrowLeft, 
+  ArrowRight,
+  Loader2,
+  FileText,
+  Sparkles
+} from "lucide-react";
 
 // UI Components
 import {
@@ -17,6 +29,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -881,6 +898,71 @@ export default function TenantOnboardingWizard() {
             </Form>
           </div>
         </CardContent>
+        <CardFooter className="flex justify-between border-t p-6">
+          {step > 1 ? (
+            <Button type="button" variant="outline" onClick={prevStep}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          ) : (
+            <div></div> // Empty div to maintain spacing
+          )}
+          
+          <div className="flex gap-2">
+            {/* Show simple create button only on first step */}
+            {step === 1 && (
+              <Button 
+                type="button" 
+                variant="default" 
+                onClick={createSimpleOrganization}
+                disabled={isSubmitting}
+                className="min-w-[140px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Create Organization 
+                  </>
+                )}
+              </Button>
+            )}
+            
+            {/* Regular next/submit button */}
+            {step < totalSteps ? (
+              <Button 
+                type="button" 
+                onClick={nextStep}
+                disabled={isSubmitting}
+              >
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="submit" 
+                onClick={() => form.handleSubmit(onSubmit)()}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    Complete
+                    <Check className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );
