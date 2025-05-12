@@ -9,14 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface TeamObjective {
-  id: number;
+  id: string;
   title: string;
   progress: number;
   status: "on_track" | "at_risk" | "behind" | "completed";
 }
 
 interface TeamCardProps {
-  id: number;
+  id: string;
   name: string;
   memberCount: number;
   progress: number;
@@ -24,7 +24,7 @@ interface TeamCardProps {
   iconBgColor: string;
   iconColor: string;
   objectives: TeamObjective[];
-  onViewDetails: (id: number) => void;
+  onViewDetails: (id: string) => void;
 }
 
 const TeamCard = ({

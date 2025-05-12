@@ -290,7 +290,7 @@ const UsersPage = () => {
   };
 
   // Find team name by ID
-  const getTeamName = (teamId: number | null | undefined) => {
+  const getTeamName = (teamId: string | null | undefined) => {
     if (!teamId || !teams) return "None";
     const team = teams.find(t => t.id === teamId);
     return team ? team.name : "Unknown";

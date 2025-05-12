@@ -39,13 +39,13 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface TeamObjective {
-  id: number;
+  id: string;
   title: string;
   progress: number;
   status: "on_track" | "at_risk" | "behind" | "completed";
   dueDate?: string;
   assignee?: {
-    id: number;
+    id: string;
     firstName: string;
     lastName: string;
     avatarUrl?: string;
@@ -62,7 +62,7 @@ export default function TeamDetailPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
-  const teamId = parseInt(id);
+  const teamId = id; // Using string ID directly for ULID compatibility
   const [viewMode, setViewMode] = useState<"today" | "weekly" | "monthly">("weekly");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   
