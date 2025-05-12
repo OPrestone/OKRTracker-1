@@ -132,11 +132,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user has access to this tenant
       const userId = (req.user as User).id;
-      const userTenants = await tenantService.getUserTenants(userId);
-      const hasAccess = userTenants.some(t => t.id === tenant.id);
+      const user = req.user as User;
       
-      if (!hasAccess && (req.user as User).role !== "admin") {
-        return res.status(403).json({ error: "You do not have access to this tenant" });
+      // Super admins always have access to all organizations
+      if (user.isAdmin || user.role === "admin") {
+        // Allow access for super admins
+      } else {
+        // Regular users need explicit access
+        const userTenants = await tenantService.getUserTenants(userId);
+        const hasAccess = userTenants.some(t => t.id === tenant.id);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ error: "You do not have access to this organization" });
+        }
       }
       
       res.json(tenant);
@@ -340,12 +348,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Tenant not found" });
       }
       
-      // Check if user is member of this tenant
-      const userTenants = await tenantService.getUserTenants(userId);
-      const isMember = userTenants.some(t => t.id === tenant.id);
+      // Check if user is member of this tenant or a super admin
+      const user = req.user as User;
       
-      if (!isMember && !(req.user as User).isAdmin) {
-        return res.status(403).json({ error: "You do not have access to this tenant" });
+      // Super admins always have access to all organizations
+      if (user.isAdmin || user.role === "admin") {
+        // Allow access for super admins
+      } else {
+        // Regular users need explicit access to the tenant
+        const userTenants = await tenantService.getUserTenants(userId);
+        const isMember = userTenants.some(t => t.id === tenant.id);
+        
+        if (!isMember) {
+          return res.status(403).json({ error: "You do not have access to this organization" });
+        }
       }
       
       const members = await tenantService.getTenantMembers(tenant.id);
