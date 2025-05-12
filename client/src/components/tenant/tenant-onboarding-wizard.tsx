@@ -7,18 +7,6 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { 
-  Check, 
-  Building2, 
-  CreditCard, 
-  Users, 
-  Target as TargetIcon, 
-  ArrowLeft, 
-  ArrowRight,
-  Loader2,
-  FileText,
-  Sparkles
-} from "lucide-react";
 
 // UI Components
 import {
@@ -29,11 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from "@/components/ui/alert";
 import {
   Form,
   FormControl,
