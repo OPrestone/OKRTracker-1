@@ -1338,13 +1338,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/check-ins", withTenant, async (req, res, next) => {
     try {
+      // Support both the old API (content field) and new API (notes field)
+      // If notes is provided but content isn't, copy notes to content
+      if (req.body.notes && !req.body.content) {
+        req.body.content = req.body.notes;
+      }
+      
+      // If teamId is a string "VLS", convert it to null
+      if (req.body.teamId === "VLS") {
+        req.body.teamId = null;
+      }
+      
+      // Always include the user ID
+      if (!req.body.userId) {
+        req.body.userId = (req.user as User).id;
+      }
+      
+      // Parse and validate the data
       const validatedData = insertCheckInSchema.parse({
         ...req.body,
         tenantId: req.tenantId
       });
+      
       const checkIn = await storage.createCheckIn(validatedData);
       res.status(201).json(checkIn);
     } catch (error) {
+      console.error("Error creating check-in:", error);
       next(error);
     }
   });
