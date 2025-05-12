@@ -142,6 +142,7 @@ function AppRoutes() {
       <ProtectedRoute path="/tenants/:id(\d+)/subscription" component={TenantPage} />
       {/* Slug-based routes for organizations */}
       <ProtectedRoute path="/organization/:organisation" component={OrganizationPage} />
+      <ProtectedRoute path="/organization/:organisation/home" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/quick-start-guide" component={QuickStartGuide} />
       {/* Onboarding */}
