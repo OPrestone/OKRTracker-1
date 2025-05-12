@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { format } from "date-fns";
 
 interface TenantSubscriptionProps {
-  tenantId: number;
+  tenantId: string;
 }
 
 interface Plan {

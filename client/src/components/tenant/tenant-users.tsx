@@ -273,7 +273,7 @@ export function TenantUsers({ tenantId }: TenantUsersProps) {
               <div className="space-y-2">
                 <Label htmlFor="user">User</Label>
                 <Select 
-                  onValueChange={(value) => setSelectedUserId(parseInt(value))}
+                  onValueChange={(value) => setSelectedUserId(value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a user" />
@@ -285,7 +285,7 @@ export function TenantUsers({ tenantId }: TenantUsersProps) {
                       </SelectItem>
                     ) : (
                       availableUsers.map((user: User) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
+                        <SelectItem key={user.id} value={user.id}>
                           {user.name || user.username}
                         </SelectItem>
                       ))
