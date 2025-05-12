@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Objective, KeyResult } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,25 +15,34 @@ import {
 } from "@/components/ui/select";
 import { AlertCircle, Flag, Target, ChevronRight, User, Calendar, Network } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 const CompanyStrategy = () => {
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
   const [timeframeFilter, setTimeframeFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("goals");
 
+  // Build tenant-specific endpoint for API calls
+  const organizationId = params?.organisation || currentTenant?.id;
+  const tenantParam = organizationId ? `?tenant=${organizationId}` : '';
+  
   // Fetch timeframes
   const { data: timeframes, isLoading: timeframesLoading } = useQuery({
-    queryKey: ["/api/timeframes"],
+    queryKey: ["/api/timeframes", organizationId],
+    enabled: !!organizationId,
   });
 
   // Fetch company objectives
   const { data: objectives, isLoading: objectivesLoading } = useQuery<Objective[]>({
-    queryKey: ["/api/objectives"],
+    queryKey: ["/api/objectives", organizationId],
+    enabled: !!organizationId,
   });
 
   // Fetch key results for objectives if they exist
   const { data: allKeyResults, isLoading: keyResultsLoading } = useQuery<KeyResult[]>({
-    queryKey: ["/api/key-results"],
-    enabled: !!(objectives && objectives.length > 0),
+    queryKey: ["/api/key-results", organizationId],
+    enabled: !!(objectives && objectives.length > 0 && organizationId),
   });
 
   const getStatusColor = (status: string) => {

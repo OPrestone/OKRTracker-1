@@ -145,6 +145,9 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/home" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/organization/:organisation/quick-start-guide" component={QuickStartGuide} />
+      <ProtectedRoute path="/organization/:organisation/mission" component={CompanyStrategy} />
+      <ProtectedRoute path="/organization/:organisation/strategy-map" component={StrategyMap} />
+      <ProtectedRoute path="/organization/:organisation/team-leader-dashboard" component={TeamLeaderDashboard} />
       
       {/* Main organization section routes */}
       <ProtectedRoute path="/organization/:organisation/my-okrs" component={MyOKRs} />

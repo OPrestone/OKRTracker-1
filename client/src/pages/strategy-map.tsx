@@ -4,14 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Edit, Plus, ZoomIn, ZoomOut } from "lucide-react";
 import { useState } from "react";
+import { useParams } from "wouter";
 import CompanyAlignmentMap from "@/components/strategy/company-alignment-map";
 import TeamsOKRView from "@/components/strategy/teams-okr-view";
 import KeyResultSummary from "@/components/strategy/key-results-summary";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 // Component to render strategy map elements
 const StrategyMap = () => {
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
   const [zoomLevel, setZoomLevel] = useState(100);
+  
+  // Build tenant-specific endpoint for API calls
+  const organizationId = params?.organisation || currentTenant?.id;
   
   // Increment/decrement zoom level
   const zoomIn = () => setZoomLevel(prev => Math.min(prev + 10, 150));
@@ -19,12 +26,14 @@ const StrategyMap = () => {
   
   // Company objectives
   const { data: objectives = [] } = useQuery({
-    queryKey: ['/api/objectives/company'],
+    queryKey: ['/api/objectives/company', organizationId],
+    enabled: !!organizationId,
   }) as { data: any[] };
   
   // Teams
   const { data: teams = [] } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams', organizationId],
+    enabled: !!organizationId,
   }) as { data: any[] };
   
   return (
@@ -133,12 +142,18 @@ const StrategyMap = () => {
 };
 
 export default function StrategyMapPage() {
+  const params = useParams<{ organisation: string }>();
+  const { currentTenant } = useTenantContext();
+  
+  // Get organization name from tenant or use "Organization" as fallback
+  const organizationName = currentTenant?.displayName || "Organization";
+  
   return (
-    <DashboardLayout title="Strategy Map" subtitle="Visualize the relationships between objectives across your organization">
+    <DashboardLayout title="Strategy Map" subtitle={`Visualize the relationships between objectives across ${organizationName}`}>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 mb-2">Strategy Map</h1>
-          <p className="text-neutral-600">Visualize the relationships between objectives across your organization</p>
+          <p className="text-neutral-600">Visualize the relationships between objectives across {organizationName}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center gap-1">

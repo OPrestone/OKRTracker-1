@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'wouter';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight, ChevronDown, Plus, MoreHorizontal, Filter, ArrowDownUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { useTenantContext } from '@/hooks/use-tenant-context';
 
 interface TeamOKRCategory {
   id: string;
