@@ -192,6 +192,7 @@ export const attachments = pgTableWithUlid("attachments", {
   mimeType: text("mime_type").notNull(),
   size: integer("size").notNull(),
   messageId: text("message_id").references(() => messages.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
