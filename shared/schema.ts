@@ -317,6 +317,17 @@ export const moodEntries = pgTableWithUlid("mood_entries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [moodEntries.userId],
+    references: [users.id]
+  }),
+  tenant: one(tenants, {
+    fields: [moodEntries.tenantId],
+    references: [tenants.id]
+  })
+}));
+
 export const financialAccounts = pgTableWithUlid("financial_accounts", {
   name: text("name").notNull(),
   description: text("description"),
@@ -641,7 +652,12 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(usersToTenants),
   teams: many(teams),
   objectives: many(objectives),
-  subscriptions: many(subscriptions)
+  subscriptions: many(subscriptions),
+  chatRoomMembers: many(chatRoomMembers),
+  reactions: many(reactions),
+  userBadges: many(userBadges),
+  userAccessGroups: many(userAccessGroups),
+  moodEntries: many(moodEntries)
 }));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
