@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.firstName} ${user.lastName}!`,
+        description: `Welcome back, ${user.name}!`,
       });
       
       // Get the saved redirect path or default to homepage
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: `Welcome, ${user.firstName} ${user.lastName}!`,
+        description: `Welcome, ${user.name}!`,
       });
       
       // Clear any existing redirect paths - new users should always go to the dashboard
