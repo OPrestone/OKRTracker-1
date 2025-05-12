@@ -57,10 +57,11 @@ class TenantService {
       
       // Create the tenant - use the direct SQL query to avoid type issues
       const { rows: [tenant] } = await db.execute(
-        sql`INSERT INTO tenants (id, name, slug, plan, status, max_users, domain, logo_url, settings, enabled_features)
+        sql`INSERT INTO tenants (id, name, display_name, slug, plan, status, max_users, domain, logo_url, settings, enabled_features)
             VALUES (
               ${tenantId},
               ${tenantData.name}, 
+              ${tenantData.displayName || tenantData.name}, 
               ${finalSlug}, 
               ${tenantData.plan || 'free'}, 
               ${tenantData.status || 'active'}, 
