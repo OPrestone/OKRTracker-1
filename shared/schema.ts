@@ -73,6 +73,7 @@ export const accessGroups = pgTableWithUlid("access_groups", {
 export const userAccessGroups = pgTable("user_access_groups", {
   userId: text("user_id").references(() => users.id).notNull(),
   accessGroupId: text("access_group_id").references(() => accessGroups.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.accessGroupId] })
@@ -171,6 +172,7 @@ export const chatRoomMembers = pgTable("chat_room_members", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   joined: timestamp("joined").defaultNow().notNull(),
   left: timestamp("left"),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.chatRoomId] })
 }));
@@ -200,6 +202,7 @@ export const reactions = pgTable("reactions", {
   userId: text("user_id").references(() => users.id).notNull(),
   messageId: text("message_id").references(() => messages.id).notNull(),
   emoji: text("emoji").notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.messageId, t.emoji] })
@@ -222,6 +225,7 @@ export const userBadges = pgTable("user_badges", {
   awardedAt: timestamp("awarded_at").defaultNow().notNull(),
   awardedById: text("awarded_by_id").references(() => users.id).notNull(),
   reason: text("reason"),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.badgeId] })
 }));
@@ -309,6 +313,7 @@ export const moodEntries = pgTableWithUlid("mood_entries", {
   moodScore: integer("mood_score").notNull(), // 1-5 rating
   notes: text("notes"),
   date: timestamp("date").notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
