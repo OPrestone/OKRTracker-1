@@ -14,13 +14,13 @@ export default function OrganizationPage() {
 
   // Fetch the tenant by slug
   const { data: tenant, isLoading: loadingTenant } = useQuery<any>({
-    queryKey: ['/api/tenants/slug', organisation],
+    queryKey: [`/api/tenants/slug/${organisation}`],
     enabled: !!organisation && !!user,
   });
 
   // Fetch user's role in this tenant using the slug
   const { data: tenantUsers = [], isLoading: loadingUsers } = useQuery<any[]>({
-    queryKey: ['/api/tenants/slug', organisation, 'users'],
+    queryKey: [`/api/tenants/slug/${organisation}/users`],
     enabled: !!organisation && !!user?.id,
   });
 
