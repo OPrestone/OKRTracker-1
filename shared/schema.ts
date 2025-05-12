@@ -307,8 +307,7 @@ export const moodEntries = pgTableWithUlid("mood_entries", {
   userId: text("user_id").references(() => users.id).notNull(),
   moodScore: integer("mood_score").notNull(), // 1-5 rating
   notes: text("notes"),
-  date: timestamp("date").defaultNow().notNull(),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  date: timestamp("date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

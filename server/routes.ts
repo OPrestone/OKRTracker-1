@@ -2818,8 +2818,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertMoodEntrySchema.parse({
         ...req.body,
-        userId: userId,
-        tenantId: tenantId // Add tenant ID to the mood entry
+        userId: userId
+        // Note: tenantId was removed as it doesn't exist in the actual database table
       });
       
       const moodEntry = await db.insert(moodEntries).values(validatedData).returning();
