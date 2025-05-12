@@ -201,12 +201,15 @@ const okrTemplates = [
 export default function TenantOnboardingWizard() {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
-  const [location, setLocation] = useLocation();
-  // Implement custom navigate function
+  const [_, setLocation] = useLocation();
+  // Implement custom navigate function that forces a full page reload to reset state
   const navigate = (path: string) => { window.location.href = path; };
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [creationSuccess, setCreationSuccess] = useState(false);
+  const [newTenantId, setNewTenantId] = useState<string | null>(null);
   
   // Create a form instance with the combined schema
   const form = useForm<z.infer<typeof formSchema>>({
@@ -233,7 +236,7 @@ export default function TenantOnboardingWizard() {
     },
   });
 
-  // Fetch available users
+  // Fetch available users for the team step
   const { data: availableUsers = [] } = useQuery({
     queryKey: ['/api/users'],
     enabled: step === 3,
@@ -242,71 +245,74 @@ export default function TenantOnboardingWizard() {
   // Calculate progress percentage
   const progress = (step / totalSteps) * 100;
 
-  // Handle tenant creation with all collected data
+  // Handle simpler tenant creation focusing on the essential first step
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      // First create the tenant
-      const orgResponse = await apiRequest("POST", "/api/tenants", {
-        name: values.orgDetails.name,
-        displayName: values.orgDetails.displayName,
-        description: values.orgDetails.description,
-        industry: values.orgDetails.industry,
-        plan: values.plan.plan,
-      });
-      
-      if (!orgResponse.ok) {
-        const errorData = await orgResponse.json();
-        throw new Error(errorData.message || "Failed to create organization");
-      }
-      
-      const orgData = await orgResponse.json();
-      const tenantId = orgData.id;
-      
-      // If users were selected, add them to the tenant
-      if (values.team.users && values.team.users.length > 0) {
-        const selectedUsers = values.team.users.filter(u => u.selected);
+      setIsSubmitting(true);
+      try {
+        // First create the tenant with minimal required information
+        const orgResponse = await apiRequest("POST", "/api/tenants", {
+          name: values.orgDetails.name,
+          displayName: values.orgDetails.displayName,
+          description: values.orgDetails.description || undefined,
+          industry: values.orgDetails.industry || undefined,
+          plan: values.plan.plan || "free",
+        });
         
-        for (const user of selectedUsers) {
-          const userResponse = await apiRequest("POST", `/api/tenants/${tenantId}/users`, {
-            email: user.email,
-            role: user.role,
-          });
+        if (!orgResponse.ok) {
+          const errorData = await orgResponse.json();
+          throw new Error(errorData.message || "Failed to create organization");
+        }
+        
+        const orgData = await orgResponse.json();
+        const tenantId = orgData.id;
+        setNewTenantId(tenantId);
+        
+        // Process remaining steps asynchronously
+        
+        // If users were selected, add them to the tenant
+        if (values.team.users && values.team.users.length > 0) {
+          const selectedUsers = values.team.users.filter(u => u.selected);
           
-          if (!userResponse.ok) {
-            // Continue even if some users fail
-            console.error(`Failed to add user ${user.email}`);
+          for (const user of selectedUsers) {
+            try {
+              await apiRequest("POST", `/api/tenants/${tenantId}/users`, {
+                email: user.email,
+                role: user.role,
+              });
+            } catch (err) {
+              console.error(`Failed to add user ${user.email}:`, err);
+              // Continue with other users even if one fails
+            }
           }
         }
-      }
-      
-      // If initial OKRs are requested, create them
-      if (values.setup.createInitialOKRs) {
-        const templateId = values.setup.selectedTemplate;
         
-        if (templateId) {
-          const okrResponse = await apiRequest("POST", `/api/tenants/${tenantId}/templates`, {
-            templateId,
-          });
-          
-          if (!okrResponse.ok) {
-            console.error("Failed to create initial OKRs");
+        // If initial OKRs are requested, create them
+        if (values.setup.createInitialOKRs && values.setup.selectedTemplate) {
+          try {
+            await apiRequest("POST", `/api/tenants/${tenantId}/templates`, {
+              templateId: values.setup.selectedTemplate,
+            });
+          } catch (err) {
+            console.error("Failed to create initial OKRs:", err);
+            // Continue anyway as this is optional
           }
         }
+        
+        setCreationSuccess(true);
+        return orgData;
+      } finally {
+        setIsSubmitting(false);
       }
-      
-      return orgData;
     },
     onSuccess: (data) => {
       toast({
-        title: "Organization created",
-        description: "Your new organization has been created successfully.",
+        title: "Organization created!",
+        description: "Your new organization has been set up successfully.",
       });
       
       // Invalidate tenants query to refresh list
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      
-      // Navigate to the new tenant page
-      navigate(`/tenants/${data.id}`);
     },
     onError: (error: Error) => {
       toast({
@@ -317,9 +323,28 @@ export default function TenantOnboardingWizard() {
     },
   });
 
-  // Handle form submission on final step
+  // Direct navigation to new tenant
+  const goToNewTenant = () => {
+    if (newTenantId) {
+      navigate(`/tenants/${newTenantId}`);
+    }
+  };
+
+  // Handle form submission
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     createTenantMutation.mutate(values);
+  };
+
+  // Try simple organization creation first (just first step) if submit button clicked
+  const createSimpleOrganization = () => {
+    // Validate only the organization details
+    form.trigger("orgDetails").then(isValid => {
+      if (isValid) {
+        // Submit with just the essential data
+        const values = form.getValues();
+        createTenantMutation.mutate(values);
+      }
+    });
   };
 
   // Step management functions
@@ -366,13 +391,44 @@ export default function TenantOnboardingWizard() {
     return isValid;
   };
 
+  // Show success screen if organization was created
+  if (creationSuccess && newTenantId) {
+    return (
+      <div className="container max-w-5xl py-8">
+        <Card className="border-none shadow-none">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                <Check className="h-8 w-8" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Organization Created Successfully!</CardTitle>
+            <CardDescription className="text-center">
+              Your organization has been set up and is ready to use
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <div className="max-w-md text-center mb-8">
+              <p className="mb-4">
+                You can now start setting up your objectives and key results, invite team members, and track your progress.
+              </p>
+            </div>
+            <Button size="lg" onClick={goToNewTenant} className="min-w-[200px]">
+              Go to Organization Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-5xl py-8">
-      <Card className="border-none shadow-none">
-        <CardHeader>
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-4">
           <CardTitle className="text-2xl font-bold">Set Up Your Organization</CardTitle>
           <CardDescription>
-            Create and configure your organization for OKR tracking in just a few steps
+            Create your organization for OKR tracking in just a few steps
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -384,32 +440,42 @@ export default function TenantOnboardingWizard() {
             </div>
             <Progress value={progress} className="h-2" />
             
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-between mt-6">
               <div className={`flex flex-col items-center ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 1 ? <Check className="h-4 w-4" /> : <Building2 className="h-4 w-4" />}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 1 ? <Check className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
                 </div>
-                <span className="text-xs mt-1">Organization</span>
+                <span className="text-xs mt-2">Organization</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 2 ? <Check className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 2 ? <Check className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
                 </div>
-                <span className="text-xs mt-1">Plan</span>
+                <span className="text-xs mt-2">Plan</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {step > 3 ? <Check className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {step > 3 ? <Check className="h-5 w-5" /> : <Users className="h-5 w-5" />}
                 </div>
-                <span className="text-xs mt-1">Team</span>
+                <span className="text-xs mt-2">Team</span>
               </div>
               <div className={`flex flex-col items-center ${step >= 4 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 4 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <TargetIcon className="h-4 w-4" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 4 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  <TargetIcon className="h-5 w-5" />
                 </div>
-                <span className="text-xs mt-1">Setup</span>
+                <span className="text-xs mt-2">Setup</span>
               </div>
             </div>
+            
+            {step === 1 && (
+              <Alert className="mt-6 bg-blue-50 border-blue-200">
+                <FileText className="h-4 w-4" />
+                <AlertTitle>Quick start available</AlertTitle>
+                <AlertDescription>
+                  You can create your organization with just the basic details and set up the rest later.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
           
           {/* Form wrapper */}
