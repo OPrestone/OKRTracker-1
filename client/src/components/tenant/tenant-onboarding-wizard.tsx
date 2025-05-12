@@ -509,172 +509,247 @@ export default function TenantOnboardingWizard() {
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 {/* Step 1: Organization Details */}
                 {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-lg font-semibold mb-4">Organization Details</div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.displayName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organization Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme Inc." {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The name of your organization as it will be displayed
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL Identifier</FormLabel>
-                          <FormControl>
-                            <Input placeholder="acme-inc" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Used in URLs and for technical identification (no spaces or special characters)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Briefly describe your organization" 
-                              rows={3}
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            A short description of your organization (optional)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.industry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Industry</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <Building2 className="h-5 w-5 mr-2 text-primary" />
+                          Organization Details
+                        </h3>
+                        <p className="text-gray-600 mt-1">Enter the basic information about your organization</p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="orgDetails.displayName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-800 font-medium">Organization Name *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Acme Inc." 
+                                  {...field} 
+                                  className="h-11 focus:ring-2 focus:ring-primary/20"
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                The name of your organization as it will be displayed throughout the platform
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="orgDetails.name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-800 font-medium">URL Identifier *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="acme-inc" 
+                                  {...field} 
+                                  className="h-11 focus:ring-2 focus:ring-primary/20"
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Used in URLs and for technical identification (no spaces or special characters)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="orgDetails.description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-800 font-medium">Description</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Briefly describe your organization" 
+                                    rows={4}
+                                    className="focus:ring-2 focus:ring-primary/20 resize-none"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  A short description of your organization (optional)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="orgDetails.industry"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-800 font-medium">Industry</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="h-11 focus:ring-2 focus:ring-primary/20">
+                                      <SelectValue placeholder="Select industry" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="technology">Technology</SelectItem>
+                                    <SelectItem value="finance">Finance</SelectItem>
+                                    <SelectItem value="healthcare">Healthcare</SelectItem>
+                                    <SelectItem value="education">Education</SelectItem>
+                                    <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                                    <SelectItem value="retail">Retail</SelectItem>
+                                    <SelectItem value="services">Services</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                  The primary industry of your organization (optional)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        {/* Quick create button */}
+                        <div className="mt-8 pt-6 border-t border-gray-100">
+                          <Button
+                            type="button"
+                            size="lg"
+                            onClick={createSimpleOrganization}
+                            className="w-full py-6 text-lg font-medium bg-gradient-to-r from-primary to-primary/90 hover:from-primary-600 hover:to-primary/95 shadow-md transition-all"
+                            disabled={isSubmitting}
                           >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an industry" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="technology">Technology</SelectItem>
-                              <SelectItem value="finance">Finance</SelectItem>
-                              <SelectItem value="healthcare">Healthcare</SelectItem>
-                              <SelectItem value="education">Education</SelectItem>
-                              <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                              <SelectItem value="retail">Retail</SelectItem>
-                              <SelectItem value="services">Services</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Select your industry (optional)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                Creating Organization...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-5 w-5 mr-2" />
+                                Create Organization Now
+                              </>
+                            )}
+                          </Button>
+                          <p className="text-center text-sm text-gray-500 mt-3">
+                            You can configure additional settings after creating your organization
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
                 {/* Step 2: Plan Selection */}
                 {step === 2 && (
-                  <div className="space-y-6">
-                    <div className="text-lg font-semibold mb-4">Select a Plan</div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="plan.plan"
-                      render={({ field }) => (
-                        <FormItem className="space-y-4">
-                          <FormLabel>Available Plans</FormLabel>
-                          <FormControl>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {plans.map((plan) => (
-                                <div 
-                                  key={plan.id}
-                                  className={`relative rounded-lg border p-4 hover:border-primary/80 transition-colors cursor-pointer ${
-                                    field.value === plan.id ? "border-primary" : ""
-                                  }`}
-                                  onClick={() => field.onChange(plan.id)}
-                                >
-                                  {plan.popular && (
-                                    <Badge className="absolute right-2 top-2" variant="secondary">
-                                      Popular
-                                    </Badge>
-                                  )}
-                                  <div className="space-y-3">
-                                    <h3 className="font-medium">{plan.name}</h3>
-                                    <div className="text-2xl font-bold">
-                                      ${plan.price} <span className="text-sm font-normal">/month</span>
+                  <div className="max-w-3xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
+                      <div className="mb-6 border-b pb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                          <CreditCard className="h-5 w-5 mr-2 text-primary" />
+                          Select a Subscription Plan
+                        </h3>
+                        <p className="text-gray-600 mt-1">Choose the plan that best fits your organization's needs</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="plan.plan"
+                        render={({ field }) => (
+                          <FormItem className="space-y-6">
+                            <FormControl>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {plans.map((plan) => (
+                                  <div 
+                                    key={plan.id}
+                                    className={`relative rounded-xl border-2 p-5 transition-all cursor-pointer hover:shadow-md ${
+                                      field.value === plan.id 
+                                        ? "border-primary bg-primary/5 shadow-sm" 
+                                        : "border-gray-200 hover:border-primary/30"
+                                    }`}
+                                    onClick={() => field.onChange(plan.id)}
+                                  >
+                                    {plan.popular && (
+                                      <Badge className="absolute right-3 top-3 bg-blue-500 hover:bg-blue-500/90 text-white">
+                                        Most Popular
+                                      </Badge>
+                                    )}
+                                    <div className="space-y-4">
+                                      <div className="flex justify-between items-center">
+                                        <h3 className={`text-lg font-semibold ${field.value === plan.id ? "text-primary" : "text-gray-800"}`}>
+                                          {plan.name}
+                                        </h3>
+                                        {field.value === plan.id && (
+                                          <Check className="h-5 w-5 text-primary" />
+                                        )}
+                                      </div>
+                                      
+                                      <div className="flex items-baseline">
+                                        <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
+                                        <span className="text-sm text-gray-500 ml-1">/month</span>
+                                      </div>
+                                      
+                                      <p className="text-sm text-gray-600 border-t border-gray-100 pt-3">
+                                        {plan.description}
+                                      </p>
+                                      
+                                      <ul className="space-y-2 mt-4">
+                                        {plan.features.map((feature, index) => (
+                                          <li key={index} className="flex items-start text-sm">
+                                            <div className="mt-0.5 mr-2 rounded-full bg-green-100 p-1 text-green-600">
+                                              <Check className="h-3 w-3" />
+                                            </div>
+                                            <span className="text-gray-700">{feature}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
                                     </div>
-                                    <p className="text-sm text-muted-foreground">
-                                      {plan.description}
-                                    </p>
-                                    <ul className="space-y-2 text-sm">
-                                      {plan.features.map((feature, index) => (
-                                        <li key={index} className="flex items-center">
-                                          <Check className="h-4 w-4 mr-2 text-primary" />
-                                          {feature}
-                                        </li>
-                                      ))}
-                                    </ul>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="plan.agreeToTerms"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-6">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>
-                              I agree to the <a href="#" className="text-primary underline">Terms of Service</a> and <a href="#" className="text-primary underline">Privacy Policy</a>
-                            </FormLabel>
+                                ))}
+                              </div>
+                            </FormControl>
                             <FormMessage />
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="mt-8 pt-4 border-t border-gray-100">
+                        <FormField
+                          control={form.control}
+                          name="plan.agreeToTerms"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-gray-700">
+                                  I agree to the <a href="#" className="text-primary font-medium hover:underline">Terms of Service</a> and <a href="#" className="text-primary font-medium hover:underline">Privacy Policy</a>
+                                </FormLabel>
+                                <FormDescription className="text-gray-500 text-xs">
+                                  You can change your plan at any time from your account settings
+                                </FormDescription>
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
                 
