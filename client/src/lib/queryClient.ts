@@ -1,17 +1,17 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Function to get the current tenant ID from the URL
-function getCurrentTenantFromUrl(): number | null {
-  // Check for numeric tenant ID in /tenants/{id} pattern
-  const numericMatch = window.location.pathname.match(/\/tenants\/(\d+)/);
-  if (numericMatch) {
-    return parseInt(numericMatch[1]);
+function getCurrentTenantFromUrl(): string | null {
+  // Check for ULID tenant ID in /tenants/{id} pattern - ULIDs are 26 characters, uppercase letters and numbers
+  const ulidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
+  if (ulidMatch) {
+    return ulidMatch[1];
   }
   
   // For organization slug routes, we need to rely on session storage
   // This will be set when switching tenants in the TenantProvider
   const storedTenantId = sessionStorage.getItem('currentTenantId');
-  return storedTenantId ? parseInt(storedTenantId) : null;
+  return storedTenantId || null;
 }
 
 async function throwIfResNotOk(res: Response) {
@@ -32,7 +32,7 @@ export async function apiRequest(
   
   // Only add tenantId if it exists
   if (tenantId) {
-    urlObj.searchParams.append('tenantId', tenantId.toString());
+    urlObj.searchParams.append('tenantId', tenantId);
   }
   
   const res = await fetch(urlObj.toString(), {
@@ -60,7 +60,7 @@ export const getQueryFn: <T>(options: {
       
       // Only add tenantId if it exists and not already in the URL
       if (tenantId && !urlObj.searchParams.has('tenantId')) {
-        urlObj.searchParams.append('tenantId', tenantId.toString());
+        urlObj.searchParams.append('tenantId', tenantId);
       }
       
       const res = await fetch(urlObj.toString(), {
