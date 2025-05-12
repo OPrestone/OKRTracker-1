@@ -775,6 +775,7 @@ export const insertTeamMoodSchema = createInsertSchema(teamMoods).omit({ id: tru
 export const insertFinancialAccountSchema = createInsertSchema(financialAccounts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
 
 // TYPES
 
@@ -848,6 +849,9 @@ export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 
 export type TeamMood = typeof teamMoods.$inferSelect;
 export type InsertTeamMood = z.infer<typeof insertTeamMoodSchema>;
+
+export type MoodEntry = typeof moodEntries.$inferSelect;
+export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 
 export type FinancialAccount = typeof financialAccounts.$inferSelect;
 export type InsertFinancialAccount = z.infer<typeof insertFinancialAccountSchema>;
