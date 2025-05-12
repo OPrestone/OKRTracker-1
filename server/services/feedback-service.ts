@@ -59,24 +59,35 @@ export async function getFeedbackById(id: number): Promise<(Feedback & { sender:
 }
 
 export async function getPublicFeedback(limit: number = 10): Promise<(Feedback & { sender: any; receiver: any })[]> {
-  // Get public feedback items
-  const feedbackItems = await db
-    .select()
-    .from(feedback)
-    .where(eq(feedback.visibility, "public"))
-    .orderBy(desc(feedback.createdAt))
-    .limit(limit);
+  try {
+    // Get all feedback items
+    const feedbackItems = await db
+      .select({
+        id: feedback.id,
+        userId: feedback.userId,
+        receiverId: feedback.receiverId,
+        content: feedback.content,
+        rating: feedback.rating,
+        objectiveId: feedback.objectiveId,
+        keyResultId: feedback.keyResultId,
+        tenantId: feedback.tenantId,
+        createdAt: feedback.createdAt
+      })
+      .from(feedback)
+      .orderBy(desc(feedback.createdAt))
+      .limit(limit);
     
-  // Prepare result
-  const results = [];
-  
-  // For each feedback, get sender and receiver
-  for (const feedbackItem of feedbackItems) {
-    // Get sender
-    const [sender] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, feedbackItem.senderId));
+    // Prepare result
+    const results = [];
+    
+    // For each feedback, get sender and receiver
+    for (const feedbackItem of feedbackItems) {
+      try {
+        // Get sender
+        const [sender] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, feedbackItem.userId));
       
     // Get receiver
     const [receiver] = await db
