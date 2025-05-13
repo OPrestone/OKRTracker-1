@@ -100,10 +100,27 @@ export default function AuthPage() {
   });
 
   // Login submission
+  // State for tenant selection modal
+  const [showTenantSelection, setShowTenantSelection] = useState(false);
+  const [availableTenants, setAvailableTenants] = useState<Array<any>>([]);
+
   function onLoginSubmit(data: LoginValues) {
     loginMutation.mutate(data, {
-      onSuccess: () => {
-        window.location.reload(); // Reload the page after successful login
+      onSuccess: (user) => {
+        // Check if user has tenants
+        if (user.tenants && user.tenants.length > 0) {
+          if (user.tenants.length === 1) {
+            // If there's only one tenant, navigate directly
+            window.location.reload();
+          } else {
+            // If multiple tenants exist, show the selection modal
+            setAvailableTenants(user.tenants);
+            setShowTenantSelection(true);
+          }
+        } else {
+          // No tenants available, just reload
+          window.location.reload();
+        }
       },
     });
   }
