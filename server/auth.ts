@@ -188,10 +188,14 @@ export function setupAuth(app: Express) {
       
       // Create user-tenant relationship if not already created
       try {
+        const { ulid } = await import("ulid");
         await db.insert(usersToTenants).values({
+          id: ulid(), // Generate a ULID for the relationship
           userId: user.id,
           tenantId: tenantId,
-          role: "member"
+          role: "member",
+          isDefault: true, // Make this the default tenant
+          createdAt: new Date()
         }).onConflictDoNothing();
         console.log("User-tenant relationship created");
       } catch (err) {

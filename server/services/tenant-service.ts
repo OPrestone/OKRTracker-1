@@ -246,12 +246,17 @@ class TenantService {
           .where(eq(usersToTenants.userId, userId));
       }
       
-      // Add user to tenant
+      // Import ulid to generate IDs
+      const { ulid } = await import("ulid");
+      
+      // Add user to tenant with an explicit ID
       const userToTenantData = insertUserToTenantSchema.parse({
+        id: ulid(), // Generate a ULID for the relationship
         userId,
         tenantId,
         role,
-        isDefault
+        isDefault,
+        createdAt: new Date()
       });
       
       const [userToTenant] = await db

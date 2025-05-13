@@ -53,12 +53,13 @@ export const users = pgTableWithUlid("users", {
 });
 
 export const usersToTenants = pgTable("users_to_tenants", {
+  id: text("id").primaryKey(), // Added id column which is primary key
   userId: text("user_id").references(() => users.id).notNull(),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  role: userRoleEnum("role").default("member").notNull(),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.userId, t.tenantId] })
-}));
+  role: userRoleEnum("role").default("member"),
+  isDefault: boolean("is_default").default(false), // Added isDefault column
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const teams = pgTableWithUlid("teams", {
   name: text("name").notNull(),
