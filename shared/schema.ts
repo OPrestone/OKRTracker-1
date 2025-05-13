@@ -1022,7 +1022,13 @@ export const actionItemsRelations = relations(actionItems, ({ one }) => ({
 }));
 
 // Types for Meetings
-export const insertMeetingSchema = createInsertSchema(meetings).omit({ id: true });
+export const insertMeetingSchema = createInsertSchema(meetings)
+  .omit({ id: true })
+  .extend({
+    // Override timestamp fields to accept ISO strings
+    scheduledStartTime: z.string().transform((str) => new Date(str)),
+    scheduledEndTime: z.string().transform((str) => new Date(str)),
+  });
 export type Meeting = typeof meetings.$inferSelect;
 export type InsertMeeting = z.infer<typeof insertMeetingSchema>;
 
@@ -1038,6 +1044,12 @@ export const insertMeetingToKeyResultSchema = createInsertSchema(meetingsToKeyRe
 export type MeetingToKeyResult = typeof meetingsToKeyResults.$inferSelect;
 export type InsertMeetingToKeyResult = z.infer<typeof insertMeetingToKeyResultSchema>;
 
-export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
+export const insertActionItemSchema = createInsertSchema(actionItems)
+  .omit({ id: true })
+  .extend({
+    // Override timestamp fields to accept ISO strings when provided
+    dueDate: z.string().transform((str) => new Date(str)).optional(),
+    completedAt: z.string().transform((str) => new Date(str)).optional(),
+  });
 export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
