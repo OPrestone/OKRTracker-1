@@ -74,10 +74,11 @@ class TenantService {
             RETURNING *`
       );
       
-      // Link the user to the tenant
+      // Link the user to the tenant with a unique ID
+      const userToTenantId = ulid();
       const { rows: [userToTenant] } = await db.execute(
-        sql`INSERT INTO users_to_tenants (user_id, tenant_id, role, is_default)
-            VALUES (${user.id}, ${tenant.id}, ${userRole}, TRUE)
+        sql`INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default)
+            VALUES (${userToTenantId}, ${user.id}, ${tenant.id}, ${userRole}, TRUE)
             RETURNING *`
       );
       
