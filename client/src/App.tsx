@@ -140,49 +140,49 @@ function AppRoutes() {
       <ProtectedRoute path="/tenants" component={TenantsPage} />
       
       {/* ULID-based routes for organizations (new format using ULIDs directly) */}
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})" component={OrganizationPage} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/strategy-map" component={StrategyMap} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})" component={OrganizationPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/strategy-map" component={StrategyMap} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
       
       {/* Main organization section routes with ULID */}
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/my-okrs" component={MyOKRs} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/draft-okrs" component={DraftOKRs} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-okrs" component={CompanyOKRs} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams" component={Teams} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/users" component={UsersPage} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/user-profile" component={UserProfile} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/reports" component={Reports} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/chat" component={ChatPage} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/feedback-wall" component={FeedbackWall} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/wellness-pulse" component={WellnessPulse} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configure" component={Configure} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/checkins" component={Checkins} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/one-on-one-meetings" component={OneOnOneMeetings} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/objectives-organizer" component={ObjectivesOrganizer} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/timeline-editor" component={TimelineEditor} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/custom-dashboard" component={CustomDashboard} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/project-kanban" component={ProjectKanban} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/import-financial" component={FinancePage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/my-okrs" component={MyOKRs} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/draft-okrs" component={DraftOKRs} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={Teams} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/users" component={UsersPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/user-profile" component={UserProfile} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/reports" component={Reports} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/chat" component={ChatPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/feedback-wall" component={FeedbackWall} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/wellness-pulse" component={WellnessPulse} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configure" component={Configure} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/checkins" component={Checkins} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/one-on-one-meetings" component={OneOnOneMeetings} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/objectives-organizer" component={ObjectivesOrganizer} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/timeline-editor" component={TimelineEditor} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/custom-dashboard" component={CustomDashboard} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/project-kanban" component={ProjectKanban} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/import-financial" component={FinancePage} />
       
       {/* Configuration routes for organizations with ULID */}
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/general" component={General} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/teams" component={TeamsConfig} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/users-permissions" component={UsersPermissions} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/integrations" component={Integrations} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/status-settings" component={StatusSettings} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/cadences" component={Cadences} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/timeframes" component={Timeframes} />
-      <ProtectedRoute path="/ulid/:id([A-Z0-9]{26})/configuration/access-groups" component={AccessGroups} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/general" component={General} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/teams" component={TeamsConfig} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/users-permissions" component={UsersPermissions} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/integrations" component={Integrations} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/status-settings" component={StatusSettings} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/cadences" component={Cadences} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/access-groups" component={AccessGroups} />
       
       {/* Legacy routes - keep for backward compatibility */}
       {/* ID-based routes - these need to be later to avoid catching slug-based routes */}
