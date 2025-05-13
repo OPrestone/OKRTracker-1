@@ -15,6 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import {
+  AlertCircle,
   Building,
   Calendar,
   ChevronDown,
@@ -153,28 +154,35 @@ export default function CreateObjective() {
   });
 
   // Fetch teams from API
-  const { data: teams = [] } = useQuery<Team[]>({
+  const { data: teams = [], isError: teamsError } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
   });
 
   // Fetch users from API
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: users = [], isError: usersError } = useQuery<User[]>({
     queryKey: ['/api/users'],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
   });
 
   // Fetch timeframes from API
-  const { data: timeframes = [] } = useQuery<Timeframe[]>({
+  const { data: timeframes = [], isError: timeframesError } = useQuery<Timeframe[]>({
     queryKey: ['/api/timeframes'],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
   });
 
   // Fetch parent objectives from API for alignment
-  const { data: objectives = [] } = useQuery({
+  const { data: objectives = [], isError: objectivesError } = useQuery({
     queryKey: ['/api/objectives'],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
   });
+  
+  // Check for any data loading errors  
+  const hasErrors = usersError || timeframesError || objectivesError || teamsError;
 
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
@@ -220,6 +228,63 @@ export default function CreateObjective() {
       setSelectedTags([...selectedTags, tag]);
     }
   };
+
+  // Show error message for authentication issues
+  if (hasErrors) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto p-6 max-w-4xl bg-white shadow">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold">Authentication Required</h1>
+            <button 
+              onClick={handleCancel}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Authentication Error</h2>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to create objectives. Please log in or register to continue.
+            </p>
+            <Button 
+              onClick={() => setLocation("/auth")} 
+              className="flex items-center gap-2"
+            >
+              Go to Login
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading state when authentication is being checked
+  if (createObjectiveMutation.isPending) {
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto p-6 max-w-4xl bg-white shadow">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold">Creating Objective...</h1>
+            <button 
+              onClick={handleCancel}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          
+          <div className="flex flex-col items-center justify-center p-12">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p className="text-gray-600">Please wait while we create your objective...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
