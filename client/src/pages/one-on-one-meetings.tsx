@@ -357,16 +357,7 @@ export default function OneOnOneMeetings() {
       meetingLink: meetingLink || undefined,
       agenda: meetingAgenda,
       tenantId: currentTenant?.id, // From tenant context
-      attendeeIds: selectedAttendees.map(attendeeName => {
-        // Find user IDs from usersData based on name
-        const user = usersData?.find((user: any) => {
-          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-          return fullName === attendeeName || user.name === attendeeName || user.username === attendeeName;
-        });
-        
-        // Just return the ID (userId) if found
-        return user?.id || null;
-      }).filter(Boolean) // Only include attendees with valid user IDs
+      attendeeIds: selectedAttendees // Now selectedAttendees directly contains valid user IDs
     };
     
     // Submit the meeting
@@ -540,7 +531,7 @@ export default function OneOnOneMeetings() {
                           const role = user.title || user.role || '';
                           
                           return (
-                            <SelectItem key={user.id} value={name}>
+                            <SelectItem key={user.id} value={user.id}>
                               {name} {role ? `(${role})` : ''}
                             </SelectItem>
                           );
@@ -553,19 +544,28 @@ export default function OneOnOneMeetings() {
                   <div className="grid grid-cols-4 items-start gap-4">
                     <div></div>
                     <div className="col-span-3 flex flex-wrap gap-2">
-                      {selectedAttendees.map((attendee) => (
-                        <Badge key={attendee} variant="secondary" className="pl-2 pr-1 py-1">
-                          {attendee}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-4 w-4 ml-1 hover:bg-transparent"
-                            onClick={() => setSelectedAttendees(selectedAttendees.filter(a => a !== attendee))}
-                          >
-                            <XCircle size={14} />
-                          </Button>
-                        </Badge>
-                      ))}
+                      {selectedAttendees.map((attendeeId) => {
+                        // Find the user with this ID to display name 
+                        const user = usersData?.find((user: any) => user.id === attendeeId);
+                        const firstName = user?.firstName || '';
+                        const lastName = user?.lastName || '';
+                        const fullName = `${firstName} ${lastName}`.trim();
+                        const displayName = user?.name || fullName || user?.username || 'User';
+                        
+                        return (
+                          <Badge key={attendeeId} variant="secondary" className="pl-2 pr-1 py-1">
+                            {displayName}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-4 w-4 ml-1 hover:bg-transparent"
+                              onClick={() => setSelectedAttendees(selectedAttendees.filter(a => a !== attendeeId))}
+                            >
+                              <XCircle size={14} />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
