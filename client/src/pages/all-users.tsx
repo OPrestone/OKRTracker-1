@@ -211,8 +211,6 @@ export default function AllUsers() {
     setIsDeleteDialogOpen(true);
   };
   
-  // Using the assignOrgMutation that was defined earlier
-  
   const handleDeleteUser = () => {
     if (!selectedUser) return;
     deleteUserMutation.mutate(selectedUser.id);
