@@ -419,16 +419,25 @@ export default function CreateObjective() {
                       <SelectValue placeholder="Select Team..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {teams?.map((team: Team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          <div className="flex items-center">
-                            <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium text-sm mr-2">
-                              {team.name.substring(0, 2).toUpperCase()}
+                      {teams && teams.length > 0 ? (
+                        teams.map((team: Team) => (
+                          <SelectItem key={team.id} value={team.id}>
+                            <div className="flex items-center">
+                              <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium text-sm mr-2">
+                                {team.name ? team.name.substring(0, 2).toUpperCase() : 'TM'}
+                              </div>
+                              <span>{team.name || 'Team ' + team.id}</span>
                             </div>
-                            <span>{team.name}</span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-teams" disabled>
+                          <div className="flex items-center text-gray-500">
+                            <Building className="h-5 w-5 mr-2" />
+                            <span>No teams available</span>
                           </div>
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -547,24 +556,35 @@ export default function CreateObjective() {
                         <SelectValue placeholder="Select Lead..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {users?.map((user: User) => {
-                          const initials = user.fullName
-                            .split(' ')
-                            .map(name => name[0])
-                            .join('')
-                            .toUpperCase();
-                            
-                          return (
-                            <SelectItem key={user.id} value={user.id}>
-                              <div className="flex items-center">
-                                <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
-                                  {initials}
+                        {users && users.length > 0 ? (
+                          users.map((user: User) => {
+                            const initials = user.fullName
+                              ? user.fullName
+                                .split(' ')
+                                .map(name => name[0])
+                                .join('')
+                                .toUpperCase()
+                              : 'U';
+                              
+                            return (
+                              <SelectItem key={user.id} value={user.id}>
+                                <div className="flex items-center">
+                                  <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
+                                    {initials}
+                                  </div>
+                                  {user.fullName || user.username || 'User ' + user.id}
                                 </div>
-                                {user.fullName}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <SelectItem value="no-users" disabled>
+                            <div className="flex items-center text-gray-500">
+                              <CircleUser className="h-5 w-5 mr-2" />
+                              <span>No users available</span>
+                            </div>
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -587,14 +607,23 @@ export default function CreateObjective() {
                         <SelectValue placeholder="Select Timeframe..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {timeframes?.map((timeframe: Timeframe) => (
-                          <SelectItem key={timeframe.id} value={timeframe.id}>
-                            <div className="flex items-center">
-                              <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-                              <span>{timeframe.name}</span>
+                        {timeframes && timeframes.length > 0 ? (
+                          timeframes.map((timeframe: Timeframe) => (
+                            <SelectItem key={timeframe.id} value={timeframe.id}>
+                              <div className="flex items-center">
+                                <Calendar className="h-5 w-5 mr-2 text-gray-500" />
+                                <span>{timeframe.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-timeframes" disabled>
+                            <div className="flex items-center text-gray-500">
+                              <Calendar className="h-5 w-5 mr-2" />
+                              <span>No timeframes available</span>
                             </div>
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
