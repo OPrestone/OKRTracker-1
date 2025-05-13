@@ -521,15 +521,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getObjective(id: string): Promise<Objective | undefined> {
-    const [objective] = await db.select().from(objectives).where(eq(objectives.id, id));
+    // Select only columns that exist in the actual database
+    const [objective] = await db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude updatedAt and statusReason which don't exist in the database
+    }).from(objectives).where(eq(objectives.id, id));
     return objective;
   }
 
   async updateObjective(id: string, objective: Partial<InsertObjective>): Promise<Objective> {
-    const [updatedObjective] = await db.update(objectives)
-      .set(objective)
-      .where(eq(objectives.id, id))
-      .returning();
+    // If the update contains fields that don't exist in the database, remove them
+    const cleanedUpdate = { ...objective };
+    if ('updatedAt' in cleanedUpdate) delete cleanedUpdate.updatedAt;
+    if ('statusReason' in cleanedUpdate) delete cleanedUpdate.statusReason;
+    
+    // Update
+    await db.update(objectives)
+      .set(cleanedUpdate)
+      .where(eq(objectives.id, id));
+    
+    // Then fetch the updated objective with only the columns that exist
+    const [updatedObjective] = await db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude fields that don't exist in the actual database
+    }).from(objectives).where(eq(objectives.id, id));
     
     if (!updatedObjective) {
       throw new Error(`Objective with id ${id} not found`);
@@ -539,23 +574,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllObjectives(): Promise<Objective[]> {
-    return db.select().from(objectives);
-  }
-
-  async getObjectivesByOwner(ownerId: string): Promise<Objective[]> {
-    return db.select().from(objectives).where(eq(objectives.ownerId, ownerId));
-  }
-
-  async getObjectivesByTeam(teamId: string): Promise<Objective[]> {
-    return db.select().from(objectives).where(eq(objectives.teamId, teamId));
-  }
-
-  async getObjectivesByTimeframe(timeframeId: string): Promise<Objective[]> {
-    return db.select().from(objectives).where(eq(objectives.timeframeId, timeframeId));
-  }
-  
-  async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
-    // Select specific columns, excluding statusReason which might be missing in the database
+    // Select only columns that exist in the actual database
     return db.select({
       id: objectives.id,
       title: objectives.title,
@@ -568,15 +587,105 @@ export class DatabaseStorage implements IStorage {
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
       createdAt: objectives.createdAt,
-      updatedAt: objectives.updatedAt
+      // Exclude updatedAt and statusReason which don't exist in the database
+    }).from(objectives);
+  }
+
+  async getObjectivesByOwner(ownerId: string): Promise<Objective[]> {
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude updatedAt and statusReason which don't exist in the database
+    }).from(objectives).where(eq(objectives.ownerId, ownerId));
+  }
+
+  async getObjectivesByTeam(teamId: string): Promise<Objective[]> {
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude updatedAt and statusReason which don't exist in the database
+    }).from(objectives).where(eq(objectives.teamId, teamId));
+  }
+
+  async getObjectivesByTimeframe(timeframeId: string): Promise<Objective[]> {
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude updatedAt and statusReason which don't exist in the database
+    }).from(objectives).where(eq(objectives.timeframeId, timeframeId));
+  }
+  
+  async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Note: Exclude fields that don't exist in the actual database: 
+      // - updatedAt
+      // - statusReason
     }).from(objectives).where(eq(objectives.tenantId, tenantId));
   }
 
   async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
-    const [updatedObjective] = await db.update(objectives)
+    // Update the progress
+    await db.update(objectives)
       .set({ progress })
-      .where(eq(objectives.id, id))
-      .returning();
+      .where(eq(objectives.id, id));
+    
+    // Then fetch the updated objective with only the columns that exist
+    const [updatedObjective] = await db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      createdAt: objectives.createdAt,
+      // Exclude fields that don't exist in the actual database
+    }).from(objectives).where(eq(objectives.id, id));
     
     if (!updatedObjective) {
       throw new Error(`Objective with id ${id} not found`);
