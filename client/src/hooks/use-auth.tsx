@@ -15,6 +15,12 @@ import { useTenantContext } from "./use-tenant-context";
 interface EnhancedUser extends SelectUser {
   tenants?: Array<Tenant & { userRole?: string }>;
   defaultTenant?: string;
+  isAdmin?: boolean;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  name?: string;
+  role?: string;
 }
 
 type AuthContextType = {
