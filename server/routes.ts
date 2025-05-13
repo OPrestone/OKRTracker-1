@@ -507,10 +507,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      // Add tenant ID to team data
+      // Use the owner ID from the authenticated user
       const validatedData = insertTeamSchema.parse({
         ...req.body,
-        tenantId: req.tenantId
+        ownerId: req.user.id
       });
       const team = await storage.createTeam(validatedData);
       res.status(201).json(team);

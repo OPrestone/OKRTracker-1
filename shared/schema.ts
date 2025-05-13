@@ -63,12 +63,11 @@ export const usersToTenants = pgTable("users_to_tenants", {
 export const teams = pgTableWithUlid("teams", {
   name: text("name").notNull(),
   description: text("description"),
-  avatarUrl: text("avatar_url"),
-  type: teamTypeEnum("type").default("team").notNull(),
+  color: text("color"),
+  icon: text("icon"),
   parentId: text("parent_id").references(() => teams.id),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  ownerId: text("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const accessGroups = pgTableWithUlid("access_groups", {
@@ -419,9 +418,9 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
     fields: [teams.parentId],
     references: [teams.id]
   }),
-  tenant: one(tenants, {
-    fields: [teams.tenantId],
-    references: [tenants.id]
+  owner: one(users, {
+    fields: [teams.ownerId],
+    references: [users.id]
   }),
   members: many(users),
   objectives: many(objectives),
@@ -795,7 +794,7 @@ export const financialBudgetsRelations = relations(financialBudgets, ({ one }) =
 // ZOD SCHEMAS
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });
 export const insertAccessGroupSchema = createInsertSchema(accessGroups).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCadenceSchema = createInsertSchema(cadences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTimeframeSchema = createInsertSchema(timeframes).omit({ id: true, createdAt: true, updatedAt: true });
