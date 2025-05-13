@@ -92,6 +92,7 @@ function AppRoutes() {
   return (
     <Switch>
       <AuthGuard path="/auth" component={AuthPage} />
+      <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />
