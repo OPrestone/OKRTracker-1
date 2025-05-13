@@ -219,7 +219,13 @@ export default function AllUsers() {
     deleteUserMutation.mutate(selectedUser.id);
   };
   
-  const isLoading = isLoadingUsers || isLoadingTeams;
+  // Helper function to get tenant name by ID
+  const getTenantName = (id: string) => {
+    const tenant = tenants.find(t => t.id === id);
+    return tenant?.name || tenant?.displayName || 'Unnamed Organization';
+  };
+  
+  const isLoading = isLoadingUsers || isLoadingTeams || isLoadingTenants;
   
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -366,6 +372,10 @@ export default function AllUsers() {
                   <Users className="h-4 w-4 mr-2" />
                   Assign to Team
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openOrgAssignDialog(user)}>
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Add to Organization
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <ShieldCheck className="h-4 w-4 mr-2" />
                   Manage Permissions
@@ -456,6 +466,73 @@ export default function AllUsers() {
               disabled={assignTeamMutation.isPending}
             >
               {assignTeamMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Organization Assignment Dialog */}
+      <Dialog open={isOrgAssignDialogOpen} onOpenChange={setIsOrgAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add User to Organization</DialogTitle>
+            <DialogDescription>
+              {selectedUser && `Add ${selectedUser.firstName} ${selectedUser.lastName} to an organization with a specific role.`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Organization</label>
+              <Select
+                value={orgAssignment.tenantId}
+                onValueChange={(value) => setOrgAssignment({ ...orgAssignment, tenantId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants.map((tenant: any) => (
+                    <SelectItem key={tenant.id} value={tenant.id}>
+                      {tenant.name || tenant.displayName || 'Unnamed Organization'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Role</label>
+              <Select
+                value={orgAssignment.role}
+                onValueChange={(value) => setOrgAssignment({ ...orgAssignment, role: value as "owner" | "admin" | "member" })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                <strong>Owner:</strong> Full access to manage organization settings, members, and all data.<br/>
+                <strong>Admin:</strong> Can manage teams, users, and data but cannot delete the organization.<br/>
+                <strong>Member:</strong> Can participate in teams and access data, but cannot manage organizational settings.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOrgAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignOrg}
+              disabled={assignOrgMutation.isPending || !orgAssignment.tenantId}
+            >
+              {assignOrgMutation.isPending ? "Adding..." : "Add to Organization"}
             </Button>
           </DialogFooter>
         </DialogContent>
