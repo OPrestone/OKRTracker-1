@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
@@ -46,7 +46,8 @@ import {
   UserCircle2,
   Target,
   Video,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { 
   Select, 
@@ -56,12 +57,54 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format, parseISO } from "date-fns";
+import { Meeting as DbMeeting } from "@shared/schema";
 
+// Types for frontend representation of meetings
 type MeetingStatus = "upcoming" | "completed" | "cancelled";
 type MeetingPlatform = "google_meet" | "microsoft_teams" | "zoom" | "in_person" | "other";
 
+interface User {
+  id: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  username?: string;
+  avatarUrl?: string;
+  title?: string;
+  role?: string;
+  initials: string;
+}
+
+interface Objective {
+  id: string;
+  title: string;
+  progress: number;
+}
+
+interface KeyResult {
+  id: string;
+  title: string;
+  progress: number;
+}
+
+interface ActionItem {
+  id: string;
+  description: string;
+  assignedToId: string;
+  assignedTo?: string;
+  completed: boolean;
+  dueDate?: string;
+  completedAt?: string;
+}
+
 interface Meeting {
-  id: number;
+  id: string;
   title: string;
   date: string;
   time: string;
@@ -69,114 +112,138 @@ interface Meeting {
   status: MeetingStatus;
   platform?: MeetingPlatform;
   meeting_link?: string;
-  attendees: {
-    id: number;
-    name: string;
-    role: string;
-    avatar?: string;
-    initials: string;
-  }[];
+  attendees: User[];
   agenda: string;
   notes?: string;
-  action_items?: {
-    id: number;
-    description: string;
-    assigned_to: string;
-    completed: boolean;
-  }[];
-  related_okrs?: {
-    id: number;
-    title: string;
-    progress: number;
-  }[];
+  action_items?: ActionItem[];
+  related_okrs?: Objective[];
+  related_key_results?: KeyResult[];
 }
 
 export default function OneOnOneMeetings() {
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    {
-      id: 1,
-      title: "Weekly OKR Check-in",
-      date: "2025-04-17",
-      time: "10:00 AM",
-      duration: "30 min",
-      status: "upcoming",
-      platform: "google_meet",
-      meeting_link: "https://meet.google.com/abc-defg-hij",
-      attendees: [
-        { id: 1, name: "John Doe", role: "Product Manager", initials: "JD" },
-        { id: 2, name: "Sarah Kim", role: "Developer", initials: "SK" }
-      ],
-      agenda: "Discuss progress on Q2 product launch objectives and blockers",
-      action_items: [],
-      related_okrs: [
-        { id: 101, title: "Launch mobile app v2.0", progress: 65 },
-        { id: 102, title: "Increase user engagement by 25%", progress: 40 }
-      ]
-    },
-    {
-      id: 2,
-      title: "Marketing Team OKR Review",
-      date: "2025-04-15",
-      time: "2:00 PM",
-      duration: "45 min",
-      status: "completed",
-      attendees: [
-        { id: 3, name: "Emily Chen", role: "Marketing Director", initials: "EC" },
-        { id: 4, name: "Alex Johnson", role: "Marketing Specialist", initials: "AJ" }
-      ],
-      agenda: "Review Q1 marketing campaign results and plan Q2 initiatives",
-      notes: "Team is on track with most objectives. Social media campaign exceeded targets by 15%. Need to allocate more resources to content creation.",
-      action_items: [
-        { id: 1, description: "Create content calendar for Q2", assigned_to: "Alex Johnson", completed: true },
-        { id: 2, description: "Schedule meeting with sales team to align on Q2 goals", assigned_to: "Emily Chen", completed: false }
-      ],
-      related_okrs: [
-        { id: 103, title: "Increase social media engagement by 30%", progress: 85 },
-        { id: 104, title: "Generate 20% more leads from content marketing", progress: 60 }
-      ]
-    },
-    {
-      id: 3,
-      title: "Engineering Sprint Planning",
-      date: "2025-04-20",
-      time: "11:00 AM",
-      duration: "60 min",
-      status: "upcoming",
-      platform: "microsoft_teams",
-      meeting_link: "https://teams.microsoft.com/l/meetup-join/meeting_abc123",
-      attendees: [
-        { id: 5, name: "Michael Wong", role: "Engineering Lead", initials: "MW" },
-        { id: 6, name: "Laura Smith", role: "Senior Developer", initials: "LS" },
-        { id: 7, name: "David Park", role: "QA Engineer", initials: "DP" }
-      ],
-      agenda: "Plan sprint tasks to align with quarterly OKRs, discuss technical debt reduction",
-      related_okrs: [
-        { id: 105, title: "Reduce API response time by 40%", progress: 25 },
-        { id: 106, title: "Implement automated testing for core features", progress: 50 }
-      ]
-    },
-    {
-      id: 4,
-      title: "Sales Performance Review",
-      date: "2025-04-10",
-      time: "9:00 AM",
-      duration: "45 min",
-      status: "cancelled",
-      attendees: [
-        { id: 8, name: "James Wilson", role: "Sales Director", initials: "JW" },
-        { id: 9, name: "Rebecca Taylor", role: "Sales Representative", initials: "RT" }
-      ],
-      agenda: "Review individual sales targets and alignment with company OKRs",
-      notes: "Meeting cancelled due to scheduling conflict. Rescheduled for next week.",
-      related_okrs: [
-        { id: 107, title: "Increase quarterly sales by 15%", progress: 30 },
-        { id: 108, title: "Expand into 2 new market segments", progress: 20 }
-      ]
-    }
-  ]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { tenant } = useTenantContext();
+  
+  // Fetch all meetings
+  const { 
+    data: meetingsData, 
+    isLoading: isLoadingMeetings, 
+    error: meetingsError 
+  } = useQuery({
+    queryKey: ['/api/meetings', tenant?.id],
+    enabled: !!tenant?.id,
+  });
+  
+  // Fetch users to get attendee details
+  const { 
+    data: usersData 
+  } = useQuery({
+    queryKey: ['/api/users'],
+    enabled: !!tenant?.id,
+  });
+  
+  // Fetch objectives for related OKRs
+  const {
+    data: objectivesData
+  } = useQuery({
+    queryKey: ['/api/objectives'],
+    enabled: !!tenant?.id,
+  });
+  
+  // Fetch key results for related OKRs
+  const {
+    data: keyResultsData
+  } = useQuery({
+    queryKey: ['/api/key-results'],
+    enabled: !!tenant?.id,
+  });
+
+  // Transform DB meeting data to frontend format
+  const meetings: Meeting[] = React.useMemo(() => {
+    if (!meetingsData || !Array.isArray(meetingsData)) return [];
+    
+    return meetingsData.map((dbMeeting: any) => {
+      // Format the date and time
+      const startTime = new Date(dbMeeting.scheduledStartTime);
+      const endTime = new Date(dbMeeting.scheduledEndTime);
+      const durationMinutes = dbMeeting.duration || 
+        Math.ceil((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+      
+      // Format attendees
+      const attendees = dbMeeting.attendees?.map((attendee: any) => {
+        const user = attendee.user || {};
+        const firstName = user.firstName || '';
+        const lastName = user.lastName || '';
+        const name = user.name || `${firstName} ${lastName}`.trim() || user.username || 'Unknown';
+        
+        return {
+          id: user.id,
+          name: name,
+          role: user.title || '',
+          avatar: user.avatarUrl,
+          initials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        };
+      }) || [];
+      
+      // Format action items
+      const actionItems = dbMeeting.actionItems?.map((item: any) => {
+        const assignedUser = usersData?.find((u: any) => u.id === item.assignedToId);
+        const assignedUserName = assignedUser ? 
+          ((assignedUser.name || 
+            `${assignedUser.firstName || ''} ${assignedUser.lastName || ''}`.trim() || 
+            assignedUser.username) || 'Unknown') : 'Unknown';
+        
+        return {
+          id: item.id,
+          description: item.description,
+          assignedToId: item.assignedToId,
+          assignedTo: assignedUserName,
+          completed: item.completed,
+          dueDate: item.dueDate,
+          completedAt: item.completedAt
+        };
+      }) || [];
+      
+      // Format related objectives
+      const relatedObjectives = dbMeeting.relatedObjectives?.map((objective: any) => {
+        return {
+          id: objective.id,
+          title: objective.title,
+          progress: objective.progress || 0
+        };
+      }) || [];
+      
+      // Format related key results
+      const relatedKeyResults = dbMeeting.relatedKeyResults?.map((keyResult: any) => {
+        return {
+          id: keyResult.id,
+          title: keyResult.title,
+          progress: keyResult.currentValue || 0
+        };
+      }) || [];
+      
+      return {
+        id: dbMeeting.id,
+        title: dbMeeting.title,
+        date: format(startTime, 'yyyy-MM-dd'),
+        time: format(startTime, 'h:mm a'),
+        duration: `${durationMinutes} min`,
+        status: dbMeeting.status as MeetingStatus,
+        platform: dbMeeting.platform as MeetingPlatform,
+        meeting_link: dbMeeting.meetingLink,
+        attendees,
+        agenda: dbMeeting.agenda,
+        notes: dbMeeting.notes,
+        action_items: actionItems,
+        related_okrs: relatedObjectives,
+        related_key_results: relatedKeyResults
+      };
+    });
+  }, [meetingsData, usersData, objectivesData, keyResultsData]);
 
   // Filter meetings by status
-  const upcomingMeetings = meetings.filter(meeting => meeting.status === "upcoming");
+  const upcomingMeetings = meetings.filter(meeting => meeting.status === "upcoming" || meeting.status === "scheduled");
   const completedMeetings = meetings.filter(meeting => meeting.status === "completed");
   const cancelledMeetings = meetings.filter(meeting => meeting.status === "cancelled");
 
