@@ -123,7 +123,7 @@ interface Meeting {
 export default function OneOnOneMeetings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { tenant } = useTenantContext();
+  const { currentTenant } = useTenantContext();
   
   // Fetch all meetings
   const { 
@@ -131,8 +131,8 @@ export default function OneOnOneMeetings() {
     isLoading: isLoadingMeetings, 
     error: meetingsError 
   } = useQuery({
-    queryKey: ['/api/meetings', tenant?.id],
-    enabled: !!tenant?.id,
+    queryKey: ['/api/meetings', currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
   
   // Fetch users to get attendee details
@@ -489,12 +489,22 @@ export default function OneOnOneMeetings() {
                       <SelectValue placeholder="Add attendees" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="John Doe">John Doe (Product Manager)</SelectItem>
-                      <SelectItem value="Sarah Kim">Sarah Kim (Developer)</SelectItem>
-                      <SelectItem value="Emily Chen">Emily Chen (Marketing Director)</SelectItem>
-                      <SelectItem value="Alex Johnson">Alex Johnson (Marketing Specialist)</SelectItem>
-                      <SelectItem value="Michael Wong">Michael Wong (Engineering Lead)</SelectItem>
-                      <SelectItem value="Laura Smith">Laura Smith (Senior Developer)</SelectItem>
+                      {!usersData || !Array.isArray(usersData) || usersData.length === 0 ? (
+                        <SelectItem value="" disabled>No users available</SelectItem>
+                      ) : (
+                        usersData.map((user: any) => {
+                          const name = user.name || 
+                            `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
+                            user.username || `User ${user.id.slice(-4)}`;
+                          const role = user.title || user.role || '';
+                          
+                          return (
+                            <SelectItem key={user.id} value={name}>
+                              {name} {role ? `(${role})` : ''}
+                            </SelectItem>
+                          );
+                        })
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -935,7 +945,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                       className="flex items-center p-2 bg-muted/30 rounded-md"
                     >
                       <Avatar className="h-8 w-8 mr-2">
-                        <AvatarImage src={attendee.avatar} alt={attendee.name} />
+                        <AvatarImage src={attendee.avatarUrl} alt={attendee.name} />
                         <AvatarFallback className="text-xs bg-primary/10 text-primary">
                           {attendee.initials}
                         </AvatarFallback>
@@ -983,7 +993,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                             {item.description}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Assigned to: {item.assigned_to}
+                            Assigned to: {item.assignedTo}
                           </p>
                         </div>
                       </div>
