@@ -639,6 +639,128 @@ export default function AllUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account. All fields are required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="firstName" className="text-sm font-medium">First Name</label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={newUser.firstName}
+                  onChange={handleNewUserInputChange}
+                  placeholder="John"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="lastName" className="text-sm font-medium">Last Name</label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={newUser.lastName}
+                  onChange={handleNewUserInputChange}
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="username" className="text-sm font-medium">Username</label>
+              <Input
+                id="username"
+                name="username"
+                value={newUser.username}
+                onChange={handleNewUserInputChange}
+                placeholder="johndoe"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <Input
+                id="email"
+                name="email"
+                value={newUser.email}
+                onChange={handleNewUserInputChange}
+                type="email"
+                placeholder="john.doe@example.com"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">Password</label>
+              <Input
+                id="password"
+                name="password"
+                value={newUser.password}
+                onChange={handleNewUserInputChange}
+                type="password"
+                placeholder="••••••••"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="teamId" className="text-sm font-medium">Team</label>
+              <Select
+                value={newUser.teamId.toString()}
+                onValueChange={(value) => setNewUser(prev => ({ ...prev, teamId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Team</SelectItem>
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="role" className="text-sm font-medium">Role</label>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateUser}
+              disabled={createUserMutation.isPending || !newUser.username || !newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password}
+            >
+              {createUserMutation.isPending ? "Creating..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
