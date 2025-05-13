@@ -171,13 +171,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Get tenant ID from session storage or URL for WebSocket connection
   const getCurrentTenantId = () => {
-    // First priority: Check for ULID in new /ulid/{id} format
-    const newUlidMatch = window.location.pathname.match(/\/ulid\/([A-Z0-9]{26})/);
-    if (newUlidMatch) {
-      return newUlidMatch[1];
+    // First priority: Check for direct ULID in path /{id} format
+    const directUlidMatch = window.location.pathname.match(/^\/([A-Z0-9]{26})/);
+    if (directUlidMatch) {
+      return directUlidMatch[1];
     }
     
-    // Second priority: Check for ULID tenant ID in /tenants/{id} pattern
+    // Second priority: Check for legacy ULID in /ulid/{id} format
+    const legacyUlidMatch = window.location.pathname.match(/\/ulid\/([A-Z0-9]{26})/);
+    if (legacyUlidMatch) {
+      return legacyUlidMatch[1];
+    }
+    
+    // Third priority: Check for ULID tenant ID in /tenants/{id} pattern
     const tenantsUlidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
     if (tenantsUlidMatch) {
       return tenantsUlidMatch[1];
