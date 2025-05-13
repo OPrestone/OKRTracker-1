@@ -340,7 +340,7 @@ export default function OneOnOneMeetings() {
       meetingLink: meetingLink || undefined,
       agenda: meetingAgenda,
       tenantId: currentTenant?.id, // From tenant context
-      attendees: selectedAttendees.map(attendeeName => {
+      attendeeIds: selectedAttendees.map(attendeeName => {
         // Find user IDs from usersData based on name
         const user = usersData?.find((user: any) => {
           const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();

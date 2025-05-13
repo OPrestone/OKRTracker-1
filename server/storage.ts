@@ -1305,6 +1305,7 @@ export class DatabaseStorage implements IStorage {
 
   async getMeetingWithDetails(id: string): Promise<Meeting & { 
     attendees: Array<User & { isAttending: boolean }>,
+    attendeeIds: string[],
     relatedObjectives: Objective[],
     relatedKeyResults: KeyResult[],
     actionItems: ActionItem[]
@@ -1313,21 +1314,25 @@ export class DatabaseStorage implements IStorage {
     const meeting = await this.getMeeting(id);
     if (!meeting) return undefined;
 
-    // Get attendees with their status
-    const attendees = await this.getMeetingAttendees(id);
+    // Get all meeting-related data in parallel for better performance
+    const [attendees, relatedObjectives, relatedKeyResults, actionItems, attendeeIdsResult] = await Promise.all([
+      this.getMeetingAttendees(id),
+      this.getMeetingObjectives(id),
+      this.getMeetingKeyResults(id),
+      this.getActionItemsByMeeting(id),
+      db.select({
+        userId: meetingsToUsers.userId
+      })
+      .from(meetingsToUsers)
+      .where(eq(meetingsToUsers.meetingId, id))
+    ]);
 
-    // Get related objectives
-    const relatedObjectives = await this.getMeetingObjectives(id);
-
-    // Get related key results
-    const relatedKeyResults = await this.getMeetingKeyResults(id);
-
-    // Get action items
-    const actionItems = await this.getActionItemsByMeeting(id);
+    const attendeeIds = attendeeIdsResult.map(result => result.userId);
 
     return {
       ...meeting,
       attendees,
+      attendeeIds,
       relatedObjectives,
       relatedKeyResults,
       actionItems
@@ -1360,7 +1365,7 @@ export class DatabaseStorage implements IStorage {
     return meetingsWithAttendeeIds;
   }
 
-  async getMeetingsByUser(userId: string): Promise<Meeting[]> {
+  async getMeetingsByUser(userId: string): Promise<(Meeting & { attendeeIds?: string[] })[]> {
     // Get all meetings where the user is an attendee
     const userMeetings = await db.select({
       meetingId: meetingsToUsers.meetingId
@@ -1373,10 +1378,28 @@ export class DatabaseStorage implements IStorage {
     const meetingIds = userMeetings.map(m => m.meetingId);
 
     // Get the full meeting details
-    return db.select()
+    const userMeetingsData = await db.select()
       .from(meetings)
       .where(inArray(meetings.id, meetingIds))
       .orderBy(desc(meetings.scheduledStartTime));
+      
+    // For each meeting, get its attendees
+    const meetingsWithAttendeeIds = await Promise.all(
+      userMeetingsData.map(async (meeting) => {
+        const attendeeIdsResult = await db.select({
+          userId: meetingsToUsers.userId
+        })
+        .from(meetingsToUsers)
+        .where(eq(meetingsToUsers.meetingId, meeting.id));
+        
+        return {
+          ...meeting,
+          attendeeIds: attendeeIdsResult.map(result => result.userId)
+        };
+      })
+    );
+    
+    return meetingsWithAttendeeIds;
   }
 
   async getMeetingsByStatus(tenantId: string, status: string): Promise<(Meeting & { attendeeIds?: string[] })[]> {
@@ -1410,10 +1433,11 @@ export class DatabaseStorage implements IStorage {
     return meetingsWithAttendeeIds;
   }
 
-  async getUpcomingMeetings(tenantId: string, limit: number = 5): Promise<Meeting[]> {
+  async getUpcomingMeetings(tenantId: string, limit: number = 5): Promise<(Meeting & { attendeeIds?: string[] })[]> {
     const now = new Date();
     
-    return db.select()
+    // First get all upcoming meetings
+    const upcomingMeetings = await db.select()
       .from(meetings)
       .where(
         and(
@@ -1424,6 +1448,24 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(meetings.scheduledStartTime)
       .limit(limit);
+    
+    // For each meeting, get its attendees
+    const meetingsWithAttendeeIds = await Promise.all(
+      upcomingMeetings.map(async (meeting) => {
+        const attendeeIdsResult = await db.select({
+          userId: meetingsToUsers.userId
+        })
+        .from(meetingsToUsers)
+        .where(eq(meetingsToUsers.meetingId, meeting.id));
+        
+        return {
+          ...meeting,
+          attendeeIds: attendeeIdsResult.map(result => result.userId)
+        };
+      })
+    );
+    
+    return meetingsWithAttendeeIds;
   }
 
   async updateMeeting(id: string, meeting: Partial<InsertMeeting>): Promise<Meeting> {
