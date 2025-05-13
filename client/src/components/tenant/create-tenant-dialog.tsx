@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,7 @@ interface CreateTenantDialogProps {
 export default function CreateTenantDialog({ open, onOpenChange }: CreateTenantDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [_, navigate] = useLocation();
   
   // Set up form with validation
   const form = useForm<FormValues>({
@@ -70,7 +72,8 @@ export default function CreateTenantDialog({ open, onOpenChange }: CreateTenantD
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const { tenant } = data;
       toast({
         title: "Organization created",
         description: "Your new organization has been created successfully.",
@@ -79,6 +82,11 @@ export default function CreateTenantDialog({ open, onOpenChange }: CreateTenantD
       onOpenChange(false);
       // Invalidate tenants query to refresh list
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      // Redirect to the new organization dashboard
+      if (tenant && tenant.slug) {
+        navigate(`/t/${tenant.slug}`);
+      }
     },
     onError: (error: Error) => {
       toast({
