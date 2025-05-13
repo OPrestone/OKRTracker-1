@@ -295,9 +295,17 @@ export default function TenantOnboardingWizard() {
       
       // Automatically redirect to the new organization dashboard after a short delay
       if (data && data.tenant && data.tenant.id) {
+        // Set the tenant ID in the context first to avoid being redirected back to tenant-onboarding
+        if (window) {
+          // Store the tenant ID in sessionStorage
+          sessionStorage.setItem("selectedTenantId", data.tenant.id);
+        }
+        
+        // Then redirect with a delay to allow the success message to be seen
         setTimeout(() => {
-          navigate(`/${data.tenant.id}`);
-        }, 1500); // Give time for the user to see the success message
+          // Force a full page refresh to ensure all tenant data is properly loaded
+          window.location.href = `/${data.tenant.id}`;
+        }, 1500);
       }
     },
     onError: (error: Error) => {
