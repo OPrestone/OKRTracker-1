@@ -162,25 +162,29 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // Determine the URL to navigate to
     let newUrl = '';
     
-    // Handle new ULID-based routes
-    if (location.startsWith('/ulid/')) {
-      newUrl = location.replace(/\/ulid\/[A-Z0-9]{26}/, `/ulid/${tenant.id}`);
+    // Handle direct ID-based routes
+    if (location.match(/^\/[A-Z0-9]{26}/)) {
+      newUrl = location.replace(/^\/[A-Z0-9]{26}/, `/${tenant.id}`);
     }
     // Handle organization routes (legacy format)
     else if (location.startsWith('/organization/')) {
-      newUrl = location.replace(/\/organization\/[^/]+/, `/ulid/${tenant.id}`);
+      newUrl = location.replace(/\/organization\/[^/]+/, `/${tenant.id}`);
     } 
+    // Handle legacy ULID-based routes
+    else if (location.startsWith('/ulid/')) {
+      newUrl = location.replace(/\/ulid\/[A-Z0-9]{26}/, `/${tenant.id}`);
+    }
     // Handle tenant ID-based routes - updated pattern for ULIDs
     else if (location.match(/\/tenants\/[A-Z0-9]{26}/)) {
-      newUrl = `/ulid/${tenant.id}`;
+      newUrl = `/${tenant.id}`;
     } 
     // Handle tenant slug-based routes (legacy)
     else if (location.startsWith('/tenants/')) {
-      newUrl = location.replace(/\/tenants\/[^/]+/, `/ulid/${tenant.id}`);
+      newUrl = location.replace(/\/tenants\/[^/]+/, `/${tenant.id}`);
     } 
-    // Default navigation to new ULID-based format
+    // Default navigation to new direct ID-based format
     else {
-      newUrl = `/ulid/${tenant.id}`;
+      newUrl = `/${tenant.id}`;
     }
     
     // Invalidate all queries before reloading to ensure fresh data

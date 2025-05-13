@@ -675,7 +675,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                       : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
                   )}
                 >
-                  <Link href={`/ulid/${selectedTenant.id}/subscription`} className="w-full">
+                  <Link href={`/${selectedTenant.id}/subscription`} className="w-full">
                     Subscription
                   </Link>
                 </div>
