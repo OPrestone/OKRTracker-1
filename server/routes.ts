@@ -3006,6 +3006,548 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 1:1 Meetings API
+  // Get all meetings for the current tenant
+  app.get("/api/meetings", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const meetings = await storage.getMeetingsByTenant(tenantId);
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching meetings:", error);
+      next(error);
+    }
+  });
+
+  // Get upcoming meetings
+  app.get("/api/meetings/upcoming", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const meetings = await storage.getUpcomingMeetings(tenantId, limit);
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching upcoming meetings:", error);
+      next(error);
+    }
+  });
+
+  // Get meetings by status
+  app.get("/api/meetings/status/:status", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const status = req.params.status;
+      
+      // Validate status
+      if (!["scheduled", "completed", "cancelled", "upcoming"].includes(status)) {
+        return res.status(400).json({ error: "Invalid meeting status" });
+      }
+      
+      const meetings = await storage.getMeetingsByStatus(tenantId, status);
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching meetings by status:", error);
+      next(error);
+    }
+  });
+
+  // Get meetings for a specific user
+  app.get("/api/users/:userId/meetings", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const userId = req.params.userId;
+      const tenantId = req.tenantId;
+      
+      // If it's not the current user, verify permission (admin or team lead)
+      if (req.user?.id !== userId && !req.user?.isAdmin) {
+        return res.status(403).json({ error: "Not authorized to view meetings for this user" });
+      }
+      
+      const meetings = await storage.getMeetingsByUser(userId);
+      
+      // Filter meetings to only include those in the current tenant for security
+      const tenantMeetings = meetings.filter(meeting => meeting.tenantId === tenantId);
+      
+      res.json(tenantMeetings);
+    } catch (error) {
+      console.error("Error fetching user meetings:", error);
+      next(error);
+    }
+  });
+
+  // Get a specific meeting with all details
+  app.get("/api/meetings/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      const meeting = await storage.getMeetingWithDetails(meetingId);
+      
+      if (!meeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      // Verify tenant access
+      if (meeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      res.json(meeting);
+    } catch (error) {
+      console.error("Error fetching meeting details:", error);
+      next(error);
+    }
+  });
+
+  // Create a new meeting
+  app.post("/api/meetings", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      const validatedData = insertMeetingSchema.parse({
+        ...req.body,
+        creatorId: userId,
+        tenantId: tenantId,
+      });
+      
+      const meeting = await storage.createMeeting(validatedData);
+      
+      // If attendees were provided, add them to the meeting
+      if (req.body.attendees && Array.isArray(req.body.attendees)) {
+        for (const attendeeId of req.body.attendees) {
+          await storage.addAttendeeToMeeting(meeting.id, attendeeId);
+        }
+      }
+      
+      // If related objectives were provided, link them to the meeting
+      if (req.body.objectives && Array.isArray(req.body.objectives)) {
+        for (const objectiveId of req.body.objectives) {
+          await storage.addObjectiveToMeeting(meeting.id, objectiveId);
+        }
+      }
+      
+      // If related key results were provided, link them to the meeting
+      if (req.body.keyResults && Array.isArray(req.body.keyResults)) {
+        for (const keyResultId of req.body.keyResults) {
+          await storage.addKeyResultToMeeting(meeting.id, keyResultId);
+        }
+      }
+      
+      res.status(201).json(meeting);
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+      next(error);
+    }
+  });
+
+  // Update a meeting
+  app.patch("/api/meetings/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      // Only allow creator or admin to update
+      if (existingMeeting.creatorId !== req.user?.id && !req.user?.isAdmin) {
+        return res.status(403).json({ error: "Not authorized to update this meeting" });
+      }
+      
+      const validatedData = z.object({
+        title: z.string().optional(),
+        scheduledStartTime: z.string().optional(),
+        scheduledEndTime: z.string().optional(),
+        duration: z.number().optional(),
+        status: z.enum(["scheduled", "completed", "cancelled", "upcoming"]).optional(),
+        platform: z.enum(["google_meet", "zoom", "microsoft_teams", "in_person", "other"]).optional(),
+        meetingLink: z.string().optional(),
+        agenda: z.string().optional(),
+        notes: z.string().optional(),
+      }).parse(req.body);
+      
+      // Convert string dates to Date objects
+      if (validatedData.scheduledStartTime) {
+        validatedData.scheduledStartTime = new Date(validatedData.scheduledStartTime);
+      }
+      
+      if (validatedData.scheduledEndTime) {
+        validatedData.scheduledEndTime = new Date(validatedData.scheduledEndTime);
+      }
+      
+      const updatedMeeting = await storage.updateMeeting(meetingId, validatedData);
+      
+      res.json(updatedMeeting);
+    } catch (error) {
+      console.error("Error updating meeting:", error);
+      next(error);
+    }
+  });
+
+  // Delete a meeting
+  app.delete("/api/meetings/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      // Only allow creator or admin to delete
+      if (existingMeeting.creatorId !== req.user?.id && !req.user?.isAdmin) {
+        return res.status(403).json({ error: "Not authorized to delete this meeting" });
+      }
+      
+      await storage.deleteMeeting(meetingId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+      next(error);
+    }
+  });
+
+  // Add attendee to meeting
+  app.post("/api/meetings/:id/attendees", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const tenantId = req.tenantId;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      const attendee = await storage.addAttendeeToMeeting(meetingId, userId);
+      
+      res.status(201).json(attendee);
+    } catch (error) {
+      console.error("Error adding meeting attendee:", error);
+      next(error);
+    }
+  });
+
+  // Remove attendee from meeting
+  app.delete("/api/meetings/:id/attendees/:userId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const userId = req.params.userId;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      await storage.removeAttendeeFromMeeting(meetingId, userId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing meeting attendee:", error);
+      next(error);
+    }
+  });
+
+  // Update attendee status
+  app.patch("/api/meetings/:id/attendees/:userId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const userId = req.params.userId;
+      const tenantId = req.tenantId;
+      const { isAttending } = req.body;
+      
+      if (isAttending === undefined) {
+        return res.status(400).json({ error: "isAttending is required" });
+      }
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      const attendee = await storage.updateAttendeeStatus(meetingId, userId, isAttending);
+      
+      res.json(attendee);
+    } catch (error) {
+      console.error("Error updating attendee status:", error);
+      next(error);
+    }
+  });
+
+  // Add action item to meeting
+  app.post("/api/meetings/:id/action-items", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      const validatedData = insertActionItemSchema.parse({
+        ...req.body,
+        meetingId,
+        tenantId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      const actionItem = await storage.createActionItem(validatedData);
+      
+      res.status(201).json(actionItem);
+    } catch (error) {
+      console.error("Error creating action item:", error);
+      next(error);
+    }
+  });
+
+  // Update action item
+  app.patch("/api/action-items/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const actionItemId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify action item exists and belongs to this tenant
+      const existingActionItem = await storage.getActionItem(actionItemId);
+      
+      if (!existingActionItem) {
+        return res.status(404).json({ error: "Action item not found" });
+      }
+      
+      if (existingActionItem.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this action item" });
+      }
+      
+      const validatedData = z.object({
+        description: z.string().optional(),
+        assignedToId: z.string().optional(),
+        completed: z.boolean().optional(),
+        dueDate: z.string().optional(),
+      }).parse(req.body);
+      
+      // Convert string date to Date object
+      if (validatedData.dueDate) {
+        validatedData.dueDate = new Date(validatedData.dueDate);
+      }
+      
+      // If completing the action item, set the completedAt timestamp
+      if (validatedData.completed === true) {
+        (validatedData as any).completedAt = new Date();
+      }
+      
+      const actionItem = await storage.updateActionItem(actionItemId, validatedData);
+      
+      res.json(actionItem);
+    } catch (error) {
+      console.error("Error updating action item:", error);
+      next(error);
+    }
+  });
+
+  // Delete action item
+  app.delete("/api/action-items/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const actionItemId = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify action item exists and belongs to this tenant
+      const existingActionItem = await storage.getActionItem(actionItemId);
+      
+      if (!existingActionItem) {
+        return res.status(404).json({ error: "Action item not found" });
+      }
+      
+      if (existingActionItem.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this action item" });
+      }
+      
+      await storage.deleteActionItem(actionItemId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting action item:", error);
+      next(error);
+    }
+  });
+
+  // Link objective to meeting
+  app.post("/api/meetings/:id/objectives/:objectiveId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const objectiveId = req.params.objectiveId;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      // Verify objective exists and belongs to this tenant
+      const existingObjective = await storage.getObjective(objectiveId);
+      
+      if (!existingObjective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      if (existingObjective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      const linkResult = await storage.addObjectiveToMeeting(meetingId, objectiveId);
+      
+      res.status(201).json(linkResult);
+    } catch (error) {
+      console.error("Error linking objective to meeting:", error);
+      next(error);
+    }
+  });
+
+  // Unlink objective from meeting
+  app.delete("/api/meetings/:id/objectives/:objectiveId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const objectiveId = req.params.objectiveId;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      await storage.removeObjectiveFromMeeting(meetingId, objectiveId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking objective from meeting:", error);
+      next(error);
+    }
+  });
+
+  // Link key result to meeting
+  app.post("/api/meetings/:id/key-results/:keyResultId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const keyResultId = req.params.keyResultId;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      // Verify key result exists and its objective belongs to this tenant
+      const existingKeyResult = await storage.getKeyResult(keyResultId);
+      
+      if (!existingKeyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      const parentObjective = await storage.getObjective(existingKeyResult.objectiveId);
+      
+      if (!parentObjective || parentObjective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
+      const linkResult = await storage.addKeyResultToMeeting(meetingId, keyResultId);
+      
+      res.status(201).json(linkResult);
+    } catch (error) {
+      console.error("Error linking key result to meeting:", error);
+      next(error);
+    }
+  });
+
+  // Unlink key result from meeting
+  app.delete("/api/meetings/:id/key-results/:keyResultId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const meetingId = req.params.id;
+      const keyResultId = req.params.keyResultId;
+      const tenantId = req.tenantId;
+      
+      // Verify meeting exists and belongs to this tenant
+      const existingMeeting = await storage.getMeeting(meetingId);
+      
+      if (!existingMeeting) {
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+      
+      if (existingMeeting.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this meeting" });
+      }
+      
+      await storage.removeKeyResultFromMeeting(meetingId, keyResultId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error unlinking key result from meeting:", error);
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time chat
