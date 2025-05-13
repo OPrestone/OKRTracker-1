@@ -1334,11 +1334,30 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getMeetingsByTenant(tenantId: string): Promise<Meeting[]> {
-    return db.select()
+  async getMeetingsByTenant(tenantId: string): Promise<(Meeting & { attendeeIds?: string[] })[]> {
+    // First get all meetings
+    const allMeetings = await db.select()
       .from(meetings)
       .where(eq(meetings.tenantId, tenantId))
       .orderBy(desc(meetings.scheduledStartTime));
+    
+    // For each meeting, get its attendees
+    const meetingsWithAttendeeIds = await Promise.all(
+      allMeetings.map(async (meeting) => {
+        const attendeeIdsResult = await db.select({
+          userId: meetingsToUsers.userId
+        })
+        .from(meetingsToUsers)
+        .where(eq(meetingsToUsers.meetingId, meeting.id));
+        
+        return {
+          ...meeting,
+          attendeeIds: attendeeIdsResult.map(result => result.userId)
+        };
+      })
+    );
+    
+    return meetingsWithAttendeeIds;
   }
 
   async getMeetingsByUser(userId: string): Promise<Meeting[]> {
@@ -1360,8 +1379,9 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(meetings.scheduledStartTime));
   }
 
-  async getMeetingsByStatus(tenantId: string, status: string): Promise<Meeting[]> {
-    return db.select()
+  async getMeetingsByStatus(tenantId: string, status: string): Promise<(Meeting & { attendeeIds?: string[] })[]> {
+    // First get all meetings by status
+    const allMeetings = await db.select()
       .from(meetings)
       .where(
         and(
@@ -1370,6 +1390,24 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(meetings.scheduledStartTime));
+    
+    // For each meeting, get its attendees
+    const meetingsWithAttendeeIds = await Promise.all(
+      allMeetings.map(async (meeting) => {
+        const attendeeIdsResult = await db.select({
+          userId: meetingsToUsers.userId
+        })
+        .from(meetingsToUsers)
+        .where(eq(meetingsToUsers.meetingId, meeting.id));
+        
+        return {
+          ...meeting,
+          attendeeIds: attendeeIdsResult.map(result => result.userId)
+        };
+      })
+    );
+    
+    return meetingsWithAttendeeIds;
   }
 
   async getUpcomingMeetings(tenantId: string, limit: number = 5): Promise<Meeting[]> {

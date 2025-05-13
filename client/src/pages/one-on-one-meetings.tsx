@@ -171,20 +171,46 @@ export default function OneOnOneMeetings() {
         Math.ceil((endTime.getTime() - startTime.getTime()) / (1000 * 60));
       
       // Format attendees
-      const attendees = dbMeeting.attendees?.map((attendee: any) => {
-        const user = attendee.user || {};
-        const firstName = user.firstName || '';
-        const lastName = user.lastName || '';
-        const name = user.name || `${firstName} ${lastName}`.trim() || user.username || 'Unknown';
-        
-        return {
-          id: user.id,
-          name: name,
-          role: user.title || '',
-          avatar: user.avatarUrl,
-          initials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
-        };
-      }) || [];
+      let attendees: any[] = [];
+      
+      // Try to get attendees from the meeting object
+      if (dbMeeting.attendees && Array.isArray(dbMeeting.attendees) && dbMeeting.attendees.length > 0) {
+        attendees = dbMeeting.attendees.map((attendee: any) => {
+          const user = attendee.user || {};
+          const firstName = user.firstName || '';
+          const lastName = user.lastName || '';
+          const name = user.name || `${firstName} ${lastName}`.trim() || user.username || 'Unknown';
+          
+          return {
+            id: user.id,
+            name: name,
+            role: user.title || '',
+            avatarUrl: user.avatarUrl,
+            initials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+          };
+        });
+      } 
+      // If we have meetingsToUsers data, fetch user details from users data
+      else if (dbMeeting.attendeeIds && Array.isArray(dbMeeting.attendeeIds) && usersData) {
+        attendees = dbMeeting.attendeeIds
+          .map((userId: string) => {
+            const user = usersData.find((u: any) => u.id === userId);
+            if (!user) return null;
+            
+            const firstName = user.firstName || '';
+            const lastName = user.lastName || '';
+            const name = user.name || `${firstName} ${lastName}`.trim() || user.username || 'Unknown';
+            
+            return {
+              id: user.id,
+              name: name,
+              role: user.title || '',
+              avatarUrl: user.avatarUrl,
+              initials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+            };
+          })
+          .filter(Boolean);
+      }
       
       // Format action items
       const actionItems = dbMeeting.actionItems?.map((item: any) => {
@@ -937,23 +963,27 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                   Attendees
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {meeting.attendees.map((attendee) => (
-                    <div 
-                      key={attendee.id} 
-                      className="flex items-center p-2 bg-muted/30 rounded-md"
-                    >
-                      <Avatar className="h-8 w-8 mr-2">
-                        <AvatarImage src={attendee.avatarUrl} alt={attendee.name} />
-                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                          {attendee.initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-sm font-medium">{attendee.name}</div>
-                        <div className="text-xs text-muted-foreground">{attendee.role}</div>
+                  {(!meeting.attendees || meeting.attendees.length === 0) ? (
+                    <div className="text-sm text-muted-foreground italic">No attendees found</div>
+                  ) : (
+                    meeting.attendees.map((attendee) => (
+                      <div 
+                        key={attendee.id || `attendee-${Math.random()}`} 
+                        className="flex items-center p-2 bg-muted/30 rounded-md"
+                      >
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarImage src={attendee.avatarUrl} alt={attendee.name || 'Attendee'} />
+                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                            {attendee.initials || (attendee.name ? attendee.name[0] : '?')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-sm font-medium">{attendee.name || 'Unknown Attendee'}</div>
+                          <div className="text-xs text-muted-foreground">{attendee.role || 'Team Member'}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
               
@@ -1075,7 +1105,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             onClick={() => {
               toast({
                 title: "Reschedule requested",
-                description: `You've requested to reschedule "${meeting.title}" with ${meeting.attendees[0]?.name || 'attendees'}.`,
+                description: `You've requested to reschedule "${meeting.title}" with ${meeting.attendees && meeting.attendees[0]?.name ? meeting.attendees[0].name : 'attendees'}.`,
               });
               // In a real implementation, you'd open a scheduling dialog or redirect to a calendar page
             }}
