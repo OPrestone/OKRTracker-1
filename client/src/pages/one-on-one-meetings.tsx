@@ -139,24 +139,24 @@ export default function OneOnOneMeetings() {
   const { 
     data: usersData 
   } = useQuery({
-    queryKey: ['/api/users'],
-    enabled: !!tenant?.id,
+    queryKey: ['/api/users', currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
   
   // Fetch objectives for related OKRs
   const {
     data: objectivesData
   } = useQuery({
-    queryKey: ['/api/objectives'],
-    enabled: !!tenant?.id,
+    queryKey: ['/api/objectives', currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
   
   // Fetch key results for related OKRs
   const {
     data: keyResultsData
   } = useQuery({
-    queryKey: ['/api/key-results'],
-    enabled: !!tenant?.id,
+    queryKey: ['/api/key-results', currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
 
   // Transform DB meeting data to frontend format
@@ -313,7 +313,7 @@ export default function OneOnOneMeetings() {
       platform: meetingPlatform || undefined,
       meetingLink: meetingLink || undefined,
       agenda: meetingAgenda,
-      tenantId: tenant?.id, // From tenant context
+      tenantId: currentTenant?.id, // From tenant context
       attendees: selectedAttendees.map(attendeeName => {
         // Find user IDs from usersData based on name
         const user = usersData?.find((user: any) => {
