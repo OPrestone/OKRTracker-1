@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import {
   Code,
   Edit,
   LinkIcon,
+  Loader2,
   MoreHorizontal,
   NetworkIcon,
   Plus,
@@ -35,31 +36,70 @@ import { useLocation } from "wouter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getQueryFn } from "@/lib/queryClient";
-import { useQuery } from "@tanstack/react-query";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { InsertObjective } from "@shared/schema";
+import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
-  id: number;
+  id: string;
+  name: string;
   fullName: string;
   username: string;
-  teamId: number | null;
+  teamId: string | null;
 }
 
 interface Team {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
-  leaderId: number | null;
-  memberCount: number | null;
+  ownerId: string | null;
 }
+
+interface Timeframe {
+  id: string;
+  name: string;
+  description: string | null;
+  startDate: string;
+  endDate: string;
+  cadenceId: string | null;
+  tenantId: string;
+}
+
+// Form schema for creating objectives
+const objectiveFormSchema = z.object({
+  title: z.string().min(5, { message: "Title must be at least 5 characters" }),
+  description: z.string().optional(),
+  teamId: z.string().optional(),
+  ownerId: z.string().optional(),
+  timeframeId: z.string(),
+  status: z.enum(["draft", "active", "completed", "archived"]).default("draft"),
+  parentId: z.string().optional(),
+  // Tags and contributors will be handled separately
+});
+
+type ObjectiveFormValues = z.infer<typeof objectiveFormSchema>;
 
 export default function CreateObjective() {
   const [_, setLocation] = useLocation();
+  const { toast } = useToast();
   const [alignmentOption, setAlignmentOption] = useState<string>("strategic-pillar");
   const [progressDriver, setProgressDriver] = useState<string>("key-results");
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedContributors, setSelectedContributors] = useState<number[]>([]);
+  const [selectedContributors, setSelectedContributors] = useState<string[]>([]);
   
   // Set of tags based on request
   const availableTags = [
@@ -69,6 +109,48 @@ export default function CreateObjective() {
     "Operational Excellence",
     "Sustainability"
   ];
+
+  // Form setup
+  const form = useForm<ObjectiveFormValues>({
+    resolver: zodResolver(objectiveFormSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'draft',
+      teamId: undefined,
+      ownerId: undefined,
+      timeframeId: '',
+      parentId: undefined,
+    }
+  });
+
+  // Create objective mutation
+  const createObjectiveMutation = useMutation({
+    mutationFn: async (data: ObjectiveFormValues) => {
+      const response = await apiRequest("POST", "/api/objectives", data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create objective");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      toast({
+        title: "Objective created",
+        description: "Your objective has been successfully created",
+      });
+      // Navigate to the objectives list or another relevant page
+      setLocation("/my-okrs");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create objective",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch teams from API
   const { data: teams = [] } = useQuery<Team[]>({
@@ -82,28 +164,48 @@ export default function CreateObjective() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  // Fetch timeframes from API
+  const { data: timeframes = [] } = useQuery<Timeframe[]>({
+    queryKey: ['/api/timeframes'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  // Fetch parent objectives from API for alignment
+  const { data: objectives = [] } = useQuery({
+    queryKey: ['/api/objectives'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
     selectedTeam && user.teamId === selectedTeam
   ) || [];
 
   const handleCancel = () => {
-    setLocation("/");
+    setLocation("/my-okrs");
   };
 
-  const handleSave = () => {
-    // Here you would normally save the data
-    // After saving, redirect to create key result page
-    setLocation("/create-key-result");
+  const onSubmit = (values: ObjectiveFormValues) => {
+    // Create the objective
+    createObjectiveMutation.mutate(values, {
+      onSuccess: () => {
+        toast({
+          title: "Objective created",
+          description: "Your objective has been created successfully",
+        });
+        setLocation("/my-okrs");
+      }
+    });
   };
 
   const handleTeamChange = (teamId: string) => {
-    setSelectedTeam(Number(teamId));
+    setSelectedTeam(teamId);
+    form.setValue('teamId', teamId);
     // Reset selected contributors when team changes
     setSelectedContributors([]);
   };
 
-  const handleContributorToggle = (userId: number) => {
+  const handleContributorToggle = (userId: string) => {
     if (selectedContributors.includes(userId)) {
       setSelectedContributors(selectedContributors.filter(id => id !== userId));
     } else {
@@ -123,7 +225,7 @@ export default function CreateObjective() {
     <DashboardLayout>
       <div className="container mx-auto p-6 max-w-4xl bg-white shadow">
         <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Add Key Result</h1>
+          <h1 className="text-2xl font-bold">Create New Objective</h1>
           <button 
             onClick={handleCancel}
             className="text-gray-500 hover:text-gray-700"
@@ -132,92 +234,142 @@ export default function CreateObjective() {
           </button>
         </div>
 
-        <div className="space-y-6">
-          {/* Name */}
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <div className="flex gap-2 mt-1">
-              <Input 
-                id="name" 
-                placeholder="Our onboarding process is smooth and fast" 
-                className="flex-1"
-              />
-              <Button variant="outline" size="icon">
-                <Edit className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Title */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2 mt-1">
+                      <Input 
+                        placeholder="Improve customer onboarding experience" 
+                        className="flex-1"
+                        {...field}
+                      />
+                      <Button type="button" variant="outline" size="icon">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {/* Alignment */}
-          <div>
-            <Label>Alignment</Label>
-            <div className="grid grid-cols-2 gap-4 mt-1">
-              <Select defaultValue="strategic-pillar">
-                <SelectTrigger className="w-full">
-                  <div className="flex items-center">
-                    <Building className="h-5 w-5 mr-2 text-green-600" />
-                    <span>Support a Strategic Pillar</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="strategic-pillar">
+            {/* Alignment */}
+            <div>
+              <Label>Alignment</Label>
+              <div className="grid grid-cols-2 gap-4 mt-1">
+                <Select defaultValue="strategic-pillar" onValueChange={setAlignmentOption}>
+                  <SelectTrigger className="w-full">
                     <div className="flex items-center">
                       <Building className="h-5 w-5 mr-2 text-green-600" />
-                      Support a Strategic Pillar
+                      <span>Support a Strategic Pillar</span>
                     </div>
-                  </SelectItem>
-                  <SelectItem value="team-objective">
-                    <div className="flex items-center">
-                      <Users className="h-5 w-5 mr-2 text-blue-600" />
-                      Support a Team Objective
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="company-objective">
-                    <div className="flex items-center">
-                      <Target className="h-5 w-5 mr-2 text-red-600" />
-                      Support a Company Objective
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Strategic Pillar..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="growth">Growth</SelectItem>
-                  <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
-                  <SelectItem value="innovation">Innovation</SelectItem>
-                  <SelectItem value="operational-excellence">Operational Excellence</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Team (renamed from Owner) */}
-          <div>
-            <Label>Team</Label>
-            <div className="mt-1">
-              <Select onValueChange={handleTeamChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Team..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {teams?.map((team: Team) => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="strategic-pillar">
                       <div className="flex items-center">
-                        <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium text-sm mr-2">
-                          {team.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <span>{team.name}</span>
+                        <Building className="h-5 w-5 mr-2 text-green-600" />
+                        Support a Strategic Pillar
                       </div>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <SelectItem value="team-objective">
+                      <div className="flex items-center">
+                        <Users className="h-5 w-5 mr-2 text-blue-600" />
+                        Support a Team Objective
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="company-objective">
+                      <div className="flex items-center">
+                        <Target className="h-5 w-5 mr-2 text-red-600" />
+                        Support a Company Objective
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {alignmentOption === 'strategic-pillar' && (
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Strategic Pillar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="growth">Growth</SelectItem>
+                      <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
+                      <SelectItem value="innovation">Innovation</SelectItem>
+                      <SelectItem value="operational-excellence">Operational Excellence</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {alignmentOption === 'company-objective' && (
+                  <FormField
+                    control={form.control}
+                    name="parentId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Parent Objective..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {objectives?.map((objective: any) => (
+                              <SelectItem key={objective.id} value={objective.id}>
+                                {objective.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
             </div>
-          </div>
+
+            {/* Team */}
+            <FormField
+              control={form.control}
+              name="teamId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Team</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      handleTeamChange(value);
+                    }} 
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Team..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams?.map((team: Team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          <div className="flex items-center">
+                            <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium text-sm mr-2">
+                              {team.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span>{team.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           
           {/* Contributors */}
           <div>
@@ -313,64 +465,78 @@ export default function CreateObjective() {
             </div>
           </div>
 
-          {/* Lead and Timeframe */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Lead */}
-            <div>
-              <Label>Lead</Label>
-              <div className="mt-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <div className="flex items-center">
-                      <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
-                        BG
-                      </div>
-                      <span>Bonface Gitonga</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bonface">
-                      <div className="flex items-center">
-                        <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
-                          BG
-                        </div>
-                        Bonface Gitonga
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="jane">
-                      <div className="flex items-center">
-                        <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-800 font-medium text-sm mr-2">
-                          JD
-                        </div>
-                        Jane Doe
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Lead and Timeframe */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Lead */}
+              <FormField
+                control={form.control}
+                name="ownerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lead</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Lead..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users?.map((user: User) => {
+                          const initials = user.fullName
+                            .split(' ')
+                            .map(name => name[0])
+                            .join('')
+                            .toUpperCase();
+                            
+                          return (
+                            <SelectItem key={user.id} value={user.id}>
+                              <div className="flex items-center">
+                                <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
+                                  {initials}
+                                </div>
+                                {user.fullName}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Timeframe */}
-            <div>
-              <Label>Timeframe</Label>
-              <div className="mt-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <div className="flex items-center">
-                      <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Q2 2025</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="q1-2025">Q1 2025</SelectItem>
-                    <SelectItem value="q2-2025">Q2 2025</SelectItem>
-                    <SelectItem value="q3-2025">Q3 2025</SelectItem>
-                    <SelectItem value="q4-2025">Q4 2025</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Timeframe */}
+              <FormField
+                control={form.control}
+                name="timeframeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Timeframe</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Timeframe..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeframes?.map((timeframe: Timeframe) => (
+                          <SelectItem key={timeframe.id} value={timeframe.id}>
+                            <div className="flex items-center">
+                              <Calendar className="h-5 w-5 mr-2 text-gray-500" />
+                              <span>{timeframe.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </div>
 
           {/* Advanced Options */}
           <Accordion type="single" collapsible className="w-full">
@@ -381,17 +547,26 @@ export default function CreateObjective() {
               <AccordionContent>
                 <div className="space-y-6 pt-2">
                   {/* Description */}
-                  <div>
-                    <div className="flex justify-between">
-                      <Label htmlFor="description">Description</Label>
-                      <span className="text-sm text-gray-500">Optional</span>
-                    </div>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Why is it a priority?" 
-                      className="mt-1 h-24"
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between">
+                          <FormLabel>Description</FormLabel>
+                          <span className="text-sm text-gray-500">Optional</span>
+                        </div>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Why is this objective a priority?" 
+                            className="h-24"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   {/* Update frequency */}
                   <div>
@@ -442,20 +617,30 @@ export default function CreateObjective() {
           {/* Bottom buttons */}
           <div className="mt-4 flex justify-end">
             <Button
-              variant="ghost"
+              type="button"
+              variant="outline"
               className="mr-2"
               onClick={handleCancel}
             >
               Cancel
             </Button>
             <Button
+              type="submit"
               className="bg-primary-600 hover:bg-primary-700 text-white"
-              onClick={handleSave}
+              disabled={createObjectiveMutation.isPending}
             >
-              Save
+              {createObjectiveMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Objective"
+              )}
             </Button>
           </div>
-        </div>
+          </form>
+        </Form>
       </div>
     </DashboardLayout>
   );
