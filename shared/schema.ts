@@ -116,12 +116,12 @@ export const objectives = pgTableWithUlid("objectives", {
   teamId: text("team_id").references(() => teams.id),
   timeframeId: text("timeframe_id").references(() => timeframes.id),
   status: objectiveStatusEnum("status").default("draft").notNull(),
-  statusReason: objectiveStatusReasonEnum("status_reason"),
+  // statusReason is removed as it doesn't exist in the DB
   progress: integer("progress").default(0).notNull(), // 0-100 percentage
   parentId: text("parent_id").references(() => objectives.id),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // updatedAt is removed as it doesn't exist in the DB
 });
 
 export const keyResults = pgTableWithUlid("key_results", {
