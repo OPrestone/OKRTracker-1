@@ -154,34 +154,41 @@ export default function CreateObjective() {
   });
 
   // Fetch teams from API
-  const { data: teams = [], isError: teamsError } = useQuery<Team[]>({
+  const { data: teams = [], isError: teamsError, error: teamsErrorData } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
 
   // Fetch users from API
-  const { data: users = [], isError: usersError } = useQuery<User[]>({
+  const { data: users = [], isError: usersError, error: usersErrorData } = useQuery<User[]>({
     queryKey: ['/api/users'],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
 
   // Fetch timeframes from API
-  const { data: timeframes = [], isError: timeframesError } = useQuery<Timeframe[]>({
+  const { data: timeframes = [], isError: timeframesError, error: timeframesErrorData } = useQuery<Timeframe[]>({
     queryKey: ['/api/timeframes'],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
 
   // Fetch parent objectives from API for alignment
-  const { data: objectives = [], isError: objectivesError } = useQuery({
+  const { data: objectives = [], isError: objectivesError, error: objectivesErrorData } = useQuery({
     queryKey: ['/api/objectives'],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
   
-  // Check for any data loading errors  
+  // Check for any data loading errors
+  const hasAuthError = teamsError || usersError || timeframesError || objectivesError;
+  const isAuthError = 
+    (teamsErrorData instanceof Error && teamsErrorData.message.includes("Unauthorized")) ||
+    (usersErrorData instanceof Error && usersErrorData.message.includes("Unauthorized")) ||
+    (timeframesErrorData instanceof Error && timeframesErrorData.message.includes("Unauthorized")) ||
+    (objectivesErrorData instanceof Error && objectivesErrorData.message.includes("Unauthorized"));
+  
   const hasErrors = usersError || timeframesError || objectivesError || teamsError;
 
   // Filter team members based on the selected team

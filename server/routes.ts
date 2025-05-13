@@ -3756,28 +3756,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Enhanced team data endpoint
-  app.get("/api/teams", async (req, res, next) => {
-    try {
-      const teams = await storage.getAllTeams();
-      
-      // Enhance teams with member count and performance
-      const enhancedTeams = await Promise.all(teams.map(async team => {
-        // Get team members count
-        const members = await storage.getUsersByTeam(team.id);
-        return {
-          ...team,
-          memberCount: members.length,
-          // Add a random performance percentage for each team (between 65-95%)
-          performance: Math.floor(Math.random() * 30) + 65
-        };
-      }));
-      
-      res.json(enhancedTeams);
-    } catch (error) {
-      next(error);
-    }
-  });
+  // Enhanced team data endpoint - merged with the other /api/teams endpoint
+  // app.get("/api/teams", async (req, res, next) => {
+  //   try {
+  //     const teams = await storage.getAllTeams();
+  //     
+  //     // Enhance teams with member count and performance
+  //     const enhancedTeams = await Promise.all(teams.map(async team => {
+  //       // Get team members count
+  //       const members = await storage.getUsersByTeam(team.id);
+  //       return {
+  //         ...team,
+  //         memberCount: members.length,
+  //         // Add a random performance percentage for each team (between 65-95%)
+  //         performance: Math.floor(Math.random() * 30) + 65
+  //       };
+  //     }));
+  //     
+  //     res.json(enhancedTeams);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // });
   
   // Team users endpoint
   app.get("/api/teams/:teamId/users", ensureAuthenticated, withTenant, async (req, res, next) => {
