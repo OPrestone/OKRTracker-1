@@ -27,8 +27,9 @@ class TenantService {
       // Check if user has any tenant connections already
       const userTenants = await this.getUserTenants(user.id);
       
-      // Allow users to create their first tenant, but restrict additional tenants to admins
-      if (userTenants.length > 0 && !user.isAdmin && !user.role?.includes('admin')) {
+      // If using tenant onboarding, allow creating organization even if user has existing ones
+      // Check if this request came from tenant-onboarding (indicated by role = "owner")
+      if (userTenants.length > 0 && !user.isAdmin && !user.role?.includes('admin') && userRole !== "owner") {
         throw new Error('Only administrators can create additional organizations');
       }
       
