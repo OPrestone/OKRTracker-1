@@ -294,9 +294,9 @@ export default function TenantOnboardingWizard() {
       setTenantCreated(true);
       
       // Automatically redirect to the new organization dashboard after a short delay
-      if (data && data.tenant && data.tenant.slug) {
+      if (data && data.tenant && data.tenant.id) {
         setTimeout(() => {
-          navigate(`/t/${data.tenant.slug}`);
+          navigate(`/${data.tenant.id}`);
         }, 1500); // Give time for the user to see the success message
       }
     },
