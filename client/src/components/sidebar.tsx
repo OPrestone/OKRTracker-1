@@ -131,6 +131,15 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
     user?.firstName && user?.lastName
       ? `${user.firstName[0]}${user.lastName[0]}`
       : user?.username?.[0] || "?";
+      
+  // Function to check if current user is an admin for the selected tenant
+  const isCurrentUserAdmin = () => {
+    if (!user || !selectedTenant) return false;
+    
+    // Check if user has admin privileges in this tenant
+    const userRole = user.tenants?.find(t => t.id === selectedTenant.id)?.userRole;
+    return userRole === 'owner' || userRole === 'admin';
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -599,32 +608,36 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
-        {/* Administrative Section */}
-        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
-          Administration
-        </div>
+        {/* Administrative Section - Always visible to admins/owners in the tenant */}
+        {(isCurrentUserAdmin() || user?.isAdmin) && (
+          <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+            <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+            Administration
+          </div>
+        )}
 
-        {/* Organizations Menu */}
-        <button
-          onClick={() => setTenantsExpanded(!tenantsExpanded)}
-          className={cn(
-            "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/tenants" || location.startsWith("/tenants/") || location.includes("/organization/")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
-          )}
-        >
-          <Building className="mr-3 h-5 w-5 text-indigo-400" />
-          <span>Organizations</span>
-          {tenantsExpanded ? (
-            <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
-          ) : (
-            <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
-          )}
-        </button>
+        {/* Organizations Menu - Always visible to admins/owners in the tenant */}
+        {(isCurrentUserAdmin() || user?.isAdmin) && (
+          <button
+            onClick={() => setTenantsExpanded(!tenantsExpanded)}
+            className={cn(
+              "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+              location === "/tenants" || location.startsWith("/tenants/") || location.includes("/organization/")
+                ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
+                : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+            )}
+          >
+            <Building className="mr-3 h-5 w-5 text-indigo-400" />
+            <span>Organizations</span>
+            {tenantsExpanded ? (
+              <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
+            )}
+          </button>
+        )}
 
-        {tenantsExpanded && (
+        {tenantsExpanded && (isCurrentUserAdmin() || user?.isAdmin) && (
           <div className="pl-11 mt-1 mb-1">
             {/* Organization Management Section */}
             <div className="mb-2">
@@ -647,8 +660,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             
             </div>
 
-            {/* Current Organization Settings */}
-            {selectedTenant && (
+            {/* Current Organization Settings - Only show for organization admins */}
+            {selectedTenant && (isCurrentUserAdmin() || user?.isAdmin) && (
               <div className="mb-2">
                 <div className="text-xs font-semibold text-indigo-300 uppercase tracking-wide mb-1">
                   {selectedTenant.name}
@@ -866,23 +879,29 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
 
-        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
-          Administration
-        </div>
-        <div
-          className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
-            location === "/configure"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
-          )}
-        >
-          <Link href={getLink("/configure")} className="flex items-center w-full">
-            <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
-            <span>Configurations</span>
-          </Link>
-        </div>
+        {/* Admin section - Only visible to admins/owners */}
+        {(isCurrentUserAdmin() || user?.isAdmin) && (
+          <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
+            <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+            Administration
+          </div>
+        )}
+        {/* Configurations link - Only visible to admins/owners */}
+        {(isCurrentUserAdmin() || user?.isAdmin) && (
+          <div
+            className={cn(
+              "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+              location === "/configure"
+                ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
+                : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+            )}
+          >
+            <Link href={getLink("/configure")} className="flex items-center w-full">
+              <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
+              <span>Configurations</span>
+            </Link>
+          </div>
+        )}
 
         <button
           onClick={() => setConfigExpanded(!configExpanded)}
