@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +40,7 @@ export function TenantSelectionModal({
 }: TenantSelectionModalProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const { switchTenant } = useTenantContext();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
 
   if (!tenants || tenants.length === 0) {
     return null;
@@ -50,7 +50,11 @@ export function TenantSelectionModal({
   const handleSelectTenant = (tenant: Tenant) => {
     setIsLoading(tenant.id);
     switchTenant(tenant);
-    // The actual navigation happens in the switchTenant function
+    // Add a small delay before redirecting
+    setTimeout(() => {
+      window.location.href = "/";
+      onClose();
+    }, 500);
   };
 
   // Role badges with appropriate colors

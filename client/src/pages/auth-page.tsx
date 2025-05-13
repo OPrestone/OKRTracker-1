@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { authenticationHelp } from "@/components/help/help-content";
+import { TenantSelectionModal } from "@/components/tenant/tenant-selection-modal";
 // Using a placeholder gradient color instead of an image
 
 // Login form schema
@@ -134,8 +135,21 @@ export default function AuthPage() {
         role: "user",
       },
       {
-        onSuccess: () => {
-          window.location.reload(); // Reload the page after successful registration
+        onSuccess: (user) => {
+          // Check if user has tenants
+          if (user.tenants && user.tenants.length > 0) {
+            if (user.tenants.length === 1) {
+              // If there's only one tenant, navigate directly
+              window.location.reload();
+            } else {
+              // If multiple tenants exist, show the selection modal
+              setAvailableTenants(user.tenants);
+              setShowTenantSelection(true);
+            }
+          } else {
+            // No tenants available, just reload
+            window.location.reload();
+          }
         },
       }
     );
@@ -178,6 +192,13 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen">
+      {/* Tenant selection modal */}
+      <TenantSelectionModal
+        isOpen={showTenantSelection}
+        onClose={() => setShowTenantSelection(false)}
+        tenants={availableTenants}
+      />
+      
       {/* Left side - Auth forms */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-20 py-12 w-full lg:w-1/2 relative">
         <div className="w-full max-w-md space-y-8">
