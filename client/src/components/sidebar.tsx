@@ -141,7 +141,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   };
 
   // Check if any tenant management paths are active to auto-expand organization menu
-  const isTenantPathActive = ["/tenants", "/tenants/", "/ulid/"].some(
+  const isTenantPathActive = ["/tenants", "/tenants/"].some(
     (path) => locationPath === path || locationPath.startsWith(path)
   );
   const [tenantsExpanded, setTenantsExpanded] = useState(isTenantPathActive);
@@ -182,8 +182,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
       }
     }
     
-    // Check for ULID in /ulid/{id}
-    const ulidDirectMatch = locationPath.match(/\/ulid\/([A-Z0-9]{26})/);
+    // Check for direct ULID path /{id}
+    const ulidDirectMatch = locationPath.match(/^\/([A-Z0-9]{26})/);
     if (ulidDirectMatch) {
       const tenantId = ulidDirectMatch[1];
       const matchedTenant = tenants.find(t => t.id === tenantId);
@@ -228,7 +228,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   // Helper function to generate links with tenant context if available
   const getLink = (path: string) => {
     if (!selectedTenant) return path;
-    return `/ulid/${selectedTenant.id}${path}`;
+    return `/${selectedTenant.id}${path}`;
   };
   
   const sidebarContent = (
@@ -656,12 +656,12 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 <div
                   className={cn(
                     "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
-                    (location.startsWith(`/ulid/${selectedTenant.id}`) && !location.includes("/subscription"))
+                    (location.startsWith(`/${selectedTenant.id}`) && !location.includes("/subscription"))
                       ? "text-white font-medium bg-indigo-900/40"
                       : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
                   )}
                 >
-                  <Link href={`/ulid/${selectedTenant.id}`} className="w-full">
+                  <Link href={`/${selectedTenant.id}`} className="w-full">
                     Organization Settings
                   </Link>
                 </div>
