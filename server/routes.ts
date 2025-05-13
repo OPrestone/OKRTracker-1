@@ -3058,8 +3058,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Team users endpoint
   app.get("/api/teams/:teamId/users", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      const teamId = parseInt(req.params.teamId);
-      if (isNaN(teamId)) {
+      const teamId = req.params.teamId;
+      if (!teamId) {
         return res.status(400).json({ error: "Invalid team ID" });
       }
       
