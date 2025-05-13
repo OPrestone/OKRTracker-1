@@ -744,6 +744,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const userId = req.params.userId;
+      const body = req.body;
+      
+      // If teamId is null or undefined, it means we want to remove the user from the team
+      if (body.teamId === null || body.teamId === undefined) {
+        // Handle removing user from team
+        const updatedUser = await storage.removeUserFromTeam(userId);
+        return res.json(updatedUser);
+      }
+      
+      // Otherwise, validate and assign to team
       const { teamId } = z.object({ teamId: z.string() }).parse(req.body);
       
       // Verify user exists and belongs to current tenant
