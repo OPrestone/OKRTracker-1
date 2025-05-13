@@ -46,22 +46,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
-  // Get tenant context safely - if it fails, provide fallback functions
-  const tenantContext = (() => {
-    try {
-      return useTenantContext();
-    } catch (e) {
-      // Provide empty implementation if TenantContext is not available
-      console.warn("TenantContext not available in AuthProvider");
-      return {
-        setCurrentTenant: () => {},
-        currentTenant: null,
-        switchTenant: () => {},
-        isLoading: false,
-        error: null
-      };
-    }
-  })();
+  // We can't use useTenantContext directly here because of circular dependency
+  // Instead, we'll use the global callback in main.tsx
+  const tenantContext = {
+    // Function gets assigned through the onProviderReady callback in TenantProvider
+    setCurrentTenant: (tenant: Tenant) => {
+      // Check if window.__setTenant exists (set by TenantProvider's onProviderReady)
+      if ((window as any).__setTenant) {
+        (window as any).__setTenant(tenant);
+      } else {
+        console.warn("setCurrentTenant called before TenantProvider ready");
+      }
+    },
+    currentTenant: null,
+    // Minimal implementation of switchTenant
+    switchTenant: (tenant: Tenant) => {
+      // Store tenant info in session storage (equivalent to TenantProvider.switchTenant)
+      sessionStorage.setItem('currentTenantId', tenant.id);
+      sessionStorage.setItem('currentTenantSlug', tenant.slug);
+      sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
+      
+      // Navigate to tenant URL
+      window.location.href = `/${tenant.id}`;
+    },
+    isLoading: false,
+    error: null
+  };
   
   const {
     data: user,
@@ -111,13 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : user.tenants[0];
           
         if (defaultTenant) {
+          // Make sure it has all the required Tenant fields
+          const fullTenant: Tenant = {
+            id: defaultTenant.id,
+            name: defaultTenant.name || (defaultTenant as any).displayName || 'Organization',
+            displayName: (defaultTenant as any).displayName || defaultTenant.name || 'Organization',
+            slug: defaultTenant.slug || 'org',
+            userRole: defaultTenant.userRole
+          };
+          
           // Update tenant info in session storage
-          sessionStorage.setItem('currentTenantId', defaultTenant.id);
-          sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
-          sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+          sessionStorage.setItem('currentTenantId', fullTenant.id);
+          sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
+          sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
           
           // Also trigger tenant refresh in tenant context
-          tenantContext.setCurrentTenant(defaultTenant);
+          tenantContext.setCurrentTenant(fullTenant);
         }
       }
       
@@ -158,13 +177,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : user.tenants[0];
           
         if (defaultTenant) {
+          // Make sure it has all the required Tenant fields
+          const fullTenant: Tenant = {
+            id: defaultTenant.id,
+            name: defaultTenant.name || (defaultTenant as any).displayName || 'Organization',
+            displayName: (defaultTenant as any).displayName || defaultTenant.name || 'Organization',
+            slug: defaultTenant.slug || 'org',
+            userRole: defaultTenant.userRole
+          };
+          
           // Update tenant info in session storage
-          sessionStorage.setItem('currentTenantId', defaultTenant.id);
-          sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
-          sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+          sessionStorage.setItem('currentTenantId', fullTenant.id);
+          sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
+          sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
           
           // Also trigger tenant refresh in tenant context
-          tenantContext.setCurrentTenant(defaultTenant);
+          tenantContext.setCurrentTenant(fullTenant);
         }
       }
       
@@ -204,8 +232,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('currentTenantSlug');
       sessionStorage.removeItem('currentTenantName');
       
-      // Reset tenant context
-      tenantContext.setCurrentTenant(null);
+      // Reset tenant context - need to create a dummy tenant to satisfy TypeScript
+      tenantContext.setCurrentTenant({
+        id: '',
+        name: '',
+        displayName: '',
+        slug: '',
+      } as unknown as Tenant);
       
       // Clear any redirect paths
       clearRedirectPath();

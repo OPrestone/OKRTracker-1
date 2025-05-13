@@ -33,7 +33,13 @@ type TenantContextType = {
 
 const TenantContext = createContext<TenantContextType | null>(null);
 
-export function TenantProvider({ children }: { children: ReactNode }) {
+export function TenantProvider({ 
+  children,
+  onProviderReady
+}: { 
+  children: ReactNode,
+  onProviderReady?: (setTenantFn: (tenant: Tenant) => void) => void 
+}) {
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [location] = useLocation();
 
@@ -47,7 +53,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     enabled: true,
   });
 
-  // Initialize from session storage on component mount
+  // Initialize from session storage on component mount and notify parent via callback
   useEffect(() => {
     const storedTenantId = sessionStorage.getItem('currentTenantId');
     if (storedTenantId) {
@@ -55,7 +61,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       // before we can fully restore the tenant object with all its properties
       console.log('Found stored tenant ID:', storedTenantId);
     }
-  }, []);
+    
+    // Notify the parent component that the provider is ready
+    if (onProviderReady) {
+      onProviderReady(setCurrentTenant);
+    }
+  }, [onProviderReady]);
 
   // Find and set the current tenant based on URL path or session storage
   useEffect(() => {
