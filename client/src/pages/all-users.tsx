@@ -137,6 +137,49 @@ export default function AllUsers() {
     setIsTeamAssignDialogOpen(true);
   };
 
+  // Organization assignment mutation
+  const assignOrgMutation = useMutation({
+    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: "owner" | "admin" | "member" }) => {
+      const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { userId, role });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      setIsOrgAssignDialogOpen(false);
+      setSelectedUser(null);
+      setOrgAssignment({ tenantId: "", role: "member" });
+      
+      toast({
+        title: "Success",
+        description: "User added to organization successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to add user to organization: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleAssignOrg = () => {
+    if (!selectedUser) return;
+    assignOrgMutation.mutate({ 
+      userId: selectedUser.id, 
+      tenantId: orgAssignment.tenantId,
+      role: orgAssignment.role
+    });
+  };
+  
+  const openOrgAssignDialog = (user: User) => {
+    setSelectedUser(user);
+    setOrgAssignment({ tenantId: "", role: "member" });
+    setIsOrgAssignDialogOpen(true);
+  };
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -168,51 +211,7 @@ export default function AllUsers() {
     setIsDeleteDialogOpen(true);
   };
   
-  // Add user to organization mutation
-  const assignOrgMutation = useMutation({
-    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: string }) => {
-      const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { 
-        userId, 
-        role 
-      });
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      
-      setIsOrgAssignDialogOpen(false);
-      setSelectedUser(null);
-      setOrgAssignment({ tenantId: "", role: "member" });
-      
-      toast({
-        title: "User Added to Organization",
-        description: "User has been successfully added to the organization.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Adding to Organization Failed",
-        description: error.message || "Failed to add user to organization.",
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const openOrgAssignDialog = (user: User) => {
-    setSelectedUser(user);
-    setOrgAssignment({ tenantId: tenantId || "", role: "member" });
-    setIsOrgAssignDialogOpen(true);
-  };
-  
-  const handleAssignOrg = () => {
-    if (!selectedUser) return;
-    
-    assignOrgMutation.mutate({ 
-      userId: selectedUser.id, 
-      tenantId: orgAssignment.tenantId,
-      role: orgAssignment.role
-    });
-  };
+  // Using the assignOrgMutation that was defined earlier
   
   const handleDeleteUser = () => {
     if (!selectedUser) return;
