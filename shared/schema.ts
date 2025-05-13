@@ -17,6 +17,8 @@ export const userLevelEnum = pgEnum("user_level", ["beginner", "intermediate", "
 export const transactionTypeEnum = pgEnum("transaction_type", ["income", "expense", "transfer"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "canceled", "past_due", "unpaid", "incomplete", "incomplete_expired", "trialing"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "pending", "failed"]);
+export const meetingStatusEnum = pgEnum("meeting_status", ["scheduled", "completed", "cancelled", "upcoming"]);
+export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "zoom", "microsoft_teams", "in_person", "other"]);
 
 // TABLE SCHEMAS
 
@@ -906,3 +908,136 @@ export type InsertFinancialTransaction = z.infer<typeof insertFinancialTransacti
 
 export type FinancialBudget = typeof financialBudgets.$inferSelect;
 export type InsertFinancialBudget = z.infer<typeof insertFinancialBudgetSchema>;
+
+// 1:1 Meetings
+export const meetings = pgTableWithUlid("meetings", {
+  title: text("title").notNull(),
+  scheduledStartTime: timestamp("scheduled_start_time").notNull(),
+  scheduledEndTime: timestamp("scheduled_end_time").notNull(),
+  duration: integer("duration").notNull(), // Duration in minutes
+  status: meetingStatusEnum("status").default("scheduled").notNull(),
+  platform: meetingPlatformEnum("platform"),
+  meetingLink: text("meeting_link"),
+  agenda: text("agenda").notNull(),
+  notes: text("notes"),
+  creatorId: text("creator_id").references(() => users.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const meetingsToUsers = pgTableWithUlid("meetings_to_users", {
+  meetingId: text("meeting_id").references(() => meetings.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  isAttending: boolean("is_attending").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const meetingsToObjectives = pgTableWithUlid("meetings_to_objectives", {
+  meetingId: text("meeting_id").references(() => meetings.id).notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const meetingsToKeyResults = pgTableWithUlid("meetings_to_key_results", {
+  meetingId: text("meeting_id").references(() => meetings.id).notNull(),
+  keyResultId: text("key_result_id").references(() => keyResults.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const actionItems = pgTableWithUlid("action_items", {
+  description: text("description").notNull(),
+  assignedToId: text("assigned_to_id").references(() => users.id).notNull(),
+  meetingId: text("meeting_id").references(() => meetings.id).notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Relations
+export const meetingsRelations = relations(meetings, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [meetings.creatorId],
+    references: [users.id]
+  }),
+  tenant: one(tenants, {
+    fields: [meetings.tenantId],
+    references: [tenants.id]
+  }),
+  attendees: many(meetingsToUsers),
+  actionItems: many(actionItems),
+  relatedObjectives: many(meetingsToObjectives),
+  relatedKeyResults: many(meetingsToKeyResults)
+}));
+
+export const meetingsToUsersRelations = relations(meetingsToUsers, ({ one }) => ({
+  meeting: one(meetings, {
+    fields: [meetingsToUsers.meetingId],
+    references: [meetings.id]
+  }),
+  user: one(users, {
+    fields: [meetingsToUsers.userId],
+    references: [users.id]
+  })
+}));
+
+export const meetingsToObjectivesRelations = relations(meetingsToObjectives, ({ one }) => ({
+  meeting: one(meetings, {
+    fields: [meetingsToObjectives.meetingId],
+    references: [meetings.id]
+  }),
+  objective: one(objectives, {
+    fields: [meetingsToObjectives.objectiveId],
+    references: [objectives.id]
+  })
+}));
+
+export const meetingsToKeyResultsRelations = relations(meetingsToKeyResults, ({ one }) => ({
+  meeting: one(meetings, {
+    fields: [meetingsToKeyResults.meetingId],
+    references: [meetings.id]
+  }),
+  keyResult: one(keyResults, {
+    fields: [meetingsToKeyResults.keyResultId],
+    references: [keyResults.id]
+  })
+}));
+
+export const actionItemsRelations = relations(actionItems, ({ one }) => ({
+  assignedTo: one(users, {
+    fields: [actionItems.assignedToId],
+    references: [users.id]
+  }),
+  meeting: one(meetings, {
+    fields: [actionItems.meetingId],
+    references: [meetings.id]
+  }),
+  tenant: one(tenants, {
+    fields: [actionItems.tenantId],
+    references: [tenants.id]
+  })
+}));
+
+// Types for Meetings
+export const insertMeetingSchema = createInsertSchema(meetings).omit({ id: true });
+export type Meeting = typeof meetings.$inferSelect;
+export type InsertMeeting = z.infer<typeof insertMeetingSchema>;
+
+export const insertMeetingToUserSchema = createInsertSchema(meetingsToUsers).omit({ id: true });
+export type MeetingToUser = typeof meetingsToUsers.$inferSelect;
+export type InsertMeetingToUser = z.infer<typeof insertMeetingToUserSchema>;
+
+export const insertMeetingToObjectiveSchema = createInsertSchema(meetingsToObjectives).omit({ id: true });
+export type MeetingToObjective = typeof meetingsToObjectives.$inferSelect;
+export type InsertMeetingToObjective = z.infer<typeof insertMeetingToObjectiveSchema>;
+
+export const insertMeetingToKeyResultSchema = createInsertSchema(meetingsToKeyResults).omit({ id: true });
+export type MeetingToKeyResult = typeof meetingsToKeyResults.$inferSelect;
+export type InsertMeetingToKeyResult = z.infer<typeof insertMeetingToKeyResultSchema>;
+
+export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
+export type ActionItem = typeof actionItems.$inferSelect;
+export type InsertActionItem = z.infer<typeof insertActionItemSchema>;

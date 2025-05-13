@@ -904,18 +904,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cadences API
-  app.get("/api/cadences", async (req, res, next) => {
+  app.get("/api/cadences", withTenant, async (req, res, next) => {
     try {
-      const cadences = await storage.getAllCadences();
-      res.json(cadences);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Fetch cadences for the current tenant only
+      const cadencesList = await db.select()
+        .from(cadences)
+        .where(eq(cadences.tenantId, tenantId));
+      
+      res.json(cadencesList);
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/cadences", async (req, res, next) => {
+  app.post("/api/cadences", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertCadenceSchema.parse(req.body);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Add tenant ID to the cadence data
+      const validatedData = insertCadenceSchema.parse({
+        ...req.body,
+        tenantId
+      });
+      
       const cadence = await storage.createCadence(validatedData);
       res.status(201).json(cadence);
     } catch (error) {
@@ -923,9 +944,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/cadences/:id", async (req, res, next) => {
+  app.patch("/api/cadences/:id", withTenant, async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify the cadence belongs to the current tenant
+      const cadence = await storage.getCadence(id);
+      if (!cadence) {
+        return res.status(404).json({ error: "Cadence not found" });
+      }
+      
+      if (cadence.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const validatedData = insertCadenceSchema.partial().parse(req.body);
       const updatedCadence = await storage.updateCadence(id, validatedData);
       res.json(updatedCadence);
@@ -934,9 +971,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/cadences/:id", async (req, res, next) => {
+  app.delete("/api/cadences/:id", withTenant, async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify the cadence belongs to the current tenant
+      const cadence = await storage.getCadence(id);
+      if (!cadence) {
+        return res.status(404).json({ error: "Cadence not found" });
+      }
+      
+      if (cadence.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
       
       // Check if cadence has timeframes
       const timeframes = await storage.getTimeframesByCadence(id);
@@ -954,18 +1006,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Timeframes API
-  app.get("/api/timeframes", async (req, res, next) => {
+  app.get("/api/timeframes", withTenant, async (req, res, next) => {
     try {
-      const timeframes = await storage.getAllTimeframes();
-      res.json(timeframes);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Fetch timeframes for the current tenant only
+      const timeframesList = await db.select()
+        .from(timeframes)
+        .where(eq(timeframes.tenantId, tenantId));
+      
+      res.json(timeframesList);
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/timeframes", async (req, res, next) => {
+  // Get timeframes by cadence
+  app.get("/api/cadences/:cadenceId/timeframes", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertTimeframeSchema.parse(req.body);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const cadenceId = req.params.cadenceId;
+      
+      // Verify the cadence belongs to the current tenant
+      const cadence = await storage.getCadence(cadenceId);
+      if (!cadence) {
+        return res.status(404).json({ error: "Cadence not found" });
+      }
+      
+      if (cadence.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Fetch timeframes for the specific cadence and current tenant
+      const timeframesList = await db.select()
+        .from(timeframes)
+        .where(
+          and(
+            eq(timeframes.cadenceId, cadenceId),
+            eq(timeframes.tenantId, tenantId)
+          )
+        );
+      
+      res.json(timeframesList);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/timeframes", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Add tenant ID to the timeframe data
+      const validatedData = insertTimeframeSchema.parse({
+        ...req.body,
+        tenantId
+      });
+      
+      // If cadenceId is provided, verify it belongs to the current tenant
+      if (validatedData.cadenceId) {
+        const cadence = await storage.getCadence(validatedData.cadenceId);
+        if (!cadence) {
+          return res.status(404).json({ error: "Cadence not found" });
+        }
+        
+        if (cadence.tenantId !== tenantId) {
+          return res.status(403).json({ error: "Access denied to the selected cadence" });
+        }
+      }
+      
       const timeframe = await storage.createTimeframe(validatedData);
       res.status(201).json(timeframe);
     } catch (error) {
@@ -973,10 +1094,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/timeframes/:id", async (req, res, next) => {
+  app.patch("/api/timeframes/:id", withTenant, async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify the timeframe belongs to the current tenant
+      const timeframe = await storage.getTimeframe(id);
+      if (!timeframe) {
+        return res.status(404).json({ error: "Timeframe not found" });
+      }
+      
+      if (timeframe.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const validatedData = insertTimeframeSchema.partial().parse(req.body);
+      
+      // If cadenceId is being updated, verify it belongs to the current tenant
+      if (validatedData.cadenceId) {
+        const cadence = await storage.getCadence(validatedData.cadenceId);
+        if (!cadence) {
+          return res.status(404).json({ error: "Cadence not found" });
+        }
+        
+        if (cadence.tenantId !== tenantId) {
+          return res.status(403).json({ error: "Access denied to the selected cadence" });
+        }
+      }
+      
       const updatedTimeframe = await storage.updateTimeframe(id, validatedData);
       res.json(updatedTimeframe);
     } catch (error) {
@@ -984,9 +1134,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/timeframes/:id", async (req, res, next) => {
+  app.delete("/api/timeframes/:id", withTenant, async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Verify the timeframe belongs to the current tenant
+      const timeframe = await storage.getTimeframe(id);
+      if (!timeframe) {
+        return res.status(404).json({ error: "Timeframe not found" });
+      }
+      
+      if (timeframe.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
       
       // Check if timeframe has objectives
       const objectives = await storage.getObjectivesByTimeframe(id);
@@ -998,16 +1163,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.deleteTimeframe(id);
       res.status(204).end();
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.get("/api/cadences/:cadenceId/timeframes", async (req, res, next) => {
-    try {
-      const cadenceId = req.params.cadenceId;
-      const timeframes = await storage.getTimeframesByCadence(cadenceId);
-      res.json(timeframes);
     } catch (error) {
       next(error);
     }
