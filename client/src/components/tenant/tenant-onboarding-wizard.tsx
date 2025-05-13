@@ -273,8 +273,14 @@ export default function TenantOnboardingWizard() {
           setup: values.setup,
         };
         
-        // Make the API request
-        const response = await apiRequest('POST', '/api/tenants', requestData);
+        // Make the API request with role explicitly set to "owner"
+        // This ensures the user becomes the admin of the organization they create
+        const requestDataWithRole = {
+          ...requestData,
+          role: "owner" // Set creator's role to owner (highest privilege level)
+        };
+        
+        const response = await apiRequest('POST', '/api/tenants', requestDataWithRole);
         const orgData = await response.json();
         
         return orgData;

@@ -112,8 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update user data in the query cache
       queryClient.setQueryData(["/api/user"], user);
       
-      // Set default tenant if available
-      if (user.tenants && user.tenants.length > 0) {
+      // Check if user has any organizations
+      const hasOrganizations = user.tenants && user.tenants.length > 0;
+      
+      if (hasOrganizations) {
+        // User has organizations - set default tenant
         // Find the user's default tenant
         const defaultTenantId = user.defaultTenant;
         const defaultTenant = defaultTenantId 
@@ -138,18 +141,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Also trigger tenant refresh in tenant context
           tenantContext.setCurrentTenant(fullTenant);
         }
+        
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${user.name}!`,
+        });
+        
+        // Get the saved redirect path or default to homepage
+        const redirectPath = getRedirectPath("/");
+        
+        // Navigate to the intended destination or home page
+        navigate(redirectPath);
+      } else {
+        // User has no organizations - redirect to tenant onboarding
+        toast({
+          title: "Login successful",
+          description: "Let's set up your organization!",
+        });
+        
+        // Clear any existing redirect paths - new users should create an organization first
+        clearRedirectPath();
+        
+        // Redirect to tenant onboarding
+        navigate("/tenant-onboarding");
       }
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.name}!`,
-      });
-      
-      // Get the saved redirect path or default to homepage
-      const redirectPath = getRedirectPath("/");
-      
-      // Navigate to the intended destination or home page
-      navigate(redirectPath);
     },
     onError: (error: Error) => {
       toast({
