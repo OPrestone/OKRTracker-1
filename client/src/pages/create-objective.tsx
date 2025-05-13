@@ -189,7 +189,7 @@ export default function CreateObjective() {
     (timeframesErrorData instanceof Error && timeframesErrorData.message.includes("Unauthorized")) ||
     (objectivesErrorData instanceof Error && objectivesErrorData.message.includes("Unauthorized"));
   
-  const hasErrors = usersError || timeframesError || objectivesError || teamsError;
+  // Note: We're using hasAuthError instead of hasErrors now for more specific error handling
 
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
@@ -237,7 +237,7 @@ export default function CreateObjective() {
   };
 
   // Show error message for authentication issues
-  if (hasErrors) {
+  if (hasAuthError) {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6 max-w-4xl bg-white shadow">
@@ -257,6 +257,15 @@ export default function CreateObjective() {
             <p className="text-gray-600 mb-6">
               You need to be logged in to create objectives. Please log in or register to continue.
             </p>
+            <div className="bg-white p-4 rounded-md border border-red-100 mb-6 w-full max-w-md text-left">
+              <h3 className="text-sm font-medium text-red-800 mb-2">Details:</h3>
+              <ul className="text-xs text-red-700 list-disc list-inside space-y-1">
+                {teamsErrorData && <li>Teams data: {teamsErrorData.message}</li>}
+                {usersErrorData && <li>Users data: {usersErrorData.message}</li>}
+                {timeframesErrorData && <li>Timeframes data: {timeframesErrorData.message}</li>}
+                {objectivesErrorData && <li>Objectives data: {objectivesErrorData.message}</li>}
+              </ul>
+            </div>
             <Button 
               onClick={() => setLocation("/auth")} 
               className="flex items-center gap-2"
