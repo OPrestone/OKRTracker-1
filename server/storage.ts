@@ -352,7 +352,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeam(id: string): Promise<Team | undefined> {
-    const [team] = await db.select().from(teams).where(eq(teams.id, id));
+    const [team] = await db.select({
+      id: teams.id,
+      name: teams.name,
+      description: teams.description,
+      color: teams.color, 
+      icon: teams.icon,
+      parentId: teams.parentId,
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt
+    }).from(teams).where(eq(teams.id, id));
     return team;
   }
 
@@ -370,7 +379,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTeams(): Promise<Team[]> {
-    return db.select().from(teams);
+    return db.select({
+      id: teams.id,
+      name: teams.name,
+      description: teams.description,
+      color: teams.color,
+      icon: teams.icon,
+      parentId: teams.parentId,
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt
+    }).from(teams);
   }
   
   async getTeamsByTenant(tenantId: string): Promise<Team[]> {
@@ -406,7 +424,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeamsByParent(parentId: string): Promise<Team[]> {
-    return db.select().from(teams).where(eq(teams.parentId, parentId));
+    return db.select({
+      id: teams.id,
+      name: teams.name,
+      description: teams.description,
+      color: teams.color,
+      icon: teams.icon,
+      parentId: teams.parentId,
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt
+    }).from(teams).where(eq(teams.parentId, parentId));
   }
 
   // Access Groups

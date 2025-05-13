@@ -497,8 +497,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teams API
   app.get("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      // Get teams for current tenant
-      const teams = await storage.getTeamsByTenant(req.tenantId);
+      // Since teams no longer have tenant_id, just get all teams
+      // and we'll rely on owner_id to associate teams with users
+      const teams = await storage.getAllTeams();
       res.json(teams);
     } catch (error) {
       next(error);
