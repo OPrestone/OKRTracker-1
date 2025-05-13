@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
+
+// Utility function to get initials from a name, safely handling null/undefined
+const getInitials = (name?: string): string => {
+  if (!name) return 'TM';
+  
+  const nameParts = name.trim().split(/\s+/);
+  if (nameParts.length === 0) return 'TM';
+  
+  if (nameParts.length === 1) {
+    return (nameParts[0].charAt(0) || 'T').toUpperCase();
+  }
+  
+  return (
+    (nameParts[0].charAt(0) || 'T') + 
+    (nameParts[nameParts.length - 1].charAt(0) || 'M')
+  ).toUpperCase();
+};
 import { 
   Card, 
   CardContent, 
@@ -820,7 +837,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                   <Avatar key={attendee?.id || Math.random()} className="border-2 border-background h-8 w-8">
                     <AvatarImage src={attendee?.avatarUrl} alt={attendee?.name || 'Team member'} />
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                      {attendee?.initials || getInitials(attendee?.name || 'TM')}
+                      {attendee?.initials || getInitials(attendee?.name)}
                     </AvatarFallback>
                   </Avatar>
                 ))}
@@ -979,18 +996,18 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
                   ) : (
                     meeting.attendees.map((attendee) => (
                       <div 
-                        key={attendee.id || `attendee-${Math.random()}`} 
+                        key={attendee?.id || `attendee-${Math.random()}`} 
                         className="flex items-center p-2 bg-muted/30 rounded-md"
                       >
                         <Avatar className="h-8 w-8 mr-2">
-                          <AvatarImage src={attendee.avatarUrl} alt={attendee.name || 'Attendee'} />
+                          <AvatarImage src={attendee?.avatarUrl} alt={attendee?.name || 'Attendee'} />
                           <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                            {attendee.initials || (attendee.name ? attendee.name[0] : '?')}
+                            {attendee?.initials || getInitials(attendee?.name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="text-sm font-medium">{attendee.name || 'Unknown Attendee'}</div>
-                          <div className="text-xs text-muted-foreground">{attendee.role || 'Team Member'}</div>
+                          <div className="text-sm font-medium">{attendee?.name || 'Team Member'}</div>
+                          <div className="text-xs text-muted-foreground">{attendee?.role || attendee?.title || 'Team Member'}</div>
                         </div>
                       </div>
                     ))
