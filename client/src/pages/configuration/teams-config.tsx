@@ -175,8 +175,8 @@ const TeamsConfig = () => {
       description: teamForm.description,
       color: teamForm.color,
       icon: teamForm.icon,
-      parentId: teamForm.parentId ? parseInt(teamForm.parentId) : null,
-      ownerId: teamForm.ownerId ? parseInt(teamForm.ownerId) : null
+      parentId: teamForm.parentId || null,
+      ownerId: teamForm.ownerId || null
     };
     
     createTeamMutation.mutate(teamData);
@@ -191,8 +191,8 @@ const TeamsConfig = () => {
       description: teamForm.description,
       color: teamForm.color,
       icon: teamForm.icon,
-      parentId: teamForm.parentId ? parseInt(teamForm.parentId) : null,
-      ownerId: teamForm.ownerId ? parseInt(teamForm.ownerId) : null
+      parentId: teamForm.parentId || null,
+      ownerId: teamForm.ownerId || null
     };
     
     updateTeamMutation.mutate(teamData);

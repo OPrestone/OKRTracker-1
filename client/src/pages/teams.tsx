@@ -412,8 +412,8 @@ const Teams = () => {
         description: newTeamDescription,
         color: newTeamColor,
         icon: newTeamIcon,
-        parentId: newTeamParent ? parseInt(newTeamParent) : null,
-        ownerId: 1 // Default to admin for this example
+        parentId: newTeamParent || null,
+        ownerId: null // Will be set to current user on the server
       };
 
       await apiRequest("POST", "/api/teams", newTeam);
