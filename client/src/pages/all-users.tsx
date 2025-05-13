@@ -39,7 +39,8 @@ import {
   Mail,
   Phone,
   Building,
-  Users
+  Users,
+  Building2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,14 +49,21 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table/data-table";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 export default function AllUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isTeamAssignDialogOpen, setIsTeamAssignDialogOpen] = useState(false);
+  const [isOrgAssignDialogOpen, setIsOrgAssignDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
+  const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
+    tenantId: "", 
+    role: "member" 
+  });
   const { toast } = useToast();
+  const { tenantId } = useTenantContext();
   
   // Fetch users
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
@@ -65,6 +73,11 @@ export default function AllUsers() {
   // Fetch teams
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<Team[]>({
     queryKey: ["/api/teams"],
+  });
+  
+  // Fetch tenants
+  const { data: tenants = [], isLoading: isLoadingTenants } = useQuery({
+    queryKey: ["/api/tenants"],
   });
   
   // Assign team mutation
@@ -153,6 +166,52 @@ export default function AllUsers() {
   const openDeleteDialog = (user: User) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
+  };
+  
+  // Add user to organization mutation
+  const assignOrgMutation = useMutation({
+    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: string }) => {
+      const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { 
+        userId, 
+        role 
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      setIsOrgAssignDialogOpen(false);
+      setSelectedUser(null);
+      setOrgAssignment({ tenantId: "", role: "member" });
+      
+      toast({
+        title: "User Added to Organization",
+        description: "User has been successfully added to the organization.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Adding to Organization Failed",
+        description: error.message || "Failed to add user to organization.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const openOrgAssignDialog = (user: User) => {
+    setSelectedUser(user);
+    setOrgAssignment({ tenantId: tenantId || "", role: "member" });
+    setIsOrgAssignDialogOpen(true);
+  };
+  
+  const handleAssignOrg = () => {
+    if (!selectedUser) return;
+    
+    assignOrgMutation.mutate({ 
+      userId: selectedUser.id, 
+      tenantId: orgAssignment.tenantId,
+      role: orgAssignment.role
+    });
   };
   
   const handleDeleteUser = () => {
