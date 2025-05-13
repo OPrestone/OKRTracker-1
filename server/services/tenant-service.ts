@@ -68,8 +68,8 @@ class TenantService {
               ${tenantData.maxUsers || 5}, 
               ${tenantData.domain || null},
               ${tenantData.logoUrl || null},
-              ${tenantData.settings ? JSON.stringify(tenantData.settings) : null},
-              ${tenantData.enabledFeatures ? JSON.stringify(tenantData.enabledFeatures) : null}
+              ${tenantData.settings ? JSON.stringify(tenantData.settings) : JSON.stringify({})},
+              ${tenantData.enabledFeatures ? JSON.stringify(tenantData.enabledFeatures) : JSON.stringify([])}
             )
             RETURNING *`
       );
