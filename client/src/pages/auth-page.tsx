@@ -136,20 +136,8 @@ export default function AuthPage() {
       },
       {
         onSuccess: (user) => {
-          // Check if user has tenants
-          if (user.tenants && user.tenants.length > 0) {
-            if (user.tenants.length === 1) {
-              // If there's only one tenant, navigate directly
-              window.location.reload();
-            } else {
-              // If multiple tenants exist, show the selection modal
-              setAvailableTenants(user.tenants);
-              setShowTenantSelection(true);
-            }
-          } else {
-            // No tenants available, just reload
-            window.location.reload();
-          }
+          // Redirect the user to the tenant onboarding page regardless of tenant status
+          navigate("/tenant-onboarding");
         },
       }
     );
