@@ -33,6 +33,8 @@ export interface IStorage {
   updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team>;
   getAllTeams(): Promise<Team[]>;
   getTeamsByParent(parentId: string): Promise<Team[]>;
+  addUserToTeam(userId: string, teamId: string): Promise<User>;
+  removeUserFromTeam(userId: string): Promise<User>;
   
   // Access Groups
   createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup>;
@@ -444,6 +446,65 @@ export class DatabaseStorage implements IStorage {
       ownerId: teams.ownerId,
       createdAt: teams.createdAt
     }).from(teams).where(eq(teams.parentId, parentId));
+  }
+  
+  async addUserToTeam(userId: string, teamId: string): Promise<User> {
+    try {
+      // First check if user and team exist
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+      }
+      
+      const team = await this.getTeam(teamId);
+      if (!team) {
+        throw new Error(`Team with id ${teamId} not found`);
+      }
+      
+      // Update the user's team
+      const [updatedUser] = await db.update(users)
+        .set({
+          teamId: teamId
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!updatedUser) {
+        throw new Error(`Failed to update team for user ${userId}`);
+      }
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error adding user to team:", error);
+      throw error;
+    }
+  }
+
+  async removeUserFromTeam(userId: string): Promise<User> {
+    try {
+      // First check if user exists
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+      }
+      
+      // Update the user to remove their team
+      const [updatedUser] = await db.update(users)
+        .set({
+          teamId: null
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!updatedUser) {
+        throw new Error(`Failed to remove team for user ${userId}`);
+      }
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error removing user from team:", error);
+      throw error;
+    }
   }
 
   // Access Groups
