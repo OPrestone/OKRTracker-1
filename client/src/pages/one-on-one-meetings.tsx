@@ -321,11 +321,9 @@ export default function OneOnOneMeetings() {
           return fullName === attendeeName || user.name === attendeeName || user.username === attendeeName;
         });
         
-        return {
-          userId: user?.id || null, 
-          name: attendeeName // Fallback if user ID not found
-        };
-      }).filter(attendee => attendee.userId !== null) // Only include attendees with valid user IDs
+        // Just return the ID (userId) if found
+        return user?.id || null;
+      }).filter(Boolean) // Only include attendees with valid user IDs
     };
     
     // Submit the meeting
