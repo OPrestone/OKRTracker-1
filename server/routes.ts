@@ -497,25 +497,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teams API
   app.get("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      // Since teams no longer have tenant_id, just get all teams
-      // and we'll rely on owner_id to associate teams with users
-      const teams = await storage.getAllTeams();
+      // Filter teams by tenant ID using the improved method
+      console.log(`Getting teams for tenant: ${req.tenantId}`);
+      const teams = await storage.getTeamsByTenant(req.tenantId);
+      console.log(`Found ${teams.length} teams for tenant ${req.tenantId}`);
       res.json(teams);
     } catch (error) {
+      console.error('Error getting teams:', error);
       next(error);
     }
   });
 
   app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
+      console.log(`Creating team for tenant: ${req.tenantId}, owner: ${req.user.id}`);
+      
       // Use the owner ID from the authenticated user
       const validatedData = insertTeamSchema.parse({
         ...req.body,
-        ownerId: req.user.id
+        ownerId: req.user.id // This links the team to a user in this tenant
       });
+      
       const team = await storage.createTeam(validatedData);
+      console.log(`Created team: ${team.id} with name: ${team.name}`);
       res.status(201).json(team);
     } catch (error) {
+      console.error('Error creating team:', error);
       next(error);
     }
   });

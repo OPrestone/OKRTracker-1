@@ -392,35 +392,45 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTeamsByTenant(tenantId: string): Promise<Team[]> {
-    // Since the teams table doesn't have a tenant_id column anymore,
-    // we need to get teams based on the owner_id of users in the tenant
-    // First, get all users who belong to this tenant
-    const tenantUsers = await db.select({
-      id: users.id
-    })
-    .from(users)
-    .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
-    .where(eq(usersToTenants.tenantId, tenantId));
-    
-    const userIds = tenantUsers.map(user => user.id);
-    
-    if (userIds.length === 0) {
-      return []; // No users in this tenant
+    try {
+      // Since the teams table doesn't have a tenant_id column,
+      // we need to get teams based on the owner_id of users in the tenant
+      
+      // First, get all users who belong to this tenant
+      const tenantUsers = await db.select({
+        id: users.id
+      })
+      .from(users)
+      .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
+      .where(eq(usersToTenants.tenantId, tenantId));
+      
+      // Extract user IDs
+      const userIds = tenantUsers.map(user => user.id);
+      
+      if (userIds.length === 0) {
+        console.log(`No users found for tenant ${tenantId}`);
+        return []; // No users in this tenant, so no teams
+      }
+      
+      console.log(`Found ${userIds.length} users for tenant ${tenantId}`, userIds);
+      
+      // Get teams where the owner_id is in the list of user IDs from this tenant
+      return db.select({
+        id: teams.id,
+        name: teams.name,
+        description: teams.description,
+        color: teams.color,
+        icon: teams.icon,
+        parentId: teams.parentId,
+        ownerId: teams.ownerId,
+        createdAt: teams.createdAt
+      })
+      .from(teams)
+      .where(inArray(teams.ownerId, userIds));
+    } catch (error) {
+      console.error('Error in getTeamsByTenant:', error);
+      return [];
     }
-    
-    // Get teams where the owner_id is in the list of user IDs
-    return db.select({
-      id: teams.id,
-      name: teams.name,
-      description: teams.description,
-      color: teams.color,
-      icon: teams.icon,
-      parentId: teams.parentId,
-      ownerId: teams.ownerId,
-      createdAt: teams.createdAt
-    })
-    .from(teams)
-    .where(inArray(teams.ownerId, userIds));
   }
 
   async getTeamsByParent(parentId: string): Promise<Team[]> {
