@@ -192,7 +192,7 @@ const formSchema = z.object({
   }),
   plan: z.object({
     plan: z.enum(["free", "starter", "professional", "enterprise"]),
-    agreeToTerms: z.literal(true),
+    agreeToTerms: z.boolean(),
   }),
   orgDetails: z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
