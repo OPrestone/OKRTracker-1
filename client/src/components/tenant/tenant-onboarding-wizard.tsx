@@ -292,6 +292,13 @@ export default function TenantOnboardingWizard() {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       
       setTenantCreated(true);
+      
+      // Automatically redirect to the new organization dashboard after a short delay
+      if (data && data.tenant && data.tenant.slug) {
+        setTimeout(() => {
+          navigate(`/t/${data.tenant.slug}`);
+        }, 1500); // Give time for the user to see the success message
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -380,12 +387,15 @@ export default function TenantOnboardingWizard() {
               </p>
               
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => navigate("/tenants")}>
+                <Button variant="outline" onClick={() => navigate("/tenants")}>
                   View All Organizations
                 </Button>
-                <Button variant="outline" onClick={() => navigate(`/t/${createTenantMutation.data?.slug}`)}>
+                <Button onClick={() => navigate(`/t/${createTenantMutation.data?.tenant?.slug}`)}>
                   Go to Dashboard
                 </Button>
+              </div>
+              <div className="text-sm text-muted-foreground mt-4 text-center">
+                You'll be automatically redirected to your dashboard in a moment...
               </div>
             </div>
           </CardContent>
