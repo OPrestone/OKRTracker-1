@@ -374,17 +374,35 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getTeamsByTenant(tenantId: string): Promise<Team[]> {
-    // Select specific columns, excluding avatarUrl which might be missing in the database
+    // Since the teams table doesn't have a tenant_id column anymore,
+    // we need to get teams based on the owner_id of users in the tenant
+    // First, get all users who belong to this tenant
+    const tenantUsers = await db.select({
+      id: users.id
+    })
+    .from(users)
+    .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
+    .where(eq(usersToTenants.tenantId, tenantId));
+    
+    const userIds = tenantUsers.map(user => user.id);
+    
+    if (userIds.length === 0) {
+      return []; // No users in this tenant
+    }
+    
+    // Get teams where the owner_id is in the list of user IDs
     return db.select({
       id: teams.id,
       name: teams.name,
       description: teams.description,
-      type: teams.type,
+      color: teams.color,
+      icon: teams.icon,
       parentId: teams.parentId,
-      tenantId: teams.tenantId,
-      createdAt: teams.createdAt,
-      updatedAt: teams.updatedAt
-    }).from(teams).where(eq(teams.tenantId, tenantId));
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt
+    })
+    .from(teams)
+    .where(inArray(teams.ownerId, userIds));
   }
 
   async getTeamsByParent(parentId: string): Promise<Team[]> {
