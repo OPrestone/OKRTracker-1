@@ -84,7 +84,7 @@ const objectiveFormSchema = z.object({
   description: z.string().optional(),
   teamId: z.string().optional(),
   ownerId: z.string().optional(),
-  timeframeId: z.string(),
+  timeframeId: z.string().optional(),
   status: z.enum(["draft", "active", "completed", "archived"]).default("draft"),
   parentId: z.string().optional(),
   // Tags and contributors will be handled separately
@@ -119,7 +119,7 @@ export default function CreateObjective() {
       status: 'draft',
       teamId: undefined,
       ownerId: undefined,
-      timeframeId: '',
+      timeframeId: undefined,
       parentId: undefined,
     }
   });
@@ -516,7 +516,7 @@ export default function CreateObjective() {
                     <FormLabel>Timeframe</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      value={field.value || undefined}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select Timeframe..." />
