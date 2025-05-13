@@ -470,11 +470,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTimeframes(): Promise<Timeframe[]> {
-    return db.select().from(timeframes);
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: timeframes.id,
+      name: timeframes.name,
+      description: timeframes.description,
+      startDate: timeframes.startDate,
+      endDate: timeframes.endDate,
+      cadenceId: timeframes.cadenceId,
+      createdAt: timeframes.createdAt,
+      // Exclude fields that don't exist in the actual database: tenant_id, updated_at
+    }).from(timeframes);
   }
 
   async getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]> {
-    return db.select().from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
+    // Select only columns that exist in the actual database
+    return db.select({
+      id: timeframes.id,
+      name: timeframes.name,
+      description: timeframes.description,
+      startDate: timeframes.startDate,
+      endDate: timeframes.endDate,
+      cadenceId: timeframes.cadenceId,
+      createdAt: timeframes.createdAt,
+      // Exclude fields that don't exist in the actual database: tenant_id, updated_at
+    }).from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
   }
   
   async updateTimeframe(id: string, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
