@@ -258,36 +258,78 @@ export default function OneOnOneMeetings() {
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform | "">("");
   const [meetingLink, setMeetingLink] = useState("");
 
+  // Create meeting API mutation
+  const createMeetingMutation = useMutation({
+    mutationFn: async (meeting: any) => {
+      const response = await apiRequest("POST", "/api/meetings", meeting);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/meetings'] });
+      toast({
+        title: "Meeting created",
+        description: "Your meeting has been scheduled successfully.",
+      });
+      setNewMeetingOpen(false);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create meeting",
+        description: error.message || "There was an error creating your meeting. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Create a new meeting
   const handleCreateMeeting = () => {
     if (!meetingTitle || !meetingDate || !meetingTime || !meetingDuration || !meetingAgenda || selectedAttendees.length === 0) {
-      alert("Please fill in all required fields");
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const newMeeting: Meeting = {
-      id: meetings.length + 1,
+    // Parse time and date into proper format
+    const durationMinutes = parseInt(meetingDuration.split(" ")[0]);
+    
+    // Construct the date objects
+    const [year, month, day] = meetingDate.split("-").map(Number);
+    const [hours, minutes] = meetingTime.split(":").map(Number);
+    
+    const startTime = new Date(year, month - 1, day, hours, minutes);
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+    
+    // Create the meeting object to send to the API
+    const meetingData = {
       title: meetingTitle,
-      date: meetingDate,
-      time: meetingTime,
-      duration: meetingDuration,
-      status: "upcoming",
-      platform: meetingPlatform as MeetingPlatform || undefined,
-      meeting_link: meetingLink || undefined,
-      attendees: selectedAttendees.map((name, index) => ({
-        id: 100 + index,
-        name,
-        role: "Team Member",
-        initials: name.split(" ").map(n => n[0]).join("")
-      })),
+      scheduledStartTime: startTime.toISOString(),
+      scheduledEndTime: endTime.toISOString(),
+      duration: durationMinutes,
+      status: "scheduled", // Database uses 'scheduled' instead of 'upcoming'
+      platform: meetingPlatform || undefined,
+      meetingLink: meetingLink || undefined,
       agenda: meetingAgenda,
-      action_items: [],
-      related_okrs: []
+      tenantId: tenant?.id, // From tenant context
+      attendees: selectedAttendees.map(attendeeName => {
+        // Find user IDs from usersData based on name
+        const user = usersData?.find((user: any) => {
+          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+          return fullName === attendeeName || user.name === attendeeName || user.username === attendeeName;
+        });
+        
+        return {
+          userId: user?.id || null, 
+          name: attendeeName // Fallback if user ID not found
+        };
+      }).filter(attendee => attendee.userId !== null) // Only include attendees with valid user IDs
     };
-
-    setMeetings([...meetings, newMeeting]);
-    setNewMeetingOpen(false);
-    resetForm();
+    
+    // Submit the meeting
+    createMeetingMutation.mutate(meetingData);
   };
 
   // Reset form fields
@@ -308,6 +350,40 @@ export default function OneOnOneMeetings() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  // Show loading state
+  if (isLoadingMeetings) {
+    return (
+      <DashboardLayout title="1:1 Meetings">
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <h3 className="text-xl font-medium">Loading meetings...</h3>
+        </div>
+      </DashboardLayout>
+    );
+  }
+  
+  // Show error state
+  if (meetingsError) {
+    return (
+      <DashboardLayout title="1:1 Meetings">
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
+          <div className="bg-red-50 text-red-600 p-6 rounded-lg max-w-md">
+            <XCircle className="h-12 w-12 mx-auto mb-4" />
+            <h3 className="text-xl font-medium mb-2">Error loading meetings</h3>
+            <p className="text-red-700">{(meetingsError as Error)?.message || "There was a problem loading your meetings."}</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/meetings'] })}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="1:1 Meetings">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -324,9 +400,18 @@ export default function OneOnOneMeetings() {
           </div>
           <Dialog open={newMeetingOpen} onOpenChange={setNewMeetingOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                New Meeting
+              <Button className="bg-primary" disabled={createMeetingMutation.isPending}>
+                {createMeetingMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Meeting
+                  </>
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[525px]">
@@ -697,7 +782,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
           <div className="flex -space-x-2 mr-2">
             {meeting.attendees.slice(0, 3).map((attendee) => (
               <Avatar key={attendee.id} className="border-2 border-background h-8 w-8">
-                <AvatarImage src={attendee.avatar} alt={attendee.name} />
+                <AvatarImage src={attendee.avatarUrl} alt={attendee.name} />
                 <AvatarFallback className="text-xs bg-primary/10 text-primary">
                   {attendee.initials}
                 </AvatarFallback>
