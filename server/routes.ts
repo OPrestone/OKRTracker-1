@@ -7,7 +7,9 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
          insertTeamMoodSchema, insertTenantSchema, insertMoodEntrySchema, users, teams, objectives as objectivesTable, 
-         keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants } from "@shared/schema";
+         keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
+         insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
+         insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";

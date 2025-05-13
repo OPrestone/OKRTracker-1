@@ -4,7 +4,11 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
          chatRooms, ChatRoom, InsertChatRoom, chatRoomMembers, ChatRoomMember, InsertChatRoomMember,
          messages, Message, InsertMessage, attachments, Attachment, InsertAttachment,
-         reactions, Reaction, InsertReaction, tenants, Tenant, usersToTenants } from "@shared/schema";
+         reactions, Reaction, InsertReaction, tenants, Tenant, usersToTenants,
+         meetings, Meeting, InsertMeeting, meetingsToUsers, MeetingToUser, InsertMeetingToUser,
+         meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
+         meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
+         actionItems, ActionItem, InsertActionItem } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -35,6 +39,45 @@ export interface IStorage {
   getTeamsByParent(parentId: string): Promise<Team[]>;
   addUserToTeam(userId: string, teamId: string): Promise<User>;
   removeUserFromTeam(userId: string): Promise<User>;
+  
+  // Meeting Management
+  createMeeting(meeting: InsertMeeting): Promise<Meeting>;
+  getMeeting(id: string): Promise<Meeting | undefined>;
+  getMeetingWithDetails(id: string): Promise<Meeting & { 
+    attendees: Array<User & { isAttending: boolean }>,
+    relatedObjectives: Objective[],
+    relatedKeyResults: KeyResult[],
+    actionItems: ActionItem[]
+  } | undefined>;
+  getMeetingsByTenant(tenantId: string): Promise<Meeting[]>;
+  getMeetingsByUser(userId: string): Promise<Meeting[]>;
+  getMeetingsByStatus(tenantId: string, status: string): Promise<Meeting[]>;
+  getUpcomingMeetings(tenantId: string, limit?: number): Promise<Meeting[]>;
+  updateMeeting(id: string, meeting: Partial<InsertMeeting>): Promise<Meeting>;
+  deleteMeeting(id: string): Promise<void>;
+  
+  // Meeting Attendees
+  addAttendeeToMeeting(meetingId: string, userId: string): Promise<MeetingToUser>;
+  removeAttendeeFromMeeting(meetingId: string, userId: string): Promise<void>;
+  updateAttendeeStatus(meetingId: string, userId: string, isAttending: boolean): Promise<MeetingToUser>;
+  getMeetingAttendees(meetingId: string): Promise<Array<User & { isAttending: boolean }>>;
+  
+  // Meeting Action Items
+  createActionItem(actionItem: InsertActionItem): Promise<ActionItem>;
+  getActionItem(id: string): Promise<ActionItem | undefined>;
+  getActionItemsByMeeting(meetingId: string): Promise<ActionItem[]>;
+  getActionItemsByUser(userId: string): Promise<ActionItem[]>;
+  updateActionItem(id: string, actionItem: Partial<InsertActionItem>): Promise<ActionItem>;
+  deleteActionItem(id: string): Promise<void>;
+  completeActionItem(id: string): Promise<ActionItem>;
+  
+  // Meeting Related OKRs
+  addObjectiveToMeeting(meetingId: string, objectiveId: string): Promise<MeetingToObjective>;
+  removeObjectiveFromMeeting(meetingId: string, objectiveId: string): Promise<void>;
+  addKeyResultToMeeting(meetingId: string, keyResultId: string): Promise<MeetingToKeyResult>;
+  removeKeyResultFromMeeting(meetingId: string, keyResultId: string): Promise<void>;
+  getMeetingObjectives(meetingId: string): Promise<Objective[]>;
+  getMeetingKeyResults(meetingId: string): Promise<KeyResult[]>;
   
   // Access Groups
   createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup>;
@@ -1247,6 +1290,379 @@ export class DatabaseStorage implements IStorage {
     .from(reactions)
     .innerJoin(users, eq(reactions.userId, users.id))
     .where(eq(reactions.messageId, messageId));
+  }
+
+  // Meetings Management
+  async createMeeting(meeting: InsertMeeting): Promise<Meeting> {
+    const [newMeeting] = await db.insert(meetings).values(meeting).returning();
+    return newMeeting;
+  }
+
+  async getMeeting(id: string): Promise<Meeting | undefined> {
+    const [meeting] = await db.select().from(meetings).where(eq(meetings.id, id));
+    return meeting;
+  }
+
+  async getMeetingWithDetails(id: string): Promise<Meeting & { 
+    attendees: Array<User & { isAttending: boolean }>,
+    relatedObjectives: Objective[],
+    relatedKeyResults: KeyResult[],
+    actionItems: ActionItem[]
+  } | undefined> {
+    // Get the meeting
+    const meeting = await this.getMeeting(id);
+    if (!meeting) return undefined;
+
+    // Get attendees with their status
+    const attendees = await this.getMeetingAttendees(id);
+
+    // Get related objectives
+    const relatedObjectives = await this.getMeetingObjectives(id);
+
+    // Get related key results
+    const relatedKeyResults = await this.getMeetingKeyResults(id);
+
+    // Get action items
+    const actionItems = await this.getActionItemsByMeeting(id);
+
+    return {
+      ...meeting,
+      attendees,
+      relatedObjectives,
+      relatedKeyResults,
+      actionItems
+    };
+  }
+
+  async getMeetingsByTenant(tenantId: string): Promise<Meeting[]> {
+    return db.select()
+      .from(meetings)
+      .where(eq(meetings.tenantId, tenantId))
+      .orderBy(desc(meetings.scheduledStartTime));
+  }
+
+  async getMeetingsByUser(userId: string): Promise<Meeting[]> {
+    // Get all meetings where the user is an attendee
+    const userMeetings = await db.select({
+      meetingId: meetingsToUsers.meetingId
+    })
+    .from(meetingsToUsers)
+    .where(eq(meetingsToUsers.userId, userId));
+
+    if (!userMeetings.length) return [];
+
+    const meetingIds = userMeetings.map(m => m.meetingId);
+
+    // Get the full meeting details
+    return db.select()
+      .from(meetings)
+      .where(inArray(meetings.id, meetingIds))
+      .orderBy(desc(meetings.scheduledStartTime));
+  }
+
+  async getMeetingsByStatus(tenantId: string, status: string): Promise<Meeting[]> {
+    return db.select()
+      .from(meetings)
+      .where(
+        and(
+          eq(meetings.tenantId, tenantId),
+          eq(meetings.status, status)
+        )
+      )
+      .orderBy(desc(meetings.scheduledStartTime));
+  }
+
+  async getUpcomingMeetings(tenantId: string, limit: number = 5): Promise<Meeting[]> {
+    const now = new Date();
+    
+    return db.select()
+      .from(meetings)
+      .where(
+        and(
+          eq(meetings.tenantId, tenantId),
+          eq(meetings.status, 'scheduled'),
+          gt(meetings.scheduledStartTime, now)
+        )
+      )
+      .orderBy(meetings.scheduledStartTime)
+      .limit(limit);
+  }
+
+  async updateMeeting(id: string, meeting: Partial<InsertMeeting>): Promise<Meeting> {
+    const [updatedMeeting] = await db.update(meetings)
+      .set(meeting)
+      .where(eq(meetings.id, id))
+      .returning();
+    
+    if (!updatedMeeting) {
+      throw new Error(`Meeting with id ${id} not found`);
+    }
+    
+    return updatedMeeting;
+  }
+
+  async deleteMeeting(id: string): Promise<void> {
+    // First delete all related records
+    await db.delete(meetingsToUsers).where(eq(meetingsToUsers.meetingId, id));
+    await db.delete(meetingsToObjectives).where(eq(meetingsToObjectives.meetingId, id));
+    await db.delete(meetingsToKeyResults).where(eq(meetingsToKeyResults.meetingId, id));
+    await db.delete(actionItems).where(eq(actionItems.meetingId, id));
+    
+    // Then delete the meeting
+    await db.delete(meetings).where(eq(meetings.id, id));
+  }
+
+  // Meeting Attendees
+  async addAttendeeToMeeting(meetingId: string, userId: string): Promise<MeetingToUser> {
+    // Check if the user is already an attendee
+    const [existingAttendee] = await db.select()
+      .from(meetingsToUsers)
+      .where(
+        and(
+          eq(meetingsToUsers.meetingId, meetingId),
+          eq(meetingsToUsers.userId, userId)
+        )
+      );
+    
+    if (existingAttendee) {
+      return existingAttendee;
+    }
+    
+    // Add the user as an attendee
+    const [newAttendee] = await db.insert(meetingsToUsers)
+      .values({
+        meetingId,
+        userId,
+        isAttending: true,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newAttendee;
+  }
+
+  async removeAttendeeFromMeeting(meetingId: string, userId: string): Promise<void> {
+    await db.delete(meetingsToUsers)
+      .where(
+        and(
+          eq(meetingsToUsers.meetingId, meetingId),
+          eq(meetingsToUsers.userId, userId)
+        )
+      );
+  }
+
+  async updateAttendeeStatus(meetingId: string, userId: string, isAttending: boolean): Promise<MeetingToUser> {
+    const [updatedAttendee] = await db.update(meetingsToUsers)
+      .set({ isAttending })
+      .where(
+        and(
+          eq(meetingsToUsers.meetingId, meetingId),
+          eq(meetingsToUsers.userId, userId)
+        )
+      )
+      .returning();
+    
+    if (!updatedAttendee) {
+      throw new Error(`Attendee record not found for meeting ${meetingId} and user ${userId}`);
+    }
+    
+    return updatedAttendee;
+  }
+
+  async getMeetingAttendees(meetingId: string): Promise<Array<User & { isAttending: boolean }>> {
+    return db.select({
+      id: users.id,
+      username: users.username,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      name: users.name,
+      title: users.title,
+      bio: users.bio,
+      avatarUrl: users.avatarUrl,
+      teamId: users.teamId,
+      level: users.level,
+      timezone: users.timezone,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      tenantId: users.tenantId,
+      defaultTenantId: users.defaultTenantId,
+      isEnabled: users.isEnabled,
+      isAdmin: users.isAdmin,
+      isAttending: meetingsToUsers.isAttending
+    })
+    .from(meetingsToUsers)
+    .innerJoin(users, eq(meetingsToUsers.userId, users.id))
+    .where(eq(meetingsToUsers.meetingId, meetingId));
+  }
+
+  // Meeting Action Items
+  async createActionItem(actionItem: InsertActionItem): Promise<ActionItem> {
+    const [newActionItem] = await db.insert(actionItems).values(actionItem).returning();
+    return newActionItem;
+  }
+
+  async getActionItem(id: string): Promise<ActionItem | undefined> {
+    const [actionItem] = await db.select().from(actionItems).where(eq(actionItems.id, id));
+    return actionItem;
+  }
+
+  async getActionItemsByMeeting(meetingId: string): Promise<ActionItem[]> {
+    return db.select()
+      .from(actionItems)
+      .where(eq(actionItems.meetingId, meetingId))
+      .orderBy(actionItems.createdAt);
+  }
+
+  async getActionItemsByUser(userId: string): Promise<ActionItem[]> {
+    return db.select()
+      .from(actionItems)
+      .where(eq(actionItems.assignedToId, userId))
+      .orderBy(actionItems.createdAt);
+  }
+
+  async updateActionItem(id: string, actionItem: Partial<InsertActionItem>): Promise<ActionItem> {
+    const [updatedActionItem] = await db.update(actionItems)
+      .set(actionItem)
+      .where(eq(actionItems.id, id))
+      .returning();
+    
+    if (!updatedActionItem) {
+      throw new Error(`Action item with id ${id} not found`);
+    }
+    
+    return updatedActionItem;
+  }
+
+  async deleteActionItem(id: string): Promise<void> {
+    await db.delete(actionItems).where(eq(actionItems.id, id));
+  }
+
+  async completeActionItem(id: string): Promise<ActionItem> {
+    const [completedActionItem] = await db.update(actionItems)
+      .set({ 
+        completed: true,
+        completedAt: new Date()
+      })
+      .where(eq(actionItems.id, id))
+      .returning();
+    
+    if (!completedActionItem) {
+      throw new Error(`Action item with id ${id} not found`);
+    }
+    
+    return completedActionItem;
+  }
+
+  // Meeting Related OKRs
+  async addObjectiveToMeeting(meetingId: string, objectiveId: string): Promise<MeetingToObjective> {
+    // Check if the objective is already linked to the meeting
+    const [existingLink] = await db.select()
+      .from(meetingsToObjectives)
+      .where(
+        and(
+          eq(meetingsToObjectives.meetingId, meetingId),
+          eq(meetingsToObjectives.objectiveId, objectiveId)
+        )
+      );
+    
+    if (existingLink) {
+      return existingLink;
+    }
+    
+    // Link the objective to the meeting
+    const [newLink] = await db.insert(meetingsToObjectives)
+      .values({
+        meetingId,
+        objectiveId,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newLink;
+  }
+
+  async removeObjectiveFromMeeting(meetingId: string, objectiveId: string): Promise<void> {
+    await db.delete(meetingsToObjectives)
+      .where(
+        and(
+          eq(meetingsToObjectives.meetingId, meetingId),
+          eq(meetingsToObjectives.objectiveId, objectiveId)
+        )
+      );
+  }
+
+  async addKeyResultToMeeting(meetingId: string, keyResultId: string): Promise<MeetingToKeyResult> {
+    // Check if the key result is already linked to the meeting
+    const [existingLink] = await db.select()
+      .from(meetingsToKeyResults)
+      .where(
+        and(
+          eq(meetingsToKeyResults.meetingId, meetingId),
+          eq(meetingsToKeyResults.keyResultId, keyResultId)
+        )
+      );
+    
+    if (existingLink) {
+      return existingLink;
+    }
+    
+    // Link the key result to the meeting
+    const [newLink] = await db.insert(meetingsToKeyResults)
+      .values({
+        meetingId,
+        keyResultId,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newLink;
+  }
+
+  async removeKeyResultFromMeeting(meetingId: string, keyResultId: string): Promise<void> {
+    await db.delete(meetingsToKeyResults)
+      .where(
+        and(
+          eq(meetingsToKeyResults.meetingId, meetingId),
+          eq(meetingsToKeyResults.keyResultId, keyResultId)
+        )
+      );
+  }
+
+  async getMeetingObjectives(meetingId: string): Promise<Objective[]> {
+    // Get all objectives related to the meeting
+    const objectiveLinks = await db.select({
+      objectiveId: meetingsToObjectives.objectiveId
+    })
+    .from(meetingsToObjectives)
+    .where(eq(meetingsToObjectives.meetingId, meetingId));
+
+    if (!objectiveLinks.length) return [];
+
+    const objectiveIds = objectiveLinks.map(link => link.objectiveId);
+
+    // Get the full objective details
+    return db.select()
+      .from(objectives)
+      .where(inArray(objectives.id, objectiveIds));
+  }
+
+  async getMeetingKeyResults(meetingId: string): Promise<KeyResult[]> {
+    // Get all key results related to the meeting
+    const keyResultLinks = await db.select({
+      keyResultId: meetingsToKeyResults.keyResultId
+    })
+    .from(meetingsToKeyResults)
+    .where(eq(meetingsToKeyResults.meetingId, meetingId));
+
+    if (!keyResultLinks.length) return [];
+
+    const keyResultIds = keyResultLinks.map(link => link.keyResultId);
+
+    // Get the full key result details
+    return db.select()
+      .from(keyResults)
+      .where(inArray(keyResults.id, keyResultIds));
   }
 }
 
