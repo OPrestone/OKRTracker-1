@@ -56,11 +56,21 @@ export default function AllUsers() {
   const [isTeamAssignDialogOpen, setIsTeamAssignDialogOpen] = useState(false);
   const [isOrgAssignDialogOpen, setIsOrgAssignDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
   const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
     tenantId: "", 
     role: "member" 
+  });
+  const [newUser, setNewUser] = useState({
+    username: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    teamId: '',
+    role: 'user'
   });
   const { toast } = useToast();
   const { tenantId } = useTenantContext();
@@ -180,6 +190,44 @@ export default function AllUsers() {
     setIsOrgAssignDialogOpen(true);
   };
 
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: typeof newUser) => {
+      const res = await apiRequest("POST", `/api/users`, {
+        ...userData,
+        tenantId: tenantId, // Assign user to current tenant
+        teamId: userData.teamId ? Number(userData.teamId) : null,
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      setIsAddUserDialogOpen(false);
+      setNewUser({
+        username: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        teamId: '',
+        role: 'user'
+      });
+      
+      toast({
+        title: "User created successfully",
+        description: "The new user has been added to the system",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error creating user",
+        description: `There was a problem creating the user: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -214,6 +262,22 @@ export default function AllUsers() {
   const handleDeleteUser = () => {
     if (!selectedUser) return;
     deleteUserMutation.mutate(selectedUser.id);
+  };
+
+  const openAddUserDialog = () => {
+    setIsAddUserDialogOpen(true);
+  };
+  
+  const handleCreateUser = () => {
+    createUserMutation.mutate(newUser);
+  };
+  
+  const handleNewUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
   // Helper function to get tenant name by ID
@@ -402,7 +466,7 @@ export default function AllUsers() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button>
+          <Button onClick={openAddUserDialog}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
           </Button>
