@@ -3112,8 +3112,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const meeting = await storage.createMeeting(validatedData);
       
-      // If attendees were provided, add them to the meeting
-      if (req.body.attendees && Array.isArray(req.body.attendees)) {
+      // If attendees or attendeeIds were provided, add them to the meeting
+      if (req.body.attendeeIds && Array.isArray(req.body.attendeeIds)) {
+        // Process attendeeIds directly
+        for (const userId of req.body.attendeeIds) {
+          if (userId) {
+            await storage.addAttendeeToMeeting(meeting.id, userId);
+          }
+        }
+      } else if (req.body.attendees && Array.isArray(req.body.attendees)) {
+        // For backward compatibility, process attendees array
         for (const attendee of req.body.attendees) {
           // Handle attendee as object or string
           const userId = typeof attendee === 'string' 

@@ -814,24 +814,35 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
       <CardContent className="pb-3">
         <div className="flex items-center mt-1 mb-3">
           <div className="flex -space-x-2 mr-2">
-            {meeting.attendees.slice(0, 3).map((attendee) => (
-              <Avatar key={attendee.id} className="border-2 border-background h-8 w-8">
-                <AvatarImage src={attendee.avatarUrl} alt={attendee.name} />
-                <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                  {attendee.initials}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {meeting.attendees.length > 3 && (
+            {meeting.attendees && meeting.attendees.length > 0 ? (
+              <>
+                {meeting.attendees.slice(0, 3).map((attendee) => (
+                  <Avatar key={attendee?.id || Math.random()} className="border-2 border-background h-8 w-8">
+                    <AvatarImage src={attendee?.avatarUrl} alt={attendee?.name || 'Team member'} />
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                      {attendee?.initials || getInitials(attendee?.name || 'TM')}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {meeting.attendees.length > 3 && (
+                  <Avatar className="border-2 border-background h-8 w-8">
+                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">
+                      +{meeting.attendees.length - 3}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </>
+            ) : (
               <Avatar className="border-2 border-background h-8 w-8">
-                <AvatarFallback className="text-xs bg-muted text-muted-foreground">
-                  +{meeting.attendees.length - 3}
-                </AvatarFallback>
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">TM</AvatarFallback>
               </Avatar>
             )}
           </div>
           <span className="text-sm text-muted-foreground">
-            {meeting.attendees.length} {meeting.attendees.length === 1 ? 'attendee' : 'attendees'}
+            {meeting.attendees && meeting.attendees.length > 0 
+              ? `${meeting.attendees.length} ${meeting.attendees.length === 1 ? 'attendee' : 'attendees'}`
+              : 'No attendees'
+            }
           </span>
         </div>
 
@@ -1105,7 +1116,7 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             onClick={() => {
               toast({
                 title: "Reschedule requested",
-                description: `You've requested to reschedule "${meeting.title}" with ${meeting.attendees && meeting.attendees[0]?.name ? meeting.attendees[0].name : 'attendees'}.`,
+                description: `You've requested to reschedule "${meeting.title}" with ${meeting.attendees && meeting.attendees.length > 0 && meeting.attendees[0]?.name ? meeting.attendees[0].name : 'your team'}.`,
               });
               // In a real implementation, you'd open a scheduling dialog or redirect to a calendar page
             }}
