@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -37,7 +38,8 @@ import {
   Target,
   Activity,
   TrendingUp,
-  BadgeCheck
+  BadgeCheck,
+  Loader2
 } from "lucide-react";
 import {
   BarChart as RechartsBarChart,
@@ -64,81 +66,6 @@ interface TeamOKRPerformance {
   changePercent: number;
   status: 'on-track' | 'at-risk' | 'behind';
 }
-
-const MOCK_PERFORMANCE_DATA: TeamOKRPerformance[] = [
-  {
-    id: "1",
-    team: "Product Team",
-    objective: "Improve product conversion rate",
-    target: "25% increase in conversions",
-    progress: 78,
-    changePercent: 5.2,
-    status: 'on-track',
-  },
-  {
-    id: "2",
-    team: "Marketing Team",
-    objective: "Increase social media engagement",
-    target: "40% more interactions per post",
-    progress: 65,
-    changePercent: 3.7,
-    status: 'on-track',
-  },
-  {
-    id: "3",
-    team: "Development Team",
-    objective: "Reduce application load time",
-    target: "50% decrease in page load time",
-    progress: 92,
-    changePercent: 8.1,
-    status: 'on-track',
-  },
-  {
-    id: "4",
-    team: "Customer Support",
-    objective: "Improve customer satisfaction score",
-    target: "Increase CSAT to 4.8/5",
-    progress: 42,
-    changePercent: -2.3,
-    status: 'at-risk',
-  },
-  {
-    id: "5",
-    team: "Sales Team",
-    objective: "Increase new client acquisition rate",
-    target: "30% more new clients per quarter",
-    progress: 35,
-    changePercent: -4.1,
-    status: 'behind',
-  },
-  {
-    id: "6",
-    team: "Finance Team",
-    objective: "Reduce operational expenses",
-    target: "15% reduction in non-essential expenses",
-    progress: 81,
-    changePercent: 6.3,
-    status: 'on-track',
-  },
-  {
-    id: "7",
-    team: "HR Team",
-    objective: "Improve employee satisfaction",
-    target: "20% increase in satisfaction surveys",
-    progress: 58,
-    changePercent: 0,
-    status: 'on-track',
-  },
-  {
-    id: "8",
-    team: "IT Support",
-    objective: "Decrease ticket resolution time",
-    target: "40% faster resolution times",
-    progress: 29,
-    changePercent: -5.8,
-    status: 'behind',
-  }
-];
 
 // Color functions for visual elements
 const getProgressColor = (progress: number) => {
@@ -269,8 +196,50 @@ export function TeamsOKRPerformance() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   
+  // Fetch real data from API
+  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+    queryKey: ['/api/dashboard'],
+  }) as { data: any, isLoading: boolean };
+  
+  const { data: objectives, isLoading: isObjectivesLoading } = useQuery({
+    queryKey: ['/api/objectives'],
+  }) as { data: any[], isLoading: boolean };
+  
+  const { data: teams, isLoading: isTeamsLoading } = useQuery({
+    queryKey: ['/api/teams'],
+  }) as { data: any[], isLoading: boolean };
+  
+  const isLoading = isDashboardLoading || isObjectivesLoading || isTeamsLoading;
+  
+  // Convert the fetched data to the format needed for the table
+  const generatePerformanceData = () => {
+    if (!objectives || !teams) return [];
+    
+    return objectives.map(obj => {
+      // Find the team for this objective
+      const team = teams.find(t => t.id === obj.teamId);
+      
+      // Determine status based on progress
+      let status: 'on-track' | 'at-risk' | 'behind' = 'behind';
+      if (obj.progress >= 70) status = 'on-track';
+      else if (obj.progress >= 40) status = 'at-risk';
+      
+      return {
+        id: obj.id,
+        team: team?.name || 'Unassigned',
+        objective: obj.title,
+        target: obj.description || 'No target specified',
+        progress: obj.progress || 0,
+        changePercent: 0, // We don't have historical data yet
+        status: status
+      };
+    });
+  };
+  
+  const realPerformanceData = generatePerformanceData();
+  
   // Filter data based on active tab and search query
-  const filteredData = MOCK_PERFORMANCE_DATA.filter(item => {
+  const filteredData = realPerformanceData.filter(item => {
     const matchesTab = 
       activeTableTab === 'all' || 
       (activeTableTab === 'on-track' && item.status === 'on-track') ||
@@ -291,7 +260,7 @@ export function TeamsOKRPerformance() {
   });
 
   // Extract unique team names for the filter dropdown
-  const uniqueTeams = Array.from(new Set(MOCK_PERFORMANCE_DATA.map(item => item.team)));
+  const uniqueTeams = teams ? Array.from(new Set(teams.map(team => team.name))) : [];
   const teamOptions = ['all', ...uniqueTeams];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
@@ -305,338 +274,302 @@ export function TeamsOKRPerformance() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs 
-          defaultValue="dashboard" 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full mb-6"
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="table">Table View</TabsTrigger>
-            <TabsTrigger value="analytics">Detailed Analytics</TabsTrigger>
-          </TabsList>
-          
-          {/* Dashboard Tab Content */}
-          <TabsContent value="dashboard" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {teamSummaryStats.map((stat, index) => (
-                <StatsCard
-                  key={index}
-                  title={stat.title}
-                  value={stat.value}
-                  subtitle={stat.subtitle}
-                  icon={stat.icon}
-                  trend={stat.trend}
-                  chart={
-                    <MiniChart
-                      data={stat.chartData}
-                      dataKey="value"
-                      type="area"
-                      color={
-                        stat.title.includes("Risk") 
-                          ? "#f59e0b" 
-                          : stat.title.includes("Track") 
-                            ? "#10b981" 
-                            : "#6366f1"
-                      }
-                      height={40}
-                    />
-                  }
-                />
-              ))}
-            </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-60">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+            <p className="text-gray-500">Loading team performance data...</p>
+          </div>
+        ) : realPerformanceData.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-2">No objectives found</p>
+            <p className="text-sm text-gray-400">Create objectives for teams to track progress</p>
+          </div>
+        ) : (
+          <Tabs 
+            defaultValue="dashboard" 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="w-full mb-6"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="table">Table View</TabsTrigger>
+              <TabsTrigger value="analytics">Detailed Analytics</TabsTrigger>
+            </TabsList>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Team Progress Chart */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Team Progress Trends</CardTitle>
-                  <CardDescription>Monthly progress for each team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={teamTrendData}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="Product" stroke="#8884d8" activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="Marketing" stroke="#82ca9d" />
-                        <Line type="monotone" dataKey="Development" stroke="#ffc658" />
-                        <Line type="monotone" dataKey="Support" stroke="#ff8042" />
-                        <Line type="monotone" dataKey="Sales" stroke="#0088FE" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Dashboard Tab Content */}
+            <TabsContent value="dashboard" className="mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {teamSummaryStats.map((stat, index) => (
+                  <StatsCard
+                    key={index}
+                    title={stat.title}
+                    value={stat.value}
+                    subtitle={stat.subtitle}
+                    icon={stat.icon}
+                    trend={stat.trend}
+                    chart={
+                      <MiniChart
+                        data={stat.chartData}
+                        dataKey="value"
+                        type="area"
+                        color={
+                          stat.title.includes("Risk") 
+                            ? "#f59e0b" 
+                            : stat.title.includes("Track") 
+                              ? "#10b981" 
+                              : "#6366f1"
+                        }
+                        height={40}
+                      />
+                    }
+                  />
+                ))}
+              </div>
               
-              {/* OKR Status Distribution */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">OKR Status Distribution</CardTitle>
-                  <CardDescription>Current status of all objectives</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-80 flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPieChart>
-                        <Pie
-                          data={statusDistributionData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          paddingAngle={5}
-                          dataKey="value"
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Team Progress Chart */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Team Progress Trends</CardTitle>
+                    <CardDescription>Monthly progress for each team</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={teamTrendData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                         >
-                          {statusDistributionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value, name) => [`${value} objectives`, name]} />
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Team Completion Rates */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Team Completion Rates</CardTitle>
-                <CardDescription>Objectives completed by each team</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBarChart
-                      data={teamCompletionData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                      <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                      <Tooltip />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="objectives" name="Total Objectives" fill="#8884d8" />
-                      <Bar yAxisId="left" dataKey="completed" name="Completed" fill="#82ca9d" />
-                      <Bar yAxisId="right" dataKey="progress" name="Progress %" fill="#ffc658" />
-                    </RechartsBarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Table View Tab Content */}
-          <TabsContent value="table" className="mt-4">
-            <div className="space-y-4">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <Tabs 
-                  defaultValue="all" 
-                  value={activeTableTab} 
-                  onValueChange={setActiveTableTab}
-                  className="w-auto"
-                >
-                  <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="on-track">On Track</TabsTrigger>
-                    <TabsTrigger value="at-risk">At Risk</TabsTrigger>
-                    <TabsTrigger value="behind">Behind</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="Product" stroke="#8884d8" activeDot={{ r: 8 }} />
+                          <Line type="monotone" dataKey="Marketing" stroke="#82ca9d" />
+                          <Line type="monotone" dataKey="Development" stroke="#ffc658" />
+                          <Line type="monotone" dataKey="Support" stroke="#ff8042" />
+                          <Line type="monotone" dataKey="Sales" stroke="#0088FE" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
                 
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-                  <div className="w-full md:w-auto">
-                    <select 
-                      className="h-9 rounded-md border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      value={selectedTeamFilter}
-                      onChange={(e) => setSelectedTeamFilter(e.target.value)}
-                    >
-                      <option value="all">All Teams</option>
-                      {teamOptions.filter(team => team !== 'all').map((team, i) => (
-                        <option key={i} value={team}>{team}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="relative w-full md:w-auto">
-                    <Search className="h-4 w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <Input 
-                      placeholder="Search teams or objectives..." 
-                      className="pl-8 h-9 w-full md:w-64"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button variant="outline" size="sm" className="h-9">
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filter
-                  </Button>
-                </div>
+                {/* OKR Status Distribution */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">OKR Status Distribution</CardTitle>
+                    <CardDescription>Current status of all objectives</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80 flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RechartsPieChart>
+                          <Pie
+                            data={statusDistributionData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            fill="#8884d8"
+                            paddingAngle={5}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {statusDistributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value, name) => [`${value} objectives`, name]} />
+                        </RechartsPieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
               
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[180px]">Team</TableHead>
-                      <TableHead className="w-[300px]">Objective</TableHead>
-                      <TableHead className="w-[200px]">Target</TableHead>
-                      <TableHead className="w-[140px]">Progress</TableHead>
-                      <TableHead className="w-[100px]">Change</TableHead>
-                      <TableHead className="w-[100px]">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No matching team performance data found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredData.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-2 text-gray-400" />
-                              {item.team}
-                            </div>
-                          </TableCell>
-                          <TableCell>{item.objective}</TableCell>
-                          <TableCell>{item.target}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="font-medium">{item.progress}%</span>
-                              </div>
-                              <Progress 
-                                value={item.progress} 
-                                className="h-2"
-                                style={{ backgroundColor: '#e5e7eb' }}
-                              >
-                                <div 
-                                  className={`h-full ${getProgressColor(item.progress)}`} 
-                                  style={{ width: `${item.progress}%` }} 
-                                />
-                              </Progress>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              {getChangeIcon(item.changePercent)}
-                              <span className={`ml-1 ${
-                                item.changePercent > 0 
-                                  ? 'text-green-600' 
-                                  : item.changePercent < 0 
-                                    ? 'text-red-600' 
-                                    : 'text-gray-600'
-                              }`}>
-                                {Math.abs(item.changePercent)}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              {getStatusIcon(item.status)}
-                              <span className="ml-1 text-sm">{getStatusText(item.status)}</span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </TabsContent>
-          
-          {/* Analytics Tab Content */}
-          <TabsContent value="analytics" className="mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Team Performance by Category */}
+              {/* Team Completion Rates */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Performance by Key Metrics</CardTitle>
-                  <CardDescription>Comparison of key performance indicators</CardDescription>
+                  <CardTitle className="text-lg">Team Completion Rates</CardTitle>
+                  <CardDescription>Objectives completed by each team</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsBarChart
-                        data={[
-                          { category: 'Quality', Product: 95, Marketing: 85, Development: 90, Support: 70, Sales: 65 },
-                          { category: 'Timeliness', Product: 70, Marketing: 80, Development: 85, Support: 65, Sales: 60 },
-                          { category: 'Efficiency', Product: 85, Marketing: 75, Development: 95, Support: 60, Sales: 55 },
-                          { category: 'Innovation', Product: 90, Marketing: 70, Development: 85, Support: 50, Sales: 45 },
-                          { category: 'Collaboration', Product: 75, Marketing: 90, Development: 80, Support: 75, Sales: 60 }
-                        ]}
+                        data={teamCompletionData}
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="category" />
-                        <YAxis />
+                        <XAxis dataKey="name" />
+                        <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
+                        <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="Product" name="Product Team" fill="#8884d8" />
-                        <Bar dataKey="Marketing" name="Marketing Team" fill="#82ca9d" />
-                        <Bar dataKey="Development" name="Development Team" fill="#ffc658" />
-                        <Bar dataKey="Support" name="Support Team" fill="#ff8042" />
-                        <Bar dataKey="Sales" name="Sales Team" fill="#0088FE" />
+                        <Bar yAxisId="left" dataKey="objectives" name="Total Objectives" fill="#8884d8" />
+                        <Bar yAxisId="left" dataKey="completed" name="Completed" fill="#82ca9d" />
+                        <Bar yAxisId="right" dataKey="progress" name="Progress %" fill="#ffc658" />
                       </RechartsBarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* OKR Completion Forecast */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">OKR Completion Forecast</CardTitle>
-                  <CardDescription>Projected completion rates based on current progress</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={[
-                          { month: 'Jan', actual: 10, projected: 12 },
-                          { month: 'Feb', actual: 18, projected: 24 },
-                          { month: 'Mar', actual: 30, projected: 36 },
-                          { month: 'Apr', actual: 42, projected: 48 },
-                          { month: 'May', actual: 50, projected: 60 },
-                          { month: 'Jun', actual: 60, projected: 72 },
-                          { month: 'Jul', actual: 67, projected: 84 },
-                          { month: 'Aug', actual: null, projected: 96 },
-                          { month: 'Sep', actual: null, projected: 100 }
-                        ]}
+            </TabsContent>
+            
+            {/* Table View Tab Content */}
+            <TabsContent value="table" className="mt-4">
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <Tabs 
+                    defaultValue="all" 
+                    value={activeTableTab} 
+                    onValueChange={setActiveTableTab}
+                    className="w-auto"
+                  >
+                    <TabsList>
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="on-track">On Track</TabsTrigger>
+                      <TabsTrigger value="at-risk">At Risk</TabsTrigger>
+                      <TabsTrigger value="behind">Behind</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+                    <div className="w-full md:w-auto">
+                      <select 
+                        className="h-9 rounded-md border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={selectedTeamFilter}
+                        onChange={(e) => setSelectedTeamFilter(e.target.value)}
                       >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="actual" name="Actual Progress" stroke="#8884d8" strokeWidth={2} dot={{ r: 5 }} />
-                        <Line type="monotone" dataKey="projected" name="Projected Progress" stroke="#82ca9d" strokeDasharray="5 5" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                        {teamOptions.map((team, index) => (
+                          <option key={index} value={team}>
+                            {team === 'all' ? 'All Teams' : team}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="relative w-full md:w-auto">
+                      <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Search objectives..."
+                        className="w-full pl-8 md:w-[250px]"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                </div>
+                
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[180px]">Team</TableHead>
+                        <TableHead>Objective</TableHead>
+                        <TableHead className="hidden sm:table-cell">Target</TableHead>
+                        <TableHead className="w-[100px] text-right">Progress</TableHead>
+                        <TableHead className="hidden sm:table-cell w-[100px] text-right">Change</TableHead>
+                        <TableHead className="w-[100px] text-center">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                            No matching objectives found. Try adjusting your filters.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredData.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.team}</TableCell>
+                            <TableCell>{item.objective}</TableCell>
+                            <TableCell className="hidden sm:table-cell">{item.target}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-sm">{item.progress}%</span>
+                                <Progress 
+                                  value={item.progress} 
+                                  className={`h-2 w-20 ${getProgressColor(item.progress)}`} 
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {getChangeIcon(item.changePercent)}
+                                <span className={`text-sm ${
+                                  item.changePercent > 0 
+                                    ? 'text-green-500' 
+                                    : item.changePercent < 0 
+                                      ? 'text-red-500' 
+                                      : 'text-gray-500'
+                                }`}>
+                                  {Math.abs(item.changePercent)}%
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center">
+                                {getStatusIcon(item.status)}
+                                <span className="ml-1 hidden sm:inline-block">
+                                  {getStatusText(item.status)}
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Detailed Analytics Tab Content */}
+            <TabsContent value="analytics" className="mt-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Objective Completion Timeline</CardTitle>
+                    <CardDescription>Projected vs actual completion rates</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={[
+                            { month: 'Jan', actual: 10, projected: 12 },
+                            { month: 'Feb', actual: 25, projected: 26 },
+                            { month: 'Mar', actual: 37, projected: 40 },
+                            { month: 'Apr', actual: 45, projected: 55 },
+                            { month: 'May', actual: 60, projected: 68 },
+                            { month: 'Jun', actual: 67, projected: 80 },
+                            { month: 'Jul', actual: 75, projected: 90 },
+                            { month: 'Aug', actual: 82, projected: 100 },
+                          ]}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="actual" name="Actual Progress" stroke="#8884d8" strokeWidth={2} dot={{ r: 5 }} />
+                          <Line type="monotone" dataKey="projected" name="Projected Progress" stroke="#82ca9d" strokeDasharray="5 5" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </CardContent>
     </Card>
   );

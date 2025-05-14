@@ -4052,14 +4052,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard data endpoint
-  app.get("/api/dashboard", async (req, res, next) => {
+  app.get("/api/dashboard", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      // Get all objectives to count and calculate completion
-      const objectives = await storage.getAllObjectives();
+      // Get tenant-specific objectives to count and calculate completion
+      const objectives = await storage.getObjectivesByTenant(req.tenantId);
       const completedObjectives = objectives.filter(obj => obj.progress === 100);
       const inProgressObjectives = objectives.filter(obj => obj.progress > 0 && obj.progress < 100);
       
-      // Get all key results
+      // Get all key results for these objectives
       let totalKeyResults = 0;
       let completedKeyResults = 0;
       
@@ -4069,22 +4069,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedKeyResults += keyResults.filter(kr => kr.progress === 100).length;
       }
       
-      // Get team performance data
-      const teams = await storage.getAllTeams();
+      // Get team performance data based on actual objectives
+      const teams = await storage.getTeamsByTenant(req.tenantId);
       let teamPerformanceSum = 0;
       
       const enhancedTeams = await Promise.all(teams.map(async team => {
-        // Get team members count
+        // Get team members 
         const members = await storage.getUsersByTeam(team.id);
+        
+        // Get team's objectives
+        const teamObjectives = objectives.filter(obj => obj.teamId === team.id);
+        
+        // Calculate real performance based on objective progress
+        let teamPerformance = 0;
+        if (teamObjectives.length > 0) {
+          // Calculate average progress across all team objectives
+          const totalProgress = teamObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0);
+          teamPerformance = Math.round(totalProgress / teamObjectives.length);
+        }
+        
         return {
           ...team,
           memberCount: members.length,
-          // Add a random performance percentage for each team (between 65-95%)
-          performance: Math.floor(Math.random() * 30) + 65
+          performance: teamPerformance,
+          objectivesCount: teamObjectives.length
         };
       }));
       
-      // Calculate average team performance
+      // Calculate average team performance from real data
       teamPerformanceSum = enhancedTeams.reduce((sum, team) => sum + team.performance, 0);
       const teamPerformanceAvg = enhancedTeams.length ? teamPerformanceSum / enhancedTeams.length : 0;
       
@@ -4123,7 +4135,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         teamPerformance: {
           average: teamPerformanceAvg,
-          improvement: Math.floor(Math.random() * 10) + 5 // Random improvement percentage (5-15%)
+          teams: enhancedTeams.map(team => ({
+            id: team.id,
+            name: team.name,
+            performance: team.performance,
+            memberCount: team.memberCount,
+            objectivesCount: team.objectivesCount
+          }))
         },
         timeRemaining: {
           days: daysRemaining,
