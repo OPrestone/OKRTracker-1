@@ -1973,6 +1973,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route to update an existing check-in
+  app.put("/api/check-ins/:id", withTenant, async (req, res, next) => {
+    try {
+      const checkInId = req.params.id;
+      
+      // Get the check-in to verify it exists and belongs to the tenant
+      const existingCheckIn = await storage.getCheckIn(checkInId);
+      
+      if (!existingCheckIn) {
+        return res.status(404).json({ error: "Check-in not found" });
+      }
+      
+      // Support both the old API (content field) and new API (notes field)
+      if (req.body.notes && !req.body.content) {
+        req.body.content = req.body.notes;
+      }
+      
+      // If teamId is a string "VLS", convert it to null
+      if (req.body.teamId === "VLS") {
+        req.body.teamId = null;
+      }
+      
+      // Ensure tenantId is set
+      req.body.tenantId = req.tenantId;
+      
+      const updatedCheckIn = await storage.updateCheckIn(checkInId, req.body);
+      res.json(updatedCheckIn);
+    } catch (error) {
+      console.error("Error updating check-in:", error);
+      next(error);
+    }
+  });
+  
+  // Route to delete a check-in
+  app.delete("/api/check-ins/:id", withTenant, async (req, res, next) => {
+    try {
+      const checkInId = req.params.id;
+      
+      // Get the check-in to verify it exists
+      const existingCheckIn = await storage.getCheckIn(checkInId);
+      
+      if (!existingCheckIn) {
+        return res.status(404).json({ error: "Check-in not found" });
+      }
+      
+      await storage.deleteCheckIn(checkInId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting check-in:", error);
+      next(error);
+    }
+  });
+  
   app.get("/api/key-results/:keyResultId/check-ins", withTenant, async (req, res, next) => {
     try {
       const keyResultId = req.params.keyResultId;
