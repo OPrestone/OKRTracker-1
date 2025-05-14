@@ -2547,17 +2547,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Get all chat rooms for this user
-      const chatRooms = await storage.getUserChatRooms(req.user.id);
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
       
-      // Filter chat rooms to only include those that belong to current tenant
-      // This requires a tenantId field to be added to the chat_rooms table
-      // For now, we'll assume all chat rooms belong to the current tenant
-      // In a production environment, we'd filter by tenantId
-      // const tenantChatRooms = chatRooms.filter(room => room.tenantId === tenantId);
+      // Get all chat rooms for this user, filtered by tenant
+      const chatRooms = await storage.getUserChatRooms(req.user.id, tenantId);
       
-      // TEMPORARY SOLUTION - Just return all chat rooms
-      // This needs to be updated when tenantId is added to chat_rooms table
       res.json(chatRooms);
     } catch (error) {
       next(error);
@@ -2572,9 +2568,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
       // Validate that all members belong to the current tenant
       if (req.body.memberIds && Array.isArray(req.body.memberIds)) {
-        const memberIds = req.body.memberIds.filter((id: number) => id !== req.user.id);
+        const memberIds = req.body.memberIds.filter((id: string) => id !== req.user.id);
         
         if (memberIds.length > 0) {
           // Check if these users belong to the current tenant
@@ -2595,13 +2595,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // We need to add tenantId to the chatRoom schema
-      // For now, we'll assume the schema has been updated to include tenantId
-      // This would be a migration to add the tenantId field to the chat_rooms table
+      // Add the tenantId to the chat room data
       const validatedData = insertChatRoomSchema.parse({
         ...req.body,
         createdBy: req.user.id,
-        // tenantId: tenantId // Uncomment when schema is updated
+        tenantId: tenantId
       });
       
       const chatRoom = await storage.createChatRoom(validatedData);
@@ -2610,18 +2608,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.addUserToChatRoom({
         chatRoomId: chatRoom.id,
         userId: req.user.id,
-        role: "admin"
+        role: "admin",
+        tenantId: tenantId
       });
       
       // Add other members if specified
       if (req.body.memberIds && Array.isArray(req.body.memberIds)) {
         await Promise.all(
-          req.body.memberIds.map(async (userId: number) => {
+          req.body.memberIds.map(async (userId: string) => {
             if (userId !== req.user.id) { // Skip creator as they're already added
               await storage.addUserToChatRoom({
                 chatRoomId: chatRoom.id,
                 userId,
-                role: "member"
+                role: "member",
+                tenantId: tenantId
               });
             }
           })

@@ -203,16 +203,14 @@ export const chatRooms = pgTableWithUlid("chat_rooms", {
 });
 
 export const chatRoomMembers = pgTable("chat_room_members", {
+  id: text("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
   chatRoomId: text("chat_room_id").references(() => chatRooms.id).notNull(),
-  lastReadTimestamp: timestamp("last_read_timestamp").defaultNow().notNull(),
-  isAdmin: boolean("is_admin").default(false).notNull(),
-  joined: timestamp("joined").defaultNow().notNull(),
-  left: timestamp("left"),
+  role: text("role").default("member").notNull(),
+  lastRead: timestamp("last_read").defaultNow().notNull(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.userId, t.chatRoomId] })
-}));
+});
 
 export const messages = pgTableWithUlid("messages", {
   content: text("content").notNull(),
@@ -833,7 +831,7 @@ export const insertKeyResultSchema = createInsertSchema(keyResults).omit({ id: t
 export const insertInitiativeSchema = createInsertSchema(initiatives).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCheckInSchema = createInsertSchema(checkIns).omit({ id: true, createdAt: true });
 export const insertChatRoomSchema = createInsertSchema(chatRooms).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertChatRoomMemberSchema = createInsertSchema(chatRoomMembers).omit({ lastReadTimestamp: true, joined: true });
+export const insertChatRoomMemberSchema = createInsertSchema(chatRoomMembers).omit({ lastRead: true, joinedAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertAttachmentSchema = createInsertSchema(attachments).omit({ id: true, createdAt: true });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ createdAt: true });
