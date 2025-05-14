@@ -807,7 +807,7 @@ export class DatabaseStorage implements IStorage {
   
   async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
     // Select only columns that exist in the actual database
-    return db.select({
+    const results = await db.select({
       id: objectives.id,
       title: objectives.title,
       description: objectives.description,
@@ -823,6 +823,19 @@ export class DatabaseStorage implements IStorage {
       // - updatedAt
       // - statusReason
     }).from(objectives).where(eq(objectives.tenantId, tenantId));
+    
+    // For each objective, fetch and add its key results
+    const objectivesWithKeyResults = await Promise.all(
+      results.map(async (objective) => {
+        const keyResultsList = await this.getKeyResultsByObjective(objective.id);
+        return {
+          ...objective,
+          keyResults: keyResultsList || []
+        };
+      })
+    );
+    
+    return objectivesWithKeyResults;
   }
 
   async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
@@ -856,13 +869,34 @@ export class DatabaseStorage implements IStorage {
 
   // Key Results
   async createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult> {
-    // Ensure currentValue is set if not provided
+    // Check if objective_id is provided since it's required by the database
+    if (!keyResult.objective_id) {
+      throw new Error("objective_id is required to create a key result");
+    }
+    
+    // Fix column names to match the database schema
     const values = {
       ...keyResult,
-      currentValue: keyResult.startValue || "0"
+      // Make sure required fields are set with proper fallbacks
+      current_value: keyResult.current_value || keyResult.start_value || "0",
+      start_value: keyResult.start_value || "0",
+      progress: keyResult.progress || 0,
+      status: keyResult.status || "not_started"
     };
     
     const [newKeyResult] = await db.insert(keyResults).values(values).returning();
+    
+    // Now we can safely use objectiveId since we validated it above
+    // Update the objective's progress
+    const results = await this.getKeyResultsByObjective(newKeyResult.objectiveId);
+    if (results && results.length > 0) {
+      const totalProgress = results.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+      const averageProgress = results.length > 0 ? Math.round(totalProgress / results.length) : 0;
+      
+      // Update the objective's progress
+      await this.updateObjectiveProgress(newKeyResult.objectiveId, averageProgress);
+    }
+    
     return newKeyResult;
   }
 

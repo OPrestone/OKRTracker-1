@@ -249,23 +249,41 @@ export default function DraftOKRs() {
   const handleAddNewKeyResult = () => {
     setNewDraftData(prev => ({
       ...prev,
-      keyResults: [...prev.keyResults, { id: "", title: "", objective_id: "" }]
+      keyResults: [...prev.keyResults, { 
+        id: "", 
+        title: "", 
+        objective_id: "",
+        start_value: "0",
+        current_value: "0",
+        target_value: "100",
+        progress: 0,
+        status: "not_started"
+      }]
     }));
   };
   
   const handleAddEditKeyResult = () => {
     setEditDraftData(prev => ({
       ...prev,
-      keyResults: [...prev.keyResults, { id: "", title: "", objective_id: prev.id }]
+      keyResults: [...prev.keyResults, { 
+        id: "", 
+        title: "", 
+        objective_id: prev.id,
+        start_value: "0",
+        current_value: "0",
+        target_value: "100",
+        progress: 0,
+        status: "not_started" 
+      }]
     }));
   };
   
-  const handleNewDraftKeyResultChange = (id: string, newTitle: string) => {
+  const handleNewDraftKeyResultChange = (id: string, field: string, value: string) => {
     setNewDraftData(prev => ({
       ...prev,
       keyResults: prev.keyResults.map((kr, index) => 
-        kr.id === id || (kr.id === "" && id === String(index)) 
-          ? { ...kr, title: newTitle } 
+        kr.id === id || (kr.id === "" && id === String(index))
+          ? { ...kr, [field]: value } 
           : kr
       )
     }));
@@ -624,7 +642,7 @@ export default function DraftOKRs() {
               <div className="space-y-4">
                 {newDraftData.keyResults && Array.isArray(newDraftData.keyResults) ? (
                   newDraftData.keyResults.map((kr, index) => (
-                    <div key={index} className="grid gap-3">
+                    <div key={index} className="grid gap-3 p-4 border rounded-md">
                       <div className="flex items-center justify-between">
                         <Label htmlFor={`key-result-${index}`}>Key Result {index + 1}</Label>
                         <Button
@@ -640,8 +658,38 @@ export default function DraftOKRs() {
                         id={`key-result-${index}`}
                         placeholder="Enter a measurable key result..."
                         value={kr.title}
-                        onChange={(e) => handleNewDraftKeyResultChange(String(index), e.target.value)}
+                        onChange={(e) => handleNewDraftKeyResultChange(String(index), "title", e.target.value)}
                       />
+                      
+                      <div className="grid grid-cols-3 gap-3 mt-2">
+                        <div>
+                          <Label htmlFor={`key-result-${index}-start`} className="text-xs">Start Value</Label>
+                          <Input
+                            id={`key-result-${index}-start`}
+                            placeholder="0"
+                            value={kr.start_value || "0"}
+                            onChange={(e) => handleNewDraftKeyResultChange(String(index), "start_value", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`key-result-${index}-current`} className="text-xs">Current Value</Label>
+                          <Input
+                            id={`key-result-${index}-current`}
+                            placeholder="0"
+                            value={kr.current_value || kr.start_value || "0"}
+                            onChange={(e) => handleNewDraftKeyResultChange(String(index), "current_value", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`key-result-${index}-target`} className="text-xs">Target Value</Label>
+                          <Input
+                            id={`key-result-${index}-target`}
+                            placeholder="100"
+                            value={kr.target_value || "100"}
+                            onChange={(e) => handleNewDraftKeyResultChange(String(index), "target_value", e.target.value)}
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (
