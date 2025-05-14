@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Card, 
@@ -147,16 +148,18 @@ const TeamStatusBadge = ({ status, className = "" }: { status: string, className
 
 // Team card with animation and enhanced design
 const TeamCard = ({ team, onClick, delay = 0 }: { team: Team, onClick: (team: Team) => void, delay?: number }) => {
+  const { currentTenant } = useTenantContext();
+  
   // Get team members
   const { data: members = [] } = useQuery<User[]>({
-    queryKey: ["/api/teams", team.id, "users"],
-    enabled: !!team.id,
+    queryKey: ["/api/teams", team.id, "users", currentTenant?.id],
+    enabled: !!team.id && !!currentTenant?.id,
   });
 
   // Get objectives for the team
   const { data: objectives = [] } = useQuery<TeamObjective[]>({
-    queryKey: ["/api/teams", team.id, "objectives"],
-    enabled: !!team.id,
+    queryKey: ["/api/teams", team.id, "objectives", currentTenant?.id],
+    enabled: !!team.id && !!currentTenant?.id,
   });
 
   // Calculate progress as average of objectives or default to 0
@@ -386,9 +389,11 @@ const CreateTeamDialog = () => {
   const [newTeamParent, setNewTeamParent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch all teams for parent selection
+  // Fetch all teams for parent selection with tenant context
+  const { currentTenant } = useTenantContext();
   const { data: teams } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["/api/teams", currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
   
   const colorOptions = [
@@ -589,10 +594,12 @@ const TeamsPage = () => {
   const [sortField, setSortField] = useState<"name" | "progress" | "members">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [, setLocation] = useLocation();
+  const { currentTenant } = useTenantContext();
 
-  // Fetch all teams
+  // Fetch all teams with tenant context
   const { data: teams = [], isLoading } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["/api/teams", currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
 
   // Filter teams by search query
