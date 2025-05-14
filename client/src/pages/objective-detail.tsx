@@ -952,40 +952,48 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {objective.checkIns.map((checkIn) => (
-                    <div key={checkIn.id} className="border rounded-md p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback>{checkIn.user.initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex justify-between mb-1">
-                            <h3 className="font-medium">{checkIn.user.name}</h3>
-                            <span className="text-sm text-gray-500">{checkIn.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`text-sm ${getProgressColorClass(checkIn.progress)}`}>
-                              Progress: {checkIn.progress}%
+                  {checkInsLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : checkIns && checkIns.length > 0 ? (
+                    checkIns.map((checkIn) => {
+                      // Find the user who created this check-in
+                      const checkInUser = users?.find(user => user.id === checkIn.userId);
+                      
+                      return (
+                        <div key={checkIn.id} className="border rounded-md p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>{checkInUser?.name?.charAt(0) || "U"}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex justify-between mb-1">
+                                <h3 className="font-medium">{checkInUser?.name || "Unknown User"}</h3>
+                                <span className="text-sm text-gray-500">
+                                  {checkIn.createdAt ? new Date(checkIn.createdAt).toLocaleDateString() : "Unknown date"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`text-sm ${getProgressColorClass(checkIn.progress || 0)}`}>
+                                  Progress: {checkIn.progress || 0}%
+                                </div>
+                                {/* We don't have previous progress data in the DB schema yet */}
+                              </div>
                             </div>
-                            {checkIn.progress > checkIn.previousProgress && (
-                              <div className="text-xs text-green-600">
-                                (+{checkIn.progress - checkIn.previousProgress}%)
-                              </div>
-                            )}
-                            {checkIn.progress < checkIn.previousProgress && (
-                              <div className="text-xs text-red-600">
-                                ({checkIn.progress - checkIn.previousProgress}%)
-                              </div>
-                            )}
+                          </div>
+                          
+                          <div className="bg-gray-50 p-3 rounded-md text-sm">
+                            <p>{checkIn.notes || "No notes provided"}</p>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gray-50 p-3 rounded-md text-sm">
-                        <p>{checkIn.notes}</p>
-                      </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      No check-ins recorded yet. Create your first check-in by clicking the "New Check-in" button.
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
