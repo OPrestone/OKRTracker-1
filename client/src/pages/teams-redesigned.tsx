@@ -965,7 +965,9 @@ const TeamsPage = () => {
 
   // Handlers for team actions
   const handleTeamView = (team: Team) => {
-    setLocation(`/teams/${team.id}`);
+    // Create a slug from the team name
+    const teamSlug = team.name.toLowerCase().replace(/\s+/g, '-');
+    setLocation(`/${currentTenant?.id}/team/${teamSlug}`);
   };
   
   const handleTeamEdit = (team: Team) => {
