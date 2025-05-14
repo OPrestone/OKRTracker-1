@@ -194,10 +194,13 @@ export const checkIns = pgTableWithUlid("check_ins", {
 export const chatRooms = pgTableWithUlid("chat_rooms", {
   name: text("name"),
   type: chatRoomTypeEnum("type").default("group").notNull(),
+  description: text("description"),
+  createdBy: integer("created_by").notNull(),
+  // Note: These columns don't exist in the actual database, but we keep them in the schema
+  // for potential future migrations
   objectiveId: text("objective_id").references(() => objectives.id),
   keyResultId: text("key_result_id").references(() => keyResults.id),
   teamId: text("team_id").references(() => teams.id),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -209,7 +212,8 @@ export const chatRoomMembers = pgTable("chat_room_members", {
   role: text("role").default("member").notNull(),
   lastRead: timestamp("last_read").defaultNow().notNull(),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  // Note: tenant_id column doesn't exist in the actual database
+  // We'll implement tenant isolation through the chat room's creator
 });
 
 export const messages = pgTableWithUlid("messages", {
@@ -218,9 +222,12 @@ export const messages = pgTableWithUlid("messages", {
   userId: text("user_id").references(() => users.id).notNull(),
   chatRoomId: text("chat_room_id").references(() => chatRooms.id).notNull(),
   replyToId: text("reply_to_id").references(() => messages.id),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+  isEdited: boolean("is_edited").default(false),
+  // Note: tenant_id doesn't exist in the actual database
+  // We'll implement tenant isolation through the chat room's membership
 });
 
 export const attachments = pgTableWithUlid("attachments", {
@@ -592,9 +599,10 @@ export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
     fields: [chatRooms.teamId],
     references: [teams.id]
   }),
-  tenant: one(tenants, {
-    fields: [chatRooms.tenantId],
-    references: [tenants.id]
+  // No direct tenant relation in the database
+  creator: one(users, {
+    fields: [chatRooms.createdBy],
+    references: [users.id]
   }),
   members: many(chatRoomMembers),
   messages: many(messages)
@@ -608,11 +616,9 @@ export const chatRoomMembersRelations = relations(chatRoomMembers, ({ one }) => 
   chatRoom: one(chatRooms, {
     fields: [chatRoomMembers.chatRoomId],
     references: [chatRooms.id]
-  }),
-  tenant: one(tenants, {
-    fields: [chatRoomMembers.tenantId],
-    references: [tenants.id]
   })
+  // No direct tenant relation in the database
+  // We'll use the chatRoom.creator relation to establish tenant context
 }));
 
 export const messagesRelations = relations(messages, ({ one, many }) => ({
@@ -628,10 +634,8 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     fields: [messages.replyToId],
     references: [messages.id]
   }),
-  tenant: one(tenants, {
-    fields: [messages.tenantId],
-    references: [tenants.id]
-  }),
+  // No direct tenant relation in the database
+  // We'll use the chatRoom relation to establish tenant context
   attachments: many(attachments),
   reactions: many(reactions)
 }));
@@ -690,7 +694,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   teams: many(teams),
   objectives: many(objectives),
   subscriptions: many(subscriptions),
-  chatRoomMembers: many(chatRoomMembers),
+  // No direct chatRoomMembers relation in the database
+  // We need to access through users instead
   reactions: many(reactions),
   userBadges: many(userBadges),
   userAccessGroups: many(userAccessGroups),
@@ -831,8 +836,22 @@ export const insertKeyResultSchema = createInsertSchema(keyResults).omit({ id: t
 export const insertInitiativeSchema = createInsertSchema(initiatives).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCheckInSchema = createInsertSchema(checkIns).omit({ id: true, createdAt: true });
 export const insertChatRoomSchema = createInsertSchema(chatRooms).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertChatRoomMemberSchema = createInsertSchema(chatRoomMembers).omit({ lastRead: true, joinedAt: true });
-export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true, updatedAt: true });
+// Explicitly define the schema to avoid issues with the actual database structure
+export const insertChatRoomMemberSchema = z.object({
+  id: z.string().optional(),
+  userId: z.string(),
+  chatRoomId: z.string(),
+  role: z.string().default("member")
+});
+// Explicitly define the schema to avoid issues with the actual database structure
+export const insertMessageSchema = z.object({
+  content: z.string(),
+  type: z.enum(["text", "file", "system"]).default("text"),
+  userId: z.string(),
+  chatRoomId: z.string(),
+  replyToId: z.string().optional(),
+  isEdited: z.boolean().default(false)
+});
 export const insertAttachmentSchema = createInsertSchema(attachments).omit({ id: true, createdAt: true });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ createdAt: true });
 export const insertBadgeSchema = createInsertSchema(badges).omit({ id: true, createdAt: true, updatedAt: true });
