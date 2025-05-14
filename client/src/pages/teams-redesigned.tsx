@@ -671,7 +671,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
       setTeamColor(team.color || "#3B82F6");
       setTeamIcon(team.icon || "users");
       setTeamDescription(team.description || "");
-      setTeamParent(team.parentId || "");
+      setTeamParent(team.parentId || "none");
     }
   }, [team]);
 
@@ -710,8 +710,8 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
 
       await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
       
-      // Invalidate and refetch teams
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      // Invalidate and refetch teams with the correct tenant context
+      await queryClient.invalidateQueries({ queryKey: ["/api/teams", currentTenant?.id] });
       
       toast({
         title: "Team updated",
