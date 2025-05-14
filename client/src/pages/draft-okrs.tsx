@@ -345,27 +345,37 @@ export default function DraftOKRs() {
       }))
     };
     
-    // In a real implementation, we would make an API call to create the draft objective
-    // For now, simulate the API call
-    setTimeout(() => {
-      setCreating(false);
-      setCreateDialogOpen(false);
-      
-      toast({
-        title: "Draft Created",
-        description: "Your draft objective has been created successfully.",
+    // Make an API call to create the draft objective
+    apiRequest("POST", "/api/objectives", newObjective)
+      .then(response => response.json())
+      .then(createdObjective => {
+        setCreating(false);
+        setCreateDialogOpen(false);
+        
+        toast({
+          title: "Draft Created",
+          description: "Your draft objective has been created successfully.",
+        });
+        
+        // Reset the form data
+        setNewDraftData({
+          title: "",
+          description: "",
+          keyResults: [{ id: "", title: "", objective_id: "" }]
+        });
+        
+        // Invalidate the query cache to refetch the data
+        queryClient.invalidateQueries(["/api/objectives", "draft"]);
+      })
+      .catch(error => {
+        setCreating(false);
+        
+        toast({
+          title: "Error",
+          description: `Failed to create draft: ${error.message}`,
+          variant: "destructive"
+        });
       });
-      
-      // Reset the form data
-      setNewDraftData({
-        title: "",
-        description: "",
-        keyResults: [{ id: "", title: "", objective_id: "" }]
-      });
-      
-      // In a real implementation, we would invalidate the query cache to refetch the data
-      // queryClient.invalidateQueries(["/api/objectives", "draft"]);
-    }, 1000);
   };
 
   return (
