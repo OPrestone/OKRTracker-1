@@ -58,6 +58,7 @@ export function SetupWorkflow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [cycleType, setCycleType] = useState<string>("quarterly");
   const [_, navigate] = useLocation();
+  const { canCreateObjectives } = useUserPermissions();
 
   // Sample OKR cycles
   const okrCycles: OKRCycle[] = [
