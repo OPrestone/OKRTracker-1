@@ -2784,7 +2784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Messages
-  app.get("/api/chat/rooms/:roomId/messages", async (req, res, next) => {
+  app.get("/api/chat/rooms/:roomId/messages", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
@@ -2793,6 +2793,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const roomId = parseInt(req.params.roomId);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const before = req.query.before ? parseInt(req.query.before as string) : undefined;
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Get the chat room and ensure it belongs to the tenant
+      const chatRoom = await storage.getChatRoom(roomId, tenantId);
+      
+      if (!chatRoom) {
+        return res.status(404).json({ error: "Chat room not found in this organization" });
+      }
       
       // Check if user is a member of this room
       const members = await storage.getChatRoomMembers(roomId);
@@ -2805,20 +2817,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Mark messages as read
       await storage.updateLastRead(req.user.id, roomId);
       
-      const messages = await storage.getMessagesByChatRoom(roomId, limit, before);
+      // Get messages with tenant filtering
+      const messages = await storage.getMessagesByChatRoom(roomId, limit, before, tenantId);
       res.json(messages);
     } catch (error) {
       next(error);
     }
   });
   
-  app.post("/api/chat/rooms/:roomId/messages", async (req, res, next) => {
+  app.post("/api/chat/rooms/:roomId/messages", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
       const roomId = parseInt(req.params.roomId);
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Get the chat room and ensure it belongs to the tenant
+      const chatRoom = await storage.getChatRoom(roomId, tenantId);
+      
+      if (!chatRoom) {
+        return res.status(404).json({ error: "Chat room not found in this organization" });
+      }
       
       // Check if user is a member of this room
       const members = await storage.getChatRoomMembers(roomId);
@@ -2831,7 +2856,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertMessageSchema.parse({
         ...req.body,
         chatRoomId: roomId,
-        userId: req.user.id
+        userId: req.user.id,
+        tenantId: tenantId // Add tenant ID to the message
       });
       
       const message = await storage.createMessage(validatedData);
@@ -2867,17 +2893,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/chat/messages/:id", async (req, res, next) => {
+  app.patch("/api/chat/messages/:id", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
       const messageId = parseInt(req.params.id);
-      const message = await storage.getMessage(messageId);
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Get message with tenant filtering to ensure it belongs to current tenant
+      const message = await storage.getMessage(messageId, tenantId);
       
       if (!message) {
-        return res.status(404).send("Message not found");
+        return res.status(404).send("Message not found in this organization");
       }
       
       // Only the author can edit their message
@@ -2891,7 +2924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validatedData = insertMessageSchema.partial().parse(req.body);
-      const updatedMessage = await storage.updateMessage(messageId, validatedData);
+      const updatedMessage = await storage.updateMessage(messageId, validatedData, tenantId);
       
       // Return the full message with user, attachments and reactions
       const user = await storage.getUser(req.user.id);

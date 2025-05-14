@@ -1749,52 +1749,88 @@ export class DatabaseStorage implements IStorage {
   
   // Messages
   async createMessage(message: InsertMessage): Promise<Message> {
+    // Make sure tenantId is set when creating a message
+    if (!message.tenantId) {
+      throw new Error("Tenant ID is required for creating a message");
+    }
+    
     const [newMessage] = await db.insert(messages).values(message).returning();
     return newMessage;
   }
 
-  async getMessage(id: number): Promise<Message | undefined> {
-    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+  async getMessage(id: number, tenantId?: string): Promise<Message | undefined> {
+    // Query with appropriate tenant filtering
+    let query = db.select().from(messages).where(eq(messages.id, id));
+    
+    // If tenantId is provided, restrict to that tenant
+    if (tenantId) {
+      query = query.where(eq(messages.tenantId, tenantId));
+    }
+    
+    const [message] = await query;
     return message;
   }
 
-  async updateMessage(id: number, message: Partial<InsertMessage>): Promise<Message> {
-    const [updatedMessage] = await db.update(messages)
+  async updateMessage(id: number, message: Partial<InsertMessage>, tenantId?: string): Promise<Message> {
+    // Build update query
+    let query = db.update(messages)
       .set({
         ...message,
         updatedAt: new Date(),
         isEdited: true
       })
-      .where(eq(messages.id, id))
-      .returning();
+      .where(eq(messages.id, id));
+      
+    // If tenantId is provided, add tenant restriction
+    if (tenantId) {
+      query = query.where(eq(messages.tenantId, tenantId));
+    }
+    
+    const [updatedMessage] = await query.returning();
     
     if (!updatedMessage) {
-      throw new Error(`Message with id ${id} not found`);
+      throw new Error(`Message with id ${id} not found or belongs to a different tenant`);
     }
     
     return updatedMessage;
   }
 
-  async deleteMessage(id: number): Promise<void> {
+  async deleteMessage(id: number, tenantId?: string): Promise<void> {
     // Soft delete - just mark as deleted
-    await db.update(messages)
+    let query = db.update(messages)
       .set({
         deletedAt: new Date(),
         content: "[This message was deleted]"
       })
       .where(eq(messages.id, id));
+      
+    // If tenantId is provided, add tenant restriction
+    if (tenantId) {
+      query = query.where(eq(messages.tenantId, tenantId));
+    }
+    
+    await query;
   }
 
   async getMessagesByChatRoom(
     chatRoomId: number, 
     limit: number = 50, 
-    before?: number
+    before?: number,
+    tenantId?: string
   ): Promise<(Message & { user: User, attachments: Attachment[], reactions: Reaction[] })[]> {
-    // Define the base query
-    const baseConditions = and(
+    // Define the base query with tenant filtering
+    let baseConditions = and(
       eq(messages.chatRoomId, chatRoomId),
       isNull(messages.deletedAt)
     );
+    
+    // Add tenant filter if provided
+    if (tenantId) {
+      baseConditions = and(
+        baseConditions,
+        eq(messages.tenantId, tenantId)
+      );
+    }
     
     // Create appropriate query based on whether 'before' is provided
     let messageResults;
