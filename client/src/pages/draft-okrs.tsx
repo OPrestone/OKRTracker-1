@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,19 +21,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+interface KeyResult {
+  id: string;
+  title: string;
+  description?: string;
+  current_value?: string;
+  target_value?: string;
+  start_value?: string;
+  progress?: number;
+  assigned_to_id?: string;
+  objective_id: string;
+  status?: string;
+  tenant_id?: string;
+  created_at?: string;
+}
+
 interface DraftObjective {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  createdAt: string;
-  owner: {
-    firstName: string;
-    lastName: string;
-  };
-  keyResults: {
-    id: number;
-    title: string;
-  }[];
+  status: string;
+  level: string;
+  tenant_id: string;
+  created_at?: string;
+  timeframe_id?: string;
+  owner_id?: string;
+  keyResults: KeyResult[];
 }
 
 interface AIAnalysis {
@@ -46,45 +61,7 @@ interface AIAnalysis {
   };
 }
 
-// Sample data
-const draftObjectives: DraftObjective[] = [
-  {
-    id: 1,
-    title: "Expand customer base in EMEA region",
-    description: "Target enterprise customers in Europe, Middle East, and Africa to increase market share",
-    createdAt: "2023-09-15",
-    owner: { firstName: "Alex", lastName: "Morgan" },
-    keyResults: [
-      { id: 1, title: "Achieve 15 new enterprise customers" },
-      { id: 2, title: "Generate €2M in new annual revenue" },
-      { id: 3, title: "Establish 3 strategic partnerships" }
-    ]
-  },
-  {
-    id: 2,
-    title: "Implement data-driven marketing strategy",
-    description: "Use analytics to optimize marketing campaigns and improve ROI",
-    createdAt: "2023-09-18",
-    owner: { firstName: "Jamie", lastName: "Taylor" },
-    keyResults: [
-      { id: 4, title: "Increase marketing qualified leads by 30%" },
-      { id: 5, title: "Reduce customer acquisition cost by 20%" },
-      { id: 6, title: "Improve conversion rate by 15%" }
-    ]
-  },
-  {
-    id: 3,
-    title: "Revamp customer onboarding process",
-    description: "Streamline the onboarding experience to improve customer satisfaction and reduce churn",
-    createdAt: "2023-09-20",
-    owner: { firstName: "Sam", lastName: "Johnson" },
-    keyResults: [
-      { id: 7, title: "Reduce onboarding time from 14 days to 7 days" },
-      { id: 8, title: "Achieve 90% customer satisfaction score" },
-      { id: 9, title: "Decrease 30-day churn by 25%" }
-    ]
-  }
-];
+// Using TanStack Query to fetch draft objectives from the API
 
 // Mock AI analysis response data
 const mockAIAnalysis: AIAnalysis = {
