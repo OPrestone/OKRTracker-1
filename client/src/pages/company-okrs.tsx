@@ -90,7 +90,10 @@ export default function CompanyOKRs() {
   const { data: objectives = [], isLoading, error } = useQuery<Objective[]>({
     queryKey: ["/api/objectives"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    onSuccess: (data) => {
+      console.log("Objectives data received:", data);
+    }
   });
 
   // Fetch key results for each objective
