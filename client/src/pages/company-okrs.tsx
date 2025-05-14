@@ -120,10 +120,22 @@ export default function CompanyOKRs() {
   // Filter objectives based on all criteria
   console.log("Raw objectives from API:", JSON.stringify(objectives, null, 2));
   
+  // Manual check for company level
+  const hasLevelField = objectives.some(obj => 'level' in obj);
+  console.log("Do objectives have level field?", hasLevelField);
+  
+  // Modified to handle potentially missing level field
   const filteredObjectives = objectives
     .filter(obj => {
       // Debug level field
       console.log(`Objective ID: ${obj.id}, Title: ${obj.title}, Level: ${obj.level || 'undefined'}`);
+      
+      // Check if it's a company level objective (handle missing level field)
+      if (!obj.level && obj.teamId === null && obj.parentId === null) {
+        console.log(`Objective ${obj.id} has no team and no parent - likely company level`);
+        return true;
+      }
+      
       return obj.level === 'company';
     })
     .filter(obj => {
