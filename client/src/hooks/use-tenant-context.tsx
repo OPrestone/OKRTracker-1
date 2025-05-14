@@ -28,6 +28,7 @@ type TenantContextType = {
   isLoading: boolean;
   error: Error | null;
   setCurrentTenant: (tenant: Tenant) => void;
+  setCurrentTenantById: (id: string) => void;
   switchTenant: (tenant: Tenant) => void;
 };
 
@@ -210,11 +211,28 @@ export function TenantProvider({
     window.location.href = newUrl;
   };
 
+  // Function to set the current tenant by ID
+  const setCurrentTenantById = (id: string) => {
+    if (!tenants) return;
+    
+    const tenant = tenants.find(t => t.id === id);
+    if (tenant) {
+      setCurrentTenant(tenant);
+      // Update session storage
+      sessionStorage.setItem('currentTenantId', tenant.id);
+      sessionStorage.setItem('currentTenantSlug', tenant.slug);
+      sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
+    } else {
+      console.warn(`Tenant with ID ${id} not found`);
+    }
+  };
+
   return (
     <TenantContext.Provider
       value={{
         currentTenant,
         setCurrentTenant,
+        setCurrentTenantById,
         switchTenant,
         isLoading,
         error: error as Error | null,

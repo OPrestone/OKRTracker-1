@@ -54,6 +54,7 @@ import TenantPage from "@/pages/tenant-page";
 import OrganizationPage from "@/pages/organization-page";
 import TenantOnboardingPage from "@/pages/tenant-onboarding-page";
 import TenantOnboardingDemoPage from "@/pages/tenant-onboarding-demo-page";
+import TenantDashboardRedirect from "@/components/tenant/tenant-dashboard-redirect";
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
@@ -146,7 +147,7 @@ function AppRoutes() {
       <ProtectedRoute path="/tenants" component={TenantsPage} />
       
       {/* ULID-based routes for organizations (new format using ULIDs directly) */}
-      <ProtectedRoute path="/:id([A-Z0-9]{26})" component={OrganizationPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})" component={TenantDashboardRedirect} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
