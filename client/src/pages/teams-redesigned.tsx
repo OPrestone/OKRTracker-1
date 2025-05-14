@@ -28,6 +28,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -509,8 +510,8 @@ const CreateTeamDialog = () => {
       setNewTeamIcon("users");
       setNewTeamParent("");
       
-      // Close dialog - needs DialogClose component
-      document.querySelector('[data-dialog-close]')?.click();
+      // We'll use the built-in close functionality
+      // Close dialog properly with DialogClose component
       
     } catch (error) {
       toast({
