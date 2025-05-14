@@ -117,6 +117,7 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
   const [goalsThisWeek, setGoalsThisWeek] = useState("");
   const [challenges, setChallenges] = useState("");
   const [needsForOKRs, setNeedsForOKRs] = useState("");
+  const { currentTenant } = useTenantContext();
   
   // States for the team and user data
   const [selectedTeam, setSelectedTeam] = useState<string>("");
