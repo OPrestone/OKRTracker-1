@@ -1329,8 +1329,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Validate user permissions (only admin/owner can update cycles)
-      const userRole = await getUserRoleForTenant(req.user as User, tenantId);
-      if (userRole !== 'admin' && userRole !== 'owner') {
+      const userTenants = await tenantService.getUserTenants(req.user.id);
+      const tenantConnection = userTenants.find(t => t.id === tenantId);
+      
+      if (!tenantConnection || (tenantConnection.userRole !== 'admin' && tenantConnection.userRole !== 'owner')) {
         return res.status(403).json({ 
           error: "Only administrators and owners can update cycles" 
         });
@@ -1398,8 +1400,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Validate user permissions (only admin/owner can delete cycles)
-      const userRole = await getUserRoleForTenant(req.user as User, tenantId);
-      if (userRole !== 'admin' && userRole !== 'owner') {
+      const userTenants = await tenantService.getUserTenants(req.user.id);
+      const tenantConnection = userTenants.find(t => t.id === tenantId);
+      
+      if (!tenantConnection || (tenantConnection.userRole !== 'admin' && tenantConnection.userRole !== 'owner')) {
         return res.status(403).json({ 
           error: "Only administrators and owners can delete cycles" 
         });
