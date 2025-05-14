@@ -341,7 +341,8 @@ const TeamPerformancePage = () => {
                             key={`cell-${index}`} 
                             fill={
                               entry.status === 'on-track' ? '#16a34a' : 
-                              entry.status === 'at-risk' ? '#eab308' : '#dc2626'
+                              entry.status === 'at-risk' ? '#eab308' : 
+                              entry.status === 'behind' ? '#dc2626' : '#3b82f6'
                             }
                           />
                         ))}

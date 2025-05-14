@@ -9,7 +9,7 @@ import { useTenantContext } from '@/hooks/use-tenant-context';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface MemberPerformanceProps {
-  teamId: string;
+  teamId: string | undefined;
   userId: string;
 }
 
@@ -17,7 +17,7 @@ const MemberPerformance = ({ teamId, userId }: MemberPerformanceProps) => {
   const { tenantId } = useTenantContext();
   
   const { data, isLoading, error } = useQuery({
-    queryKey: [`/api/teams/${teamId}/members/${userId}/performance`, tenantId],
+    queryKey: [`/api/teams/${teamId || ''}/members/${userId}/performance`, tenantId],
     queryFn: getQueryFn(),
     enabled: !!teamId && !!userId && !!tenantId,
   });
