@@ -19,7 +19,7 @@ export default function Dashboards() {
   }) as { data: any };
 
   const { data: teamsData = [] } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams-performance'],
   }) as { data: any[] };
 
   const { data: objectivesData = [] } = useQuery({
@@ -66,27 +66,17 @@ export default function Dashboards() {
     ];
   };
 
-  // Prepare data for bar chart using objectives data
+  // Prepare data for bar chart using team performance data
   const prepareBarData = () => {
-    if (!teamsData || !Array.isArray(teamsData) || !objectivesData || !Array.isArray(objectivesData)) {
+    if (!teamsData || !Array.isArray(teamsData)) {
       return [];
     }
     
-    // Calculate team performance based on their objectives
+    // Use the progress data directly from the teams-performance endpoint
     const teamPerformance = teamsData.map((team: any) => {
-      // Filter objectives that belong to this team
-      const teamObjectives = objectivesData.filter((obj: any) => obj.teamId === team.id);
-      
-      // Calculate average progress of team objectives
-      let avgProgress = 0;
-      if (teamObjectives.length > 0) {
-        const totalProgress = teamObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
-        avgProgress = Math.round(totalProgress / teamObjectives.length);
-      }
-      
       return {
         name: team.name,
-        performance: avgProgress
+        performance: team.progress || 0
       };
     });
     
