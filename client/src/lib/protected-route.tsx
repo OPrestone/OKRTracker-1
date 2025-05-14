@@ -59,13 +59,32 @@ export function ProtectedRoute({
     );
   }
 
-  // If tenant is required but no tenant is selected, redirect to tenant selection
+  // If tenant is required but no tenant is selected, check if we have a saved tenant ID before redirecting
   if (isTenantRelatedPath && !currentTenant) {
-    return (
-      <Route path={path}>
-        <Redirect to="/tenants" />
-      </Route>
-    );
+    // Check if we have a stored tenant ID in session storage
+    const storedTenantId = sessionStorage.getItem('currentTenantId');
+    
+    if (storedTenantId) {
+      // If we have a stored tenant ID but tenant context hasn't loaded it yet,
+      // render loading state instead of redirecting to tenant selection
+      return (
+        <Route path={path}>
+          <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-3 text-muted-foreground">
+              Restoring tenant session...
+            </span>
+          </div>
+        </Route>
+      );
+    } else {
+      // If no stored tenant ID, then redirect to tenant selection
+      return (
+        <Route path={path}>
+          <Redirect to="/tenants" />
+        </Route>
+      );
+    }
   }
 
   // Render the protected component if user is authenticated
