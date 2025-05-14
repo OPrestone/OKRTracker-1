@@ -66,14 +66,32 @@ export default function Dashboards() {
     ];
   };
 
-  // Prepare data for bar chart
+  // Prepare data for bar chart using objectives data
   const prepareBarData = () => {
-    if (!teamsData || !Array.isArray(teamsData)) return [];
+    if (!teamsData || !Array.isArray(teamsData) || !objectivesData || !Array.isArray(objectivesData)) {
+      return [];
+    }
     
-    return teamsData.map((team: any) => ({
-      name: team.name,
-      performance: team.performance || 0
-    }));
+    // Calculate team performance based on their objectives
+    const teamPerformance = teamsData.map((team: any) => {
+      // Filter objectives that belong to this team
+      const teamObjectives = objectivesData.filter((obj: any) => obj.teamId === team.id);
+      
+      // Calculate average progress of team objectives
+      let avgProgress = 0;
+      if (teamObjectives.length > 0) {
+        const totalProgress = teamObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
+        avgProgress = Math.round(totalProgress / teamObjectives.length);
+      }
+      
+      return {
+        name: team.name,
+        performance: avgProgress
+      };
+    });
+    
+    // Sort by performance (descending)
+    return teamPerformance.sort((a, b) => b.performance - a.performance);
   };
 
   const pieData = preparePieData();
