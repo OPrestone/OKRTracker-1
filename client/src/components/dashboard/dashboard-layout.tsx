@@ -17,15 +17,7 @@ interface DashboardLayoutProps {
   };
 }
 
-const dummyChartData = [
-  { name: 'Jan', value: 12 },
-  { name: 'Feb', value: 19 },
-  { name: 'Mar', value: 15 },
-  { name: 'Apr', value: 27 },
-  { name: 'May', value: 22 },
-  { name: 'Jun', value: 30 },
-  { name: 'Jul', value: 25 },
-];
+// This will be replaced with real data from the dashboard API
 
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
   const stats = overviewStats || {
