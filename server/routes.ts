@@ -1502,9 +1502,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Extract key results to handle them separately
+      const keyResultsData = requestData.keyResults;
+      delete requestData.keyResults;
+      
+      // Validate and create the objective
       const validatedData = insertObjectiveSchema.parse(requestData);
       const objective = await storage.createObjective(validatedData);
-      res.status(201).json(objective);
+      
+      // Process key results if provided
+      if (keyResultsData && Array.isArray(keyResultsData)) {
+        // Create each key result associated with the new objective
+        for (const kr of keyResultsData) {
+          await storage.createKeyResult({
+            title: kr.title,
+            description: kr.description,
+            objective_id: objective.id, // The ID of the objective we just created
+            target_value: kr.target_value,
+            current_value: kr.current_value || kr.start_value || "0",
+            start_value: kr.start_value || "0",
+            progress: kr.progress || 0,
+            status: kr.status || "not_started",
+            assigned_to_id: kr.assigned_to_id,
+            tenant_id: requestData.tenantId,
+          });
+        }
+      }
+      
+      // Fetch the created objective with its key results
+      const keyResults = await storage.getKeyResultsByObjective(objective.id);
+      const result = {
+        ...objective,
+        keyResults
+      };
+      
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }
@@ -1594,9 +1626,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Extract key results to handle them separately
+      const keyResultsData = requestData.keyResults;
+      delete requestData.keyResults;
+      
+      // Validate and update the objective
       const validatedData = insertObjectiveSchema.partial().parse(requestData);
       const updatedObjective = await storage.updateObjective(id, validatedData);
-      res.json(updatedObjective);
+      
+      // Process key results if provided
+      if (keyResultsData && Array.isArray(keyResultsData)) {
+        // Process each key result
+        for (const kr of keyResultsData) {
+          if (kr.id) {
+            // Update existing key result
+            await storage.updateKeyResult(kr.id, {
+              title: kr.title,
+              description: kr.description,
+              target_value: kr.target_value,
+              current_value: kr.current_value,
+              start_value: kr.start_value,
+              status: kr.status,
+              assigned_to_id: kr.assigned_to_id,
+              tenant_id: requestData.tenantId,
+            });
+          } else {
+            // Create new key result
+            await storage.createKeyResult({
+              title: kr.title,
+              description: kr.description,
+              objective_id: id, // The ID of the objective we just updated
+              target_value: kr.target_value,
+              current_value: kr.current_value || kr.start_value || "0",
+              start_value: kr.start_value || "0",
+              progress: kr.progress || 0,
+              status: kr.status || "not_started",
+              assigned_to_id: kr.assigned_to_id,
+              tenant_id: requestData.tenantId,
+            });
+          }
+        }
+      }
+      
+      // Fetch the updated objective with its key results
+      const keyResults = await storage.getKeyResultsByObjective(id);
+      const result = {
+        ...updatedObjective,
+        keyResults
+      };
+      
+      res.json(result);
     } catch (error) {
       next(error);
     }
