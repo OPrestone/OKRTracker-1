@@ -495,8 +495,8 @@ const CreateTeamDialog = () => {
 
       await apiRequest("POST", "/api/teams", newTeam);
       
-      // Invalidate and refetch teams
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      // Invalidate and refetch teams with the correct tenant context
+      await queryClient.invalidateQueries({ queryKey: ["/api/teams", currentTenant?.id] });
       
       toast({
         title: "Team created",
@@ -510,8 +510,8 @@ const CreateTeamDialog = () => {
       setNewTeamIcon("users");
       setNewTeamParent("");
       
-      // We'll use the built-in close functionality
-      // Close dialog properly with DialogClose component
+      // Close the dialog programmatically using a hidden DialogClose component
+      document.querySelector('[data-dialog-close="true"]')?.click();
       
     } catch (error) {
       toast({
@@ -526,6 +526,9 @@ const CreateTeamDialog = () => {
   
   return (
     <DialogContent className="sm:max-w-[525px]">
+      {/* Hidden DialogClose for programmatic closing */}
+      <DialogClose data-dialog-close="true" className="hidden" />
+      
       <DialogHeader>
         <DialogTitle>Create New Team</DialogTitle>
         <DialogDescription>
@@ -632,6 +635,9 @@ const CreateTeamDialog = () => {
         </div>
       
         <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">Cancel</Button>
+          </DialogClose>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating..." : "Create Team"}
           </Button>
