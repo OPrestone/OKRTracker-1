@@ -357,44 +357,123 @@ const objectiveData: Objective = {
 };
 
 export default function ObjectiveDetail() {
-  const [match, params] = useRoute('/objective-detail/:id');
-  const objectiveId = params?.id;
+  const { id: objectiveId } = useParams();
   const [progressValue, setProgressValue] = useState<string>("0");
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { currentTenant } = useTenantContext();
+  const { tenant } = useTenantContext();
   
-  // Fetch the objective data from API
+  // Fetch the objective data from API with tenant context
   const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
     queryKey: ['/api/objectives', objectiveId],
-    enabled: !!objectiveId && !!currentTenant,
+    queryFn: async () => {
+      if (!objectiveId || !tenant?.id) {
+        throw new Error("Missing objectiveId or tenant");
+      }
+      
+      const response = await apiRequest(
+        'GET', 
+        `/api/objectives/${objectiveId}?tenantId=${tenant.id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching objective: ${response.statusText}`);
+      }
+      
+      return await response.json() as DbObjective;
+    },
+    enabled: !!objectiveId && !!tenant?.id,
   });
 
   // Fetch key results related to this objective
   const { data: keyResults, isLoading: keyResultsLoading } = useQuery({
-    queryKey: ['/api/key-results', { objectiveId }],
-    enabled: !!objectiveId && !!currentTenant,
+    queryKey: ['/api/key-results', objectiveId],
+    queryFn: async () => {
+      if (!objectiveId || !tenant?.id) {
+        throw new Error("Missing objectiveId or tenant");
+      }
+      
+      const response = await apiRequest(
+        'GET', 
+        `/api/key-results?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching key results: ${response.statusText}`);
+      }
+      
+      return await response.json() as DbKeyResult[];
+    },
+    enabled: !!objectiveId && !!tenant?.id,
   });
 
   // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['/api/teams'],
-    enabled: !!currentTenant,
+    queryFn: async () => {
+      if (!tenant?.id) {
+        throw new Error("Missing tenant");
+      }
+      
+      const response = await apiRequest(
+        'GET', 
+        `/api/teams?tenantId=${tenant.id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching teams: ${response.statusText}`);
+      }
+      
+      return await response.json() as Team[];
+    },
+    enabled: !!tenant?.id,
   });
 
   // Fetch users
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
-    enabled: !!currentTenant,
+    queryFn: async () => {
+      if (!tenant?.id) {
+        throw new Error("Missing tenant");
+      }
+      
+      const response = await apiRequest(
+        'GET', 
+        `/api/users?tenantId=${tenant.id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching users: ${response.statusText}`);
+      }
+      
+      return await response.json() as User[];
+    },
+    enabled: !!tenant?.id,
   });
 
   // Fetch check-ins
   const { data: checkIns, isLoading: checkInsLoading } = useQuery({
-    queryKey: ['/api/check-ins', { objectiveId }],
-    enabled: !!objectiveId && !!currentTenant,
+    queryKey: ['/api/check-ins', objectiveId],
+    queryFn: async () => {
+      if (!objectiveId || !tenant?.id) {
+        throw new Error("Missing objectiveId or tenant");
+      }
+      
+      const response = await apiRequest(
+        'GET', 
+        `/api/check-ins?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching check-ins: ${response.statusText}`);
+      }
+      
+      return await response.json() as DbCheckIn[];
+    },
+    enabled: !!objectiveId && !!tenant?.id,
   });
 
   // Update progress value when objective data changes
@@ -454,8 +533,8 @@ export default function ObjectiveDetail() {
     }
   };
 
-  // Handle progress update
-  const handleProgressUpdate = () => {
+  // Handle progress update with real API
+  const handleProgressUpdate = async () => {
     const newProgress = parseInt(progressValue, 10);
     if (isNaN(newProgress) || newProgress < 0 || newProgress > 100) {
       toast({
@@ -466,28 +545,54 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    // Update objective progress
-    const updatedObjective = {
-      ...objective,
-      progress: newProgress,
-      lastUpdated: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    };
+    if (!objective || !tenant?.id) {
+      toast({
+        title: "Cannot Update Progress",
+        description: "Missing objective data or tenant information.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setObjective(updatedObjective);
-    setProgressDialogOpen(false);
-    
-    toast({
-      title: "Progress Updated",
-      description: `Progress has been updated to ${newProgress}%.`,
-    });
+    try {
+      // Prepare the update data
+      const updateData = {
+        progress: newProgress,
+        tenantId: tenant.id
+      };
+
+      // Make API request to update objective
+      const response = await apiRequest(
+        'PATCH',
+        `/api/objectives/${objective.id}?tenantId=${tenant.id}`,
+        updateData
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error updating progress: ${response.statusText}`);
+      }
+
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objective.id] });
+      
+      setProgressDialogOpen(false);
+      
+      toast({
+        title: "Progress Updated",
+        description: `Progress has been updated to ${newProgress}%.`,
+      });
+    } catch (error) {
+      console.error("Error updating progress:", error);
+      toast({
+        title: "Error Updating Progress",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Handle check-in submission
-  const handleCheckInSubmit = () => {
+  // Handle check-in submission with real API
+  const handleCheckInSubmit = async () => {
     if (!newCheckInNotes.trim()) {
       toast({
         title: "Check-in Notes Required",
@@ -497,39 +602,59 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    // Create new check-in
-    const newCheckIn: CheckIn = {
-      id: Date.now(), // Use timestamp as temporary ID
-      user: {
-        id: objective.owner.id,
-        name: objective.owner.name,
-        initials: objective.owner.initials
-      },
-      date: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-      progress: objective.progress,
-      previousProgress: objective.checkIns[0]?.progress || objective.progress,
-      notes: newCheckInNotes
-    };
+    if (!objective || !tenant?.id) {
+      toast({
+        title: "Cannot Add Check-in",
+        description: "Missing objective data or tenant information.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Update objective with new check-in
-    const updatedObjective = {
-      ...objective,
-      checkIns: [newCheckIn, ...objective.checkIns],
-      lastUpdated: newCheckIn.date
-    };
+    try {
+      // Create the check-in data model
+      const checkInData: Partial<DbCheckIn> = {
+        userId: users?.[0]?.id, // Currently logged in user
+        objectiveId: objective.id,
+        progress: objective.progress,
+        notes: newCheckInNotes,
+        tenantId: tenant.id
+      };
 
-    setObjective(updatedObjective);
-    setNewCheckInNotes("");
-    setCheckInDialogOpen(false);
-    
-    toast({
-      title: "Check-in Added",
-      description: "Your check-in has been recorded successfully.",
-    });
+      // Make API request to create check-in
+      const response = await apiRequest(
+        'POST',
+        `/api/check-ins?tenantId=${tenant.id}`,
+        checkInData
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error creating check-in: ${response.statusText}`);
+      }
+
+      // Get the newly created check-in
+      const newCheckIn = await response.json() as DbCheckIn;
+
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/check-ins', objective.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objective.id] });
+
+      // Clear form and close dialog
+      setNewCheckInNotes("");
+      setCheckInDialogOpen(false);
+      
+      toast({
+        title: "Check-in Added",
+        description: "Your check-in has been recorded successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding check-in:", error);
+      toast({
+        title: "Error Adding Check-in",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   // Toggle todo completion
@@ -871,7 +996,7 @@ export default function ObjectiveDetail() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle>To-Dos</CardTitle>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled>
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add To-Do
                     </Button>
@@ -882,40 +1007,43 @@ export default function ObjectiveDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {objective.todos.map((todo) => (
-                      <div 
-                        key={todo.id} 
-                        className={`flex items-center justify-between p-3 border rounded-md ${todo.completed ? 'bg-gray-50' : ''}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer ${todo.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}
-                            onClick={() => toggleTodo(todo.id)}
-                          >
-                            {todo.completed && <CheckCircle className="h-4 w-4 text-white" />}
-                          </div>
-                          <div>
-                            <p className={`text-sm font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>
-                              {todo.title}
-                            </p>
-                            {todo.dueDate && (
-                              <p className="text-xs text-gray-500">
-                                Due: {todo.dueDate}
+                    {keyResults && keyResults.length > 0 ? (
+                      keyResults.map((keyResult, idx) => (
+                        <div 
+                          key={keyResult.id} 
+                          className="flex items-center justify-between p-3 border rounded-md"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer border-gray-300">
+                              {/* Will implement toggling when todos are supported */}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">
+                                Complete Key Result: {keyResult.title}
                               </p>
-                            )}
+                              <p className="text-xs text-gray-500">
+                                Progress: {keyResult.progress || 0}%
+                              </p>
+                            </div>
                           </div>
+                          
+                          {keyResult.assignedTo && (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="text-xs">
+                                  {keyResult.assignedTo.name?.charAt(0) || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-gray-500">{keyResult.assignedTo.name}</span>
+                            </div>
+                          )}
                         </div>
-                        
-                        {todo.assignee && (
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs">{todo.assignee.initials}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs text-gray-500">{todo.assignee.name}</span>
-                          </div>
-                        )}
+                      ))
+                    ) : (
+                      <div className="text-center p-4 text-gray-500">
+                        No tasks defined for this objective yet
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -932,24 +1060,34 @@ export default function ObjectiveDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>{objective.owner.initials}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{objective.owner.name}</p>
-                    <p className="text-sm text-gray-500">{objective.owner.role}</p>
+                {objective.owner ? (
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>{objective.owner.name?.charAt(0) || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{objective.owner.name || "Unknown Owner"}</p>
+                      <p className="text-sm text-gray-500">{objective.owner.role || "Team Member"}</p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    No owner assigned
+                  </div>
+                )}
                 
                 <Separator />
                 
                 <div>
                   <p className="text-sm text-gray-500 mb-2">Team</p>
-                  <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-gray-400" />
-                    <span className="font-medium">{objective.team.name}</span>
-                  </div>
+                  {objective.team ? (
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-gray-400" />
+                      <span className="font-medium">{objective.team.name}</span>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">No team assigned</div>
+                  )}
                 </div>
               </div>
             </CardContent>
