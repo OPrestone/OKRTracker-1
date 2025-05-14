@@ -163,35 +163,17 @@ export function setupAuth(app: Express) {
       // Ensure we have a name field from firstName and lastName
       const name = `${req.body.firstName || ''} ${req.body.lastName || ''}`.trim() || req.body.username;
       
-      // Get a default tenant if one isn't provided
+      // Don't automatically assign to a default tenant
+      // User will be redirected to organization creation after registration
       let tenantId = req.body.tenantId;
-      if (!tenantId) {
-        // Find or create a default tenant
-        try {
-          // Try to find an existing tenant
-          const existingTenants = await db.select().from(tenantsTable);
-          if (existingTenants && existingTenants.length > 0) {
-            tenantId = existingTenants[0].id;
-            console.log("Using existing tenant for registration:", tenantId);
-          } else {
-            // Create a default tenant if none exists
-            console.log("No tenants found, creating a default tenant");
-            const [defaultTenant] = await db.insert(tenantsTable).values({
-              name: "Default Organization",
-              slug: "default-org",
-              plan: "free",
-              settings: {},
-              enabledFeatures: ["objectives", "key_results", "chat"]
-            }).returning();
-            tenantId = defaultTenant.id;
-            console.log("Created default tenant:", tenantId);
-          }
-        } catch (err) {
-          console.error("Error finding/creating default tenant:", err);
-          // Fallback to a static ID only as last resort
-          tenantId = "01JTTH6MTJE4DHTH63RV7H21G0"; // Use an existing tenant ID if possible
-          console.log("Using fallback tenant ID:", tenantId);
-        }
+      
+      // If a specific tenant ID is provided in the request, use it
+      // (This can happen in special cases like API-driven or admin-initiated registration)
+      if (tenantId) {
+        console.log("Using specified tenant ID for registration:", tenantId);
+      } else {
+        // Otherwise, don't assign a tenant - user will create their own during onboarding
+        console.log("No tenant assigned during registration - user will create one during onboarding");
       }
 
       const userData = {
@@ -208,21 +190,26 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser(userData);
       console.log("User created successfully:", user.id);
       
-      // Create user-tenant relationship if not already created
-      try {
-        const { ulid } = await import("ulid");
-        await db.insert(usersToTenants).values({
-          id: ulid(), // Generate a ULID for the relationship
-          userId: user.id,
-          tenantId: tenantId,
-          role: "member",
-          isDefault: true, // Make this the default tenant
-          createdAt: new Date()
-        }).onConflictDoNothing();
-        console.log("User-tenant relationship created");
-      } catch (err) {
-        console.error("Error creating user-tenant relationship:", err);
-        // Non-critical error, continue with registration
+      // Only create user-tenant relationship if a tenantId was explicitly provided
+      // Otherwise, user will create their own organization during onboarding and be assigned as owner
+      if (tenantId) {
+        try {
+          const { ulid } = await import("ulid");
+          await db.insert(usersToTenants).values({
+            id: ulid(), // Generate a ULID for the relationship
+            userId: user.id,
+            tenantId: tenantId,
+            role: "member", // Users added during registration are members by default
+            isDefault: true, // Make this the default tenant
+            createdAt: new Date()
+          }).onConflictDoNothing();
+          console.log("User-tenant relationship created");
+        } catch (err) {
+          console.error("Error creating user-tenant relationship:", err);
+          // Non-critical error, continue with registration
+        }
+      } else {
+        console.log("No tenant relationship created - user will create their own organization");
       }
 
       req.login(user, (err) => {
