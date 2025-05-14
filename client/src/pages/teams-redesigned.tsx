@@ -1148,6 +1148,30 @@ const TeamsPage = () => {
   return (
     <DashboardLayout title="Teams">
       <div className="container mx-auto px-6 py-8 max-w-7xl">
+        {/* Edit Team Dialog */}
+        {selectedTeam && (
+          <EditTeamDialog 
+            team={selectedTeam} 
+            isOpen={isEditDialogOpen} 
+            onClose={() => {
+              setIsEditDialogOpen(false);
+              setSelectedTeam(null);
+            }} 
+          />
+        )}
+        
+        {/* Delete Team Dialog */}
+        {selectedTeam && (
+          <DeleteTeamDialog 
+            team={selectedTeam} 
+            isOpen={isDeleteDialogOpen} 
+            onClose={() => {
+              setIsDeleteDialogOpen(false);
+              setSelectedTeam(null);
+            }} 
+          />
+        )}
+        
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
