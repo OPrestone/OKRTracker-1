@@ -4478,6 +4478,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get performance data for team members of a specific team
+  app.get("/api/teams/:teamId/members-performance", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { teamId } = req.params;
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      if (!teamId) {
+        return res.status(400).json({ error: "Team ID is required" });
+      }
+      
+      console.log(`Getting performance data for members of team ${teamId} in tenant ${tenantId}`);
+      const membersPerformance = await storage.getTeamMembersPerformance(teamId, tenantId);
+      res.json(membersPerformance);
+    } catch (error) {
+      console.error(`Error fetching team members performance:`, error);
+      next(error);
+    }
+  });
+  
+  // Get performance data for a specific team member
+  app.get("/api/teams/:teamId/members/:userId/performance", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { teamId, userId } = req.params;
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      if (!teamId) {
+        return res.status(400).json({ error: "Team ID is required" });
+      }
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+      
+      console.log(`Getting performance data for member ${userId} of team ${teamId} in tenant ${tenantId}`);
+      const memberPerformance = await storage.getTeamMemberPerformance(teamId, userId, tenantId);
+      res.json(memberPerformance);
+    } catch (error) {
+      console.error(`Error fetching team member performance:`, error);
+      next(error);
+    }
+  });
+  
   // Team users endpoint
   app.get("/api/teams/:teamId/users", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {

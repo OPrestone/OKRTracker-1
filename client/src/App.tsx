@@ -134,6 +134,7 @@ function AppRoutes() {
       <ProtectedRoute path="/okr-reports" component={OKRReports} />
       <ProtectedRoute path="/export-reports" component={ExportReports} />
       <ProtectedRoute path="/team-performance" component={TeamPerformance} />
+      <ProtectedRoute path="/team-performance/:teamId" component={TeamPerformance} />
       <ProtectedRoute path="/ai-recommendations" component={AIRecommendations} />
       
       {/* Communication */}
@@ -170,6 +171,8 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/user-profile" component={UserProfile} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/reports" component={Reports} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/team-performance" component={TeamPerformance} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/team-performance/:teamId" component={TeamPerformance} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/chat" component={ChatPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/feedback-wall" component={FeedbackWall} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/wellness-pulse" component={WellnessPulse} />

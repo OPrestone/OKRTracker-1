@@ -40,6 +40,8 @@ export interface IStorage {
   getTeamsByTenant(tenantId: string): Promise<Team[]>;
   getTeamPerformance(teamId: string, tenantId: string): Promise<any>;
   getTeamsPerformance(tenantId: string): Promise<any[]>;
+  getTeamMemberPerformance(teamId: string, userId: string, tenantId: string): Promise<any>;
+  getTeamMembersPerformance(teamId: string, tenantId: string): Promise<any[]>;
   addUserToTeam(userId: string, teamId: string): Promise<User>;
   removeUserFromTeam(userId: string): Promise<User>;
   
@@ -644,6 +646,171 @@ export class DatabaseStorage implements IStorage {
       return teamsPerformance;
     } catch (error) {
       console.error('Error getting teams performance:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get performance metrics for a specific team member
+   * @param teamId - The ID of the team
+   * @param userId - The ID of the user
+   * @param tenantId - The tenant ID for context
+   * @returns Team member performance metrics
+   */
+  async getTeamMemberPerformance(teamId: string, userId: string, tenantId: string): Promise<any> {
+    try {
+      // Get the user details
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+      }
+      
+      // Get the team details
+      const team = await this.getTeam(teamId);
+      if (!team) {
+        throw new Error(`Team with id ${teamId} not found`);
+      }
+      
+      // Verify user belongs to the team
+      if (user.teamId !== teamId) {
+        throw new Error(`User ${userId} is not a member of team ${teamId}`);
+      }
+      
+      // Get objectives assigned to this user that belong to the team
+      const userObjectives = await db
+        .select()
+        .from(objectives)
+        .where(and(
+          eq(objectives.ownerId, userId),
+          eq(objectives.teamId, teamId),
+          eq(objectives.tenantId, tenantId)
+        ));
+      
+      // Get key results assigned to this user
+      const userKeyResults = await db
+        .select()
+        .from(keyResults)
+        .where(and(
+          eq(keyResults.assignedToId, userId),
+          eq(keyResults.tenantId, tenantId)
+        ));
+      
+      // Get all objectives for the team to find key results in team objectives that are assigned to this user
+      const teamObjectives = await this.getObjectivesByTeam(teamId, tenantId);
+      const teamObjectiveIds = teamObjectives.map(obj => obj.id);
+      
+      // Filter key results to only include those that belong to team objectives
+      const keyResultsForTeamObjectives = userKeyResults.filter(kr => 
+        teamObjectiveIds.includes(kr.objectiveId)
+      );
+      
+      // Calculate metrics
+      const totalAssignedObjectives = userObjectives.length;
+      const completedObjectives = userObjectives.filter(obj => obj.progress === 100).length;
+      const onTrackObjectives = userObjectives.filter(obj => obj.progress >= 70 && obj.progress < 100).length;
+      const atRiskObjectives = userObjectives.filter(obj => obj.progress >= 40 && obj.progress < 70).length;
+      const behindObjectives = userObjectives.filter(obj => obj.progress < 40).length;
+      
+      const totalAssignedKeyResults = keyResultsForTeamObjectives.length;
+      const completedKeyResults = keyResultsForTeamObjectives.filter(kr => kr.progress === 100).length;
+      
+      // Calculate overall progress
+      const overallProgress = totalAssignedObjectives > 0
+        ? Math.round(userObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / totalAssignedObjectives)
+        : totalAssignedKeyResults > 0
+          ? Math.round(keyResultsForTeamObjectives.reduce((sum, kr) => sum + (kr.progress || 0), 0) / totalAssignedKeyResults)
+          : 0;
+      
+      // Generate performance data
+      return {
+        user,
+        team,
+        metrics: {
+          totalAssignedObjectives,
+          completedObjectives,
+          onTrackObjectives,
+          atRiskObjectives,
+          behindObjectives,
+          totalAssignedKeyResults,
+          completedKeyResults,
+          overallProgress
+        },
+        objectives: userObjectives.map(obj => {
+          // Find key results for this objective
+          const objKeyResults = userKeyResults.filter(kr => kr.objectiveId === obj.id);
+          
+          return {
+            ...obj,
+            keyResults: objKeyResults,
+            status: obj.progress >= 70 ? 'on-track' : obj.progress >= 40 ? 'at-risk' : 'behind'
+          };
+        }),
+        keyResults: keyResultsForTeamObjectives
+      };
+    } catch (error) {
+      console.error(`Error getting performance for team member ${userId} in team ${teamId}:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get performance metrics for all members of a specific team
+   * @param teamId - The ID of the team
+   * @param tenantId - The tenant ID for context
+   * @returns Array of team member performance metrics
+   */
+  async getTeamMembersPerformance(teamId: string, tenantId: string): Promise<any[]> {
+    try {
+      // Get all team members
+      const teamMembers = await this.getUsersByTeam(teamId);
+      
+      // Get performance data for each team member
+      const membersPerformance = await Promise.all(
+        teamMembers.map(async (member) => {
+          try {
+            const performance = await this.getTeamMemberPerformance(teamId, member.id, tenantId);
+            return {
+              id: member.id,
+              name: member.name,
+              email: member.email,
+              username: member.username,
+              avatar: member.avatar,
+              role: member.role,
+              team: performance.team,
+              progress: performance.metrics.overallProgress,
+              objectives: {
+                total: performance.metrics.totalAssignedObjectives,
+                completed: performance.metrics.completedObjectives,
+                onTrack: performance.metrics.onTrackObjectives,
+                atRisk: performance.metrics.atRiskObjectives,
+                behind: performance.metrics.behindObjectives
+              },
+              keyResults: {
+                total: performance.metrics.totalAssignedKeyResults,
+                completed: performance.metrics.completedKeyResults
+              }
+            };
+          } catch (error) {
+            console.error(`Error getting performance for team member ${member.id}:`, error);
+            return {
+              id: member.id,
+              name: member.name,
+              email: member.email,
+              username: member.username,
+              avatar: member.avatar,
+              role: member.role,
+              team: { id: teamId, name: 'Unknown' },
+              progress: 0,
+              objectives: { total: 0, completed: 0, onTrack: 0, atRisk: 0, behind: 0 },
+              keyResults: { total: 0, completed: 0 }
+            };
+          }
+        })
+      );
+      
+      return membersPerformance;
+    } catch (error) {
+      console.error(`Error getting team members performance for team ${teamId}:`, error);
       return [];
     }
   }
