@@ -177,7 +177,7 @@ export default function DraftOKRs() {
     setEditDialogOpen(false);
   };
 
-  const handleKeyResultChange = (id: number, newTitle: string) => {
+  const handleKeyResultChange = (id: string, newTitle: string) => {
     setEditFormData(prev => ({
       ...prev,
       keyResults: prev.keyResults.map(kr => 
@@ -187,16 +187,20 @@ export default function DraftOKRs() {
   };
 
   const addKeyResult = () => {
-    // Generate a unique ID for the new key result
-    const newId = Math.max(0, ...editFormData.keyResults.map(kr => kr.id)) + 1;
+    // Generate a unique temporary ID for the new key result
+    const tempId = `temp-${Date.now()}`;
     
     setEditFormData(prev => ({
       ...prev,
-      keyResults: [...prev.keyResults, { id: newId, title: "" }]
+      keyResults: [...prev.keyResults, { 
+        id: tempId, 
+        title: "", 
+        objective_id: selectedObjective?.id || "" 
+      }]
     }));
   };
 
-  const removeKeyResult = (id: number) => {
+  const removeKeyResult = (id: string) => {
     setEditFormData(prev => ({
       ...prev,
       keyResults: prev.keyResults.filter(kr => kr.id !== id)
@@ -238,16 +242,32 @@ export default function DraftOKRs() {
 
     setSubmitting(true);
     
+    // Prepare the updated objective with active status
+    const updatedObjective = {
+      ...selectedObjective,
+      status: "active" // Change from draft to active
+    };
+    
+    // In a real implementation, we would make an API call to update the objective status
+    // For example: 
+    // const response = await fetch(`/api/objectives/${selectedObjective.id}`, {
+    //   method: "PATCH", 
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ status: "active" })
+    // });
+    
     // Simulate API call
     setTimeout(() => {
       setSubmitting(false);
       setSubmitDialogOpen(false);
       
-      // In a real app, this would update the status in the database
       toast({
         title: "OKR Submitted",
-        description: "Your objective has been submitted for approval.",
+        description: "Your objective has been submitted for approval and is now active.",
       });
+      
+      // In a real implementation, we would invalidate the query cache to refetch the data
+      // queryClient.invalidateQueries(["/api/objectives", "draft"]);
     }, 1500);
   };
 
@@ -309,16 +329,42 @@ export default function DraftOKRs() {
 
     setCreating(true);
     
-    // Simulate API call
+    // Get tenant ID from the selected tenant in context or session storage
+    const tenantId = sessionStorage.getItem('selectedTenantId') || '';
+    
+    // Prepare the new objective data
+    const newObjective = {
+      title: newDraftData.title,
+      description: newDraftData.description,
+      status: "draft",
+      level: "company", // Default level
+      tenant_id: tenantId,
+      keyResults: newDraftData.keyResults.map(kr => ({
+        ...kr,
+        title: kr.title.trim()
+      }))
+    };
+    
+    // In a real implementation, we would make an API call to create the draft objective
+    // For now, simulate the API call
     setTimeout(() => {
       setCreating(false);
       setCreateDialogOpen(false);
       
-      // In a real app, this would create a new draft objective in the database
       toast({
         title: "Draft Created",
         description: "Your draft objective has been created successfully.",
       });
+      
+      // Reset the form data
+      setNewDraftData({
+        title: "",
+        description: "",
+        keyResults: [{ id: "", title: "", objective_id: "" }]
+      });
+      
+      // In a real implementation, we would invalidate the query cache to refetch the data
+      // queryClient.invalidateQueries(["/api/objectives", "draft"]);
     }, 1000);
   };
 
