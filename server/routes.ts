@@ -1656,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get all key results with optional tenant filtering
-  app.get("/api/key-results", withTenant, async (req, res, next) => {
+  app.get("/api/key-results", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const tenantId = req.tenantId;
       const keyResults = await storage.getAllKeyResults();
@@ -1677,7 +1677,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(keyResults);
       }
     } catch (error) {
-      next(error);
+      console.error('Error fetching all key results:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

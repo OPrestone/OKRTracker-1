@@ -887,6 +887,10 @@ export class DatabaseStorage implements IStorage {
   async getKeyResultsByObjective(objectiveId: string): Promise<KeyResult[]> {
     return db.select().from(keyResults).where(eq(keyResults.objectiveId, objectiveId));
   }
+  
+  async getAllKeyResults(): Promise<KeyResult[]> {
+    return db.select().from(keyResults);
+  }
 
   async updateKeyResultProgress(id: string, progress: number): Promise<KeyResult> {
     const [updatedKeyResult] = await db.update(keyResults)

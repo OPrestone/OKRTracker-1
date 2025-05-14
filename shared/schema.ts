@@ -150,18 +150,21 @@ export const objectives = pgTableWithUlid("objectives", {
 export const keyResults = pgTableWithUlid("key_results", {
   title: text("title").notNull(),
   description: text("description"),
-  type: keyResultTypeEnum("type").default("percentage").notNull(),
-  currentValue: integer("current_value").default(0).notNull(),
-  targetValue: integer("target_value").notNull(),
-  startValue: integer("start_value").default(0).notNull(),
-  format: text("format"), // e.g., "$", "%", etc.
-  milestones: jsonb("milestones"), // Array of milestone objects
+  // Based on the database schema, there's no "type" column, so we're removing it
+  // currentValue, targetValue, startValue are text in the database (not integer)
+  currentValue: text("current_value"),
+  targetValue: text("target_value"),
+  startValue: text("start_value"),
+  // assignedToId exists in DB but not in schema
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  // No format or milestones columns in the database
   objectiveId: text("objective_id").references(() => objectives.id).notNull(),
-  ownerId: text("owner_id").references(() => users.id),
-  progress: integer("progress").default(0).notNull(), // 0-100 percentage
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // owner_id doesn't exist in database, but assigned_to_id serves a similar purpose
+  progress: integer("progress").default(0), // optional in database
+  status: text("status").default("not_started"),
+  tenantId: text("tenant_id").references(() => tenants.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  // updatedAt column doesn't exist in the database
 });
 
 export const initiatives = pgTableWithUlid("initiatives", {
@@ -529,10 +532,10 @@ export const keyResultsRelations = relations(keyResults, ({ one, many }) => ({
     fields: [keyResults.objectiveId],
     references: [objectives.id]
   }),
-  owner: one(users, {
-    fields: [keyResults.ownerId],
+  assignedTo: one(users, {
+    fields: [keyResults.assignedToId],
     references: [users.id],
-    relationName: "owner"
+    relationName: "assignedToKeyResults"
   }),
   tenant: one(tenants, {
     fields: [keyResults.tenantId],

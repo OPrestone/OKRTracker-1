@@ -73,21 +73,21 @@ export default function MyOKRs() {
   // Fetch all objectives
   const { data: objectives = [], isLoading: loadingObjectives } = useQuery<DBObjective[]>({
     queryKey: ['/api/objectives'],
-    queryFn: getQueryFn({ on401: 'returnEmpty' }),
+    queryFn: getQueryFn({ on401: 'returnNull' }),
     enabled: !!user
   });
   
   // Fetch key results
   const { data: keyResults = [], isLoading: loadingKeyResults } = useQuery<KeyResult[]>({
     queryKey: ['/api/key-results'],
-    queryFn: getQueryFn({ on401: 'returnEmpty' }),
+    queryFn: getQueryFn({ on401: 'returnNull' }),
     enabled: !!user
   });
   
   // Fetch timeframes for mapping
   const { data: timeframes = [], isLoading: loadingTimeframes } = useQuery<Timeframe[]>({
     queryKey: ['/api/timeframes'],
-    queryFn: getQueryFn({ on401: 'returnEmpty' }),
+    queryFn: getQueryFn({ on401: 'returnNull' }),
     enabled: !!user
   });
   
