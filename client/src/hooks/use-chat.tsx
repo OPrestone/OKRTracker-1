@@ -597,6 +597,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         throw new Error('No tenant ID available. Please select an organization first.');
       }
       
+      // Add tenantId as both a query parameter and in the body since the server middleware looks in both places
       const response = await fetch(`/api/chat/rooms?tenantId=${currentTenantId}`, {
         method: 'POST',
         headers: {
