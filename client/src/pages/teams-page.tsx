@@ -25,10 +25,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreateTeamModal } from "@/components/team/create-team-modal";
 
 export default function TeamsPage() {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
   const { data: teams, isLoading, error } = useQuery<Team[]>({
@@ -63,7 +65,7 @@ export default function TeamsPage() {
       cell: ({ row }) => {
         const team = row.original;
         return (
-          <div className="font-medium">{team.name}</div>
+          <div className="font-medium">{(team as any).name || `Team ${team.id}`}</div>
         );
       },
     },
@@ -71,7 +73,8 @@ export default function TeamsPage() {
       accessorKey: "description",
       header: "Description",
       cell: ({ row }) => {
-        const description = row.getValue("description") as string;
+        const team = row.original;
+        const description = (team as any).description;
         return (
           <div className="max-w-[300px] truncate">
             {description || "No description provided"}
@@ -179,7 +182,7 @@ export default function TeamsPage() {
               Manage your organization's teams and their members
             </p>
           </div>
-          <Button onClick={() => console.log("Create team")}>
+          <Button onClick={() => setIsCreateTeamModalOpen(true)}>
             Create Team
           </Button>
         </div>
@@ -200,6 +203,13 @@ export default function TeamsPage() {
           />
         )}
       </div>
+      
+      {/* Team Creation Modal */}
+      <CreateTeamModal
+        isOpen={isCreateTeamModalOpen}
+        onClose={() => setIsCreateTeamModalOpen(false)}
+        parentTeams={teams || []}
+      />
     </DashboardLayout>
   );
 }

@@ -207,7 +207,7 @@ export function CreateTeamModal({ isOpen, onClose, parentTeams = [] }: CreateTea
                         <SelectItem value="">No parent team</SelectItem>
                         {parentTeams.map((team) => (
                           <SelectItem key={team.id} value={team.id}>
-                            {team.name}
+                            {(team as any).name || `Team ${team.id}`}
                           </SelectItem>
                         ))}
                       </SelectContent>
