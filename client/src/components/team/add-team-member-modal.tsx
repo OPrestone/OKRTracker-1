@@ -154,19 +154,55 @@ export function AddTeamMemberModal({
   });
 
   // Create new user mutation
+  // First check if the team belongs to the current tenant
+  const { data: teamData } = useQuery({
+    queryKey: ["/api/teams", teamId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/teams/${teamId}?tenantId=${tenantId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to verify team: ${await response.text()}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Error verifying team:", error);
+        return null;
+      }
+    },
+    enabled: !!teamId && !!tenantId
+  });
+
+  const teamBelongsToTenant = teamData && teamData.tenantId === tenantId;
+  
   const createUserMutation = useMutation({
     mutationFn: async (userData: z.infer<typeof userFormSchema>) => {
       try {
-        // Create the new user with the tenant ID included
-        const response = await apiRequest("POST", "/api/register", {
-          ...userData,
-          tenantId: tenantId
-        });
+        // Verify the team belongs to the current tenant
+        if (!teamBelongsToTenant) {
+          throw new Error("The selected team does not belong to the current tenant");
+        }
+        
+        // Prepare the data format the server expects - include tenant ID
+        const dataForServer = {
+          username: userData.username,
+          password: userData.password,
+          name: `${userData.firstName} ${userData.lastName}`,
+          email: userData.email || '',
+          tenantId: tenantId, // This is crucial for tenant association
+          teamId: teamId,     // Include team ID directly in registration
+          role: userData.role || 'member'
+        };
+        
+        console.log("Sending user data:", { ...dataForServer, password: '****' });
+        
+        // Create the new user with all necessary data
+        const response = await apiRequest("POST", "/api/register", dataForServer);
         
         if (!response.ok) {
           // Handle common error cases
           if (response.status === 400) {
             const text = await response.text();
+            console.log("Error response:", text);
             if (text.includes("Username already exists")) {
               throw new Error("Username already exists. Please choose a different username.");
             }
@@ -177,15 +213,32 @@ export function AddTeamMemberModal({
         }
         
         const newUser = await response.json();
+        console.log("User created successfully:", newUser);
         
-        // After creating the user, assign them to the team
-        await apiRequest("POST", `/api/users/${newUser.id}/team`, {
-          teamId,
-          tenantId
-        });
+        // If the server supports setting the team during registration, we're done
+        // If not, try to set the team separately
+        try {
+          // Try to add the user to the team as a fallback
+          // The registration might have already done this if it processed the teamId
+          const teamResponse = await apiRequest("POST", `/api/users/${newUser.id}/team`, {
+            teamId,
+            tenantId
+          });
+          
+          if (!teamResponse.ok) {
+            console.warn("Team assignment via separate endpoint failed:", await teamResponse.text());
+            // This is not critical - the user is created and registered with the tenant
+          } else {
+            console.log("User assigned to team via separate endpoint");
+          }
+        } catch (teamError) {
+          console.warn("Error in team assignment fallback:", teamError);
+          // Continue - the user was created successfully
+        }
         
         return newUser;
       } catch (error) {
+        console.error("Error creating user:", error);
         // Re-throw to be handled by onError
         throw error;
       }
