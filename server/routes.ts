@@ -3045,19 +3045,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getPublicFeedback } = await import("./services/feedback-service");
       
       // Get all public feedback
-      const allPublicFeedback = await getPublicFeedback();
-      
-      // Filter feedback to only include those from the current tenant
-      // This is a temporary solution until the feedback service is updated
-      // to support tenant-specific queries
-      const tenantPublicFeedback = allPublicFeedback.filter(feedback => 
-        feedback.tenantId === tenantId || feedback.tenantId === null
-      );
-      
-      res.json(tenantPublicFeedback);
+      let allPublicFeedback = [];
+      try {
+        allPublicFeedback = await getPublicFeedback();
+          
+        // Filter feedback to only include those from the current tenant
+        // This is a temporary solution until the feedback service is updated
+        // to support tenant-specific queries
+        const tenantPublicFeedback = allPublicFeedback.filter(feedback => 
+          feedback.tenantId === tenantId || feedback.tenantId === null
+        );
+        
+        res.json(tenantPublicFeedback);
+      } catch (innerError) {
+        console.error("Error getting public feedback data:", innerError);
+        // Return empty array to prevent client-side issues
+        res.json([]);
+      }
     } catch (error) {
       console.error("Error fetching public feedback:", error);
-      res.status(500).json({ message: "Failed to fetch public feedback" });
+      // Return empty array instead of error to prevent client-side issues
+      res.json([]);
     }
   });
 
@@ -3387,25 +3395,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getPublicUserBadges } = await import("./services/feedback-service");
       
       // Get all public user badges
-      const allPublicBadges = await getPublicUserBadges();
-      
-      // Get users who belong to this tenant
-      const tenantUsers = await db.select({ userId: usersToTenants.userId })
-        .from(usersToTenants)
-        .where(eq(usersToTenants.tenantId, tenantId))
-        .then(result => result.map(item => item.userId));
-      
-      // Filter public badges to only include those from users in the current tenant
-      // and badges that belong to the current tenant or are global
-      const tenantPublicBadges = allPublicBadges.filter(badge => 
-        tenantUsers.includes(badge.userId) && 
-        (badge.tenantId === tenantId || badge.tenantId === null)
-      );
-      
-      res.json(tenantPublicBadges);
+      let allPublicBadges = [];
+      try {
+        allPublicBadges = await getPublicUserBadges();
+        
+        // Get users who belong to this tenant
+        const tenantUsers = await db.select({ userId: usersToTenants.userId })
+          .from(usersToTenants)
+          .where(eq(usersToTenants.tenantId, tenantId))
+          .then(result => result.map(item => item.userId));
+        
+        // Filter public badges to only include those from users in the current tenant
+        // and badges that belong to the current tenant or are global
+        const tenantPublicBadges = allPublicBadges.filter(badge => 
+          tenantUsers.includes(badge.userId) && 
+          (badge.tenantId === tenantId || badge.tenantId === null)
+        );
+        
+        res.json(tenantPublicBadges);
+      } catch (innerError) {
+        console.error("Error getting public badges data:", innerError);
+        // Return empty array to prevent client-side issues
+        res.json([]);
+      }
     } catch (error) {
       console.error("Error fetching public badges:", error);
-      res.status(500).json({ message: "Failed to fetch public badges" });
+      // Return empty array instead of error to prevent client-side issues
+      res.json([]);
     }
   });
   

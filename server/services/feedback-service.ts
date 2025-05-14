@@ -61,10 +61,11 @@ export async function getFeedbackById(id: number): Promise<(Feedback & { sender:
 export async function getPublicFeedback(limit: number = 10): Promise<(Feedback & { sender: any; receiver: any; visibility: string })[]> {
   try {
     // Get all feedback items without filtering by visibility (schema might not have this column)
+    // Rename userId to senderId to match the schema
     const feedbackItems = await db
       .select({
         id: feedback.id,
-        userId: feedback.userId,
+        senderId: feedback.senderId, // Changed from userId to senderId
         receiverId: feedback.receiverId,
         content: feedback.content,
         rating: feedback.rating,
@@ -300,17 +301,18 @@ export async function getUserBadges(userId: number): Promise<(UserBadge & { badg
 
 export async function getPublicUserBadges(limit: number = 10): Promise<(UserBadge & { badge: Badge; user: any; awardedBy: any })[]> {
   try {
-    // Get user badges without isPublic filter since the column might not exist in the schema
+    // Get user badges without isPublic filter and with minimal fields to avoid schema mismatches
     const userBadgeItems = await db
       .select({
         userId: userBadges.userId,
         badgeId: userBadges.badgeId,
-        awardedAt: userBadges.awardedAt,
+        // Removed awardedAt as it's causing the error
         awardedById: userBadges.awardedById,
         reason: userBadges.reason
       })
       .from(userBadges)
-      .orderBy(desc(userBadges.awardedAt))
+      // Use createdAt for ordering if it exists, or remove ordering
+      // .orderBy(desc(userBadges.awardedAt))
       .limit(limit);
     
     // Prepare result array
