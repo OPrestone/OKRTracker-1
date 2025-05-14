@@ -882,7 +882,10 @@ export default function TeamDetailPage() {
                         <p className="text-muted-foreground text-sm mb-4">
                           Create objectives to start tracking your team's progress.
                         </p>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => setIsCreateObjectiveModalOpen(true)}
+                        >
                           <PlusCircle className="h-4 w-4 mr-2" />
                           <span>Create Objective</span>
                         </Button>
@@ -907,7 +910,10 @@ export default function TeamDetailPage() {
                           className="pl-8 w-[200px] h-9"
                         />
                       </div>
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => setIsCreateObjectiveModalOpen(true)}
+                      >
                         <PlusCircle className="h-4 w-4 mr-2" />
                         <span>New Objective</span>
                       </Button>
@@ -1010,7 +1016,10 @@ export default function TeamDetailPage() {
                       <p className="text-muted-foreground text-sm mb-4">
                         Create your first objective to start tracking progress.
                       </p>
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => setIsCreateObjectiveModalOpen(true)}
+                      >
                         <PlusCircle className="h-4 w-4 mr-2" />
                         <span>Create Objective</span>
                       </Button>
@@ -1025,7 +1034,10 @@ export default function TeamDetailPage() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-lg">Team Members</CardTitle>
-                    <Button size="sm">
+                    <Button 
+                      size="sm"
+                      onClick={() => setIsAddTeamMemberModalOpen(true)}
+                    >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       <span>Add Member</span>
                     </Button>
@@ -1091,7 +1103,10 @@ export default function TeamDetailPage() {
                       <p className="text-muted-foreground text-sm mb-4">
                         Add members to your team to start collaborating.
                       </p>
-                      <Button size="sm">
+                      <Button 
+                        size="sm"
+                        onClick={() => setIsAddTeamMemberModalOpen(true)}
+                      >
                         <PlusCircle className="h-4 w-4 mr-2" />
                         <span>Add Member</span>
                       </Button>
@@ -1166,7 +1181,10 @@ export default function TeamDetailPage() {
                         <p className="text-muted-foreground text-sm mb-4">
                           Team activity will appear here once objectives are created and updated.
                         </p>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => setIsCreateObjectiveModalOpen(true)}
+                        >
                           <PlusCircle className="h-4 w-4 mr-2" />
                           <span>Create Objective</span>
                         </Button>
