@@ -36,24 +36,26 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Enhanced session configuration
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "okr-management-system-secret",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Changed to true to ensure session is saved on each request
+    saveUninitialized: true, // Changed to true to save new sessions
     store: storage.sessionStore,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // Disabled secure for dev environment - fix for localhost HTTPS issues
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 30 * 24 * 60 * 60 * 1000 // Extended to 30 days for persistent login
     }
   };
   
-  // Log session configuration for debugging
   console.log("Session configuration:", {
-    ...sessionSettings,
-    store: sessionSettings.store ? "Configured" : "Missing",
-    secret: sessionSettings.secret ? "Set" : "Missing"
+    secret: sessionSettings.secret ? 'Set' : 'Not set',
+    resave: sessionSettings.resave,
+    saveUninitialized: sessionSettings.saveUninitialized,
+    store: sessionSettings.store ? 'Configured' : 'Not configured',
+    cookie: sessionSettings.cookie
   });
 
   app.set("trust proxy", 1);

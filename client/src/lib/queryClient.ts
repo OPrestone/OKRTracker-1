@@ -29,12 +29,36 @@ function getCurrentTenantFromUrl(): string | null {
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    // Add more detailed debugging for authentication issues
+    
+    // Enhanced debugging for authentication and API errors
     if (res.status === 401) {
       console.error(`Authentication error: ${res.status} for ${res.url}`);
+      console.error('Authentication Context: ', {
+        cookies: document.cookie ? 'Present' : 'None',
+        url: res.url,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Try to check session status to debug authentication issues
+      try {
+        const sessionCheck = await fetch('/api/test-session', { 
+          credentials: 'include'
+        });
+        if (sessionCheck.ok) {
+          const sessionData = await sessionCheck.json();
+          console.log('Session status:', sessionData);
+        } else {
+          console.log('Session check failed:', sessionCheck.status);
+        }
+      } catch (sessionError) {
+        console.error('Error checking session:', sessionError);
+      }
+    } else if (res.status === 403) {
+      console.error(`Permission error: ${res.status} for ${res.url}`);
     } else {
       console.error(`API error: ${res.status} for ${res.url} - ${text}`);
     }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -71,6 +95,9 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
+      // Enhanced debugging: log the request attempt
+      console.log(`Making API request: ${queryKey[0]}`);
+      
       // Add tenant query parameter if available
       const tenantId = getCurrentTenantFromUrl();
       const urlKey = queryKey[0] as string;
@@ -81,16 +108,38 @@ export const getQueryFn: <T>(options: {
         urlObj.searchParams.append('tenantId', tenantId);
       }
       
-      const res = await fetch(urlObj.toString(), {
+      // Show request context for debugging
+      const requestUrl = urlObj.toString();
+      console.log('Request context:', { 
+        url: requestUrl,
+        hasCredentials: true,
+        hasTenant: !!tenantId
+      });
+      
+      const res = await fetch(requestUrl, {
         credentials: "include", // Important for session cookies
+        headers: {
+          // Adding a client timestamp for debugging
+          'X-Client-Timestamp': new Date().toISOString()
+        }
       });
 
+      // Capture response status for better debugging
+      console.log(`Response received: ${res.status} for ${requestUrl}`);
+
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        console.log(`Handling 401 with returnNull for ${requestUrl}`);
         return null;
       }
 
       await throwIfResNotOk(res);
       const data = await res.json();
+      
+      // Log successful data retrieval (without exposing sensitive data)
+      if (data) {
+        console.log(`Data successfully retrieved from ${requestUrl}`);
+      }
+      
       return data;
     } catch (error) {
       // If we get a 401 with the returnNull option, return null instead of throwing
@@ -99,8 +148,10 @@ export const getQueryFn: <T>(options: {
         error.message.startsWith("401:") &&
         unauthorizedBehavior === "returnNull"
       ) {
+        console.log(`Converted 401 error to null return value (${queryKey[0]})`);
         return null;
       }
+      console.error(`Error in getQueryFn for ${queryKey[0]}:`, error);
       throw error;
     }
   };

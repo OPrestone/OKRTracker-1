@@ -3,6 +3,16 @@
  */
 
 import { Express, Request, Response } from "express";
+import { Session } from "express-session";
+
+// Extend the SessionData interface to include our custom properties
+declare module "express-session" {
+  interface SessionData {
+    counter?: number;
+    isTestAuthenticated?: boolean;
+    testUser?: { id: string; username: string };
+  }
+}
 
 export function setupTestAuthRoutes(app: Express) {
   // Test route to check session functionality
@@ -12,7 +22,7 @@ export function setupTestAuthRoutes(app: Express) {
     console.log('Session:', req.session);
     
     // If no counter exists in session, initialize it
-    if (!req.session.counter) {
+    if (req.session.counter === undefined) {
       req.session.counter = 0;
     }
     
@@ -30,7 +40,8 @@ export function setupTestAuthRoutes(app: Express) {
       res.json({
         sessionId: req.sessionID,
         counter: req.session.counter,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        cookies: req.headers.cookie ? 'Present' : 'None'
       });
     });
   });
