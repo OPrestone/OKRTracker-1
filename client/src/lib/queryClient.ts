@@ -29,6 +29,12 @@ function getCurrentTenantFromUrl(): string | null {
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    // Add more detailed debugging for authentication issues
+    if (res.status === 401) {
+      console.error(`Authentication error: ${res.status} for ${res.url}`);
+    } else {
+      console.error(`API error: ${res.status} for ${res.url} - ${text}`);
+    }
     throw new Error(`${res.status}: ${text}`);
   }
 }

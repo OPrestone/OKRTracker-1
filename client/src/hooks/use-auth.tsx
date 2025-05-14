@@ -80,7 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch
   } = useQuery<EnhancedUser | undefined, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async ({ queryKey }) => {
+      console.log("Attempting to fetch user authentication status");
+      try {
+        const result = await getQueryFn({ on401: "returnNull" })({ queryKey });
+        if (result) {
+          console.log("User authenticated successfully:", result.id);
+        } else {
+          console.log("No authenticated user found, session may be invalid");
+        }
+        return result;
+      } catch (err) {
+        console.error("Authentication error:", err);
+        return undefined;
+      }
+    },
   });
 
   // Check if user has access to any tenants
@@ -105,8 +119,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      console.log("Attempting login for user:", credentials.username);
+      try {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        console.log("Login API response status:", res.status);
+        const data = await res.json();
+        console.log("Login successful");
+        return data;
+      } catch (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
     },
     onSuccess: (user: EnhancedUser) => {
       // Update user data in the query cache
