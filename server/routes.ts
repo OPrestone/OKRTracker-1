@@ -21,6 +21,15 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
 
+// Extend Request interface to include tenantId
+declare global {
+  namespace Express {
+    interface Request {
+      tenantId?: string;
+    }
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   setupAuth(app);
@@ -4108,10 +4117,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Approved objectives endpoint - returns all approved objectives across all levels
-  app.get("/api/objectives/approved", withTenant, async (req, res, next) => {
+  // Special route handler for approved objectives
+  app.get("/api/objectives/approved", ensureAuthenticated, async (req, res, next) => {
     try {
-      const tenantId = req.tenantId;
+      console.log("Processing /api/objectives/approved request");
+      
+      const user = req.user as User;
+      
+      // Try to get tenant ID from query parameter
+      let tenantId: string | null = null;
+      if (req.query.tenantId) {
+        tenantId = req.query.tenantId as string;
+        console.log(`Using tenant ID from query parameter: ${tenantId}`);
+      } else {
+        // If no tenant ID provided, get user's default tenant
+        const defaultTenant = await tenantService.getUserDefaultTenant(user.id);
+        if (defaultTenant) {
+          tenantId = defaultTenant.id;
+          console.log(`Using default tenant ID: ${tenantId}`);
+        }
+      }
+      
+      // Verify we have a valid tenant ID
+      if (!tenantId) {
+        console.log("No valid tenant ID found");
+        return res.status(400).json({ error: "Valid tenant ID is required" });
+      }
+      
+      // Check if user has access to this tenant
+      const userTenants = await tenantService.getUserTenants(user.id);
+      const hasTenantAccess = userTenants.some(t => t.id === tenantId) || user.isAdmin;
+      
+      console.log(`User tenants: ${userTenants.map(t => t.id).join(', ')}`);
+      console.log(`Has access to tenant ${tenantId}: ${hasTenantAccess}`);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "You do not have access to this tenant" });
+      }
+      
       console.log(`Getting approved objectives for tenant ${tenantId}`);
       
       const approvedObjectives = await storage.getApprovedObjectives(tenantId);
@@ -4126,7 +4169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(approvedObjectives);
     } catch (error) {
       console.error("Error getting approved objectives:", error);
-      next(error);
+      res.status(500).json({ error: "Failed to get approved objectives" });
     }
   });
   
