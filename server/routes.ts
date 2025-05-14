@@ -1443,6 +1443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Assign the tenant ID from middleware
       requestData.tenantId = req.tenantId;
       
+      // Set the level field if not provided (required by database)
+      if (!requestData.level) {
+        requestData.level = requestData.teamId ? 'team' : 'company';
+      }
+      
       // Check if the user is an admin or owner of the tenant
       const userId = req.user.id;
       const tenantId = req.tenantId;

@@ -134,14 +134,15 @@ export const timeframes = pgTableWithUlid("timeframes", {
 export const objectives = pgTableWithUlid("objectives", {
   title: text("title").notNull(),
   description: text("description"),
-  ownerId: text("owner_id").references(() => users.id),
+  ownerId: text("owner_id").references(() => users.id).notNull(),
   teamId: text("team_id").references(() => teams.id),
-  timeframeId: text("timeframe_id").references(() => timeframes.id),
+  timeframeId: text("timeframe_id").references(() => timeframes.id).notNull(),
   status: objectiveStatusEnum("status").default("draft").notNull(),
   // statusReason is removed as it doesn't exist in the DB
   progress: integer("progress").default(0).notNull(), // 0-100 percentage
   parentId: text("parent_id").references(() => objectives.id),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  level: text("level").notNull(), // Required field per database schema
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // updatedAt is removed as it doesn't exist in the DB
 });
