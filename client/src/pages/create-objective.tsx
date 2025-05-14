@@ -402,11 +402,20 @@ export default function CreateObjective() {
                             <SelectValue placeholder="Select Parent Objective..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {objectives?.map((objective: any) => (
-                              <SelectItem key={objective.id} value={objective.id}>
-                                {objective.title}
+                            {objectives && objectives.length > 0 ? (
+                              objectives.map((objective: any) => (
+                                <SelectItem key={objective.id} value={objective.id}>
+                                  {objective.title}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-objectives" disabled>
+                                <div className="flex items-center text-gray-500">
+                                  <Target className="h-5 w-5 mr-2" />
+                                  <span>No parent objectives available</span>
+                                </div>
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
