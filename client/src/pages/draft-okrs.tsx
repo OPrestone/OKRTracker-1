@@ -289,12 +289,12 @@ export default function DraftOKRs() {
     }));
   };
   
-  const handleEditDraftKeyResultChange = (id: string, newTitle: string) => {
+  const handleEditDraftKeyResultChange = (id: string, field: string, value: string) => {
     setEditDraftData(prev => ({
       ...prev,
       keyResults: prev.keyResults.map((kr, index) => 
         kr.id === id || (kr.id === "" && id === String(index)) 
-          ? { ...kr, title: newTitle } 
+          ? { ...kr, [field]: value } 
           : kr
       )
     }));
@@ -757,7 +757,7 @@ export default function DraftOKRs() {
               <div className="space-y-4">
                 {editDraftData.keyResults && Array.isArray(editDraftData.keyResults) ? (
                   editDraftData.keyResults.map((kr, index) => (
-                    <div key={kr.id || index} className="grid gap-3">
+                    <div key={kr.id || index} className="grid gap-3 p-4 border rounded-md">
                       <div className="flex items-center justify-between">
                         <Label htmlFor={`edit-key-result-${index}`}>Key Result {index + 1}</Label>
                         <Button
@@ -773,8 +773,38 @@ export default function DraftOKRs() {
                         id={`edit-key-result-${index}`}
                         placeholder="Enter a measurable key result..."
                         value={kr.title || ""}
-                        onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), e.target.value)}
+                        onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), "title", e.target.value)}
                       />
+                      
+                      <div className="grid grid-cols-3 gap-3 mt-2">
+                        <div>
+                          <Label htmlFor={`edit-key-result-${index}-start`} className="text-xs">Start Value</Label>
+                          <Input
+                            id={`edit-key-result-${index}-start`}
+                            placeholder="0"
+                            value={kr.start_value || "0"}
+                            onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), "start_value", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`edit-key-result-${index}-current`} className="text-xs">Current Value</Label>
+                          <Input
+                            id={`edit-key-result-${index}-current`}
+                            placeholder="0"
+                            value={kr.current_value || kr.start_value || "0"}
+                            onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), "current_value", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`edit-key-result-${index}-target`} className="text-xs">Target Value</Label>
+                          <Input
+                            id={`edit-key-result-${index}-target`}
+                            placeholder="100"
+                            value={kr.target_value || "100"}
+                            onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), "target_value", e.target.value)}
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (
