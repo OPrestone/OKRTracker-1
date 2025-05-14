@@ -605,6 +605,25 @@ export const checkInsRelations = relations(checkIns, ({ one }) => ({
   })
 }));
 
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [projects.ownerId],
+    references: [users.id]
+  }),
+  team: one(teams, {
+    fields: [projects.teamId],
+    references: [teams.id]
+  }),
+  objective: one(objectives, {
+    fields: [projects.objectiveId],
+    references: [objectives.id]
+  }),
+  tenant: one(tenants, {
+    fields: [projects.tenantId],
+    references: [tenants.id]
+  })
+}));
+
 export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
   objective: one(objectives, {
     fields: [chatRooms.objectiveId],
@@ -887,6 +906,7 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true,
 export const insertOnboardingSchema = createInsertSchema(onboarding).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFeedbackSchema = createInsertSchema(feedback).omit({ id: true, createdAt: true });
 export const insertTeamMoodSchema = createInsertSchema(teamMoods).omit({ id: true, createdAt: true });
+export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
 export const insertFinancialAccountSchema = createInsertSchema(financialAccounts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
@@ -977,6 +997,9 @@ export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 
 export type TeamMood = typeof teamMoods.$inferSelect;
 export type InsertTeamMood = z.infer<typeof insertTeamMoodSchema>;
+
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
 
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;

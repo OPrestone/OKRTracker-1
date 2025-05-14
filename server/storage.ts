@@ -45,6 +45,15 @@ export interface IStorage {
   addUserToTeam(userId: string, teamId: string): Promise<User>;
   removeUserFromTeam(userId: string): Promise<User>;
   
+  // Project Management
+  createProject(project: InsertProject): Promise<Project>;
+  getProject(id: string): Promise<Project | undefined>;
+  getProjectsByStatus(status: string, tenantId: string): Promise<Project[]>;
+  getProjectsByTenant(tenantId: string): Promise<Project[]>;
+  updateProject(id: string, project: Partial<InsertProject>): Promise<Project>;
+  updateProjectStatus(id: string, status: string): Promise<Project>;
+  deleteProject(id: string): Promise<void>;
+  
   // Meeting Management
   createMeeting(meeting: InsertMeeting): Promise<Meeting>;
   getMeeting(id: string): Promise<Meeting | undefined>;
