@@ -4,6 +4,7 @@ import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
 import CompanyStrategy from "@/pages/company-strategy";
 import Teams from "@/pages/teams";
+import TeamsRedesigned from "@/pages/teams-redesigned";
 import TeamDetail from "@/pages/team-detail";
 import UserDetail from "@/pages/single-profile";
 
@@ -117,7 +118,7 @@ function AppRoutes() {
       <ProtectedRoute path="/create-company-objective" component={CreateCompanyObjective} />
       
       {/* User Management Section */}
-      <ProtectedRoute path="/teams" component={Teams} />
+      <ProtectedRoute path="/teams" component={TeamsRedesigned} />
       <ProtectedRoute path="/teams/:id" component={TeamDetail} />
       <ProtectedRoute path="/users/:id" component={UserDetail} />
       <ProtectedRoute path="/users" component={UsersPage} />
@@ -165,7 +166,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-company-objective" component={CreateCompanyObjective} />
-      <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={Teams} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={TeamsRedesigned} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/users" component={UsersPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
@@ -216,7 +217,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/organization/:organisation/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/organization/:organisation/company-strategy" component={CompanyStrategy} />
-      <ProtectedRoute path="/organization/:organisation/teams" component={Teams} />
+      <ProtectedRoute path="/organization/:organisation/teams" component={TeamsRedesigned} />
       <ProtectedRoute path="/organization/:organisation/teams/:id" component={TeamDetail} />
       <ProtectedRoute path="/organization/:organisation/users" component={UsersPage} />
       <ProtectedRoute path="/organization/:organisation/all-users" component={AllUsers} />
