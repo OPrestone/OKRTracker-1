@@ -154,49 +154,50 @@ export function AddTeamMemberModal({
   });
 
   // Create new user mutation
-  // First check if the team belongs to the current tenant
-  const { data: teamData } = useQuery({
+  // Define Team interface
+  interface Team {
+    id: string;
+    name: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    tenantId?: string;
+  }
+  
+  // We need to verify the team belongs to the tenant first
+  const { data: teamData, isLoading: isLoadingTeam } = useQuery<Team>({
     queryKey: ["/api/teams", teamId],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/teams/${teamId}?tenantId=${tenantId}`);
-        if (!response.ok) {
-          throw new Error(`Failed to verify team: ${await response.text()}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.error("Error verifying team:", error);
-        return null;
-      }
-    },
     enabled: !!teamId && !!tenantId
   });
-
-  const teamBelongsToTenant = teamData && teamData.tenantId === tenantId;
   
   const createUserMutation = useMutation({
     mutationFn: async (userData: z.infer<typeof userFormSchema>) => {
       try {
-        // Verify the team belongs to the current tenant
-        if (!teamBelongsToTenant) {
+        // Check if team exists and verify tenant ownership before attempting user creation
+        if (!teamData && !isLoadingTeam && teamId) {
+          throw new Error("Team not found. Please select a valid team.");
+        }
+        
+        // Ensure team belongs to the current tenant
+        if (teamData && teamData.tenantId && teamData.tenantId !== tenantId) {
           throw new Error("The selected team does not belong to the current tenant");
         }
         
-        // Prepare the data format the server expects - include tenant ID
-        const dataForServer = {
+        // First create the user with the tenant association
+        const userDataForServer = {
           username: userData.username,
           password: userData.password,
-          name: `${userData.firstName} ${userData.lastName}`,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
           email: userData.email || '',
           tenantId: tenantId, // This is crucial for tenant association
-          teamId: teamId,     // Include team ID directly in registration
           role: userData.role || 'member'
         };
         
-        console.log("Sending user data:", { ...dataForServer, password: '****' });
+        console.log("Creating new user in tenant:", { ...userDataForServer, password: '****', tenantId });
         
-        // Create the new user with all necessary data
-        const response = await apiRequest("POST", "/api/register", dataForServer);
+        // Step 1: Create the user
+        const response = await apiRequest("POST", "/api/register", userDataForServer);
         
         if (!response.ok) {
           // Handle common error cases
@@ -207,6 +208,8 @@ export function AddTeamMemberModal({
               throw new Error("Username already exists. Please choose a different username.");
             }
             throw new Error(text || "Invalid user data");
+          } else if (response.status === 401) {
+            throw new Error("Your session has expired. Please log in again.");
           } else {
             throw new Error(`Server error: ${response.status}`);
           }
@@ -215,25 +218,47 @@ export function AddTeamMemberModal({
         const newUser = await response.json();
         console.log("User created successfully:", newUser);
         
-        // If the server supports setting the team during registration, we're done
-        // If not, try to set the team separately
-        try {
-          // Try to add the user to the team as a fallback
-          // The registration might have already done this if it processed the teamId
-          const teamResponse = await apiRequest("POST", `/api/users/${newUser.id}/team`, {
-            teamId,
-            tenantId
-          });
-          
-          if (!teamResponse.ok) {
-            console.warn("Team assignment via separate endpoint failed:", await teamResponse.text());
-            // This is not critical - the user is created and registered with the tenant
-          } else {
-            console.log("User assigned to team via separate endpoint");
+        // Only proceed with team assignment if we have a team ID
+        if (teamId) {
+          // Step 2: Ensure user is in the tenant
+          // This should be done automatically during registration,
+          // but we'll make an explicit call to be sure
+          try {
+            // Add user to team
+            console.log(`Adding user ${newUser.id} to team ${teamId}`);
+            
+            // Use the addUserToTeam method via its API endpoint
+            const addToTeamResponse = await apiRequest("POST", `/api/teams/${teamId}/users`, {
+              userId: newUser.id,
+              tenantId
+            });
+            
+            if (!addToTeamResponse.ok) {
+              // Try alternative endpoint if that exists
+              console.log("First team assignment method failed, trying alternative...");
+              
+              const alternativeResponse = await apiRequest("POST", `/api/users/${newUser.id}/team`, {
+                teamId,
+                tenantId
+              });
+              
+              if (!alternativeResponse.ok) {
+                console.warn("All team assignment methods failed:", await alternativeResponse.text());
+                toast({
+                  title: "User Created",
+                  description: "User was created but couldn't be added to the team automatically. They may need to be added manually.",
+                  variant: "default"
+                });
+              } else {
+                console.log("User assigned to team successfully via alternative endpoint");
+              }
+            } else {
+              console.log("User assigned to team successfully");
+            }
+          } catch (teamError) {
+            console.warn("Error in team assignment:", teamError);
+            // Continue - the user was created successfully
           }
-        } catch (teamError) {
-          console.warn("Error in team assignment fallback:", teamError);
-          // Continue - the user was created successfully
         }
         
         return newUser;
