@@ -1870,28 +1870,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check-ins API
-  app.get("/api/check-ins", withTenant, async (req, res, next) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const checkIns = await storage.getRecentCheckIns(limit);
-      
-      // Filter check-ins by objectives that belong to the current tenant
-      // We need to get the objectives first
-      const objectives = await storage.getAllObjectives();
-      const tenantObjectiveIds = objectives
-        .filter(obj => obj.tenantId === req.tenantId)
-        .map(obj => obj.id);
-      
-      // Now filter check-ins by these objective IDs
-      const tenantCheckIns = checkIns.filter(checkIn => 
-        checkIn.objectiveId && tenantObjectiveIds.includes(checkIn.objectiveId)
-      );
-      
-      res.json(tenantCheckIns);
-    } catch (error) {
-      next(error);
-    }
-  });
 
   app.post("/api/check-ins", withTenant, async (req, res, next) => {
     try {

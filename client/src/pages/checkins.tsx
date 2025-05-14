@@ -530,15 +530,17 @@ export default function CheckIns() {
     queryKey: ['/api/objectives'],
   });
   
+  // Fetch teams for check-ins
+  const { data: teams, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['/api/teams'],
+  });
+  
   // Fetch users data
   const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['/api/users'],
   });
   
-  // Fetch teams data
-  const { data: teams, isLoading: isLoadingTeams } = useQuery({
-    queryKey: ['/api/teams'],
-  });
+  // Teams data already fetched above
   
   const isLoading = isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
   
@@ -651,43 +653,57 @@ export default function CheckIns() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {needsCheckInData.map((kr) => (
-                        <TableRow key={kr.id} className="h-16">
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{kr.title}</p>
-                              <p className="text-sm text-muted-foreground">{kr.objective.title}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback>{getInitials(kr.owner.name)}</AvatarFallback>
-                              </Avatar>
-                              <span>{kr.owner.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {format(kr.lastCheckIn, "MMM d")}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{format(kr.dueDate, "MMM d")}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleOpenCheckIn(kr)}
+                      {keyResults && keyResults.filter(kr => 
+                        // Filter key results that need check-ins (no recent check-ins or low progress)
+                        kr.status !== 'completed' && parseInt(kr.progress?.toString() || '0') < 100
+                      ).map((kr) => {
+                        // Find the objective for this key result
+                        const objective = objectives?.find(obj => obj.id === kr.objectiveId);
+                        // Find the assigned user
+                        const owner = users?.find(user => user.id === kr.assignedToId);
+                        // Find the last check-in for this key result
+                        const lastCheckIn = checkIns?.find(c => c.keyResultId === kr.id);
+                        
+                        return (
+                          <TableRow key={kr.id} className="h-16">
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{kr.title}</p>
+                                <p className="text-sm text-muted-foreground">{objective?.title || 'Unknown Objective'}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback>{owner ? getInitials(owner.name || owner.username) : '??'}</AvatarFallback>
+                                </Avatar>
+                                <span>{owner ? (owner.name || owner.username) : 'Unassigned'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">
+                                {lastCheckIn ? format(new Date(lastCheckIn.createdAt), "MMM d") : 'Never'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">
+                                  {kr.dueDate ? format(new Date(kr.dueDate), "MMM d") : 'No due date'}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleOpenCheckIn(kr)}
                             >
                               Check-in
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      );
+                    })}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -775,31 +791,37 @@ export default function CheckIns() {
               </div>
             </div>
             
-            {checkInData.map((checkIn) => (
-              <Card key={checkIn.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="grid grid-cols-1 md:grid-cols-4">
-                    <div className="p-6 md:border-r">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            {format(checkIn.date, "MMMM d, yyyy")}
-                          </p>
-                          <h3 className="text-lg font-semibold">
-                            {checkIn.keyResult.objective.title}
-                          </h3>
+            {checkIns && checkIns.map((checkIn) => {
+              // Find the related key result
+              const keyResult = keyResults?.find(kr => kr.id === checkIn.keyResultId);
+              // Find the related objective
+              const objective = objectives?.find(obj => obj.id === keyResult?.objectiveId);
+              
+              return (
+                <Card key={checkIn.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="grid grid-cols-1 md:grid-cols-4">
+                      <div className="p-6 md:border-r">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(checkIn.createdAt), "MMMM d, yyyy")}
+                            </p>
+                            <h3 className="text-lg font-semibold">
+                              {objective?.title || 'Unknown Objective'}
+                            </h3>
+                          </div>
+                          <ConfidenceBadge level={checkIn.confidenceLevel || 'On Track'} />
                         </div>
-                        <ConfidenceBadge level={checkIn.confidenceLevel} />
-                      </div>
-                      
-                      <p className="font-medium mb-1">{checkIn.keyResult.title}</p>
-                      
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
-                        <ProgressIndicator 
-                          previous={checkIn.previousProgress} 
-                          current={checkIn.progress} 
-                        />
+                        
+                        <p className="font-medium mb-1">{keyResult?.title || 'Unknown Key Result'}</p>
+                        
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Progress</p>
+                          <ProgressIndicator 
+                            previous={parseFloat(keyResult?.startValue?.toString() || '0')} 
+                            current={parseFloat(keyResult?.currentValue?.toString() || '0')} 
+                          />
                       </div>
                       
                       <div className="flex items-center gap-2 mt-4">
