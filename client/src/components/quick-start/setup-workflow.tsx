@@ -302,10 +302,17 @@ export function SetupWorkflow() {
           </div>
           
           <div className="pt-4 space-y-2">
-            <Button className="w-full" onClick={() => navigate('/create-objective')}>
-              Continue to Key Results
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            {canCreateObjectives() ? (
+              <Button className="w-full" onClick={() => navigate('/create-objective')}>
+                Continue to Key Results
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button className="w-full" disabled title="Only organization owners and admins can create objectives">
+                Continue to Key Results
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
             
             <Button variant="outline" className="w-full" onClick={() => navigate('/company-objectives')}>
               View All Objectives

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +64,7 @@ interface AlignmentAnalysis {
 
 const AIRecommendations = () => {
   const { toast } = useToast();
+  const { canCreateObjectives } = useUserPermissions();
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [selectedObjective, setSelectedObjective] = useState<string>("");
   
