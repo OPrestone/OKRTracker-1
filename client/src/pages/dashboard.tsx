@@ -28,23 +28,12 @@ export default function Dashboards() {
 
   // Extract stats from dashboard data
   const stats = {
-    totalObjectives: dashboardData?.objectives?.total || 35,
-    completedObjectives: dashboardData?.objectives?.completed || 21,
-    atRiskObjectives: dashboardData?.objectives?.atRisk || 4,
-    teamProgress: dashboardData?.teamProgress || 78,
-    upcomingCheckins: dashboardData?.upcomingCheckins || 8,
+    totalObjectives: dashboardData?.objectives?.total || 0,
+    completedObjectives: dashboardData?.objectives?.completed || 0,
+    atRiskObjectives: dashboardData?.objectives?.inProgress || 0,
+    teamProgress: dashboardData?.teamPerformance?.average || 0,
+    upcomingCheckins: dashboardData?.keyResults?.total || 0,
   };
-  
-  // Prepare chart data
-  const dummyChartData = [
-    { name: 'Jan', value: 12 },
-    { name: 'Feb', value: 19 },
-    { name: 'Mar', value: 15 },
-    { name: 'Apr', value: 27 },
-    { name: 'May', value: 22 },
-    { name: 'Jun', value: 30 },
-    { name: 'Jul', value: 25 },
-  ];
   
   // Prepare data for pie chart
   const preparePieData = () => {

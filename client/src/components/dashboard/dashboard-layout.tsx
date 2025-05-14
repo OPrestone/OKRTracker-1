@@ -21,12 +21,19 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
   const stats = overviewStats || {
-    totalObjectives: 35,
-    completedObjectives: 21,
-    atRiskObjectives: 4,
-    teamProgress: 78,
-    upcomingCheckins: 8
+    totalObjectives: 0,
+    completedObjectives: 0,
+    atRiskObjectives: 0,
+    teamProgress: 0,
+    upcomingCheckins: 0
   };
+  
+  // Generate chart data based on objectives counts
+  const objectivesChartData = [
+    { name: 'Total', value: stats.totalObjectives },
+    { name: 'Completed', value: stats.completedObjectives },
+    { name: 'In Progress', value: stats.atRiskObjectives }
+  ];
 
   return (
     <div className="flex flex-col space-y-6">
@@ -60,11 +67,11 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Total Objectives"
               value={stats.totalObjectives}
-              trend={3.5}
+              trend={1.0}
               icon={<Target className="h-5 w-5 text-indigo-500" />}
               chart={
                 <MiniSparkline 
-                  data={dummyChartData}
+                  data={objectivesChartData}
                   dataKey="value"
                   color="#6366f1"
                   height={40}
@@ -85,11 +92,11 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Completed Objectives"
               value={stats.completedObjectives}
-              trend={6.8}
+              trend={2.5}
               icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
               chart={
                 <MiniSparkline 
-                  data={dummyChartData}
+                  data={objectivesChartData}
                   dataKey="value"
                   color="#10b981"
                   height={40}
@@ -100,11 +107,11 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="At Risk Objectives"
               value={stats.atRiskObjectives}
-              trend={-2.3}
+              trend={0.5}
               icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
               chart={
                 <MiniSparkline 
-                  data={dummyChartData.slice().reverse()}
+                  data={objectivesChartData}
                   dataKey="value"
                   color="#ef4444"
                   height={40}
@@ -121,7 +128,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               <CardContent>
                 <div className="h-80">
                   <MiniChart
-                    data={dummyChartData}
+                    data={objectivesChartData}
                     dataKey="value"
                     type="bar"
                     color="#6366f1"
@@ -146,7 +153,12 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                       </div>
                       <div>
                         <h3 className="font-medium">{stats.upcomingCheckins} Check-ins</h3>
-                        <p className="text-sm text-slate-500">Next: Tomorrow, 10:00 AM</p>
+                        <p className="text-sm text-slate-500">
+                          {stats.upcomingCheckins > 0 
+                            ? 'Scheduled for this week' 
+                            : 'No upcoming check-ins'
+                          }
+                        </p>
                       </div>
                     </div>
                     <div className="bg-slate-100 px-2 py-1 rounded text-xs text-slate-600">
@@ -161,10 +173,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                   <CardTitle className="text-lg font-medium">Team Engagement</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <GaugeChart value={78} color="#6366f1" />
+                  <GaugeChart value={Math.round(stats.teamProgress)} color="#6366f1" />
                   <div className="flex justify-between mt-2 text-sm">
-                    <div className="text-slate-500">Last month: 65%</div>
-                    <div className="font-medium text-emerald-600">+13%</div>
+                    <div className="text-slate-500">Current Progress</div>
+                    <div className="font-medium text-emerald-600">{Math.round(stats.teamProgress)}%</div>
                   </div>
                 </CardContent>
               </Card>
