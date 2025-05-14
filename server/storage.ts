@@ -1142,6 +1142,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(checkIns.userId, userId))
       .orderBy(desc(checkIns.createdAt));
   }
+  
+  async getCheckInsByUserId(userId: string, tenantId: string): Promise<CheckIn[]> {
+    try {
+      console.log(`Getting check-ins for user ${userId} in tenant ${tenantId}`);
+      return db.select()
+        .from(checkIns)
+        .where(and(
+          eq(checkIns.userId, userId),
+          eq(checkIns.tenantId, tenantId)
+        ))
+        .orderBy(desc(checkIns.createdAt));
+    } catch (error) {
+      console.error(`Error getting check-ins for user ${userId} in tenant ${tenantId}:`, error);
+      return [];
+    }
+  }
 
   async getCheckInsByObjective(objectiveId: string): Promise<CheckIn[]> {
     return db.select()
