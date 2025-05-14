@@ -18,11 +18,15 @@ import { slackService } from "./services/slack-service";
 import { stripeService } from "./services/stripe-service";
 import { tenantService } from "./services/tenant-service";
 import { WebSocketServer, WebSocket } from "ws";
+import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   setupAuth(app);
+  
+  // Setup test auth routes for debugging session issues
+  setupTestAuthRoutes(app);
 
   // Initialize data
   initializeData();
