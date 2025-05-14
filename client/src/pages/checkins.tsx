@@ -174,7 +174,8 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
         template: checkInTemplate,
         objectiveIds: selectedObjectives,
         keyResultIds: selectedKeyResults,
-        teamId: selectedTeam || null
+        teamId: selectedTeam || null,
+        tenantId: currentTenant?.id // Add the tenant ID to the payload
       };
       
       // Make API call to create the check-in

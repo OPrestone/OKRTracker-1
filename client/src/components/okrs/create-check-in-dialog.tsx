@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 import {
   Dialog,
@@ -96,11 +97,18 @@ export default function CreateCheckInDialog({
     }
   };
 
+  // Import useTenantContext hook 
+  import { useTenantContext } from "@/hooks/use-tenant-context";
+  
+  // Add this near the top of your component
+  const { currentTenant } = useTenantContext();
+
   const createCheckInMutation = useMutation({
     mutationFn: async (data: CheckInFormValues) => {
       const response = await apiRequest("POST", "/api/check-ins", {
         ...data,
-        objectiveId
+        objectiveId,
+        tenantId: currentTenant?.id // Add tenant ID to the request
       });
       return response.json();
     },
