@@ -96,12 +96,17 @@ export default function TeamDetailPage() {
     { day: "Sun", created: 13, completed: 11 },
   ];
   
-  // Get tenant ID from path
-  const tenantId = params.id;
+  // Get tenant ID from path and context
+  const { currentTenant } = useTenantContext();
+  const tenantId = params.id || currentTenant?.id;
+  
+  // State for active tab and animation triggers
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [expandedObjective, setExpandedObjective] = useState<string | null>(null);
   
   // Query for teams data (either by ID or by finding team by slug)
-  const { data: team, isLoading: teamLoading } = useQuery({
-    queryKey: teamSlug ? [`/api/teams`, tenantId, teamSlug] : [`/api/teams/${teamId}`],
+  const { data: team, isLoading: teamLoading, error: teamError } = useQuery({
+    queryKey: teamSlug ? ["/api/teams", tenantId, "slug", teamSlug] : ["/api/teams", teamId, tenantId],
     queryFn: async () => {
       if (teamSlug) {
         // If we have a slug, we need to fetch all teams and find by slug
@@ -121,7 +126,7 @@ export default function TeamDetailPage() {
         return matchedTeam;
       } else {
         // Direct ID lookup
-        const res = await fetch(`/api/teams/${teamId}`);
+        const res = await fetch(`/api/teams/${teamId}?tenantId=${tenantId}`);
         if (!res.ok) {
           if (res.status === 404) {
             throw new Error("Team not found");
@@ -131,35 +136,72 @@ export default function TeamDetailPage() {
         return res.json();
       }
     },
-    retry: false
+    retry: false,
+    onError: (err) => {
+      toast({
+        title: "Error loading team",
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive"
+      });
+    }
   });
 
-  const { data: members, isLoading: membersLoading } = useQuery({
-    // Don't run this query until we have the team data
-    queryKey: [`/api/teams/${team?.id || teamId}/members`],
+  // Query for team members data
+  const { data: members = [], isLoading: membersLoading } = useQuery({
+    queryKey: ["/api/teams", team?.id || teamId, "users", tenantId],
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/members`);
+      const res = await fetch(`/api/teams/${resolvedTeamId}/users?tenantId=${tenantId}`);
       if (!res.ok) throw new Error("Failed to fetch team members");
       return res.json();
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId)
+    enabled: !!(team?.id || teamId && tenantId),
+    onError: (err) => {
+      toast({
+        title: "Error loading team members",
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive"
+      });
+    }
   });
 
-  const { data: objectives, isLoading: objectivesLoading } = useQuery({
-    // Don't run this query until we have the team data
-    queryKey: [`/api/teams/${team?.id || teamId}/objectives`],
+  // Query for team objectives data
+  const { data: objectives = [], isLoading: objectivesLoading } = useQuery({
+    queryKey: ["/api/teams", team?.id || teamId, "objectives", tenantId],
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/objectives`);
+      const res = await fetch(`/api/teams/${resolvedTeamId}/objectives?tenantId=${tenantId}`);
       if (!res.ok) throw new Error("Failed to fetch team objectives");
       return res.json();
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId)
+    enabled: !!(team?.id || teamId && tenantId),
+    onError: (err) => {
+      toast({
+        title: "Error loading objectives",
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Query for team performance data
+  const { data: teamPerformance, isLoading: performanceLoading } = useQuery({
+    queryKey: ["/api/teams", team?.id || teamId, "performance", tenantId],
+    queryFn: async () => {
+      const resolvedTeamId = team?.id || teamId;
+      const res = await fetch(`/api/teams/${resolvedTeamId}/performance?tenantId=${tenantId}`);
+      if (!res.ok) throw new Error("Failed to fetch team performance data");
+      return res.json();
+    },
+    enabled: !!(team?.id || teamId && tenantId),
+    onError: (err) => {
+      // Silently log errors without toast to avoid overwhelming users
+      console.error("Error loading team performance:", err);
+    }
   });
   
   // Sample completed tasks data (this would come from API in real implementation)
@@ -220,12 +262,98 @@ export default function TeamDetailPage() {
     }
   };
 
+  // Generate activity data based on objectives and their progress
+  const generateActivityData = (objectives: any[]) => {
+    if (!objectives || objectives.length === 0) return activityData;
+    
+    const days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const result: TaskActivity[] = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dayName = days_of_week[date.getDay()];
+      
+      // For real implementation, we'd query actual data from the API
+      // For now, generate data based on objectives count
+      const created = Math.floor(Math.random() * 10) + (objectives.length);
+      const completed = Math.floor(Math.random() * created * 0.8);
+      
+      result.push({
+        day: dayName,
+        created,
+        completed
+      });
+    }
+    
+    return result;
+  };
+  
+  // Calculate team statistics
+  const calculateTeamStats = (objectives: any[] = []) => {
+    if (!objectives || objectives.length === 0) {
+      return { 
+        totalObjectives: 0,
+        completedObjectives: 0,
+        onTrackCount: 0,
+        atRiskCount: 0,
+        behindCount: 0,
+        averageProgress: 0
+      };
+    }
+    
+    const totalObjectives = objectives.length;
+    const completedObjectives = objectives.filter(obj => obj.status === "completed").length;
+    const onTrackCount = objectives.filter(obj => obj.status === "on_track").length;
+    const atRiskCount = objectives.filter(obj => obj.status === "at_risk").length;
+    const behindCount = objectives.filter(obj => obj.status === "behind").length;
+    const totalProgress = objectives.reduce((sum, obj) => sum + (parseInt(obj.progress) || 0), 0);
+    const averageProgress = totalObjectives > 0 ? Math.round(totalProgress / totalObjectives) : 0;
+    
+    return {
+      totalObjectives,
+      completedObjectives,
+      onTrackCount,
+      atRiskCount,
+      behindCount,
+      averageProgress
+    };
+  };
+  
+  // Calculate team members contribution
+  const calculateMemberContribution = (members: any[] = [], objectives: any[] = []) => {
+    if (!members || members.length === 0 || !objectives || objectives.length === 0) {
+      return [];
+    }
+    
+    const memberContribution = members.map(member => {
+      const assignedObjectives = objectives.filter(obj => 
+        obj.assignee?.id === member.id || obj.assignedToId === member.id || obj.ownerId === member.id
+      );
+      
+      const completedObjectives = assignedObjectives.filter(obj => obj.status === "completed");
+      const progress = assignedObjectives.reduce((sum, obj) => sum + (parseInt(obj.progress) || 0), 0);
+      const averageProgress = assignedObjectives.length > 0 ? progress / assignedObjectives.length : 0;
+      
+      return {
+        id: member.id,
+        name: `${member.firstName} ${member.lastName}`,
+        assignedCount: assignedObjectives.length,
+        completedCount: completedObjectives.length,
+        averageProgress: Math.round(averageProgress)
+      };
+    });
+    
+    return memberContribution.sort((a, b) => b.assignedCount - a.assignedCount);
+  };
+
   // Function to determine progress color
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "bg-green-600";
-    if (progress >= 50) return "bg-blue-600";
-    if (progress >= 25) return "bg-amber-500";
-    return "bg-red-600";
+    if (progress >= 75) return "#16a34a"; // green-600
+    if (progress >= 50) return "#3b82f6"; // blue-600
+    if (progress >= 25) return "#eab308"; // amber-500
+    return "#dc2626"; // red-600
   };
 
   // Function to get status badge styling
@@ -240,8 +368,19 @@ export default function TeamDetailPage() {
       case "completed":
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Completed</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status || "Not Started"}</Badge>;
     }
+  };
+  
+  // Function to format date to readable string
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }).format(date);
   };
 
   return (
