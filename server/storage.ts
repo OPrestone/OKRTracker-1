@@ -8,7 +8,8 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetings, Meeting, InsertMeeting, meetingsToUsers, MeetingToUser, InsertMeetingToUser,
          meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
-         actionItems, ActionItem, InsertActionItem } from "@shared/schema";
+         actionItems, ActionItem, InsertActionItem,
+         projects, Project, InsertProject } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
