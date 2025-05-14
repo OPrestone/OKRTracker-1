@@ -43,9 +43,18 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   };
+  
+  // Log session configuration for debugging
+  console.log("Session configuration:", {
+    ...sessionSettings,
+    store: sessionSettings.store ? "Configured" : "Missing",
+    secret: sessionSettings.secret ? "Set" : "Missing"
+  });
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
@@ -86,12 +95,23 @@ export function setupAuth(app: Express) {
 
   passport.serializeUser((user, done) => {
     console.log("Serializing user:", user.id);
+    // Store session debugging information
+    if (!user || !user.id) {
+      console.error("Invalid user object during serialization:", user);
+      return done(new Error("Invalid user object"), null);
+    }
     done(null, user.id);
   });
   
   passport.deserializeUser(async (id: string, done) => {
     try {
       console.log("Deserializing user ID:", id);
+      
+      if (!id) {
+        console.error("Invalid user ID during deserialization");
+        return done(new Error("Invalid user ID"), null);
+      }
+      
       const user = await storage.getUser(id);
       
       if (!user) {
