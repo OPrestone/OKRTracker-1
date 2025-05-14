@@ -570,27 +570,33 @@ export default function DraftOKRs() {
               </div>
               
               <div className="space-y-4">
-                {newDraftData.keyResults.map((kr, index) => (
-                  <div key={index} className="grid gap-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor={`key-result-${index}`}>Key Result {index + 1}</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveNewKeyResult(index)}
-                        className="h-7 px-2"
-                      >
-                        Remove
-                      </Button>
+                {newDraftData.keyResults && Array.isArray(newDraftData.keyResults) ? (
+                  newDraftData.keyResults.map((kr, index) => (
+                    <div key={index} className="grid gap-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={`key-result-${index}`}>Key Result {index + 1}</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveNewKeyResult(index)}
+                          className="h-7 px-2"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <Input
+                        id={`key-result-${index}`}
+                        placeholder="Enter a measurable key result..."
+                        value={kr.title}
+                        onChange={(e) => handleNewDraftKeyResultChange(String(index), e.target.value)}
+                      />
                     </div>
-                    <Input
-                      id={`key-result-${index}`}
-                      placeholder="Enter a measurable key result..."
-                      value={kr.title}
-                      onChange={(e) => handleNewDraftKeyResultChange(String(index), e.target.value)}
-                    />
+                  ))
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-muted-foreground">No key results defined yet</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -705,25 +711,35 @@ export default function DraftOKRs() {
             <div className="grid gap-6 py-4">
               <div>
                 <h3 className="font-medium mb-2">Overall Assessment</h3>
-                <p className="text-muted-foreground">{aiAnalysis.overall}</p>
+                <p className="text-muted-foreground">
+                  {aiAnalysis.overall ? aiAnalysis.overall : "Overall assessment not available"}
+                </p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-medium mb-2 text-green-600">Strengths</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {aiAnalysis.strengths.map((strength, i) => (
-                      <li key={i} className="text-muted-foreground">{strength}</li>
-                    ))}
+                    {aiAnalysis.strengths && Array.isArray(aiAnalysis.strengths) ? (
+                      aiAnalysis.strengths.map((strength, i) => (
+                        <li key={i} className="text-muted-foreground">{strength}</li>
+                      ))
+                    ) : (
+                      <li className="text-muted-foreground">No strengths identified</li>
+                    )}
                   </ul>
                 </div>
                 
                 <div>
                   <h3 className="font-medium mb-2 text-amber-600">Areas for Improvement</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    {aiAnalysis.weaknesses.map((weakness, i) => (
-                      <li key={i} className="text-muted-foreground">{weakness}</li>
-                    ))}
+                    {aiAnalysis.weaknesses && Array.isArray(aiAnalysis.weaknesses) ? (
+                      aiAnalysis.weaknesses.map((weakness, i) => (
+                        <li key={i} className="text-muted-foreground">{weakness}</li>
+                      ))
+                    ) : (
+                      <li className="text-muted-foreground">No improvement areas identified</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -731,9 +747,13 @@ export default function DraftOKRs() {
               <div>
                 <h3 className="font-medium mb-2">Suggestions</h3>
                 <ul className="list-disc pl-5 space-y-1">
-                  {aiAnalysis.suggestions.map((suggestion, i) => (
-                    <li key={i} className="text-muted-foreground">{suggestion}</li>
-                  ))}
+                  {aiAnalysis.suggestions && Array.isArray(aiAnalysis.suggestions) ? (
+                    aiAnalysis.suggestions.map((suggestion, i) => (
+                      <li key={i} className="text-muted-foreground">{suggestion}</li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground">No suggestions available</li>
+                  )}
                 </ul>
               </div>
               
@@ -744,18 +764,28 @@ export default function DraftOKRs() {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">{aiAnalysis.improvedObjective.title}</CardTitle>
+                    <CardTitle className="text-base">
+                      {aiAnalysis.improvedObjective && aiAnalysis.improvedObjective.title ? 
+                        aiAnalysis.improvedObjective.title : "Title not available"}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {aiAnalysis.improvedObjective.description}
+                      {aiAnalysis.improvedObjective && aiAnalysis.improvedObjective.description ? 
+                        aiAnalysis.improvedObjective.description : "Description not available"}
                     </p>
                     
                     <h4 className="text-sm font-medium mb-2">Key Results</h4>
                     <ul className="list-disc pl-5 space-y-2">
-                      {aiAnalysis.improvedObjective.keyResults.map((kr, i) => (
-                        <li key={i} className="text-sm">{kr}</li>
-                      ))}
+                      {aiAnalysis.improvedObjective && 
+                       aiAnalysis.improvedObjective.keyResults && 
+                       Array.isArray(aiAnalysis.improvedObjective.keyResults) ? (
+                        aiAnalysis.improvedObjective.keyResults.map((kr, i) => (
+                          <li key={i} className="text-sm">{kr}</li>
+                        ))
+                      ) : (
+                        <li className="text-sm">No key results available</li>
+                      )}
                     </ul>
                   </CardContent>
                 </Card>
