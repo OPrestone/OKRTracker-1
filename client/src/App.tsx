@@ -168,6 +168,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-company-objective" component={CreateCompanyObjective} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={TeamsRedesigned} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/team/:teamSlug" component={TeamDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/users" component={UsersPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/all-users" component={AllUsers} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/user-profile" component={UserProfile} />

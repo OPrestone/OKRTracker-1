@@ -61,8 +61,15 @@ interface TaskActivity {
 export default function TeamDetailPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { id } = useParams<{ id: string }>();
-  const teamId = id; // Using string ID directly for ULID compatibility
+  // Get parameters from the URL, supporting both ID and slug-based routes
+  const params = useParams<{ id?: string; teamId?: string; teamSlug?: string }>();
+  
+  // Determine team ID from parameters - handle both formats
+  // For /:id/teams/:teamId route
+  // For /:id/team/:teamSlug route (we'll lookup by name)
+  const teamId = params.teamId || params.id;
+  const teamSlug = params.teamSlug;
+  
   const [viewMode, setViewMode] = useState<"today" | "weekly" | "monthly">("weekly");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   
@@ -77,39 +84,70 @@ export default function TeamDetailPage() {
     { day: "Sun", created: 13, completed: 11 },
   ];
   
+  // Get tenant ID from path
+  const tenantId = params.id;
+  
+  // Query for teams data (either by ID or by finding team by slug)
   const { data: team, isLoading: teamLoading } = useQuery({
-    queryKey: [`/api/teams/${teamId}`],
+    queryKey: teamSlug ? [`/api/teams`, tenantId, teamSlug] : [`/api/teams/${teamId}`],
     queryFn: async () => {
-      const res = await fetch(`/api/teams/${teamId}`);
-      if (!res.ok) {
-        if (res.status === 404) {
+      if (teamSlug) {
+        // If we have a slug, we need to fetch all teams and find by slug
+        const res = await fetch(`/api/teams?tenantId=${tenantId}`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch teams");
+        }
+        const teams = await res.json();
+        // Find the team with matching slug (normalized team name)
+        const matchedTeam = teams.find((t: any) => 
+          t.name.toLowerCase().replace(/\s+/g, '-') === teamSlug
+        );
+        
+        if (!matchedTeam) {
           throw new Error("Team not found");
         }
-        throw new Error("Failed to fetch team details");
+        return matchedTeam;
+      } else {
+        // Direct ID lookup
+        const res = await fetch(`/api/teams/${teamId}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error("Team not found");
+          }
+          throw new Error("Failed to fetch team details");
+        }
+        return res.json();
       }
-      return res.json();
     },
     retry: false
   });
 
   const { data: members, isLoading: membersLoading } = useQuery({
-    queryKey: [`/api/teams/${teamId}/members`],
+    // Don't run this query until we have the team data
+    queryKey: [`/api/teams/${team?.id || teamId}/members`],
     queryFn: async () => {
-      const res = await fetch(`/api/teams/${teamId}/members`);
+      // Use the team ID from the resolved team data if available (for slug-based routing)
+      const resolvedTeamId = team?.id || teamId;
+      const res = await fetch(`/api/teams/${resolvedTeamId}/members`);
       if (!res.ok) throw new Error("Failed to fetch team members");
       return res.json();
     },
-    enabled: !!teamId
+    // Only enable the query once we have a team ID to use
+    enabled: !!(team?.id || teamId)
   });
 
   const { data: objectives, isLoading: objectivesLoading } = useQuery({
-    queryKey: [`/api/teams/${teamId}/objectives`],
+    // Don't run this query until we have the team data
+    queryKey: [`/api/teams/${team?.id || teamId}/objectives`],
     queryFn: async () => {
-      const res = await fetch(`/api/teams/${teamId}/objectives`);
+      // Use the team ID from the resolved team data if available (for slug-based routing)
+      const resolvedTeamId = team?.id || teamId;
+      const res = await fetch(`/api/teams/${resolvedTeamId}/objectives`);
       if (!res.ok) throw new Error("Failed to fetch team objectives");
       return res.json();
     },
-    enabled: !!teamId
+    // Only enable the query once we have a team ID to use
+    enabled: !!(team?.id || teamId)
   });
   
   // Sample completed tasks data (this would come from API in real implementation)
@@ -161,7 +199,13 @@ export default function TeamDetailPage() {
   ];
 
   const handleGoBack = () => {
-    setLocation("/teams");
+    // If we have a tenant ID, navigate back to the tenant-specific teams page
+    if (tenantId) {
+      setLocation(`/${tenantId}/teams`);
+    } else {
+      // Fall back to the global teams page if no tenant context
+      setLocation("/teams");
+    }
   };
 
   // Function to determine progress color
