@@ -2465,6 +2465,64 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // Project Management
+  async createProject(project: InsertProject): Promise<Project> {
+    const [newProject] = await db.insert(projects).values(project).returning();
+    return newProject;
+  }
+
+  async getProject(id: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project;
+  }
+
+  async getProjectsByStatus(status: string, tenantId: string): Promise<Project[]> {
+    return await db.select()
+      .from(projects)
+      .where(and(
+        eq(projects.status, status),
+        eq(projects.tenantId, tenantId)
+      ))
+      .orderBy(projects.priority);
+  }
+
+  async getProjectsByTenant(tenantId: string): Promise<Project[]> {
+    return await db.select()
+      .from(projects)
+      .where(eq(projects.tenantId, tenantId))
+      .orderBy(projects.status, projects.priority);
+  }
+
+  async updateProject(id: string, project: Partial<InsertProject>): Promise<Project> {
+    const [updatedProject] = await db.update(projects)
+      .set(project)
+      .where(eq(projects.id, id))
+      .returning();
+    
+    if (!updatedProject) {
+      throw new Error(`Project with id ${id} not found`);
+    }
+    
+    return updatedProject;
+  }
+
+  async updateProjectStatus(id: string, status: string): Promise<Project> {
+    const [updatedProject] = await db.update(projects)
+      .set({ status })
+      .where(eq(projects.id, id))
+      .returning();
+    
+    if (!updatedProject) {
+      throw new Error(`Project with id ${id} not found`);
+    }
+    
+    return updatedProject;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    await db.delete(projects).where(eq(projects.id, id));
+  }
 }
 
 // Use the database storage implementation

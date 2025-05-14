@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -9,7 +9,8 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertTeamMoodSchema, insertTenantSchema, insertMoodEntrySchema, users, teams, objectives as objectivesTable, 
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
-         insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum } from "@shared/schema";
+         insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
+         projects, projectStatusEnum, insertProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -4639,6 +4640,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route has been moved to avoid duplication - see implementation at line ~514
+  
+  // Project Management Routes
+  app.get("/api/projects", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      if (!req.tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      const projects = await storage.getProjectsByTenant(req.tenantId);
+      res.json(projects);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/by-status/:status", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      if (!req.tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      const { status } = req.params;
+      const projects = await storage.getProjectsByStatus(status, req.tenantId);
+      res.json(projects);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      if (!req.tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+
+      const validatedData = insertProjectSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId,
+        createdAt: new Date(),
+      });
+      
+      const project = await storage.createProject(validatedData);
+      res.status(201).json(project);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.patch("/api/projects/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const project = await storage.getProject(id);
+      
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Ensure the project belongs to the tenant
+      if (req.tenantId && project.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "You don't have permission to update this project" });
+      }
+
+      const updatedProject = await storage.updateProject(id, req.body);
+      res.json(updatedProject);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/projects/:id/status", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status || !Object.values(projectStatusEnum.enumValues).includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const project = await storage.getProject(id);
+      
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Ensure the project belongs to the tenant
+      if (req.tenantId && project.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "You don't have permission to update this project" });
+      }
+
+      const updatedProject = await storage.updateProjectStatus(id, status);
+      res.json(updatedProject);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/projects/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const project = await storage.getProject(id);
+      
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Ensure the project belongs to the tenant
+      if (req.tenantId && project.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "You don't have permission to delete this project" });
+      }
+
+      await storage.deleteProject(id);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
   
   // Upcoming meetings endpoint
   app.get("/api/meetings/upcoming", async (req, res, next) => {
