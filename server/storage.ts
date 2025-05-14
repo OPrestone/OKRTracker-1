@@ -881,23 +881,34 @@ export class DatabaseStorage implements IStorage {
       current_value: keyResult.current_value || keyResult.start_value || "0",
       start_value: keyResult.start_value || "0",
       progress: keyResult.progress || 0,
-      status: keyResult.status || "not_started"
+      status: keyResult.status || "not_started",
+      // Map schema columns to database columns if needed
+      objectiveId: keyResult.objective_id
     };
     
-    const [newKeyResult] = await db.insert(keyResults).values(values).returning();
-    
-    // Now we can safely use objectiveId since we validated it above
-    // Update the objective's progress
-    const results = await this.getKeyResultsByObjective(newKeyResult.objectiveId);
-    if (results && results.length > 0) {
-      const totalProgress = results.reduce((sum, kr) => sum + (kr.progress || 0), 0);
-      const averageProgress = results.length > 0 ? Math.round(totalProgress / results.length) : 0;
+    // Add error handling and logging
+    try {
+      console.log("Creating key result with values:", JSON.stringify(values));
+      const [newKeyResult] = await db.insert(keyResults).values(values).returning();
+      console.log("Key result created:", newKeyResult);
       
+      // Now we can safely use objectiveId since we validated it above
       // Update the objective's progress
-      await this.updateObjectiveProgress(newKeyResult.objectiveId, averageProgress);
+      const results = await this.getKeyResultsByObjective(newKeyResult.objectiveId);
+      if (results && results.length > 0) {
+        const totalProgress = results.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+        const averageProgress = results.length > 0 ? Math.round(totalProgress / results.length) : 0;
+        
+        // Update the objective's progress
+        await this.updateObjectiveProgress(newKeyResult.objectiveId, averageProgress);
+      }
+      
+      return newKeyResult;
+    } catch (error) {
+      console.error("Error creating key result:", error);
+      console.error("Attempted values:", JSON.stringify(values));
+      throw error;
     }
-    
-    return newKeyResult;
   }
 
   async getKeyResult(id: string): Promise<KeyResult | undefined> {

@@ -252,7 +252,7 @@ export default function DraftOKRs() {
       keyResults: [...prev.keyResults, { 
         id: "", 
         title: "", 
-        objective_id: "",
+        objective_id: prev.id || "", // Use the objective ID if it exists
         start_value: "0",
         current_value: "0",
         target_value: "100",
@@ -263,19 +263,26 @@ export default function DraftOKRs() {
   };
   
   const handleAddEditKeyResult = () => {
-    setEditDraftData(prev => ({
-      ...prev,
-      keyResults: [...prev.keyResults, { 
-        id: "", 
-        title: "", 
-        objective_id: prev.id,
-        start_value: "0",
-        current_value: "0",
-        target_value: "100",
-        progress: 0,
-        status: "not_started" 
-      }]
-    }));
+    setEditDraftData(prev => {
+      // Make sure prev.id is available and not empty
+      if (!prev.id) {
+        console.warn("No objective ID available for key result");
+      }
+      
+      return {
+        ...prev,
+        keyResults: [...prev.keyResults, { 
+          id: "", 
+          title: "", 
+          objective_id: prev.id, // This should always have the parent objective's ID
+          start_value: "0",
+          current_value: "0",
+          target_value: "100",
+          progress: 0,
+          status: "not_started" 
+        }]
+      };
+    });
   };
   
   const handleNewDraftKeyResultChange = (id: string, field: string, value: string) => {
@@ -444,7 +451,10 @@ export default function DraftOKRs() {
       tenant_id: tenantId,
       keyResults: newDraftData.keyResults.map(kr => ({
         ...kr,
-        title: kr.title.trim()
+        title: kr.title.trim(),
+        // For new key results, the objective_id will be set by the server
+        // after the objective is created
+        objective_id: undefined 
       }))
     };
     
