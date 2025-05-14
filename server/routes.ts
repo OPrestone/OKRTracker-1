@@ -8,7 +8,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
          insertTeamMoodSchema, insertTenantSchema, insertMoodEntrySchema, users, teams, objectives as objectivesTable, 
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
-         timeframes, cadences, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
+         timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

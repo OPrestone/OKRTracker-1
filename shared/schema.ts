@@ -22,6 +22,18 @@ export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "z
 
 // TABLE SCHEMAS
 
+export const cycles = pgTableWithUlid("cycles", {
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  timeframeId: text("timeframe_id").references(() => timeframes.id),
+  status: text("status").default("active").notNull(), // active, completed, upcoming
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const users = pgTableWithUlid("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -823,6 +835,7 @@ export const insertFinancialAccountSchema = createInsertSchema(financialAccounts
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
+export const insertCycleSchema = createInsertSchema(cycles).omit({ id: true, createdAt: true, updatedAt: true });
 
 // TYPES
 
@@ -842,6 +855,9 @@ export type InsertCadence = z.infer<typeof insertCadenceSchema>;
 
 export type Timeframe = typeof timeframes.$inferSelect;
 export type InsertTimeframe = z.infer<typeof insertTimeframeSchema>;
+
+export type Cycle = typeof cycles.$inferSelect;
+export type InsertCycle = z.infer<typeof insertCycleSchema>;
 
 export type Objective = typeof objectives.$inferSelect;
 export type InsertObjective = z.infer<typeof insertObjectiveSchema>;
