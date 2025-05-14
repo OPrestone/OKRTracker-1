@@ -36,6 +36,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup test auth routes for debugging session issues
   setupTestAuthRoutes(app);
+  
+  // Direct test route for approved objectives - accessible without middleware
+  app.get("/api/test-approved", async (req, res) => {
+    try {
+      console.log("Test approved objectives endpoint called");
+      console.log("User authenticated:", req.isAuthenticated());
+      console.log("Query params:", req.query);
+      
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.query.tenantId as string || "01JTTH6MTJE4DHTH63RV7H21G0";
+      console.log(`Using tenant ID: ${tenantId}`);
+      
+      const approvedObjectives = await storage.getApprovedObjectives(tenantId);
+      console.log(`Found ${approvedObjectives ? approvedObjectives.length : 0} approved objectives`);
+      
+      return res.json(approvedObjectives || []);
+    } catch (error) {
+      console.error("Error in test-approved endpoint:", error);
+      return res.status(500).json({ error: "Internal Server Error", details: String(error) });
+    }
+  });
 
   // Initialize data
   initializeData();
