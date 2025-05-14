@@ -146,6 +146,7 @@ function AppRoutes() {
       {/* ULID-based routes for organizations (new format using ULIDs directly) */}
       <ProtectedRoute path="/:id([A-Z0-9]{26})" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/dashboard" component={Dashboard} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
