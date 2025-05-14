@@ -189,23 +189,9 @@ export default function CreateObjective() {
 
   // Create objective mutation
   const createObjectiveMutation = useMutation({
-    mutationFn: async (data: any) => {
-      // Create a complete payload that includes key results
-      const payload = {
-        ...data,
-        keyResults: keyResults.map(kr => ({
-          title: kr.title,
-          description: kr.description || "",
-          start_value: kr.start_value || "0",
-          current_value: kr.current_value || kr.start_value || "0",
-          target_value: kr.target_value || "100",
-          progress: kr.progress || 0,
-          status: "not_started",
-          assigned_to_id: kr.assignedToId
-        })),
-        tags: selectedTags,
-        contributors: selectedContributors
-      };
+    mutationFn: async (payload: any) => {
+      // Log the payload for debugging
+      console.log("Sending payload to API:", payload);
 
       const response = await apiRequest("POST", "/api/objectives", payload);
       if (!response.ok) {
@@ -282,6 +268,10 @@ export default function CreateObjective() {
   };
 
   const onSubmit = (values: ObjectiveFormValues) => {
+    // Log the form values and key results for debugging
+    console.log("Form values:", values);
+    console.log("Key results:", keyResults);
+    
     // Validate key results before submission
     if (progressDriver === "key-results") {
       // Check if any key result doesn't have a title or has a title shorter than 3 characters
@@ -299,19 +289,62 @@ export default function CreateObjective() {
       
       // If there are no key results defined, add a default one
       if (keyResults.length === 0) {
-        setKeyResults([{ 
+        const defaultKeyResult = { 
           title: "Achieve target goal", 
           description: "Default key result", 
           start_value: "0", 
           current_value: "0", 
           target_value: "100",
           format: "number"
-        }]);
+        };
+        setKeyResults([defaultKeyResult]);
+        
+        // If we added a default key result, wait a moment to ensure state update before submission
+        setTimeout(() => {
+          // Create a payload with the default key result
+          const payload = {
+            ...values,
+            keyResults: [{
+              title: "Achieve target goal", 
+              description: "Default key result", 
+              start_value: "0", 
+              current_value: "0", 
+              target_value: "100",
+              progress: 0,
+              status: "not_started"
+            }],
+            tags: selectedTags,
+            contributors: selectedContributors
+          };
+          console.log("Submitting payload with default key result:", payload);
+          // Create the objective with the default key result
+          createObjectiveMutation.mutate(payload);
+        }, 100);
+        return;
       }
     }
 
-    // Create the objective with key results
-    createObjectiveMutation.mutate(values);
+    // Create combined payload with form values and key results
+    const payload = {
+      ...values,
+      keyResults: keyResults.map(kr => ({
+        title: kr.title,
+        description: kr.description || "",
+        start_value: kr.start_value || "0",
+        current_value: kr.current_value || kr.start_value || "0",
+        target_value: kr.target_value || "100",
+        progress: kr.progress || 0,
+        status: "not_started",
+        assigned_to_id: kr.assignedToId
+      })),
+      tags: selectedTags,
+      contributors: selectedContributors
+    };
+    
+    console.log("Submitting payload:", payload);
+    
+    // Submit the payload directly through the mutation
+    createObjectiveMutation.mutate(payload);
   };
 
   const handleTeamChange = (teamId: string) => {
