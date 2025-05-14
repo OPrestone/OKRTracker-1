@@ -980,31 +980,74 @@ export default function CheckIns() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {teamCheckInsData.map((team) => (
-                      <TableRow key={team.id}>
-                        <TableCell className="font-medium">{team.team}</TableCell>
-                        <TableCell>{team.objective}</TableCell>
-                        <TableCell>{team.checkInCount}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                              <div 
-                                className="h-full bg-primary-600 rounded-full" 
-                                style={{ width: `${team.avgProgress}%` }}
-                              />
+                    {teams && teams.map((team) => {
+                      // Count check-ins related to this team
+                      const teamObjectives = objectives?.filter(obj => obj.teamId === team.id) || [];
+                      const teamObjectiveIds = teamObjectives.map(obj => obj.id);
+                      const teamKeyResults = keyResults?.filter(kr => 
+                        kr.objectiveId && teamObjectiveIds.includes(kr.objectiveId)
+                      ) || [];
+                      const teamCheckIns = checkIns?.filter(checkIn =>
+                        teamKeyResults.some(kr => kr.id === checkIn.keyResultId)
+                      ) || [];
+                      
+                      // Calculate average progress
+                      const totalProgress = teamKeyResults.reduce(
+                        (sum, kr) => sum + parseInt(kr.progress?.toString() || '0'), 
+                        0
+                      );
+                      const avgProgress = teamKeyResults.length > 0 
+                        ? Math.round(totalProgress / teamKeyResults.length) 
+                        : 0;
+                      
+                      // Count at-risk key results (progress < 30% and deadline within 2 weeks)
+                      const twoWeeksFromNow = new Date();
+                      twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+                      
+                      const atRiskCount = teamKeyResults.filter(kr => 
+                        parseInt(kr.progress?.toString() || '0') < 30 && 
+                        kr.dueDate && new Date(kr.dueDate) < twoWeeksFromNow
+                      ).length;
+                      
+                      // Get most recent check-in
+                      const lastCheckInDate = teamCheckIns.length > 0 
+                        ? new Date(Math.max(...teamCheckIns.map(c => new Date(c.createdAt).getTime())))
+                        : null;
+                      
+                      return (
+                        <TableRow key={team.id}>
+                          <TableCell className="font-medium">{team.name}</TableCell>
+                          <TableCell>
+                            {teamObjectives.length > 0 
+                              ? `${teamObjectives.length} objective${teamObjectives.length !== 1 ? 's' : ''}` 
+                              : 'No objectives'}
+                          </TableCell>
+                          <TableCell>{teamCheckIns.length}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary-600 rounded-full" 
+                                  style={{ width: `${avgProgress}%` }}
+                                />
+                              </div>
+                              <span>{avgProgress}%</span>
                             </div>
-                            <span>{team.avgProgress}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{team.atRiskCount}</TableCell>
-                        <TableCell>{format(team.lastCheckIn, "MMM d")}</TableCell>
+                          </TableCell>
+                          <TableCell>{atRiskCount}</TableCell>
+                          <TableCell>
+                            {lastCheckInDate 
+                              ? format(lastCheckInDate, "MMM d") 
+                              : 'Never'}
+                          </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm">
                             <ChevronRight className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    );
+                  })}
                   </TableBody>
                 </Table>
               </CardContent>
