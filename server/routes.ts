@@ -4108,6 +4108,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Approved objectives endpoint - returns all approved objectives across all levels
+  app.get("/api/objectives/approved", withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const approvedObjectives = await storage.getApprovedObjectives(tenantId);
+      
+      console.log(`Found ${approvedObjectives.length} approved objectives for tenant ${tenantId}`);
+      
+      res.json(approvedObjectives);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Approve an objective
+  app.post("/api/objectives/:id/approve", withTenant, async (req, res, next) => {
+    try {
+      const objectiveId = req.params.id;
+      
+      // Check if the user has permission to approve objectives
+      // Currently only admins can approve objectives
+      if (!req.user?.isAdmin && req.user?.role !== 'owner') {
+        return res.status(403).json({ error: "Unauthorized: Only admins can approve objectives" });
+      }
+      
+      const approvedObjective = await storage.approveObjective(objectiveId);
+      res.json(approvedObjective);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Unapprove an objective
+  app.post("/api/objectives/:id/unapprove", withTenant, async (req, res, next) => {
+    try {
+      const objectiveId = req.params.id;
+      
+      // Check if the user has permission to unapprove objectives
+      // Currently only admins can unapprove objectives
+      if (!req.user?.isAdmin && req.user?.role !== 'owner') {
+        return res.status(403).json({ error: "Unauthorized: Only admins can unapprove objectives" });
+      }
+      
+      const unapprovedObjective = await storage.unapproveObjective(objectiveId);
+      res.json(unapprovedObjective);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Enhanced team data endpoint - merged with the other /api/teams endpoint
   // app.get("/api/teams", async (req, res, next) => {
   //   try {

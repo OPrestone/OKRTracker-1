@@ -824,6 +824,7 @@ export class DatabaseStorage implements IStorage {
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
       level: objectives.level, // Include the level field
+      isApproved: objectives.isApproved, // Include the approval status
       createdAt: objectives.createdAt,
       // Note: Exclude fields that don't exist in the actual database: 
       // - updatedAt
@@ -842,6 +843,80 @@ export class DatabaseStorage implements IStorage {
     );
     
     return objectivesWithKeyResults;
+  }
+  
+  async getApprovedObjectives(tenantId: string): Promise<Objective[]> {
+    // Select all columns that exist in the actual database
+    const results = await db.select({
+      id: objectives.id,
+      title: objectives.title,
+      description: objectives.description,
+      ownerId: objectives.ownerId,
+      teamId: objectives.teamId,
+      timeframeId: objectives.timeframeId,
+      status: objectives.status,
+      progress: objectives.progress,
+      parentId: objectives.parentId,
+      tenantId: objectives.tenantId,
+      level: objectives.level,
+      isApproved: objectives.isApproved,
+      createdAt: objectives.createdAt,
+    }).from(objectives)
+      .where(and(
+        eq(objectives.tenantId, tenantId),
+        eq(objectives.isApproved, true)
+      ));
+    
+    // For each objective, fetch and add its key results
+    const objectivesWithKeyResults = await Promise.all(
+      results.map(async (objective) => {
+        const keyResultsList = await this.getKeyResultsByObjective(objective.id);
+        return {
+          ...objective,
+          keyResults: keyResultsList || []
+        };
+      })
+    );
+    
+    return objectivesWithKeyResults;
+  }
+  
+  async approveObjective(id: string): Promise<Objective> {
+    const [updatedObjective] = await db.update(objectives)
+      .set({ isApproved: true })
+      .where(eq(objectives.id, id))
+      .returning();
+    
+    if (!updatedObjective) {
+      throw new Error(`Objective with id ${id} not found`);
+    }
+    
+    // Fetch key results for the updated objective
+    const keyResultsList = await this.getKeyResultsByObjective(updatedObjective.id);
+    
+    return {
+      ...updatedObjective,
+      keyResults: keyResultsList || []
+    };
+  }
+  
+  async unapproveObjective(id: string): Promise<Objective> {
+    const [updatedObjective] = await db.update(objectives)
+      .set({ isApproved: false })
+      .where(eq(objectives.id, id))
+      .returning();
+    
+    if (!updatedObjective) {
+      throw new Error(`Objective with id ${id} not found`);
+    }
+    
+    // Fetch key results for the updated objective
+    const keyResultsList = await this.getKeyResultsByObjective(updatedObjective.id);
+    
+    return {
+      ...updatedObjective,
+      keyResults: keyResultsList || []
+    };
   }
 
   async updateObjectiveProgress(id: string, progress: number): Promise<Objective> {
