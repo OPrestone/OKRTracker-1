@@ -1654,6 +1654,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Get all key results with optional tenant filtering
+  app.get("/api/key-results", withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const keyResults = await storage.getAllKeyResults();
+      
+      // If tenant ID is provided, filter by tenant
+      if (tenantId) {
+        // First get objectives for this tenant
+        const objectives = await storage.getObjectivesByTenant(tenantId);
+        const objectiveIds = objectives.map(obj => obj.id);
+        
+        // Then filter key results that belong to these objectives
+        const filteredKeyResults = keyResults.filter(kr => 
+          objectiveIds.includes(kr.objectiveId)
+        );
+        
+        res.json(filteredKeyResults);
+      } else {
+        res.json(keyResults);
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
 
   app.post("/api/key-results", withTenant, async (req, res, next) => {
     try {

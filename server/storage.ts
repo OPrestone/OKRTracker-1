@@ -113,6 +113,7 @@ export interface IStorage {
   getKeyResult(id: string): Promise<KeyResult | undefined>;
   updateKeyResult(id: string, keyResult: Partial<InsertKeyResult>): Promise<KeyResult>;
   getKeyResultsByObjective(objectiveId: string): Promise<KeyResult[]>;
+  getAllKeyResults(): Promise<KeyResult[]>;
   updateKeyResultProgress(id: string, progress: number): Promise<KeyResult>;
   
   // Initiatives
