@@ -118,8 +118,14 @@ export default function CompanyOKRs() {
   });
 
   // Filter objectives based on all criteria
+  console.log("Raw objectives from API:", JSON.stringify(objectives, null, 2));
+  
   const filteredObjectives = objectives
-    .filter(obj => obj.level === 'company')
+    .filter(obj => {
+      // Debug level field
+      console.log(`Objective ID: ${obj.id}, Title: ${obj.title}, Level: ${obj.level || 'undefined'}`);
+      return obj.level === 'company';
+    })
     .filter(obj => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
@@ -162,6 +168,8 @@ export default function CompanyOKRs() {
       // Timeframe filter
       return selectedTimeframes.length === 0 || selectedTimeframes.includes(obj.timeframeId);
     });
+    
+  console.log("Filtered company objectives:", filteredObjectives);
 
   // Helper function to get status color
   const getStatusColor = (status: string) => {
