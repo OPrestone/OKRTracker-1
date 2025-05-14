@@ -1537,36 +1537,75 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Rooms
   async createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom> {
+    // Ensure tenant_id is properly set for multi-tenancy
+    if (!chatRoom.tenantId) {
+      throw new Error("Tenant ID is required for creating a chat room");
+    }
+    
     const [newChatRoom] = await db.insert(chatRooms).values(chatRoom).returning();
     return newChatRoom;
   }
 
-  async getChatRoom(id: string): Promise<ChatRoom | undefined> {
-    const [room] = await db.select().from(chatRooms).where(eq(chatRooms.id, id));
-    return room;
+  async getChatRoom(id: string, tenantId?: string): Promise<ChatRoom | undefined> {
+    // If tenantId is provided, ensure we only return rooms for that tenant
+    if (tenantId) {
+      const [room] = await db.select()
+        .from(chatRooms)
+        .where(
+          and(
+            eq(chatRooms.id, id),
+            eq(chatRooms.tenantId, tenantId)
+          )
+        );
+      return room;
+    } else {
+      // For backward compatibility with existing code that doesn't specify tenant
+      const [room] = await db.select().from(chatRooms).where(eq(chatRooms.id, id));
+      return room;
+    }
   }
 
-  async updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>): Promise<ChatRoom> {
-    const [updatedRoom] = await db.update(chatRooms)
+  async updateChatRoom(id: string, chatRoom: Partial<InsertChatRoom>, tenantId?: string): Promise<ChatRoom> {
+    let query = db.update(chatRooms)
       .set({
         ...chatRoom,
         updatedAt: new Date()
-      })
-      .where(eq(chatRooms.id, id))
-      .returning();
+      });
+    
+    // If tenantId is provided, restrict update to the specific tenant
+    if (tenantId) {
+      query = query.where(
+        and(
+          eq(chatRooms.id, id),
+          eq(chatRooms.tenantId, tenantId)
+        )
+      );
+    } else {
+      query = query.where(eq(chatRooms.id, id));
+    }
+    
+    const [updatedRoom] = await query.returning();
     
     if (!updatedRoom) {
-      throw new Error(`Chat room with id ${id} not found`);
+      throw new Error(`Chat room with id ${id} not found or belongs to a different tenant`);
     }
     
     return updatedRoom;
   }
 
-  async getAllChatRooms(): Promise<ChatRoom[]> {
-    return db.select().from(chatRooms);
+  async getAllChatRooms(tenantId?: string): Promise<ChatRoom[]> {
+    // If tenantId is provided, filter rooms by tenant
+    if (tenantId) {
+      return db.select()
+        .from(chatRooms)
+        .where(eq(chatRooms.tenantId, tenantId));
+    } else {
+      // For backward compatibility, return all if no tenant specified
+      return db.select().from(chatRooms);
+    }
   }
 
-  async getChatRoomsByUser(userId: string): Promise<ChatRoom[]> {
+  async getChatRoomsByUser(userId: string, tenantId?: string): Promise<ChatRoom[]> {
     // Get all chat rooms where the user is a member
     const memberRooms = await db.select({
       chatRoomId: chatRoomMembers.chatRoomId
@@ -1580,9 +1619,22 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
     
-    return db.select()
-      .from(chatRooms)
-      .where(inArray(chatRooms.id, roomIds));
+    // If tenantId is provided, filter rooms by tenant
+    if (tenantId) {
+      return db.select()
+        .from(chatRooms)
+        .where(
+          and(
+            inArray(chatRooms.id, roomIds),
+            eq(chatRooms.tenantId, tenantId)
+          )
+        );
+    } else {
+      // For backward compatibility, return all if no tenant specified
+      return db.select()
+        .from(chatRooms)
+        .where(inArray(chatRooms.id, roomIds));
+    }
   }
 
   async getUserChatRooms(userId: string, tenantId?: string): Promise<(ChatRoom & { unreadCount: number })[]> {
@@ -1597,64 +1649,22 @@ export class DatabaseStorage implements IStorage {
     
     const roomIds = members.map(m => m.chatRoomId);
     
-    // Get the rooms the user is a member of
-    const rooms = await db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
+    // Get the rooms the user is a member of, filtering by tenant_id if provided
+    let roomsQuery = db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
     
-    // Filter for tenant context - since there's no tenant_id column in the chat_rooms table,
-    // we need a different approach for multi-tenancy filtering.
-    // Here we can filter by checking if the room was created by a user in the specified tenant.
-    // This is a simplification - a proper solution would involve adding a tenant_id column to all tables.
-    
-    // Get all user IDs for the tenant if tenantId is provided
-    let tenantUserIds: string[] = [];
+    // Filter by tenant_id if provided (using the newly added column)
     if (tenantId) {
-      const tenantUsers = await db.select({ id: users.id })
-        .from(users)
-        .innerJoin(usersToTenants, eq(users.id, usersToTenants.userId))
-        .where(eq(usersToTenants.tenantId, tenantId));
-      
-      tenantUserIds = tenantUsers.map(u => u.id);
-      
-      // Only include rooms created by users in this tenant
-      const filteredRooms = rooms.filter(room => 
-        tenantUserIds.includes(room.createdBy.toString())
-      );
-      
-      // If filteredRooms is empty, return empty array
-      if (filteredRooms.length === 0) {
-        return [];
-      }
-      
-      // Continue with the filtered rooms
-      const tenantRooms = filteredRooms;
-      
-      // Get unread counts for each room
-      const results = await Promise.all(tenantRooms.map(async (room) => {
-        const member = members.find(m => m.chatRoomId === room.id);
-        if (!member) {
-          return { ...room, unreadCount: 0 };
-        }
-        
-        // Count messages newer than user's last read timestamp or joined time if lastRead doesn't exist
-        const lastRead = member.lastRead || member.joinedAt;
-        
-        const unreadMessages = await db.select({ count: count() })
-          .from(messages)
-          .where(
-            and(
-              eq(messages.chatRoomId, room.id),
-              gt(messages.createdAt, lastRead),
-              ne(messages.userId, userId) // Don't count user's own messages
-            )
-          );
-        
-        return { ...room, unreadCount: unreadMessages[0]?.count || 0 };
-      }));
-      
-      return results;
+      roomsQuery = roomsQuery.where(eq(chatRooms.tenantId, tenantId));
     }
     
-    // If no tenantId provided, return all rooms with unread counts
+    const rooms = await roomsQuery;
+    
+    // If no rooms found, return empty array
+    if (rooms.length === 0) {
+      return [];
+    }
+    
+    // Get unread counts for each room
     const results = await Promise.all(rooms.map(async (room) => {
       const member = members.find(m => m.chatRoomId === room.id);
       if (!member) {
@@ -1680,8 +1690,16 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getChatRoomsByType(type: string): Promise<ChatRoom[]> {
-    return db.select().from(chatRooms).where(eq(chatRooms.type, type));
+  async getChatRoomsByType(type: string, tenantId?: string): Promise<ChatRoom[]> {
+    // Filter chat rooms by type and optionally by tenant
+    let query = db.select().from(chatRooms).where(eq(chatRooms.type, type));
+    
+    // If tenantId is provided, filter by tenant
+    if (tenantId) {
+      query = query.where(eq(chatRooms.tenantId, tenantId));
+    }
+    
+    return query;
   }
   
   // Chat Room Members
