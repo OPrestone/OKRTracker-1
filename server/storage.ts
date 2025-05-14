@@ -1585,7 +1585,7 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(chatRooms.id, roomIds));
   }
 
-  async getUserChatRooms(userId: string): Promise<(ChatRoom & { unreadCount: number })[]> {
+  async getUserChatRooms(userId: string, tenantId?: string): Promise<(ChatRoom & { unreadCount: number })[]> {
     // Get all chat rooms where the user is a member
     const members = await db.select()
       .from(chatRoomMembers)
@@ -1596,7 +1596,15 @@ export class DatabaseStorage implements IStorage {
     }
     
     const roomIds = members.map(m => m.chatRoomId);
-    const rooms = await db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
+    
+    // Filter chat rooms by tenantId if provided
+    let query = db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
+    
+    if (tenantId) {
+      query = query.where(eq(chatRooms.tenantId, tenantId));
+    }
+    
+    const rooms = await query;
     
     // Get unread counts for each room
     const results = await Promise.all(rooms.map(async (room) => {
@@ -1605,13 +1613,15 @@ export class DatabaseStorage implements IStorage {
         return { ...room, unreadCount: 0 };
       }
       
-      // Count messages newer than user's last read timestamp
+      // Count messages newer than user's last read timestamp or joined time if lastReadTimestamp doesn't exist
+      const lastRead = member.lastRead || member.joinedAt;
+      
       const unreadMessages = await db.select({ count: count() })
         .from(messages)
         .where(
           and(
             eq(messages.chatRoomId, room.id),
-            gt(messages.createdAt, member.lastRead),
+            gt(messages.createdAt, lastRead),
             ne(messages.userId, userId) // Don't count user's own messages
           )
         );
