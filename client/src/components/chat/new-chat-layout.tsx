@@ -418,7 +418,7 @@ export function NewChatLayout() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="primary" size="icon" className="h-8 w-8 rounded-full" onClick={handleSendMessage}>
+                      <Button variant="default" size="icon" className="h-8 w-8 rounded-full" onClick={handleSendMessage}>
                         <Send className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
