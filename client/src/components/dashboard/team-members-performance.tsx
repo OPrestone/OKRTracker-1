@@ -57,7 +57,7 @@ interface TeamMember {
 }
 
 interface TeamMembersPerformanceProps {
-  teamId: string;
+  teamId: string | undefined;
 }
 
 const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
@@ -69,7 +69,7 @@ const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
   const tenantId = currentTenant?.id;
 
   const { data, isLoading, error } = useQuery<TeamMember[]>({
-    queryKey: [`/api/teams/${teamId}/members-performance`, tenantId],
+    queryKey: [`/api/teams/${teamId || ''}/members-performance`, tenantId],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
   });

@@ -47,6 +47,14 @@ interface TeamPerformanceData {
     teamMorale: number;
     atRiskCount: number;
     averageCheckInsPerWeek: number;
+    completedObjectives: number;
+    onTrackObjectives: number;
+    atRiskObjectives: number;
+    behindObjectives: number;
+    totalObjectives: number;
+    completedKeyResults: number;
+    totalKeyResults: number;
+    overallProgress: number;
   };
   objectives: {
     id: string;
@@ -67,11 +75,12 @@ interface TeamPerformanceData {
     name: string;
     progress: number;
   }[];
+  memberCount?: number;
 }
 
 const TeamPerformancePage = () => {
   const params = useParams();
-  const teamId = params.teamId;
+  const teamId = params.teamId || '';
   const { currentTenant } = useTenantContext();
   const [selectedTab, setSelectedTab] = useState('overview');
   
@@ -327,7 +336,7 @@ const TeamPerformancePage = () => {
                         fill="#3b82f6"
                         radius={[0, 4, 4, 0]}
                       >
-                        {progressData.map((entry, index) => (
+                        {progressData.map((entry: { progress: number; name: string; status?: string }, index: number) => (
                           <Cell 
                             key={`cell-${index}`} 
                             fill={
