@@ -523,31 +523,31 @@ export default function CheckIns() {
   
   // Fetch check-ins data
   const { data: checkIns, isLoading: isLoadingCheckIns, error: checkInsError, refetch: refetchCheckIns } = useQuery({
-    queryKey: ['/api/check-ins'],
+    queryKey: [`/api/check-ins?tenantId=${currentTenant?.id}`],
     enabled: !!user && !!currentTenant,
   });
   
   // Fetch key results for check-ins
   const { data: keyResults, isLoading: isLoadingKeyResults, error: keyResultsError } = useQuery({
-    queryKey: ['/api/key-results'],
+    queryKey: [`/api/key-results?tenantId=${currentTenant?.id}`],
     enabled: !!user && !!currentTenant,
   });
   
   // Fetch objectives for check-ins
   const { data: objectives, isLoading: isLoadingObjectives, error: objectivesError } = useQuery({
-    queryKey: ['/api/objectives'],
+    queryKey: [`/api/objectives?tenantId=${currentTenant?.id}`],
     enabled: !!user && !!currentTenant,
   });
   
   // Fetch teams for check-ins
   const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: [`/api/teams?tenantId=${currentTenant?.id}`],
     enabled: !!user && !!currentTenant,
   });
   
   // Fetch users data
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery({
-    queryKey: ['/api/users'],
+    queryKey: [`/api/users?tenantId=${currentTenant?.id}`],
     enabled: !!user && !!currentTenant,
   });
   

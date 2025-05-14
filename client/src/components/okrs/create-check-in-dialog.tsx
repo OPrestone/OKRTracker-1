@@ -68,12 +68,12 @@ export default function CreateCheckInDialog({
   const { currentTenant } = useTenantContext();
 
   const { data: keyResults = [] } = useQuery<KeyResult[]>({
-    queryKey: ["/api/key-results", { objectiveId }],
+    queryKey: ["/api/key-results", { objectiveId, tenantId: currentTenant?.id }],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/objectives/${objectiveId}/key-results`);
+      const response = await apiRequest("GET", `/api/objectives/${objectiveId}/key-results?tenantId=${currentTenant?.id}`);
       return response.json();
     },
-    enabled: open
+    enabled: open && !!currentTenant
   });
 
   const form = useForm<CheckInFormValues>({
@@ -110,10 +110,10 @@ export default function CreateCheckInDialog({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/check-ins"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives?tenantId=${currentTenant?.id}`, objectiveId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/check-ins?tenantId=${currentTenant?.id}`] });
       if (form.getValues("keyResultId")) {
-        queryClient.invalidateQueries({ queryKey: ["/api/key-results", form.getValues("keyResultId")] });
+        queryClient.invalidateQueries({ queryKey: [`/api/key-results?tenantId=${currentTenant?.id}`, form.getValues("keyResultId")] });
       }
       toast({
         title: "Check-in Created",
