@@ -44,7 +44,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { hashPassword } from "@/lib/auth";
 
 interface User {
   id: string;
@@ -157,26 +156,39 @@ export function AddTeamMemberModal({
   // Create new user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: z.infer<typeof userFormSchema>) => {
-      // Create the new user with the tenant ID included
-      const response = await apiRequest("POST", "/api/register", {
-        ...userData,
-        tenantId: tenantId
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create user");
+      try {
+        // Create the new user with the tenant ID included
+        const response = await apiRequest("POST", "/api/register", {
+          ...userData,
+          tenantId: tenantId
+        });
+        
+        if (!response.ok) {
+          // Handle common error cases
+          if (response.status === 400) {
+            const text = await response.text();
+            if (text.includes("Username already exists")) {
+              throw new Error("Username already exists. Please choose a different username.");
+            }
+            throw new Error(text || "Invalid user data");
+          } else {
+            throw new Error(`Server error: ${response.status}`);
+          }
+        }
+        
+        const newUser = await response.json();
+        
+        // After creating the user, assign them to the team
+        await apiRequest("POST", `/api/users/${newUser.id}/team`, {
+          teamId,
+          tenantId
+        });
+        
+        return newUser;
+      } catch (error) {
+        // Re-throw to be handled by onError
+        throw error;
       }
-      
-      const newUser = await response.json();
-      
-      // After creating the user, assign them to the team
-      await apiRequest("POST", `/api/users/${newUser.id}/team`, {
-        teamId,
-        tenantId
-      });
-      
-      return newUser;
     },
     onSuccess: () => {
       toast({
@@ -195,11 +207,19 @@ export function AddTeamMemberModal({
       queryClient.invalidateQueries({ queryKey: ["/api/users", tenantId] });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create user: ${error.message}`,
-        variant: "destructive"
-      });
+      // Set form error for username field if it's a username exists error
+      if (error.message?.includes("Username already exists")) {
+        form.setError("username", { 
+          type: "manual", 
+          message: "This username is already taken. Please choose another."
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to create user: ${error.message}`,
+          variant: "destructive"
+        });
+      }
     }
   });
 
