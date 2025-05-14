@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { 
   Filter, Search, BarChart, ChevronRight, Calendar, Target, 
-  Users, Activity, Briefcase, Loader2, Building, ArrowUpRight 
+  Users, Activity, Briefcase, Loader2, Building, ArrowUpRight, Plus
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -333,6 +333,13 @@ export default function CompanyOKRs() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button 
+              onClick={() => navigate("/create-company-objective")}
+              className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Create Company OKR
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">

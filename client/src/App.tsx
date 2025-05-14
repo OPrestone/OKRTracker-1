@@ -40,6 +40,7 @@ import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
 import StrategyMap from "@/pages/strategy-map";
 import CreateObjective from "@/pages/create-objective-redesigned";
+import CreateCompanyObjective from "@/pages/create-company-objective";
 import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
@@ -112,6 +113,7 @@ function AppRoutes() {
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/create-objective" component={CreateObjective} />
+      <ProtectedRoute path="/create-company-objective" component={CreateCompanyObjective} />
       
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={Teams} />
@@ -160,6 +162,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/create-company-objective" component={CreateCompanyObjective} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={Teams} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams/:teamId" component={TeamDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/users" component={UsersPage} />
