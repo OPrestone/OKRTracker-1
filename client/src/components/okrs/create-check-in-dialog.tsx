@@ -102,7 +102,7 @@ export default function CreateCheckInDialog({
 
   const createCheckInMutation = useMutation({
     mutationFn: async (data: CheckInFormValues) => {
-      const response = await apiRequest("POST", "/api/check-ins", {
+      const response = await apiRequest("POST", `/api/check-ins?tenantId=${currentTenant?.id}`, {
         ...data,
         objectiveId,
         tenantId: currentTenant?.id

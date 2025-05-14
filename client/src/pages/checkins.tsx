@@ -179,8 +179,8 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
         tenantId: currentTenant?.id
       };
       
-      // Make API call to create the check-in
-      const response = await fetch('/api/check-ins', {
+      // Make API call to create the check-in with tenant ID in URL
+      const response = await fetch(`/api/check-ins?tenantId=${currentTenant?.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
