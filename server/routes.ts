@@ -1973,6 +1973,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route to get all check-ins for a tenant
+  app.get("/api/check-ins", withTenant, async (req, res, next) => {
+    try {
+      const checkIns = await storage.getCheckInsByTenant(req.tenantId);
+      res.json(checkIns);
+    } catch (error) {
+      console.error("Error fetching check-ins:", error);
+      next(error);
+    }
+  });
+  
   // Route to update an existing check-in
   app.put("/api/check-ins/:id", withTenant, async (req, res, next) => {
     try {

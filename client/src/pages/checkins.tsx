@@ -496,11 +496,69 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
 export default function CheckIns() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedKeyResult, setSelectedKeyResult] = useState<any>(null);
+  const { toast } = useToast();
+  
+  // Fetch check-ins data
+  const { data: checkIns, isLoading: isLoadingCheckIns, error: checkInsError, refetch: refetchCheckIns } = useQuery({
+    queryKey: ['/api/check-ins'],
+  });
+  
+  // Fetch key results for check-ins
+  const { data: keyResults, isLoading: isLoadingKeyResults } = useQuery({
+    queryKey: ['/api/key-results'],
+  });
+  
+  // Fetch objectives for check-ins
+  const { data: objectives, isLoading: isLoadingObjectives } = useQuery({
+    queryKey: ['/api/objectives'],
+  });
+  
+  // Fetch users data
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['/api/users'],
+  });
+  
+  // Fetch teams data
+  const { data: teams, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['/api/teams'],
+  });
+  
+  const isLoading = isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
   
   // Function to handle opening the check-in modal
   const handleOpenCheckIn = (keyResult: any) => {
     setSelectedKeyResult(keyResult);
     setOpenModal(true);
+  };
+  
+  // Handle successful check-in creation
+  const handleSuccessfulCheckIn = () => {
+    setOpenModal(false);
+    refetchCheckIns();
+    toast({
+      title: "Check-in submitted",
+      description: "Your check-in has been submitted successfully",
+    });
+  };
+  
+  // Handle check-in deletion
+  const handleDeleteCheckIn = async (checkInId: string) => {
+    try {
+      await fetch(`/api/check-ins/${checkInId}`, {
+        method: 'DELETE',
+      });
+      toast({
+        title: "Check-in deleted",
+        description: "The check-in has been deleted successfully",
+      });
+      refetchCheckIns();
+    } catch (error) {
+      toast({
+        title: "Error deleting check-in",
+        description: "There was an error deleting the check-in. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
