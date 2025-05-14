@@ -196,6 +196,8 @@ export const chatRooms = pgTableWithUlid("chat_rooms", {
   type: chatRoomTypeEnum("type").default("group").notNull(),
   description: text("description"),
   createdBy: integer("created_by").notNull(),
+  // Added tenant_id column that now exists in the database
+  tenantId: text("tenant_id").references(() => tenants.id),
   // Note: These columns don't exist in the actual database, but we keep them in the schema
   // for potential future migrations
   objectiveId: text("objective_id").references(() => objectives.id),
@@ -222,12 +224,12 @@ export const messages = pgTableWithUlid("messages", {
   userId: text("user_id").references(() => users.id).notNull(),
   chatRoomId: text("chat_room_id").references(() => chatRooms.id).notNull(),
   replyToId: text("reply_to_id").references(() => messages.id),
+  // Added tenant_id column that now exists in the database
+  tenantId: text("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
   isEdited: boolean("is_edited").default(false),
-  // Note: tenant_id doesn't exist in the actual database
-  // We'll implement tenant isolation through the chat room's membership
 });
 
 export const attachments = pgTableWithUlid("attachments", {
@@ -599,7 +601,10 @@ export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
     fields: [chatRooms.teamId],
     references: [teams.id]
   }),
-  // No direct tenant relation in the database
+  tenant: one(tenants, {
+    fields: [chatRooms.tenantId],
+    references: [tenants.id]
+  }),
   creator: one(users, {
     fields: [chatRooms.createdBy],
     references: [users.id]
@@ -634,8 +639,10 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     fields: [messages.replyToId],
     references: [messages.id]
   }),
-  // No direct tenant relation in the database
-  // We'll use the chatRoom relation to establish tenant context
+  tenant: one(tenants, {
+    fields: [messages.tenantId],
+    references: [tenants.id]
+  }),
   attachments: many(attachments),
   reactions: many(reactions)
 }));
