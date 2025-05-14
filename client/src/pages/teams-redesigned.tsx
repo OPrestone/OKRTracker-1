@@ -490,7 +490,7 @@ const CreateTeamDialog = () => {
         description: newTeamDescription,
         color: newTeamColor,
         icon: newTeamIcon,
-        parentId: newTeamParent || null,
+        parentId: newTeamParent === "none" ? null : newTeamParent,
       };
 
       await apiRequest("POST", "/api/teams", newTeam);
@@ -624,7 +624,7 @@ const CreateTeamDialog = () => {
               <SelectValue placeholder="None (Top-level team)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None (Top-level team)</SelectItem>
+              <SelectItem value="none">None (Top-level team)</SelectItem>
               {teams?.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}
@@ -705,7 +705,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
         description: teamDescription,
         color: teamColor,
         icon: teamIcon,
-        parentId: teamParent || null,
+        parentId: teamParent === "none" ? null : teamParent,
       };
 
       await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
@@ -830,7 +830,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
                 <SelectValue placeholder="None (Top-level team)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None (Top-level team)</SelectItem>
+                <SelectItem value="none">None (Top-level team)</SelectItem>
                 {teams?.filter(t => t.id !== team?.id).map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
