@@ -195,21 +195,37 @@ export default function DraftOKRs() {
     
     // Make an API call to update the objective status
     apiRequest("PATCH", `/api/objectives/${selectedObjective.id}`, { status: "active" })
-      .then(response => response.json())
-      .then(updatedObjective => {
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(updatedObj => {
         setSubmitting(false);
         setSubmitDialogOpen(false);
+        
+        // Optimistically update the UI by removing the objective from the draft list
+        if (draftObjectives && Array.isArray(draftObjectives)) {
+          queryClient.setQueryData(["/api/objectives", "draft"], 
+            draftObjectives.filter(obj => obj.id !== selectedObjective.id)
+          );
+        }
         
         toast({
           title: "OKR Submitted",
           description: "Your objective has been submitted for approval and is now active.",
         });
         
-        // Invalidate the query cache to refetch the data
+        // Also invalidate active objectives query if it exists
+        queryClient.invalidateQueries({ queryKey: ["/api/objectives", "active"] });
+        
+        // Invalidate the draft objectives query to refetch in the background
         queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft"] });
       })
       .catch(error => {
         setSubmitting(false);
+        console.error("Error submitting OKR:", error);
         
         toast({
           title: "Error",
@@ -416,10 +432,23 @@ export default function DraftOKRs() {
     
     // Make an API call to create the draft objective
     apiRequest("POST", "/api/objectives", newObjective)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(createdObjective => {
         setCreating(false);
         setCreateDialogOpen(false);
+        
+        // Optimistically update the UI with the new objective
+        if (draftObjectives && Array.isArray(draftObjectives)) {
+          // Update the client-side cache immediately
+          queryClient.setQueryData(["/api/objectives", "draft"], 
+            [...draftObjectives, createdObjective]
+          );
+        }
         
         toast({
           title: "Draft Created",
@@ -433,11 +462,13 @@ export default function DraftOKRs() {
           keyResults: [{ id: "", title: "", objective_id: "" }]
         });
         
-        // Invalidate the query cache to refetch the data
+        // Invalidate the query cache to refetch the data in the background
+        // This ensures we have the most up-to-date data from the server
         queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft"] });
       })
       .catch(error => {
         setCreating(false);
+        console.error("Error creating draft:", error);
         
         toast({
           title: "Error",
