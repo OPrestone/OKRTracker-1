@@ -47,8 +47,8 @@ function TeamItem({ name, memberCount, performance, initials, bgColor, textColor
 }
 
 export function TeamPerformance() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/teams'],
+  const { data: teamsPerformanceData, isLoading, error } = useQuery({
+    queryKey: ['/api/teams-performance'],
   });
 
   // Background and text colors for team avatars
@@ -89,20 +89,25 @@ export function TeamPerformance() {
             ))}
           </>
         ) : error ? (
-          <div className="text-red-500">Error loading teams</div>
+          <div className="text-red-500">Error loading teams performance data</div>
         ) : (
           <>
-            {data && data.map((team: any, index: number) => (
+            {teamsPerformanceData && teamsPerformanceData.map((team: any, index: number) => (
               <TeamItem 
                 key={team.id}
                 name={team.name}
-                memberCount={team.memberCount}
-                performance={team.performance}
+                memberCount={team.memberCount || 0}
+                performance={team.progress || 0}
                 initials={getInitials(team.name)}
                 bgColor={teamColors[index % teamColors.length].bg}
                 textColor={teamColors[index % teamColors.length].text}
               />
             ))}
+            {(!teamsPerformanceData || teamsPerformanceData.length === 0) && (
+              <div className="text-center py-5 text-neutral-500">
+                No team performance data available
+              </div>
+            )}
           </>
         )}
       </CardContent>

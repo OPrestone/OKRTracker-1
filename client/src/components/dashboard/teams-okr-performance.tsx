@@ -206,7 +206,7 @@ export function TeamsOKRPerformance() {
   }) as { data: any[], isLoading: boolean };
   
   const { data: teams, isLoading: isTeamsLoading } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams-performance'],
   }) as { data: any[], isLoading: boolean };
   
   const isLoading = isDashboardLoading || isObjectivesLoading || isTeamsLoading;
