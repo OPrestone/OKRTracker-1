@@ -1182,6 +1182,19 @@ export default function TeamDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Modals */}
+      <CreateObjectiveModal 
+        isOpen={isCreateObjectiveModalOpen}
+        onClose={() => setIsCreateObjectiveModalOpen(false)}
+        teamId={team?.id || ""}
+      />
+      
+      <AddTeamMemberModal
+        isOpen={isAddTeamMemberModalOpen}
+        onClose={() => setIsAddTeamMemberModalOpen(false)}
+        teamId={team?.id || ""}
+        currentMembers={members || []}
+      />
     </DashboardLayout>
   );
 }
