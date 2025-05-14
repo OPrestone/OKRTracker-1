@@ -516,11 +516,8 @@ export default function TeamDetailPage() {
                     <TabsTrigger value="members">Members</TabsTrigger>
                     <TabsTrigger value="activity">Activity</TabsTrigger>
                   </TabsList>
-                </Tabs>
-              </div>
-            </div>
-            
-            <TabsContent value="overview" className="mt-0">
+                
+                <TabsContent value="overview" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Team Performance Overview */}
                 <Card className="col-span-3 md:col-span-2">
@@ -887,9 +884,9 @@ export default function TeamDetailPage() {
                   </CardContent>
                 </Card>
               </motion.div>
-            </TabsContent>
-            
-            <TabsContent value="objectives" className="mt-0">
+                </TabsContent>
+                
+                <TabsContent value="objectives" className="mt-0">
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
@@ -1014,9 +1011,9 @@ export default function TeamDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="members" className="mt-0">
+                </TabsContent>
+                
+                <TabsContent value="members" className="mt-0">
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
@@ -1095,9 +1092,9 @@ export default function TeamDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="activity" className="mt-0">
+                </TabsContent>
+                
+                <TabsContent value="activity" className="mt-0">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">Team Activity</CardTitle>
@@ -1171,7 +1168,10 @@ export default function TeamDetailPage() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+                </TabsContent>
+                </Tabs>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
