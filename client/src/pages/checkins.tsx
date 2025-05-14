@@ -879,7 +879,8 @@ export default function CheckIns() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+          })}
           </div>
         </TabsContent>
         
