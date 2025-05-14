@@ -214,10 +214,10 @@ export function IndividualProgress() {
   
   // Fetch all users in the tenant for the dropdown
   const { 
-    data: users, 
+    data: users = [], 
     isLoading: usersLoading, 
     error: usersError 
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/users"],
     enabled: !!currentTenant
   });
@@ -229,12 +229,17 @@ export function IndividualProgress() {
     error: performanceError 
   } = useQuery<UserPerformance>({
     queryKey: ["/api/users", selectedUserId, "performance"],
-    enabled: !!selectedUserId && !!currentTenant
+    queryFn: async () => {
+      const res = await fetch(`/api/users/${selectedUserId}/performance?tenantId=${currentTenant?.id}`);
+      if (!res.ok) throw new Error('Failed to fetch performance data');
+      return await res.json();
+    },
+    enabled: !!selectedUserId && !!currentTenant?.id
   });
   
   // Initialize selectedUserId when users data loads
   React.useEffect(() => {
-    if (users?.length && !selectedUserId) {
+    if (Array.isArray(users) && users.length && !selectedUserId) {
       // Default to current user if available
       const defaultUser = user ? 
         users.find(u => u.id === user.id) : 
@@ -257,7 +262,7 @@ export function IndividualProgress() {
   const stats = performanceData?.statistics;
   
   // Loading state
-  if (usersLoading) {
+  if (usersLoadingg) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
@@ -316,7 +321,7 @@ export function IndividualProgress() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Team Members</SelectLabel>
-                {users.map((user) => (
+                {Array.isArray(users) && users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name || user.username || `User ${user.id}`}
                   </SelectItem>
@@ -376,7 +381,7 @@ export function IndividualProgress() {
             <StatsCard
               title="Satisfaction"
               value={`${(stats?.avgSatisfaction || 0).toFixed(1)}/5`}
-              description="Average feedback rating"
+              subtitle="Average feedback rating"
               icon={<Award className="h-4 w-4 text-muted-foreground" />}
             />
           </div>
