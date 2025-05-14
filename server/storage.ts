@@ -96,6 +96,7 @@ export interface IStorage {
   getTimeframe(id: string): Promise<Timeframe | undefined>;
   getAllTimeframes(): Promise<Timeframe[]>;
   getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]>;
+  getTimeframesByTenant(tenantId: string): Promise<Timeframe[]>;
   
   // Objectives
   createObjective(objective: InsertObjective): Promise<Objective>;
@@ -655,6 +656,31 @@ export class DatabaseStorage implements IStorage {
       createdAt: timeframes.createdAt,
       // Exclude fields that don't exist in the actual database: tenant_id, updated_at
     }).from(timeframes).where(eq(timeframes.cadenceId, cadenceId));
+  }
+  
+  async getTimeframesByTenant(tenantId: string): Promise<Timeframe[]> {
+    try {
+      console.log(`Getting timeframes for tenant: ${tenantId}`);
+      
+      // Select only columns that exist in the actual database
+      return db.select({
+        id: timeframes.id,
+        name: timeframes.name,
+        description: timeframes.description,
+        startDate: timeframes.startDate,
+        endDate: timeframes.endDate,
+        cadenceId: timeframes.cadenceId,
+        createdAt: timeframes.createdAt,
+        // Exclude fields that don't exist in the actual database: tenant_id, updated_at
+      }).from(timeframes);
+      
+      // Note: Since the database schema doesn't have a tenant_id column in timeframes table,
+      // we're returning all timeframes for now. In a production environment, this should
+      // be filtered by tenant ID once the schema is updated.
+    } catch (error) {
+      console.error(`Error getting timeframes for tenant ${tenantId}:`, error);
+      return [];
+    }
   }
   
   async updateTimeframe(id: string, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {

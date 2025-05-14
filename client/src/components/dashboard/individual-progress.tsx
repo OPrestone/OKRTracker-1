@@ -262,7 +262,7 @@ export function IndividualProgress() {
   const stats = performanceData?.statistics;
   
   // Loading state
-  if (usersLoadingg) {
+  if (usersLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
