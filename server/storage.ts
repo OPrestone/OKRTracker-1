@@ -1597,23 +1597,71 @@ export class DatabaseStorage implements IStorage {
     
     const roomIds = members.map(m => m.chatRoomId);
     
-    // Filter chat rooms by tenantId if provided
-    let query = db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
+    // Get the rooms the user is a member of
+    const rooms = await db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
     
+    // Filter for tenant context - since there's no tenant_id column in the chat_rooms table,
+    // we need a different approach for multi-tenancy filtering.
+    // Here we can filter by checking if the room was created by a user in the specified tenant.
+    // This is a simplification - a proper solution would involve adding a tenant_id column to all tables.
+    
+    // Get all user IDs for the tenant if tenantId is provided
+    let tenantUserIds: string[] = [];
     if (tenantId) {
-      query = query.where(eq(chatRooms.tenantId, tenantId));
+      const tenantUsers = await db.select({ id: users.id })
+        .from(users)
+        .innerJoin(usersToTenants, eq(users.id, usersToTenants.userId))
+        .where(eq(usersToTenants.tenantId, tenantId));
+      
+      tenantUserIds = tenantUsers.map(u => u.id);
+      
+      // Only include rooms created by users in this tenant
+      const filteredRooms = rooms.filter(room => 
+        tenantUserIds.includes(room.createdBy.toString())
+      );
+      
+      // If filteredRooms is empty, return empty array
+      if (filteredRooms.length === 0) {
+        return [];
+      }
+      
+      // Continue with the filtered rooms
+      const tenantRooms = filteredRooms;
+      
+      // Get unread counts for each room
+      const results = await Promise.all(tenantRooms.map(async (room) => {
+        const member = members.find(m => m.chatRoomId === room.id);
+        if (!member) {
+          return { ...room, unreadCount: 0 };
+        }
+        
+        // Count messages newer than user's last read timestamp or joined time if lastRead doesn't exist
+        const lastRead = member.lastRead || member.joinedAt;
+        
+        const unreadMessages = await db.select({ count: count() })
+          .from(messages)
+          .where(
+            and(
+              eq(messages.chatRoomId, room.id),
+              gt(messages.createdAt, lastRead),
+              ne(messages.userId, userId) // Don't count user's own messages
+            )
+          );
+        
+        return { ...room, unreadCount: unreadMessages[0]?.count || 0 };
+      }));
+      
+      return results;
     }
     
-    const rooms = await query;
-    
-    // Get unread counts for each room
+    // If no tenantId provided, return all rooms with unread counts
     const results = await Promise.all(rooms.map(async (room) => {
       const member = members.find(m => m.chatRoomId === room.id);
       if (!member) {
         return { ...room, unreadCount: 0 };
       }
       
-      // Count messages newer than user's last read timestamp or joined time if lastReadTimestamp doesn't exist
+      // Count messages newer than user's last read timestamp or joined time
       const lastRead = member.lastRead || member.joinedAt;
       
       const unreadMessages = await db.select({ count: count() })
