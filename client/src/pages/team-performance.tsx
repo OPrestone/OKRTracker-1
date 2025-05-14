@@ -33,18 +33,20 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 const TeamPerformancePage = () => {
   const params = useParams();
   const teamId = params.teamId;
-  const { tenantId } = useTenantContext();
+  const { currentTenant } = useTenantContext();
   const [selectedTab, setSelectedTab] = useState('overview');
+  
+  const tenantId = currentTenant?.id;
 
   const { data: teamData, isLoading, error } = useQuery({
     queryKey: [`/api/teams/${teamId}`, tenantId],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
   });
 
   const { data: performanceData, isLoading: isLoadingPerformance, error: performanceError } = useQuery({
     queryKey: [`/api/teams/${teamId}/performance`, tenantId],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
   });
 

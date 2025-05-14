@@ -54,7 +54,7 @@ const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/teams/${teamId}/members-performance`, tenantId],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
   });
 
