@@ -150,12 +150,24 @@ export default function DraftOKRs() {
     setAnalyzing(true);
     setAiDialogOpen(true);
     
-    // In a real implementation, we would make an API call to get AI analysis
-    // For now, simulate the API call with setTimeout
-    setTimeout(() => {
-      setAnalyzing(false);
-      setAiAnalysis(mockAIAnalysis);
-    }, 2500);
+    // Make an API call to get AI analysis
+    apiRequest("POST", "/api/objectives/analyze", { objective })
+      .then(response => response.json())
+      .then(analysis => {
+        setAnalyzing(false);
+        setAiAnalysis(analysis);
+      })
+      .catch(error => {
+        setAnalyzing(false);
+        // Fallback to mock data for now until the API endpoint is fully implemented
+        setAiAnalysis(mockAIAnalysis);
+        
+        toast({
+          title: "Analysis Warning",
+          description: "Using local analysis engine. Remote analysis unavailable.",
+          variant: "warning"
+        });
+      });
   };
 
   const handleSubmit = (objective: DraftObjective) => {
