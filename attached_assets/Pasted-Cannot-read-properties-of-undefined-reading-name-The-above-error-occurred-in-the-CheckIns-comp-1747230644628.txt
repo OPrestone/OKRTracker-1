@@ -1,0 +1,22 @@
+Cannot read properties of undefined (reading 'name')
+The above error occurred in the <CheckIns> component:
+
+    at CheckIns (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/pages/checkins.tsx:1207:37)
+    at Route (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7f62c792:280:16)
+    at ProtectedRoute (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/lib/protected-route.tsx:25:3)
+    at Switch (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7f62c792:336:17)
+    at AppRoutes
+    at OnboardingProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-onboarding.tsx:53:38)
+    at HelpProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-help-context.tsx:41:32)
+    at AuthProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx:28:32)
+    at TenantProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx:24:3)
+    at ThemeProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at App
+    at TenantProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx?v=lxjjuwf84mmfflNKlBBBR:24:3)
+    at AuthProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx?v=lxjjuwf84mmfflNKlBBBR:28:32)
+    at QueryClientProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=7f62c792:2875:3)
+    at ThemeProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/components/ui/theme-provider.tsx?v=lxjjuwf84mmfflNKlBBBR:25:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Cannot read properties of undefined (reading 'name')

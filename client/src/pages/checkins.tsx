@@ -885,9 +885,9 @@ export default function CheckIns() {
                       
                       <div className="flex items-center gap-2 mt-4">
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback>{getInitials(checkIn.createdBy.name)}</AvatarFallback>
+                          <AvatarFallback>{checkIn.createdBy && checkIn.createdBy.name ? getInitials(checkIn.createdBy.name) : '??'}</AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">{checkIn.createdBy.name}</span>
+                        <span className="text-sm">{checkIn.createdBy && checkIn.createdBy.name ? checkIn.createdBy.name : 'Unknown User'}</span>
                       </div>
                     </div>
                     
@@ -903,15 +903,15 @@ export default function CheckIns() {
                             Feedback ({checkIn.comments.length})
                           </p>
                           <div className="space-y-4">
-                            {checkIn.comments && Array.isArray(checkIn.comments) ? checkIn.comments.map((comment) => (
+                            {checkIn.comments && Array.isArray(checkIn.comments) ? checkIn.comments.map((comment: any) => (
                               <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                   <Avatar className="h-6 w-6">
-                                    <AvatarFallback>{getInitials(comment.author.name)}</AvatarFallback>
+                                    <AvatarFallback>{comment.author && comment.author.name ? getInitials(comment.author.name) : '??'}</AvatarFallback>
                                   </Avatar>
-                                  <span className="text-sm font-medium">{comment.author.name}</span>
+                                  <span className="text-sm font-medium">{comment.author && comment.author.name ? comment.author.name : 'Unknown User'}</span>
                                   <span className="text-xs text-muted-foreground">
-                                    {format(comment.createdAt, "MMM d, h:mm a")}
+                                    {comment.createdAt ? format(comment.createdAt, "MMM d, h:mm a") : 'Unknown date'}
                                   </span>
                                 </div>
                                 <p className="text-sm">{comment.content}</p>
