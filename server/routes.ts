@@ -4088,48 +4088,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Company objectives progress endpoint
-  app.get("/api/objectives/company", async (req, res, next) => {
+  app.get("/api/objectives/company", withTenant, async (req, res, next) => {
     try {
-      // Create sample company objectives with progress for display
-      const sampleCompanyObjectives = [
-        {
-          id: 101,
-          title: "Increase global market share by 15%",
-          progress: 75,
-          description: "Drive expansion in key markets through strategic partnerships and targeted marketing",
-          status: "on_track"
-        },
-        {
-          id: 102,
-          title: "Improve overall customer satisfaction score to 90%",
-          progress: 60,
-          description: "Enhance product quality and customer support experience",
-          status: "on_track"
-        },
-        {
-          id: 103,
-          title: "Develop and launch 3 innovative products",
-          progress: 40,
-          description: "Expand product portfolio with cutting-edge solutions",
-          status: "at_risk"
-        },
-        {
-          id: 104,
-          title: "Reduce operational costs by 10%",
-          progress: 85,
-          description: "Optimize internal processes and resource allocation",
-          status: "on_track"
-        },
-        {
-          id: 105,
-          title: "Increase employee engagement score to 85%",
-          progress: 65,
-          description: "Enhance workplace culture and professional development opportunities",
-          status: "on_track"
-        }
-      ];
+      // Get real company objectives from the database
+      const tenantId = req.tenantId;
       
-      res.json(sampleCompanyObjectives);
+      // Get all objectives for this tenant
+      const allObjectives = await storage.getObjectivesByTenant(tenantId);
+      
+      // Filter objectives where level is "company"
+      const companyObjectives = allObjectives.filter(obj => obj.level === "company");
+      
+      // Log for debugging purposes
+      console.log(`Found ${companyObjectives.length} company objectives for tenant ${tenantId}`);
+      
+      res.json(companyObjectives);
     } catch (error) {
       next(error);
     }

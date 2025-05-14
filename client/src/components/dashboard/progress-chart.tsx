@@ -33,14 +33,14 @@ function ProgressItem({ title, progress }: { title: string; progress: number | n
 }
 
 export function ProgressChart() {
-  // Use the general objectives endpoint and filter for company level
+  // Use the company objectives endpoint
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/objectives'],
+    queryKey: ['/api/objectives/company'],
   });
 
-  // Filter for only company level objectives
+  // The data should already be company objectives, just filter for valid progress
   const companyObjectives = data?.filter((obj: any) => 
-    obj.level === 'company' && obj.progress !== undefined
+    obj.progress !== undefined
   ) || [];
 
   return (
