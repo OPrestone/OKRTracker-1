@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useRoute, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
