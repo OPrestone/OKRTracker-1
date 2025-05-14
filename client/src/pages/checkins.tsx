@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,11 @@ import { Slider } from "@/components/ui/slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { BarChart, LineChart, Calendar, CalendarDays, Clock, ListChecks, ArrowUpRight, CalendarClock, BarChart4, LineChart as LineChartIcon, ChevronRight, MessageSquare, ThumbsUp, AlertCircle, CheckCircle, UserRound, Users, Check } from "lucide-react";
+import { BarChart, LineChart, Calendar, CalendarDays, Clock, ListChecks, ArrowUpRight, CalendarClock, BarChart4, LineChart as LineChartIcon, ChevronRight, MessageSquare, ThumbsUp, AlertCircle, CheckCircle, UserRound, Users, Check, AlertTriangle, RefreshCw } from "lucide-react";
 import { cn, getInitials, formatDate } from "@/lib/utils";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useAuth } from "@/hooks/use-auth";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { 
   LineChart as ReLineChart, 
   Line, 
@@ -514,35 +516,43 @@ export default function CheckIns() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedKeyResult, setSelectedKeyResult] = useState<any>(null);
   const { toast } = useToast();
+  const { user, isLoading: isLoadingAuth } = useAuth();
+  const { selectedTenant } = useTenantContext();
   
   // Fetch check-ins data
   const { data: checkIns, isLoading: isLoadingCheckIns, error: checkInsError, refetch: refetchCheckIns } = useQuery({
     queryKey: ['/api/check-ins'],
+    enabled: !!user && !!selectedTenant,
   });
   
   // Fetch key results for check-ins
-  const { data: keyResults, isLoading: isLoadingKeyResults } = useQuery({
+  const { data: keyResults, isLoading: isLoadingKeyResults, error: keyResultsError } = useQuery({
     queryKey: ['/api/key-results'],
+    enabled: !!user && !!selectedTenant,
   });
   
   // Fetch objectives for check-ins
-  const { data: objectives, isLoading: isLoadingObjectives } = useQuery({
+  const { data: objectives, isLoading: isLoadingObjectives, error: objectivesError } = useQuery({
     queryKey: ['/api/objectives'],
+    enabled: !!user && !!selectedTenant,
   });
   
   // Fetch teams for check-ins
-  const { data: teams, isLoading: isLoadingTeams } = useQuery({
+  const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useQuery({
     queryKey: ['/api/teams'],
+    enabled: !!user && !!selectedTenant,
   });
   
   // Fetch users data
-  const { data: users, isLoading: isLoadingUsers } = useQuery({
+  const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['/api/users'],
+    enabled: !!user && !!selectedTenant,
   });
   
-  // Teams data already fetched above
+  const isLoading = isLoadingAuth || isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
   
-  const isLoading = isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
+  // Check for any authentication or data loading errors
+  const hasError = !user || checkInsError || keyResultsError || objectivesError || teamsError || usersError;
   
   // Function to handle opening the check-in modal
   const handleOpenCheckIn = (keyResult: any) => {
