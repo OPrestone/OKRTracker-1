@@ -124,7 +124,14 @@ export default function DraftOKRs() {
       if (!response.ok) {
         throw new Error("Failed to fetch draft objectives");
       }
-      return response.json();
+      
+      const objectives = await response.json();
+      
+      // Ensure each objective has a keyResults array
+      return objectives.map((objective: DraftObjective) => ({
+        ...objective,
+        keyResults: objective.keyResults || []
+      }));
     }
   });
 
@@ -165,7 +172,7 @@ export default function DraftOKRs() {
         toast({
           title: "Analysis Warning",
           description: "Using local analysis engine. Remote analysis unavailable.",
-          variant: "warning"
+          variant: "destructive"
         });
       });
   };
@@ -444,7 +451,7 @@ export default function DraftOKRs() {
             <p className="text-destructive">Failed to load draft OKRs.</p>
           </CardContent>
         </Card>
-      ) : draftObjectives && draftObjectives.length > 0 ? (
+      ) : (draftObjectives && Array.isArray(draftObjectives) && draftObjectives.length > 0) ? (
         <div className="grid gap-6">
           {draftObjectives.map((objective) => (
             <Card key={objective.id}>
@@ -475,30 +482,34 @@ export default function DraftOKRs() {
                 <div className="space-y-6">
                   <h3 className="font-medium">Key Results</h3>
                   <div className="space-y-4">
-                    {objective.keyResults.map((keyResult, index) => (
-                      <div key={keyResult.id || index} className="border rounded-lg p-4">
-                        <h4 className="font-medium">{keyResult.title}</h4>
-                        {keyResult.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {keyResult.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 mt-2">
-                          {keyResult.assigned_to_id && (
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback>
-                                  {keyResult.assigned_to_id.substring(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-muted-foreground">
-                                Assigned to: {keyResult.assigned_to_id}
-                              </span>
-                            </div>
+                    {objective.keyResults && objective.keyResults.length > 0 ? (
+                      objective.keyResults.map((keyResult, index) => (
+                        <div key={keyResult.id || index} className="border rounded-lg p-4">
+                          <h4 className="font-medium">{keyResult.title}</h4>
+                          {keyResult.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {keyResult.description}
+                            </p>
                           )}
+                          <div className="flex items-center gap-4 mt-2">
+                            {keyResult.assigned_to_id && (
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback>
+                                    {keyResult.assigned_to_id.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs text-muted-foreground">
+                                  Assigned to: {keyResult.assigned_to_id}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No key results defined.</div>
+                    )}
                   </div>
                 </div>
               </CardContent>
