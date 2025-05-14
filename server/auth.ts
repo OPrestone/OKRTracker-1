@@ -246,7 +246,8 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", passport.authenticate("local"), async (req, res) => {
-    console.log("Login successful, returning user data");
+    console.log("Login successful, user authenticated:", req.user?.id);
+    console.log("Session ID:", req.sessionID);
     
     try {
       if (!req.user) {
