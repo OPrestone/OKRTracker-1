@@ -1136,6 +1136,41 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async updateCheckIn(id: string, checkInData: Partial<InsertCheckIn>): Promise<CheckIn> {
+    const [updatedCheckIn] = await db.update(checkIns)
+      .set(checkInData)
+      .where(eq(checkIns.id, id))
+      .returning();
+    
+    if (!updatedCheckIn) {
+      throw new Error(`Check-in with id ${id} not found`);
+    }
+    
+    // Update key result progress if progress was updated
+    if (updatedCheckIn.keyResultId && typeof checkInData.progress === 'number') {
+      await this.updateKeyResultProgress(updatedCheckIn.keyResultId, checkInData.progress);
+    }
+    
+    return updatedCheckIn;
+  }
+
+  async deleteCheckIn(id: string): Promise<void> {
+    const [checkIn] = await db.select().from(checkIns).where(eq(checkIns.id, id));
+    
+    if (!checkIn) {
+      throw new Error(`Check-in with id ${id} not found`);
+    }
+    
+    await db.delete(checkIns).where(eq(checkIns.id, id));
+  }
+
+  async getCheckInsByTenant(tenantId: string): Promise<CheckIn[]> {
+    return db.select()
+      .from(checkIns)
+      .where(eq(checkIns.tenantId, tenantId))
+      .orderBy(desc(checkIns.createdAt));
+  }
+
   // Chat Rooms
   async createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom> {
     const [newChatRoom] = await db.insert(chatRooms).values(chatRoom).returning();

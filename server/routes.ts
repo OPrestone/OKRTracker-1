@@ -1911,6 +1911,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.userId = (req.user as User).id;
       }
       
+      // Ensure tenantId is set
+      req.body.tenantId = req.tenantId;
+      
+      
       // Parse and validate the data
       const validatedData = insertCheckInSchema.parse({
         ...req.body,
