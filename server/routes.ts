@@ -37,6 +37,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup test auth routes for debugging session issues
   setupTestAuthRoutes(app);
   
+  // Define common middleware
+  const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    console.log("Checking authentication:", req.path, "isAuthenticated:", req.isAuthenticated(), "sessionID:", req.sessionID, "user:", req.user ? req.user.id : "none");
+    
+    if (!req.isAuthenticated()) {
+      console.log("Unauthorized access to", req.path);
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    next();
+  };
+  
+  const withTenant = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    // Get tenantId from query param, body, or use default from user
+    const requestedTenantId = req.query.tenantId || req.body?.tenantId || (req.user as any).defaultTenantId;
+    
+    // If no tenantId provided or found, return error
+    if (!requestedTenantId) {
+      return res.status(400).json({ error: "Missing tenantId parameter" });
+    }
+    
+    (req as any).tenantId = requestedTenantId as string;
+    
+    // Verify user has access to the requested tenant
+    const userTenants = await storage.getUserTenants(req.user.id);
+    const hasTenantAccess = userTenants.some(tenant => tenant.id === (req as any).tenantId);
+    
+    if (!hasTenantAccess) {
+      return res.status(403).json({ error: "Access to tenant denied" });
+    }
+    
+    next();
+  };
+  
   // Direct test route for approved objectives - accessible without middleware
   app.get("/api/test-approved", async (req, res) => {
     try {
@@ -60,82 +97,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Internal Server Error", details: String(error) });
     }
   });
+  
+  // Just keeping the test endpoint for troubleshooting
+  // The actual API endpoints for approved objectives are defined later in this file
 
   // Initialize data
   initializeData();
   
-  // Middleware to ensure user is authenticated
-  const ensureAuthenticated = (req: Request, res: any, next: any) => {
-    console.log("Checking authentication:", req.path, 
-                "isAuthenticated:", req.isAuthenticated(),
-                "sessionID:", req.sessionID,
-                "user:", req.user?.id || "none");
-
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    
-    console.log("Unauthorized access to", req.path);
-    res.status(401).json({ error: "Unauthorized" });
-  };
-  
-  // Middleware to extract the current tenant ID from request and ensure user has access
-  const withTenant = async (req: Request, res: any, next: any) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
-      const user = req.user as User;
-      
-      // Try to get tenant ID from:
-      // 1. Query parameter: ?tenantId=ABC123
-      // 2. URL path parameter in routes like /tenants/:tenantId/...
-      // 3. User's default tenant
-      let tenantId: string | null = null;
-      
-      if (req.query.tenantId) {
-        tenantId = req.query.tenantId as string;
-      } else if (req.params.tenantId) {
-        tenantId = req.params.tenantId;
-      } else if (req.path.includes('/tenants/')) {
-        // Extract tenant ID from path like /tenants/ABC123/something
-        const match = req.path.match(/\/tenants\/([^\/]+)/);
-        if (match && match[1]) {
-          tenantId = match[1];
-        }
-      }
-      
-      // If no tenant ID found, get user's default tenant
-      if (!tenantId) {
-        const defaultTenant = await tenantService.getUserDefaultTenant(user.id);
-        if (defaultTenant) {
-          tenantId = defaultTenant.id;
-        }
-      }
-      
-      // If we still don't have a valid tenant ID, return error
-      if (!tenantId) {
-        return res.status(400).json({ error: "Valid tenant ID is required" });
-      }
-      
-      // Check if user has access to this tenant
-      const userTenants = await tenantService.getUserTenants(user.id);
-      const hasTenantAccess = userTenants.some(t => t.id === tenantId) || user.isAdmin;
-      
-      if (!hasTenantAccess) {
-        return res.status(403).json({ error: "You do not have access to this tenant" });
-      }
-      
-      // Store tenant ID in request for use in route handlers
-      req.tenantId = tenantId;
-      
-      next();
-    } catch (error) {
-      console.error("Error in tenant middleware:", error);
-      res.status(500).json({ error: "Failed to process tenant context" });
-    }
-  };
+  // Use the middleware defined above
+  // The rest of the routes will use the existing middleware
   
   // Multi-tenancy API Endpoints
   
