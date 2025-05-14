@@ -128,7 +128,10 @@ const TeamMember = ({ user, index }: { user: User; index: number }) => {
 };
 
 // Team status badge component
-const TeamStatusBadge = ({ status, className = "" }: { status: string, className?: string }) => {
+const TeamStatusBadge = ({ status, className = "" }: { status?: string, className?: string }) => {
+  // If status is undefined or null, use a default value
+  const safeStatus = status || "at_risk";
+  
   const statusConfig = {
     "on_track": { color: "bg-green-50 text-green-700 border-green-200", icon: <CheckCircle2 className="w-3 h-3 mr-1" /> },
     "at_risk": { color: "bg-amber-50 text-amber-700 border-amber-200", icon: <Clock className="w-3 h-3 mr-1" /> },
@@ -136,12 +139,13 @@ const TeamStatusBadge = ({ status, className = "" }: { status: string, className
     "completed": { color: "bg-blue-50 text-blue-700 border-blue-200", icon: <CheckCircle2 className="w-3 h-3 mr-1" /> },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.at_risk;
+  const config = statusConfig[safeStatus as keyof typeof statusConfig] || statusConfig.at_risk;
+  const displayText = safeStatus ? safeStatus.replace(/_/g, " ") : "at risk";
 
   return (
     <Badge variant="outline" className={`flex items-center gap-1 ${config.color} ${className}`}>
       {config.icon}
-      {status.replace("_", " ")}
+      {displayText}
     </Badge>
   );
 };
@@ -597,9 +601,20 @@ const TeamsPage = () => {
   const { currentTenant } = useTenantContext();
 
   // Fetch all teams with tenant context
-  const { data: teams = [], isLoading } = useQuery<Team[]>({
+  const { data: teams = [], isLoading, error } = useQuery<Team[]>({
     queryKey: ["/api/teams", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    onSuccess: (data) => {
+      console.log("Teams data successfully fetched:", data);
+    },
+    onError: (err) => {
+      console.error("Error fetching teams:", err);
+      toast({
+        title: "Error loading teams",
+        description: "There was an error loading teams data. Please try again later.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Filter teams by search query
