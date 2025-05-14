@@ -240,6 +240,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   } = useQuery<ChatRoom[]>({
     queryKey: ['/api/chat/rooms'],
     enabled: !!user,
+    queryFn: async () => {
+      const currentTenantId = getCurrentTenantId();
+      if (!currentTenantId) {
+        return [];
+      }
+      const response = await fetch(`/api/chat/rooms?tenantId=${currentTenantId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat rooms');
+      }
+      return response.json();
+    }
   });
   
   // Fetch current room
@@ -249,6 +260,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   } = useQuery<ChatRoomWithMembers | null>({
     queryKey: ['/api/chat/rooms', currentRoomId],
     enabled: !!currentRoomId,
+    queryFn: async () => {
+      const currentTenantId = getCurrentTenantId();
+      if (!currentTenantId || !currentRoomId) {
+        return null;
+      }
+      const response = await fetch(`/api/chat/rooms/${currentRoomId}?tenantId=${currentTenantId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat room details');
+      }
+      return response.json();
+    }
   });
   
   // Fetch messages
@@ -261,11 +283,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     enabled: !!currentRoomId,
     queryFn: async ({ queryKey }) => {
       const [, roomId, , before] = queryKey;
-      const url = `/api/chat/rooms/${roomId}/messages${before ? `?before=${before}` : ''}`;
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId || !roomId) {
+        return [];
+      }
+      
+      const url = `/api/chat/rooms/${roomId}/messages${before ? `?before=${before}&tenantId=${currentTenantId}` : `?tenantId=${currentTenantId}`}`;
       const response = await fetch(url);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
+      
       return response.json() as Promise<Message[]>;
     }
   });
@@ -330,16 +360,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ id, message }: { id: number, message: MessageInput }) => {
-      const response = await fetch(`/api/chat/rooms/${id}/messages`, {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/rooms/${id}/messages?tenantId=${currentTenantId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(message)
+        body: JSON.stringify({
+          ...message,
+          tenantId: currentTenantId
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to send message');
       }
       
       return response.json();
@@ -375,16 +415,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Edit message mutation
   const editMessageMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number, content: string }) => {
-      const response = await fetch(`/api/chat/messages/${id}`, {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/messages/${id}?tenantId=${currentTenantId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ 
+          content,
+          tenantId: currentTenantId
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to edit message');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to edit message');
       }
       
       return response.json();
@@ -411,12 +461,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Delete message mutation
   const deleteMessageMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/chat/messages/${id}`, {
-        method: 'DELETE'
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/messages/${id}?tenantId=${currentTenantId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete message');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to delete message');
       }
     },
     onSuccess: (_, id) => {
@@ -521,16 +581,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Create chat room mutation
   const createChatRoomMutation = useMutation({
     mutationFn: async ({ name, type, memberIds }: { name: string, type: string, memberIds: number[] }) => {
-      const response = await fetch('/api/chat/rooms', {
+      // Get tenant ID for the request
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/rooms?tenantId=${currentTenantId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, type, memberIds })
+        body: JSON.stringify({ name, type, memberIds, tenantId: currentTenantId })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create chat room');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to create chat room');
       }
       
       return response.json();

@@ -44,7 +44,7 @@ function CreateChatRoomForm({ onClose }: CreateChatRoomFormProps) {
   });
   
   // Filter out current user
-  const otherUsers = user ? users.filter((u: any) => u.id !== user.id) : [];
+  const otherUsers = user ? (users as any[]).filter((u: any) => u.id !== user.id) : [];
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -378,7 +378,6 @@ const ChatSidebar = () => {
                       </span>
                     </div>
                     <p className="text-xs truncate text-muted-foreground">
-                      {/* Last message preview would go here if available */}
                       No messages yet
                     </p>
                   </div>
@@ -411,7 +410,7 @@ const ChatSidebar = () => {
                       </span>
                     </div>
                     <p className="text-xs truncate text-muted-foreground">
-                      {room.lastMessage || "No messages yet"}
+                      No messages yet
                     </p>
                   </div>
                   {room.unreadCount ? (
@@ -443,7 +442,7 @@ const ChatSidebar = () => {
                       </span>
                     </div>
                     <p className="text-xs truncate text-muted-foreground">
-                      {room.lastMessage || "No messages yet"}
+                      No messages yet
                     </p>
                   </div>
                   {room.unreadCount ? (
@@ -508,136 +507,134 @@ export function NewChatLayout() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-  
-  // Handle sending a message
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      sendMessage({ content: messageText.trim() });
+
+  // Handle message input submission
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (messageText.trim() && currentRoom) {
+      sendMessage(messageText);
       setMessageText("");
     }
   };
-  
-  // Handle key press (Enter to send)
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+
+  // Handle scroll to top to load more messages
+  const handleScroll = () => {
+    if (!messagesContainerRef.current || !hasMoreMessages) return;
+    
+    const { scrollTop } = messagesContainerRef.current;
+    if (scrollTop === 0) {
+      loadMoreMessages();
     }
   };
-  
-  // Handle scroll to load more messages
-  useEffect(() => {
-    const messagesContainer = messagesContainerRef.current;
-    if (!messagesContainer) return;
-    
-    const handleScroll = () => {
-      if (messagesContainer.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
-        loadMoreMessages();
-      }
-    };
-    
-    messagesContainer.addEventListener("scroll", handleScroll);
-    return () => messagesContainer.removeEventListener("scroll", handleScroll);
-  }, [hasMoreMessages, isLoadingMessages, loadMoreMessages]);
-  
+
   return (
-    <div className="flex h-full bg-background">
-      {/* Left sidebar */}
+    <div className="flex h-screen">
       <ChatSidebar />
       
-      {/* Middle chat section */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-xl font-bold">Chat ONN</h1>
-          <div className="text-sm text-muted-foreground">Create memorable talks</div>
-        </div>
-        
+      <div className="flex-1 flex flex-col overflow-hidden">
         {currentRoom ? (
           <>
             <ChatHeader currentRoom={currentRoom} />
             
-            {/* Messages container */}
             <div 
-              className="flex-1 overflow-y-auto p-4"
               ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4"
+              onScroll={handleScroll}
             >
-              {isLoadingMessages && (
-                <div className="flex justify-center mb-4">
-                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+              {isLoadingMessages ? (
+                <div className="flex justify-center items-center h-20">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              )}
-              
-              {messages.length === 0 && !isLoadingMessages ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <p>No messages yet</p>
-                    <p>Start a conversation</p>
+              ) : messages.length === 0 ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="text-center max-w-xs">
+                    <h3 className="text-lg font-medium">No messages yet</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Send your first message to start the conversation.
+                    </p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {hasMoreMessages && (
+                    <div className="text-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={loadMoreMessages}
+                        disabled={isLoadingMessages}
+                      >
+                        {isLoadingMessages ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          "Load more messages"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                  
                   {messages.map((message) => (
                     <ChatMessage 
                       key={message.id} 
-                      message={message}
-                      isCurrentUser={message.userId === Number(user?.id)}
+                      message={message} 
+                      isCurrentUser={message.userId === user?.id} 
                     />
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
             
-            {/* Message input */}
             <div className="border-t p-4">
-              <div className="flex items-center gap-2 bg-background rounded-lg border p-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                        <Paperclip className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Attach files</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <Input 
-                  type="text" 
-                  placeholder="Type a message here..." 
-                  className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" 
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                />
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                        <Smile className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Add emoji</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="default" size="icon" className="h-8 w-8 rounded-full" onClick={handleSendMessage}>
-                        <Send className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Send message</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="Type a message..."
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    className="pr-20"
+                  />
+                  <div className="absolute right-2 bottom-1/2 transform translate-y-1/2 flex items-center gap-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+                            <Smile className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add emoji</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+                            <Paperclip className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Attach file</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <Button type="submit" size="icon" disabled={!messageText.trim()}>
+                  <Send className="h-5 w-5" />
+                </Button>
+              </form>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center max-w-md p-8">
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-sm">
               <h2 className="text-2xl font-bold mb-4">Welcome to Chat</h2>
               <p className="text-muted-foreground mb-6">
                 Select a conversation from the sidebar or start a new one to begin chatting.
@@ -658,17 +655,16 @@ export function NewChatLayout() {
         )}
       </div>
       
-      {/* Right sidebar */}
       <div className="w-80 border-l h-full">
         <Tabs defaultValue="notifications">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
           </TabsList>
-          <TabsContent value="notifications">
+          <TabsContent value="notifications" className="h-[calc(100vh-48px)] overflow-y-auto">
             <NotificationsPanel />
           </TabsContent>
-          <TabsContent value="suggestions">
+          <TabsContent value="suggestions" className="h-[calc(100vh-48px)] overflow-y-auto">
             <SuggestionsPanel />
           </TabsContent>
         </Tabs>
