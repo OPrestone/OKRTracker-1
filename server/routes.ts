@@ -1181,6 +1181,258 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cycles API
+  app.get("/api/cycles", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Fetch cycles for the current tenant only
+      const cyclesList = await db.select()
+        .from(cycles)
+        .where(eq(cycles.tenantId, tenantId));
+      
+      res.json(cyclesList);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/timeframes/:timeframeId/cycles", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const timeframeId = req.params.timeframeId;
+      
+      // Verify the timeframe belongs to the current tenant
+      const timeframe = await db.select()
+        .from(timeframes)
+        .where(
+          and(
+            eq(timeframes.id, timeframeId),
+            eq(timeframes.tenantId, tenantId)
+          )
+        )
+        .then(results => results[0]);
+      
+      if (!timeframe) {
+        return res.status(404).json({ error: "Timeframe not found" });
+      }
+      
+      // Fetch cycles for the specific timeframe and current tenant
+      const cyclesList = await db.select()
+        .from(cycles)
+        .where(
+          and(
+            eq(cycles.timeframeId, timeframeId),
+            eq(cycles.tenantId, tenantId)
+          )
+        );
+      
+      res.json(cyclesList);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/cycles", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Validate user permissions (only admin/owner can create cycles)
+      const userRole = await getUserRoleForTenant(req.user as User, tenantId);
+      if (userRole !== 'admin' && userRole !== 'owner') {
+        return res.status(403).json({ 
+          error: "Only administrators and owners can create cycles" 
+        });
+      }
+      
+      // Add tenant ID to the cycle data
+      const validatedData = insertCycleSchema.parse({
+        ...req.body,
+        tenantId
+      });
+      
+      // If timeframeId is provided, verify it belongs to the current tenant
+      if (validatedData.timeframeId) {
+        const timeframe = await db.select()
+          .from(timeframes)
+          .where(
+            and(
+              eq(timeframes.id, validatedData.timeframeId),
+              eq(timeframes.tenantId, tenantId)
+            )
+          )
+          .then(results => results[0]);
+        
+        if (!timeframe) {
+          return res.status(404).json({ error: "Timeframe not found" });
+        }
+      }
+      
+      const [cycle] = await db.insert(cycles).values(validatedData).returning();
+      res.status(201).json(cycle);
+    } catch (error) {
+      console.error("Error creating cycle:", error);
+      next(error);
+    }
+  });
+
+  app.get("/api/cycles/:id", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const { id } = req.params;
+      
+      const cycle = await db.select()
+        .from(cycles)
+        .where(
+          and(
+            eq(cycles.id, id),
+            eq(cycles.tenantId, tenantId)
+          )
+        )
+        .then(results => results[0]);
+      
+      if (!cycle) {
+        return res.status(404).json({ error: "Cycle not found" });
+      }
+      
+      res.json(cycle);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/cycles/:id", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const { id } = req.params;
+      
+      // Validate user permissions (only admin/owner can update cycles)
+      const userRole = await getUserRoleForTenant(req.user as User, tenantId);
+      if (userRole !== 'admin' && userRole !== 'owner') {
+        return res.status(403).json({ 
+          error: "Only administrators and owners can update cycles" 
+        });
+      }
+      
+      // Verify the cycle exists and belongs to the tenant
+      const existingCycle = await db.select()
+        .from(cycles)
+        .where(
+          and(
+            eq(cycles.id, id),
+            eq(cycles.tenantId, tenantId)
+          )
+        )
+        .then(results => results[0]);
+      
+      if (!existingCycle) {
+        return res.status(404).json({ error: "Cycle not found" });
+      }
+      
+      // Validate timeframeId if it's being updated
+      if (req.body.timeframeId) {
+        const timeframe = await db.select()
+          .from(timeframes)
+          .where(
+            and(
+              eq(timeframes.id, req.body.timeframeId),
+              eq(timeframes.tenantId, tenantId)
+            )
+          )
+          .then(results => results[0]);
+        
+        if (!timeframe) {
+          return res.status(404).json({ error: "Timeframe not found" });
+        }
+      }
+      
+      // Update the cycle
+      const [updatedCycle] = await db.update(cycles)
+        .set({
+          ...req.body,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(cycles.id, id),
+            eq(cycles.tenantId, tenantId)
+          )
+        )
+        .returning();
+      
+      res.json(updatedCycle);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/cycles/:id", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const { id } = req.params;
+      
+      // Validate user permissions (only admin/owner can delete cycles)
+      const userRole = await getUserRoleForTenant(req.user as User, tenantId);
+      if (userRole !== 'admin' && userRole !== 'owner') {
+        return res.status(403).json({ 
+          error: "Only administrators and owners can delete cycles" 
+        });
+      }
+      
+      // Verify the cycle exists and belongs to the tenant
+      const existingCycle = await db.select()
+        .from(cycles)
+        .where(
+          and(
+            eq(cycles.id, id),
+            eq(cycles.tenantId, tenantId)
+          )
+        )
+        .then(results => results[0]);
+      
+      if (!existingCycle) {
+        return res.status(404).json({ error: "Cycle not found" });
+      }
+      
+      // Delete the cycle
+      await db.delete(cycles)
+        .where(
+          and(
+            eq(cycles.id, id),
+            eq(cycles.tenantId, tenantId)
+          )
+        );
+      
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Objectives API
   app.get("/api/objectives", withTenant, async (req, res, next) => {
     try {
