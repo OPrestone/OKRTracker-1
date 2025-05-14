@@ -51,28 +51,6 @@ export function useUserPermissions() {
   };
   
   /**
-   * Check if the user is an admin or owner of a specific tenant by ID
-   * @param tenantId The ID of the tenant to check permissions for
-   * @returns boolean indicating if the user has admin/owner permissions for the given tenant
-   */
-  const isAdminOrOwnerOfTenant = (tenantId: string): boolean => {
-    if (!user) return false;
-    
-    // Global system admin check
-    if (user.isAdmin) return true;
-    
-    // Check user's role in the specified tenant
-    if (user.tenants) {
-      const tenantMembership = user.tenants.find(t => t.id === tenantId);
-      if (tenantMembership && (tenantMembership.userRole === 'owner' || tenantMembership.userRole === 'admin')) {
-        return true;
-      }
-    }
-    
-    return false;
-  };
-
-  /**
    * Check if the user has permission to create objectives
    * @returns boolean indicating if the user can create objectives
    */
@@ -83,7 +61,6 @@ export function useUserPermissions() {
   return {
     isAdminOrOwner,
     isOwner,
-    isAdminOrOwnerOfTenant,
     canCreateObjectives
   };
 }
