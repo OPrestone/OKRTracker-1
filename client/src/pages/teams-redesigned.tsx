@@ -37,6 +37,17 @@ import {
 } from "@/components/ui/dialog";
 
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -151,7 +162,19 @@ const TeamStatusBadge = ({ status, className = "" }: { status?: string, classNam
 };
 
 // Team card with animation and enhanced design
-const TeamCard = ({ team, onClick, delay = 0 }: { team: Team, onClick: (team: Team) => void, delay?: number }) => {
+const TeamCard = ({ 
+  team, 
+  onClick, 
+  onEdit,
+  onDelete,
+  delay = 0 
+}: { 
+  team: Team, 
+  onClick: (team: Team) => void, 
+  onEdit: (team: Team) => void,
+  onDelete: (team: Team) => void,
+  delay?: number 
+}) => {
   const { currentTenant } = useTenantContext();
   
   // Get team members
@@ -288,14 +311,39 @@ const TeamCard = ({ team, onClick, delay = 0 }: { team: Team, onClick: (team: Te
           </div>
         </CardContent>
         
-        <CardFooter className="p-3 border-t bg-gray-50/50">
+        <CardFooter className="p-3 border-t bg-gray-50/50 flex justify-between gap-2">
           <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-primary hover:text-primary font-medium"
+            variant="outline" 
+            size="sm"
+            className="flex-1 flex items-center"
             onClick={() => onClick(team)}
           >
-            <span>View Team Details</span>
-            <ChevronRight className="h-4 w-4" />
+            <Eye className="h-4 w-4 mr-1" />
+            <span>View</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1 flex items-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(team);
+            }}
+          >
+            <Edit className="h-4 w-4 mr-1" />
+            <span>Edit</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1 flex items-center text-destructive hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(team);
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            <span>Delete</span>
           </Button>
         </CardFooter>
       </Card>
@@ -383,6 +431,27 @@ const NoTeamsFound = () => (
   </motion.div>
 );
 
+// Color and icon options for team dialogs
+const colorOptions = [
+  { name: "Blue", value: "#3B82F6" },
+  { name: "Purple", value: "#8B5CF6" },
+  { name: "Pink", value: "#EC4899" },
+  { name: "Green", value: "#10B981" },
+  { name: "Red", value: "#EF4444" },
+  { name: "Orange", value: "#F59E0B" },
+  { name: "Teal", value: "#14B8A6" },
+  { name: "Indigo", value: "#6366F1" }
+];
+
+const iconOptions = [
+  { name: "Users", value: "users" },
+  { name: "Building", value: "building" },
+  { name: "Office Building", value: "building2" },
+  { name: "Briefcase", value: "briefcase" },
+  { name: "Rocket", value: "rocket" },
+  { name: "Lightning", value: "zap" }
+];
+
 // Create team dialog component
 const CreateTeamDialog = () => {
   const { toast } = useToast();
@@ -399,26 +468,6 @@ const CreateTeamDialog = () => {
     queryKey: ["/api/teams", currentTenant?.id],
     enabled: !!currentTenant?.id,
   });
-  
-  const colorOptions = [
-    { name: "Blue", value: "#3B82F6" },
-    { name: "Purple", value: "#8B5CF6" },
-    { name: "Pink", value: "#EC4899" },
-    { name: "Green", value: "#10B981" },
-    { name: "Red", value: "#EF4444" },
-    { name: "Orange", value: "#F59E0B" },
-    { name: "Teal", value: "#14B8A6" },
-    { name: "Indigo", value: "#6366F1" }
-  ];
-  
-  const iconOptions = [
-    { name: "Users", value: "users" },
-    { name: "Building", value: "building" },
-    { name: "Office Building", value: "building2" },
-    { name: "Briefcase", value: "briefcase" },
-    { name: "Rocket", value: "rocket" },
-    { name: "Lightning", value: "zap" }
-  ];
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -591,6 +640,281 @@ const CreateTeamDialog = () => {
   );
 };
 
+// Edit team dialog component
+const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: boolean, onClose: () => void }) => {
+  const { toast } = useToast();
+  const [teamName, setTeamName] = useState("");
+  const [teamColor, setTeamColor] = useState("#3B82F6");
+  const [teamIcon, setTeamIcon] = useState("users");
+  const [teamDescription, setTeamDescription] = useState("");
+  const [teamParent, setTeamParent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch all teams for parent selection
+  const { currentTenant } = useTenantContext();
+  const { data: teams } = useQuery<Team[]>({
+    queryKey: ["/api/teams", currentTenant?.id],
+    enabled: !!currentTenant?.id && isOpen,
+  });
+
+  // Initialize form values when team changes
+  useEffect(() => {
+    if (team) {
+      setTeamName(team.name);
+      setTeamColor(team.color || "#3B82F6");
+      setTeamIcon(team.icon || "users");
+      setTeamDescription(team.description || "");
+      setTeamParent(team.parentId || "");
+    }
+  }, [team]);
+
+  const handleUpdateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!teamName.trim()) {
+      toast({
+        title: "Team name required",
+        description: "Please enter a name for the team",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!team?.id) {
+      toast({
+        title: "Team not found",
+        description: "The team you're trying to edit could not be found",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const updatedTeam = {
+        id: team.id,
+        name: teamName,
+        description: teamDescription,
+        color: teamColor,
+        icon: teamIcon,
+        parentId: teamParent || null,
+      };
+
+      await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
+      
+      // Invalidate and refetch teams
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      
+      toast({
+        title: "Team updated",
+        description: "Team has been updated successfully.",
+      });
+      
+      // Close dialog
+      onClose();
+      
+    } catch (error) {
+      toast({
+        title: "Error updating team",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>Edit Team</DialogTitle>
+          <DialogDescription>
+            Update the team details below.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleUpdateTeam} className="space-y-4 py-2">
+          <div className="grid gap-2">
+            <label htmlFor="team-name" className="text-sm font-medium">
+              Team Name <span className="text-red-500">*</span>
+            </label>
+            <Input
+              id="team-name"
+              placeholder="Enter team name"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="team-description" className="text-sm font-medium">
+              Description
+            </label>
+            <Textarea
+              id="team-description"
+              placeholder="Enter team description"
+              value={teamDescription}
+              onChange={(e) => setTeamDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="team-color" className="text-sm font-medium">
+                Team Color
+              </label>
+              <Select value={teamColor} onValueChange={setTeamColor}>
+                <SelectTrigger id="team-color" className="w-full">
+                  <SelectValue placeholder="Select color" />
+                </SelectTrigger>
+                <SelectContent>
+                  {colorOptions.map((color) => (
+                    <SelectItem key={color.value} value={color.value}>
+                      <div className="flex items-center">
+                        <div 
+                          className="w-4 h-4 rounded-full mr-2" 
+                          style={{ backgroundColor: color.value }}
+                        />
+                        {color.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="team-icon" className="text-sm font-medium">
+                Team Icon
+              </label>
+              <Select value={teamIcon} onValueChange={setTeamIcon}>
+                <SelectTrigger id="team-icon" className="w-full">
+                  <SelectValue placeholder="Select icon" />
+                </SelectTrigger>
+                <SelectContent>
+                  {iconOptions.map((icon) => (
+                    <SelectItem key={icon.value} value={icon.value}>
+                      <div className="flex items-center">
+                        {icon.value === "users" && <Users className="w-4 h-4 mr-2" />}
+                        {icon.value === "building" && <Building className="w-4 h-4 mr-2" />}
+                        {icon.value === "building2" && <Building2 className="w-4 h-4 mr-2" />}
+                        {icon.value === "briefcase" && <Briefcase className="w-4 h-4 mr-2" />}
+                        {icon.value === "rocket" && <Rocket className="w-4 h-4 mr-2" />}
+                        {icon.value === "zap" && <Zap className="w-4 h-4 mr-2" />}
+                        {icon.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="parent-team" className="text-sm font-medium">
+              Parent Team (Optional)
+            </label>
+            <Select value={teamParent} onValueChange={setTeamParent}>
+              <SelectTrigger id="parent-team">
+                <SelectValue placeholder="None (Top-level team)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None (Top-level team)</SelectItem>
+                {teams?.filter(t => t.id !== team?.id).map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Delete team confirmation dialog
+const DeleteTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: boolean, onClose: () => void }) => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { currentTenant } = useTenantContext();
+
+  const handleDeleteTeam = async () => {
+    if (!team?.id) {
+      toast({
+        title: "Team not found",
+        description: "The team you're trying to delete could not be found",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await apiRequest("DELETE", `/api/teams/${team.id}?tenantId=${currentTenant?.id}`);
+      
+      // Invalidate and refetch teams
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      
+      toast({
+        title: "Team deleted",
+        description: "Team has been deleted successfully.",
+      });
+      
+      // Close dialog
+      onClose();
+      
+    } catch (error) {
+      toast({
+        title: "Error deleting team",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure you want to delete this team?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. It will permanently delete the
+            <span className="font-bold"> {team?.name}</span> team and all associated data.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDeleteTeam}
+            disabled={isSubmitting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isSubmitting ? "Deleting..." : "Delete Team"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+
 const TeamsPage = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -599,6 +923,11 @@ const TeamsPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [, setLocation] = useLocation();
   const { currentTenant } = useTenantContext();
+  
+  // State for managing team actions
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch all teams with tenant context
   const { data: teams = [], isLoading, error } = useQuery<Team[]>({
@@ -634,9 +963,19 @@ const TeamsPage = () => {
     return 0;
   });
 
-  // Handle team click to navigate to detail page
-  const handleTeamClick = (team: Team) => {
+  // Handlers for team actions
+  const handleTeamView = (team: Team) => {
     setLocation(`/teams/${team.id}`);
+  };
+  
+  const handleTeamEdit = (team: Team) => {
+    setSelectedTeam(team);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleTeamDelete = (team: Team) => {
+    setSelectedTeam(team);
+    setIsDeleteDialogOpen(true);
   };
 
   // Table columns definition
@@ -775,12 +1114,15 @@ const TeamsPage = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => handleTeamClick(team)}
+                onClick={() => handleTeamView(team)}
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View team
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => handleTeamEdit(team)}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit team
               </DropdownMenuItem>
@@ -789,7 +1131,10 @@ const TeamsPage = () => {
                 Add members
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-destructive">
+              <DropdownMenuItem 
+                className="cursor-pointer text-destructive"
+                onClick={() => handleTeamDelete(team)}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete team
               </DropdownMenuItem>
@@ -958,7 +1303,9 @@ const TeamsPage = () => {
                     <TeamCard 
                       key={team.id} 
                       team={team} 
-                      onClick={handleTeamClick} 
+                      onClick={handleTeamView}
+                      onEdit={handleTeamEdit}
+                      onDelete={handleTeamDelete}
                       delay={index}
                     />
                   ))}
