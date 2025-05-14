@@ -23,6 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { getQueryFn } from "@/lib/queryClient";
 
 // Define interfaces for type safety
 interface KeyResult {
@@ -83,95 +84,33 @@ export default function CompanyOKRs() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
+
+
   // Fetch objectives data
   const { data: objectives = [], isLoading, error } = useQuery<Objective[]>({
     queryKey: ["/api/objectives"],
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/objectives");
-        if (response.status === 401) {
-          // Handle unauthorized
-          return [];
-        }
-        if (!response.ok) {
-          throw new Error("Failed to fetch objectives");
-        }
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("Error fetching objectives:", err);
-        throw err;
-      }
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated
   });
 
   // Fetch key results for each objective
   const { data: keyResults = [] } = useQuery<KeyResult[]>({
     queryKey: ["/api/key-results"],
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/key-results");
-        if (response.status === 401) {
-          // Handle unauthorized
-          return [];
-        }
-        if (!response.ok) {
-          throw new Error("Failed to fetch key results");
-        }
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("Error fetching key results:", err);
-        throw err;
-      }
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated
   });
 
   // Fetch timeframes for filtering
   const { data: timeframes = [] } = useQuery<any[]>({
     queryKey: ["/api/timeframes"],
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/timeframes");
-        if (response.status === 401) {
-          // Handle unauthorized
-          return [];
-        }
-        if (!response.ok) {
-          throw new Error("Failed to fetch timeframes");
-        }
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("Error fetching timeframes:", err);
-        throw err;
-      }
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated
   });
 
   // Fetch teams for assignment info
   const { data: teams = [] } = useQuery<any[]>({
     queryKey: ["/api/teams"],
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/teams");
-        if (response.status === 401) {
-          // Handle unauthorized
-          return [];
-        }
-        if (!response.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error("Error fetching teams:", err);
-        throw err;
-      }
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated
   });
 
