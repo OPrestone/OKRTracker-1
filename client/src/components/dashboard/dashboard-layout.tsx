@@ -5,6 +5,8 @@ import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/min
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -17,8 +19,6 @@ interface DashboardLayoutProps {
   };
 }
 
-// This will be replaced with real data from the dashboard API
-
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
   const stats = overviewStats || {
     totalObjectives: 0,
@@ -27,6 +27,11 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     teamProgress: 0,
     upcomingCheckins: 0
   };
+  
+  // Fetch teams data
+  const { data: teamsData = [] } = useQuery({
+    queryKey: ['/api/teams'],
+  }) as { data: any[] };
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [
@@ -184,36 +189,26 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            <MiniStatsCard
-              title="Marketing Team"
-              value="92%"
-              trend={2.5}
-              icon={<Users className="h-4 w-4 text-indigo-500" />}
-            />
-            <MiniStatsCard
-              title="Engineering Team"
-              value="87%"
-              trend={1.8}
-              icon={<Users className="h-4 w-4 text-indigo-500" />}
-            />
-            <MiniStatsCard
-              title="Product Team"
-              value="79%"
-              trend={5.2}
-              icon={<Users className="h-4 w-4 text-indigo-500" />}
-            />
-            <MiniStatsCard
-              title="Design Team"
-              value="81%"
-              trend={-1.4}
-              icon={<Users className="h-4 w-4 text-indigo-500" />}
-            />
-            <MiniStatsCard
-              title="Sales Team"
-              value="94%"
-              trend={3.7}
-              icon={<Users className="h-4 w-4 text-indigo-500" />}
-            />
+            {teamsData && teamsData.length > 0 ? (
+              // Display real team data
+              teamsData.map((team, index) => (
+                <MiniStatsCard
+                  key={team.id}
+                  title={team.name || `Team ${index + 1}`}
+                  value={`${team.performance || Math.round(stats.teamProgress)}%`}
+                  trend={team.memberCount || 0}
+                  trendLabel={team.memberCount ? `${team.memberCount} members` : undefined}
+                  icon={<Users className="h-4 w-4 text-indigo-500" />}
+                />
+              ))
+            ) : (
+              // Add a placeholder if no teams found
+              <div className="col-span-full flex flex-col items-center p-4 text-slate-500">
+                <Users className="h-10 w-10 text-slate-300 mb-3" />
+                <p>No teams found</p>
+                <Button variant="outline" size="sm" className="mt-2">Add Team</Button>
+              </div>
+            )}
           </div> 
       
       {children}

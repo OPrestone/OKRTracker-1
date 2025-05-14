@@ -102,10 +102,11 @@ export function MiniStatsCard({
   title,
   value,
   trend,
+  trendLabel,
   icon,
   iconColor = "text-primary-600",
   bgColor = "bg-primary-100"
-}: Omit<StatsCardProps, 'chart' | 'progressBar' | 'progressValue' | 'subtitle' | 'trendLabel'>) {
+}: Omit<StatsCardProps, 'chart' | 'progressBar' | 'progressValue' | 'subtitle'>) {
   const isPositive = trend && trend > 0;
   const isNegative = trend && trend < 0;
   
@@ -125,17 +126,21 @@ export function MiniStatsCard({
       
       {trend !== undefined && (
         <div className="mt-2">
-          <div 
-            className={cn(
-              "text-xs inline-flex items-center",
-              isPositive ? "text-emerald-600" : 
-              isNegative ? "text-rose-600" : 
-              "text-neutral-600"
-            )}
-          >
-            {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
-            <span>{Math.abs(trend).toFixed(1)}%</span>
-          </div>
+          {trendLabel ? (
+            <div className="text-xs text-neutral-500">{trendLabel}</div>
+          ) : (
+            <div 
+              className={cn(
+                "text-xs inline-flex items-center",
+                isPositive ? "text-emerald-600" : 
+                isNegative ? "text-rose-600" : 
+                "text-neutral-600"
+              )}
+            >
+              {isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDown className="h-3 w-3 mr-1" /> : null}
+              <span>{Math.abs(trend).toFixed(1)}%</span>
+            </div>
+          )}
         </div>
       )}
     </div>
