@@ -248,27 +248,30 @@ export default function DraftOKRs() {
       status: "active" // Change from draft to active
     };
     
-    // In a real implementation, we would make an API call to update the objective status
-    // For example: 
-    // const response = await fetch(`/api/objectives/${selectedObjective.id}`, {
-    //   method: "PATCH", 
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ status: "active" })
-    // });
-    
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmitDialogOpen(false);
-      
-      toast({
-        title: "OKR Submitted",
-        description: "Your objective has been submitted for approval and is now active.",
+    // Make an API call to update the objective status
+    apiRequest("PATCH", `/api/objectives/${selectedObjective.id}`, { status: "active" })
+      .then(response => response.json())
+      .then(updatedObjective => {
+        setSubmitting(false);
+        setSubmitDialogOpen(false);
+        
+        toast({
+          title: "OKR Submitted",
+          description: "Your objective has been submitted for approval and is now active.",
+        });
+        
+        // Invalidate the query cache to refetch the data
+        queryClient.invalidateQueries(["/api/objectives", "draft"]);
+      })
+      .catch(error => {
+        setSubmitting(false);
+        
+        toast({
+          title: "Error",
+          description: `Failed to submit OKR: ${error.message}`,
+          variant: "destructive"
+        });
       });
-      
-      // In a real implementation, we would invalidate the query cache to refetch the data
-      // queryClient.invalidateQueries(["/api/objectives", "draft"]);
-    }, 1500);
   };
 
   const handleNewDraft = () => {
