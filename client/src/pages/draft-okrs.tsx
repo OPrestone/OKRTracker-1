@@ -655,27 +655,33 @@ export default function DraftOKRs() {
               </div>
               
               <div className="space-y-4">
-                {editDraftData.keyResults.map((kr, index) => (
-                  <div key={kr.id || index} className="grid gap-3">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor={`edit-key-result-${index}`}>Key Result {index + 1}</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveEditKeyResult(index)}
-                        className="h-7 px-2"
-                      >
-                        Remove
-                      </Button>
+                {editDraftData.keyResults && Array.isArray(editDraftData.keyResults) ? (
+                  editDraftData.keyResults.map((kr, index) => (
+                    <div key={kr.id || index} className="grid gap-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={`edit-key-result-${index}`}>Key Result {index + 1}</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveEditKeyResult(index)}
+                          className="h-7 px-2"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <Input
+                        id={`edit-key-result-${index}`}
+                        placeholder="Enter a measurable key result..."
+                        value={kr.title || ""}
+                        onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), e.target.value)}
+                      />
                     </div>
-                    <Input
-                      id={`edit-key-result-${index}`}
-                      placeholder="Enter a measurable key result..."
-                      value={kr.title}
-                      onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), e.target.value)}
-                    />
+                  ))
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-muted-foreground">No key results defined yet</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -846,14 +852,16 @@ export default function DraftOKRs() {
             {selectedObjective && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">{selectedObjective.title}</CardTitle>
+                  <CardTitle className="text-base">
+                    {selectedObjective.title || "Untitled Objective"}
+                  </CardTitle>
                 </CardHeader>
-                {selectedObjective.keyResults.length > 0 && (
+                {selectedObjective.keyResults && Array.isArray(selectedObjective.keyResults) && selectedObjective.keyResults.length > 0 && (
                   <CardContent>
                     <h4 className="text-sm font-medium mb-2">Key Results</h4>
                     <ul className="list-disc pl-5 space-y-2">
                       {selectedObjective.keyResults.map((kr, i) => (
-                        <li key={kr.id || i} className="text-sm">{kr.title}</li>
+                        <li key={kr.id || i} className="text-sm">{kr.title || "Untitled Key Result"}</li>
                       ))}
                     </ul>
                   </CardContent>
