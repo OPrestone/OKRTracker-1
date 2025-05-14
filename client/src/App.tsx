@@ -16,6 +16,7 @@ import UsersPermissions from "@/pages/configuration/users-permissions";
 import Integrations from "@/pages/configuration/integrations";
 import Cadences from "@/pages/configuration/cadences";
 import Timeframes from "@/pages/configuration/timeframes";
+import Cycles from "@/pages/configuration/cycles";
 import StatusSettings from "@/pages/configuration/status-settings";
 import AccessGroups from "@/pages/configuration/access-groups";
 import AuthPage from "@/pages/auth-page";
@@ -185,6 +186,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/status-settings" component={StatusSettings} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/cadences" component={Cadences} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/access-groups" component={AccessGroups} />
       
       {/* Legacy routes - keep for backward compatibility */}
@@ -226,6 +228,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/configuration/status-settings" component={StatusSettings} />
       <ProtectedRoute path="/organization/:organisation/configuration/cadences" component={Cadences} />
       <ProtectedRoute path="/organization/:organisation/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/organization/:organisation/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/organization/:organisation/configuration/access-groups" component={AccessGroups} />
       {/* Onboarding */}
       <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
@@ -248,6 +251,7 @@ function AppRoutes() {
       <ProtectedRoute path="/configuration/status-settings" component={StatusSettings} />
       <ProtectedRoute path="/configuration/cadences" component={Cadences} />
       <ProtectedRoute path="/configuration/timeframes" component={Timeframes} />
+      <ProtectedRoute path="/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/configuration/access-groups" component={AccessGroups} />
       <Route component={NotFound} />
     </Switch>
