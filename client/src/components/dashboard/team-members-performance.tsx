@@ -40,6 +40,22 @@ import { getQueryFn } from '@/lib/queryClient';
 import { useTenantContext } from '@/hooks/use-tenant-context';
 import MemberPerformance from './member-performance';
 
+interface TeamMember {
+  id: string;
+  name: string;
+  email?: string;
+  progress: number;
+  objectives: {
+    total: number;
+    completed: number;
+    behind: number;
+  };
+  keyResults: {
+    total: number;
+    completed: number;
+  };
+}
+
 interface TeamMembersPerformanceProps {
   teamId: string;
 }
@@ -52,7 +68,7 @@ const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
   
   const tenantId = currentTenant?.id;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<TeamMember[]>({
     queryKey: [`/api/teams/${teamId}/members-performance`, tenantId],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
@@ -64,7 +80,7 @@ const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
   };
 
   // Filter members based on search query
-  const filteredMembers = data ? data.filter((member: any) => 
+  const filteredMembers = data ? data.filter((member) => 
     member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     member.email?.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
@@ -188,7 +204,7 @@ const TeamMembersPerformance = ({ teamId }: TeamMembersPerformanceProps) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMembers.map((member: any) => (
+                  {filteredMembers.map((member) => (
                     <TableRow key={member.id}>
                       <TableCell>
                         <div className="font-medium">{member.name}</div>

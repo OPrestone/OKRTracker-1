@@ -30,6 +30,45 @@ import { useTenantContext } from '@/hooks/use-tenant-context';
 import TeamMembersPerformance from '@/components/dashboard/team-members-performance';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 
+interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  memberCount: number;
+  color?: string;
+  icon?: string;
+}
+
+interface TeamPerformanceData {
+  metrics: {
+    completionRate: number;
+    behindSchedule: number;
+    averageProgress: number;
+    teamMorale: number;
+    atRiskCount: number;
+    averageCheckInsPerWeek: number;
+  };
+  objectives: {
+    id: string;
+    title: string;
+    progress: number;
+    status: string;
+    owner: {
+      id: string;
+      name: string;
+    };
+  }[];
+  trendData: {
+    date: string;
+    progress: number;
+  }[];
+  memberData: {
+    id: string;
+    name: string;
+    progress: number;
+  }[];
+}
+
 const TeamPerformancePage = () => {
   const params = useParams();
   const teamId = params.teamId;
@@ -38,13 +77,13 @@ const TeamPerformancePage = () => {
   
   const tenantId = currentTenant?.id;
 
-  const { data: teamData, isLoading, error } = useQuery({
+  const { data: teamData, isLoading, error } = useQuery<Team>({
     queryKey: [`/api/teams/${teamId}`, tenantId],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
   });
 
-  const { data: performanceData, isLoading: isLoadingPerformance, error: performanceError } = useQuery({
+  const { data: performanceData, isLoading: isLoadingPerformance, error: performanceError } = useQuery<TeamPerformanceData>({
     queryKey: [`/api/teams/${teamId}/performance`, tenantId],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!teamId && !!tenantId,
