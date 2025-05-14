@@ -106,7 +106,9 @@ export const userAccessGroups = pgTable("user_access_groups", {
 export const cadences = pgTableWithUlid("cadences", {
   name: text("name").notNull(),
   description: text("description"),
-  periodDays: integer("period_days").notNull(), // e.g., 7 for weekly, 90 for quarterly
+  // The database has 'period' column instead of 'period_days'
+  period: text("period"), // e.g., 'weekly', 'quarterly'
+  startMonth: text("start_month"),
   // Note: tenant_id doesn't exist in the actual database table
   // but we keep the schema definition for future migration
   // tenantId: text("tenant_id").references(() => tenants.id).notNull(),
