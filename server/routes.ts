@@ -1205,14 +1205,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timeframeId = req.params.timeframeId;
       
       // Verify the timeframe belongs to the current tenant
+      // Only filter by timeframe ID since tenant_id column doesn't exist in timeframes table
       const timeframe = await db.select()
         .from(timeframes)
-        .where(
-          and(
-            eq(timeframes.id, timeframeId),
-            eq(timeframes.tenantId, tenantId)
-          )
-        )
+        .where(eq(timeframes.id, timeframeId))
         .then(results => results[0]);
       
       if (!timeframe) {
@@ -1261,14 +1257,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If timeframeId is provided, verify it belongs to the current tenant
       if (validatedData.timeframeId) {
+        // Only filter by timeframe ID since tenant_id column doesn't exist in timeframes table
         const timeframe = await db.select()
           .from(timeframes)
-          .where(
-            and(
-              eq(timeframes.id, validatedData.timeframeId),
-              eq(timeframes.tenantId, tenantId)
-            )
-          )
+          .where(eq(timeframes.id, validatedData.timeframeId))
           .then(results => results[0]);
         
         if (!timeframe) {
@@ -1349,14 +1341,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate timeframeId if it's being updated
       if (req.body.timeframeId) {
+        // Only filter by timeframe ID since tenant_id column doesn't exist in timeframes table
         const timeframe = await db.select()
           .from(timeframes)
-          .where(
-            and(
-              eq(timeframes.id, req.body.timeframeId),
-              eq(timeframes.tenantId, tenantId)
-            )
-          )
+          .where(eq(timeframes.id, req.body.timeframeId))
           .then(results => results[0]);
         
         if (!timeframe) {

@@ -107,9 +107,12 @@ export const cadences = pgTableWithUlid("cadences", {
   name: text("name").notNull(),
   description: text("description"),
   periodDays: integer("period_days").notNull(), // e.g., 7 for weekly, 90 for quarterly
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  // Note: tenant_id doesn't exist in the actual database table
+  // but we keep the schema definition for future migration
+  // tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // updatedAt column doesn't exist in the actual database table
+  // updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const timeframes = pgTableWithUlid("timeframes", {
@@ -118,9 +121,12 @@ export const timeframes = pgTableWithUlid("timeframes", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   cadenceId: text("cadence_id").references(() => cadences.id),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  // Note: tenant_id doesn't exist in the actual database table
+  // but we keep the schema definition for future migration
+  // tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // updatedAt column doesn't exist in the actual database table
+  // updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const objectives = pgTableWithUlid("objectives", {
@@ -466,10 +472,11 @@ export const userAccessGroupsRelations = relations(userAccessGroups, ({ one }) =
 }));
 
 export const cadencesRelations = relations(cadences, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [cadences.tenantId],
-    references: [tenants.id]
-  }),
+  // Note: tenant relation removed as tenant_id doesn't exist in the actual database table
+  // tenant: one(tenants, {
+  //   fields: [cadences.tenantId],
+  //   references: [tenants.id]
+  // }),
   timeframes: many(timeframes)
 }));
 
@@ -478,10 +485,11 @@ export const timeframesRelations = relations(timeframes, ({ one, many }) => ({
     fields: [timeframes.cadenceId],
     references: [cadences.id]
   }),
-  tenant: one(tenants, {
-    fields: [timeframes.tenantId],
-    references: [tenants.id]
-  }),
+  // Note: tenant relation removed as tenant_id doesn't exist in the actual database table
+  // tenant: one(tenants, {
+  //   fields: [timeframes.tenantId],
+  //   references: [tenants.id]
+  // }),
   objectives: many(objectives)
 }));
 
