@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -49,86 +52,104 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// Types for the Objective Detail
-interface Owner {
-  id: number;
+// Types for the Objective Detail based on the database schema
+interface User {
+  id: string;
+  username: string;
+  name?: string;
+  email?: string;
+  teamId?: string;
+  role?: string;
+}
+
+interface Team {
+  id: string;
   name: string;
-  initials: string;
-  role: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  parentId?: string;
+  ownerId?: string;
 }
 
-interface KeyResult {
-  id: number;
+interface Timeframe {
+  id: string;
+  name: string;
+  startDate?: Date;
+  endDate?: Date;
+  isActive?: boolean;
+}
+
+interface DbKeyResult {
+  id: string;
   title: string;
-  description: string;
-  progress: number;
-  status: "on_track" | "at_risk" | "behind" | "completed";
-  owner: {
-    id: number;
-    name: string;
-    initials: string;
-  };
-  dueDate: string;
-  lastUpdated: string;
+  description?: string;
+  objectiveId: string;
+  currentValue?: string;
+  targetValue?: string;
+  startValue?: string;
+  assignedToId?: string;
+  progress?: number;
+  status?: string;
+  tenantId?: string;
+  createdAt?: string;
+  
+  // Relations
+  assignedTo?: User;
 }
 
-interface Initiative {
-  id: number;
+interface DbInitiative {
+  id: string;
   title: string;
-  description: string;
-  status: "not_started" | "in_progress" | "completed";
-  dueDate: string;
-  owner: {
-    id: number;
-    name: string;
-    initials: string;
-  };
-}
-
-interface CheckIn {
-  id: number;
-  user: {
-    id: number;
-    name: string;
-    initials: string;
-  };
-  date: string;
-  progress: number;
-  previousProgress: number;
-  notes: string;
-}
-
-interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
+  description?: string;
+  status: string;
+  keyResultId: string;
+  ownerId?: string;
   dueDate?: string;
-  assignee?: {
-    id: number;
-    name: string;
-    initials: string;
-  };
+  completed: boolean;
+  tenantId: string;
+  createdAt?: string;
+  
+  // Relations
+  owner?: User;
 }
 
-interface Objective {
-  id: number;
+interface DbCheckIn {
+  id: string;
+  userId: string;
+  objectiveId?: string;
+  keyResultId?: string;
+  progress?: number;
+  notes?: string;
+  tenantId?: string;
+  createdAt?: string;
+  
+  // Relations
+  user?: User;
+}
+
+interface DbObjective {
+  id: string;
   title: string;
-  description: string;
+  description?: string;
+  ownerId: string;
+  teamId?: string;
+  timeframeId: string;
+  status: string; // Using objectiveStatusEnum
   progress: number;
-  status: "on_track" | "at_risk" | "behind" | "completed";
-  timeframe: string;
-  startDate: string;
-  endDate: string;
-  owner: Owner;
-  team: {
-    id: number;
-    name: string;
-  };
-  lastUpdated: string;
-  keyResults: KeyResult[];
-  initiatives: Initiative[];
-  checkIns: CheckIn[];
-  todos: Todo[];
+  parentId?: string;
+  tenantId: string;
+  level: string;
+  isApproved: boolean;
+  createdAt?: string;
+  
+  // Relations
+  owner?: User;
+  team?: Team;
+  timeframe?: Timeframe;
+  keyResults?: DbKeyResult[];
+  checkIns?: DbCheckIn[];
+  initiatives?: DbInitiative[];
 }
 
 // Sample data for the objective
@@ -335,13 +356,52 @@ const objectiveData: Objective = {
 };
 
 export default function ObjectiveDetail() {
-  const [objective, setObjective] = useState<Objective>(objectiveData);
-  const [progressValue, setProgressValue] = useState<string>(objective.progress.toString());
+  const [match, params] = useRoute('/objective-detail/:id');
+  const objectiveId = params?.id;
+  const [progressValue, setProgressValue] = useState<string>("0");
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { currentTenant } = useTenantContext();
+  
+  // Fetch the objective data from API
+  const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
+    queryKey: ['/api/objectives', objectiveId],
+    enabled: !!objectiveId && !!currentTenant,
+  });
+
+  // Fetch key results related to this objective
+  const { data: keyResults, isLoading: keyResultsLoading } = useQuery({
+    queryKey: ['/api/key-results', { objectiveId }],
+    enabled: !!objectiveId && !!currentTenant,
+  });
+
+  // Fetch teams
+  const { data: teams, isLoading: teamsLoading } = useQuery({
+    queryKey: ['/api/teams'],
+    enabled: !!currentTenant,
+  });
+
+  // Fetch users
+  const { data: users, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/users'],
+    enabled: !!currentTenant,
+  });
+
+  // Fetch check-ins
+  const { data: checkIns, isLoading: checkInsLoading } = useQuery({
+    queryKey: ['/api/check-ins', { objectiveId }],
+    enabled: !!objectiveId && !!currentTenant,
+  });
+
+  // Update progress value when objective data changes
+  useEffect(() => {
+    if (objective && objective.progress !== undefined) {
+      setProgressValue(objective.progress.toString());
+    }
+  }, [objective]);
 
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number): string => {
@@ -492,6 +552,37 @@ export default function ObjectiveDetail() {
   const handleGoBack = () => {
     navigate("/my-okrs");
   };
+
+  // Combine all loading states
+  const isLoading = objectiveLoading || keyResultsLoading || teamsLoading || usersLoading || checkInsLoading;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Loading Objective...">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading objective data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show error state
+  if (objectiveError || !objective) {
+    return (
+      <DashboardLayout title="Objective Not Found">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <h2 className="text-xl font-semibold">Objective Not Found</h2>
+          <p className="text-muted-foreground">The objective you are looking for does not exist or you do not have access to it.</p>
+          <Button onClick={handleGoBack}>Go Back</Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Objective Detail">
