@@ -410,7 +410,8 @@ const AIRecommendations = () => {
                             <Button
                               size="sm"
                               onClick={() => handleCreateObjective(rec)}
-                              disabled={createObjectiveMutation.isPending}
+                              disabled={createObjectiveMutation.isPending || !canCreateObjectives()}
+                              title={!canCreateObjectives() ? "Only organization owners and admins can create objectives" : ""}
                             >
                               {createObjectiveMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -555,7 +556,8 @@ const AIRecommendations = () => {
                             <Button
                               size="sm"
                               onClick={() => handleCreateKeyResult(rec)}
-                              disabled={createKeyResultMutation.isPending}
+                              disabled={createKeyResultMutation.isPending || !canCreateObjectives()}
+                              title={!canCreateObjectives() ? "Only organization owners and admins can create key results" : ""}
                             >
                               {createKeyResultMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -690,7 +692,10 @@ const AIRecommendations = () => {
                           <CardTitle>Suggested Improvements</CardTitle>
                           <Button 
                             onClick={handleApplyImprovements} 
-                            disabled={updateObjectiveMutation.isPending || (!okrImprovement.improvedTitle && !okrImprovement.improvedDescription)}
+                            disabled={updateObjectiveMutation.isPending || 
+                              (!okrImprovement.improvedTitle && !okrImprovement.improvedDescription) || 
+                              !canCreateObjectives()}
+                            title={!canCreateObjectives() ? "Only organization owners and admins can update objectives" : ""}
                           >
                             {updateObjectiveMutation.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -741,6 +746,8 @@ const AIRecommendations = () => {
                                         size="sm"
                                         variant="ghost"
                                         onClick={() => handleCreateKeyResult(kr)}
+                                        disabled={!canCreateObjectives()}
+                                        title={!canCreateObjectives() ? "Only organization owners and admins can create key results" : ""}
                                       >
                                         <Check className="h-4 w-4" />
                                       </Button>
