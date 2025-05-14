@@ -1978,6 +1978,51 @@ export class DatabaseStorage implements IStorage {
       .from(keyResults)
       .where(inArray(keyResults.id, keyResultIds));
   }
+  
+  async getFeedbackForUser(userId: string, tenantId: string): Promise<any[]> {
+    try {
+      console.log(`Getting feedback for user ${userId} in tenant ${tenantId}`);
+      const receivedFeedback = await db.select({
+        id: feedback.id,
+        content: feedback.content,
+        title: feedback.title,
+        type: feedback.type,
+        rating: feedback.rating,
+        from: feedback.userId,
+        createdAt: feedback.createdAt,
+      })
+      .from(feedback)
+      .where(and(
+        eq(feedback.receiverId, userId),
+        eq(feedback.tenantId, tenantId)
+      ))
+      .orderBy(desc(feedback.createdAt));
+      
+      // Enhance feedback with user information
+      const enhancedFeedback = await Promise.all(
+        receivedFeedback.map(async (fb) => {
+          // Get user information for the sender
+          const sender = await this.getUser(fb.from);
+          return {
+            ...fb,
+            fromUser: sender ? {
+              id: sender.id,
+              name: sender.name,
+              email: sender.email,
+              avatar: sender.avatar,
+              initials: sender.initials || sender.name?.substring(0, 2).toUpperCase() || 'UN',
+            } : null,
+            date: fb.createdAt // alias createdAt as date for frontend compatibility
+          };
+        })
+      );
+      
+      return enhancedFeedback;
+    } catch (error) {
+      console.error(`Error getting feedback for user ${userId} in tenant ${tenantId}:`, error);
+      return [];
+    }
+  }
 }
 
 // Use the database storage implementation
