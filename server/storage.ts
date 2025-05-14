@@ -693,6 +693,7 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives).where(eq(objectives.id, id));
@@ -746,6 +747,7 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives);
@@ -764,6 +766,7 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives).where(eq(objectives.ownerId, ownerId));
@@ -782,6 +785,7 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives).where(eq(objectives.teamId, teamId));
@@ -800,13 +804,14 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives).where(eq(objectives.timeframeId, timeframeId));
   }
   
   async getObjectivesByTenant(tenantId: string): Promise<Objective[]> {
-    // Select only columns that exist in the actual database
+    // Select all columns that exist in the actual database
     const results = await db.select({
       id: objectives.id,
       title: objectives.title,
@@ -818,6 +823,7 @@ export class DatabaseStorage implements IStorage {
       progress: objectives.progress,
       parentId: objectives.parentId,
       tenantId: objectives.tenantId,
+      level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
       // Note: Exclude fields that don't exist in the actual database: 
       // - updatedAt
