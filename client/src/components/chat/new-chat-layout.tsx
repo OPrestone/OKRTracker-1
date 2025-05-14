@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/use-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +15,160 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
-import { Phone, Video, MoreHorizontal, Search, Plus, Smile, Paperclip, Send } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Phone, Video, MoreHorizontal, Search, Plus, Smile, Paperclip, Send, Loader2 } from "lucide-react";
+
+// CreateChatRoomForm component
+type CreateChatRoomFormProps = {
+  onClose: () => void;
+};
+
+function CreateChatRoomForm({ onClose }: CreateChatRoomFormProps) {
+  const { user } = useAuth();
+  const { createChatRoom } = useChat();
+  const [chatName, setChatName] = useState("");
+  const [chatType, setChatType] = useState("direct");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch users for chat creation
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["/api/users"],
+    enabled: !!user,
+  });
+  
+  // Filter out current user
+  const otherUsers = user ? users.filter((u: any) => u.id !== user.id) : [];
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!chatName.trim()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await createChatRoom(
+        chatName,
+        chatType,
+        selectedUsers.map(id => Number(id))
+      );
+      
+      setChatName("");
+      setChatType("direct");
+      setSelectedUsers([]);
+      onClose();
+    } catch (error) {
+      console.error("Failed to create chat room:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <DialogDescription>
+        Create a new chat room to start conversations with team members.
+      </DialogDescription>
+      
+      <div className="space-y-4 py-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            placeholder="Chat name"
+            value={chatName}
+            onChange={(e) => setChatName(e.target.value)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Type</Label>
+          <RadioGroup value={chatType} onValueChange={setChatType} className="flex gap-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="direct" id="direct" />
+              <Label htmlFor="direct">Direct</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="group" id="group" />
+              <Label htmlFor="group">Group</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="public" id="public" />
+              <Label htmlFor="public">Public</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Members</Label>
+          {isLoadingUsers ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ScrollArea className="h-[200px] border rounded-md p-2">
+              <div className="space-y-2">
+                {otherUsers.map((user: any) => (
+                  <div key={user.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`user-${user.id}`}
+                      checked={selectedUsers.includes(user.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedUsers([...selectedUsers, user.id]);
+                        } else {
+                          setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`user-${user.id}`} className="flex items-center space-x-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.firstName} ${user.lastName}`} />
+                        <AvatarFallback>{user.firstName?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <span>{user.firstName} {user.lastName}</span>
+                    </Label>
+                  </div>
+                ))}
+                {otherUsers.length === 0 && (
+                  <div className="text-center p-4 text-muted-foreground">
+                    No other users found
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+      </div>
+      
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!chatName.trim() || selectedUsers.length === 0 || isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create Chat"
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
 
 // ChatHeader component - Displays the current chat header with user info
 const ChatHeader = ({ currentRoom }: { currentRoom: any }) => {
@@ -144,21 +296,37 @@ const SuggestionsPanel = () => {
 
 // Chat sidebar component
 const ChatSidebar = () => {
-  const { chatRooms, selectRoom, currentRoom } = useChat();
+  const { chatRooms, selectRoom, currentRoom, isLoadingRooms } = useChat();
   const [activeTab, setActiveTab] = useState("direct");
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
-  // Filter rooms by type
-  const directChats = chatRooms.filter(room => room.type === "direct");
-  const groupChats = chatRooms.filter(room => room.type === "group");
-  const publicChats = chatRooms.filter(room => room.type === "public");
+  // Filter rooms by type and search query
+  const filteredRooms = chatRooms.filter(room => {
+    return room.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+  
+  const directChats = filteredRooms.filter(room => room.type === "direct");
+  const groupChats = filteredRooms.filter(room => room.type === "group");
+  const publicChats = filteredRooms.filter(room => room.type === "public");
   
   return (
     <div className="w-80 border-r h-full flex flex-col">
       <div className="p-4 flex justify-between items-center">
         <h2 className="font-bold text-xl">Chats</h2>
-        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-          <Plus className="h-4 w-4" />
-        </Button>
+        <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Conversation</DialogTitle>
+            </DialogHeader>
+            <CreateChatRoomForm onClose={() => setShowNewChatDialog(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="px-4 pb-2">
@@ -174,114 +342,152 @@ const ChatSidebar = () => {
       <div className="px-4 pb-2">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search..." className="pl-8" />
+          <Input 
+            placeholder="Search..." 
+            className="pl-8" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
       
       <ScrollArea className="flex-1">
-        <div className="px-2">
-          {activeTab === "direct" && directChats.map((room) => (
-            <Button
-              key={room.id}
-              variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
-              className="w-full justify-start mb-1 p-2"
-              onClick={() => selectRoom(room.id)}
-            >
-              <div className="flex items-center gap-2 w-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${room.name}`} />
-                  <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium truncate">{room.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
-                    </span>
+        {isLoadingRooms ? (
+          <div className="flex justify-center items-center h-20">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="px-2">
+            {activeTab === "direct" && directChats.map((room) => (
+              <Button
+                key={room.id}
+                variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
+                className="w-full justify-start mb-1 p-2"
+                onClick={() => selectRoom(room.id)}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${room.name}`} />
+                    <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium truncate">{room.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
+                      </span>
+                    </div>
+                    <p className="text-xs truncate text-muted-foreground">
+                      {/* Last message preview would go here if available */}
+                      No messages yet
+                    </p>
                   </div>
-                  <p className="text-xs truncate text-muted-foreground">
-                    Are you missing today's call...
-                  </p>
+                  {room.unreadCount ? (
+                    <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
+                      {room.unreadCount}
+                    </Badge>
+                  ) : null}
                 </div>
-                {room.unreadCount ? (
-                  <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
-                    {room.unreadCount}
-                  </Badge>
-                ) : null}
-              </div>
-            </Button>
-          ))}
-          
-          {activeTab === "group" && groupChats.map((room) => (
-            <Button
-              key={room.id}
-              variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
-              className="w-full justify-start mb-1 p-2"
-              onClick={() => selectRoom(room.id)}
-            >
-              <div className="flex items-center gap-2 w-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium truncate">{room.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
-                    </span>
+              </Button>
+            ))}
+            
+            {activeTab === "group" && groupChats.map((room) => (
+              <Button
+                key={room.id}
+                variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
+                className="w-full justify-start mb-1 p-2"
+                onClick={() => selectRoom(room.id)}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${room.name}`} />
+                    <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium truncate">{room.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
+                      </span>
+                    </div>
+                    <p className="text-xs truncate text-muted-foreground">
+                      {room.lastMessage || "No messages yet"}
+                    </p>
                   </div>
-                  <p className="text-xs truncate text-muted-foreground">
-                    Last message preview...
-                  </p>
+                  {room.unreadCount ? (
+                    <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
+                      {room.unreadCount}
+                    </Badge>
+                  ) : null}
                 </div>
-                {room.unreadCount ? (
-                  <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
-                    {room.unreadCount}
-                  </Badge>
-                ) : null}
-              </div>
-            </Button>
-          ))}
-          
-          {activeTab === "public" && publicChats.map((room) => (
-            <Button
-              key={room.id}
-              variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
-              className="w-full justify-start mb-1 p-2"
-              onClick={() => selectRoom(room.id)}
-            >
-              <div className="flex items-center gap-2 w-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium truncate">{room.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
-                    </span>
+              </Button>
+            ))}
+            
+            {activeTab === "public" && publicChats.map((room) => (
+              <Button
+                key={room.id}
+                variant={currentRoom?.id === room.id ? "secondary" : "ghost"}
+                className="w-full justify-start mb-1 p-2"
+                onClick={() => selectRoom(room.id)}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${room.name}`} />
+                    <AvatarFallback>{room.name[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium truncate">{room.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(room.updatedAt), { addSuffix: false })}
+                      </span>
+                    </div>
+                    <p className="text-xs truncate text-muted-foreground">
+                      {room.lastMessage || "No messages yet"}
+                    </p>
                   </div>
-                  <p className="text-xs truncate text-muted-foreground">
-                    Last message preview...
-                  </p>
+                  {room.unreadCount ? (
+                    <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
+                      {room.unreadCount}
+                    </Badge>
+                  ) : null}
                 </div>
-                {room.unreadCount ? (
-                  <Badge variant="default" className="ml-auto h-5 w-5 p-0 text-[10px] flex items-center justify-center">
-                    {room.unreadCount}
-                  </Badge>
-                ) : null}
+              </Button>
+            ))}
+            
+            {((activeTab === "direct" && directChats.length === 0) ||
+              (activeTab === "group" && groupChats.length === 0) ||
+              (activeTab === "public" && publicChats.length === 0)) && (
+              <div className="text-center p-4 text-muted-foreground">
+                {searchQuery ? (
+                  <div>
+                    <p>No conversations matching "{searchQuery}"</p>
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      Clear search
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <p>No conversations found</p>
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => setShowNewChatDialog(true)}
+                    >
+                      Create a new conversation
+                    </Button>
+                  </div>
+                )}
               </div>
-            </Button>
-          ))}
-          
-          {((activeTab === "direct" && directChats.length === 0) ||
-            (activeTab === "group" && groupChats.length === 0) ||
-            (activeTab === "public" && publicChats.length === 0)) && (
-            <div className="text-center p-4 text-muted-foreground">
-              No conversations found
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
@@ -292,6 +498,7 @@ export function NewChatLayout() {
   const { user } = useAuth();
   const { currentRoom, messages, sendMessage, isLoadingMessages, loadMoreMessages, hasMoreMessages } = useChat();
   const [messageText, setMessageText] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   
@@ -435,7 +642,7 @@ export function NewChatLayout() {
               <p className="text-muted-foreground mb-6">
                 Select a conversation from the sidebar or start a new one to begin chatting.
               </p>
-              <Dialog>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
                   <Button>Start a new conversation</Button>
                 </DialogTrigger>
@@ -443,7 +650,7 @@ export function NewChatLayout() {
                   <DialogHeader>
                     <DialogTitle>Create New Conversation</DialogTitle>
                   </DialogHeader>
-                  {/* New conversation form would go here */}
+                  <CreateChatRoomForm onClose={() => setShowCreateDialog(false)} />
                 </DialogContent>
               </Dialog>
             </div>
