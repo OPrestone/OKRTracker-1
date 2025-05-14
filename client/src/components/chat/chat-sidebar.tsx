@@ -20,23 +20,33 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export function ChatSidebar() {
   const { user } = useAuth();
-  const { chatRooms, selectRoom, currentRoom, createChatRoom } = useChat();
+  const { chatRooms, selectRoom, currentRoom, createChatRoom, getCurrentTenantId } = useChat();
   const [open, setOpen] = useState(false);
   const [chatName, setChatName] = useState("");
   const [chatType, setChatType] = useState("direct");
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
-  // Fetch users for chat creation
+  // Get current tenant ID
+  const tenantId = getCurrentTenantId();
+
+  // Fetch users for chat creation with tenant filter
   const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-    enabled: !!user,
+    queryKey: ["/api/users", tenantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!tenantId,
   });
 
   // Filter out current user
   const otherUsers = users.filter((u: any) => u.id !== user?.id);
 
   const handleCreateRoom = async () => {
-    if (!chatName.trim()) return;
+    if (!chatName.trim() || !tenantId) return;
     
     try {
       await createChatRoom(chatName, chatType, selectedUsers);

@@ -31,16 +31,26 @@ type CreateChatRoomFormProps = {
 
 function CreateChatRoomForm({ onClose }: CreateChatRoomFormProps) {
   const { user } = useAuth();
-  const { createChatRoom } = useChat();
+  const { createChatRoom, getCurrentTenantId } = useChat();
   const [chatName, setChatName] = useState("");
   const [chatType, setChatType] = useState("direct");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Fetch users for chat creation
+  // Get the current tenant ID
+  const tenantId = getCurrentTenantId();
+  
+  // Fetch users for chat creation with tenant filter
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ["/api/users"],
-    enabled: !!user,
+    queryKey: ["/api/users", tenantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!tenantId,
   });
   
   // Filter out current user
@@ -49,7 +59,7 @@ function CreateChatRoomForm({ onClose }: CreateChatRoomFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!chatName.trim()) {
+    if (!chatName.trim() || !tenantId) {
       return;
     }
     
@@ -513,7 +523,7 @@ export function NewChatLayout() {
     e.preventDefault();
     
     if (messageText.trim() && currentRoom) {
-      sendMessage(messageText);
+      sendMessage({ content: messageText });
       setMessageText("");
     }
   };

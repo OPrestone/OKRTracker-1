@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useState, useEffect, useRef, useC
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 // Types for Chat API
 type User = {
@@ -97,6 +98,7 @@ type ChatContext = {
   createChatRoom: (name: string, type: string, memberIds: number[]) => Promise<void>;
   addMemberToChatRoom: (roomId: number, userId: number) => Promise<void>;
   removeMemberFromChatRoom: (roomId: number, userId: number) => Promise<void>;
+  getCurrentTenantId: () => string | null;
 };
 
 const ChatContext = createContext<ChatContext | null>(null);
@@ -169,29 +171,36 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Setup WebSocket
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   
-  // Get tenant ID from session storage or URL for WebSocket connection
-  const getCurrentTenantId = () => {
-    // First priority: Check for direct ULID in path /{id} format
+  // Get tenant ID from context, session storage or URL for WebSocket connection
+  const { currentTenant } = useTenantContext();
+  
+  const getCurrentTenantId = useCallback(() => {
+    // First priority: Use tenant context if available
+    if (currentTenant && currentTenant.id) {
+      return currentTenant.id;
+    }
+    
+    // Second priority: Check for direct ULID in path /{id} format
     const directUlidMatch = window.location.pathname.match(/^\/([A-Z0-9]{26})/);
     if (directUlidMatch) {
       return directUlidMatch[1];
     }
     
-    // Second priority: Check for legacy ULID in /ulid/{id} format
+    // Third priority: Check for legacy ULID in /ulid/{id} format
     const legacyUlidMatch = window.location.pathname.match(/\/ulid\/([A-Z0-9]{26})/);
     if (legacyUlidMatch) {
       return legacyUlidMatch[1];
     }
     
-    // Third priority: Check for ULID tenant ID in /tenants/{id} pattern
+    // Fourth priority: Check for ULID tenant ID in /tenants/{id} pattern
     const tenantsUlidMatch = window.location.pathname.match(/\/tenants\/([A-Z0-9]{26})/);
     if (tenantsUlidMatch) {
       return tenantsUlidMatch[1];
     }
     
-    // Third priority: Use session storage
+    // Fifth priority: Use session storage
     return sessionStorage.getItem('currentTenantId');
-  };
+  }, [currentTenant]);
   
   const tenantId = getCurrentTenantId();
   const wsUrl = `${protocol}//${window.location.host}/ws${tenantId ? `?tenantId=${tenantId}` : ''}`;
@@ -724,7 +733,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         stopTyping,
         createChatRoom,
         addMemberToChatRoom,
-        removeMemberFromChatRoom
+        removeMemberFromChatRoom,
+        getCurrentTenantId
       }}
     >
       {children}
