@@ -589,21 +589,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Create chat room mutation
   const createChatRoomMutation = useMutation({
-    mutationFn: async ({ name, type, memberIds }: { name: string, type: string, memberIds: number[] }) => {
-      // Get tenant ID for the request
-      const currentTenantId = getCurrentTenantId();
-      
-      if (!currentTenantId) {
+    mutationFn: async ({ name, type, memberIds, tenantId }: { name: string, type: string, memberIds: number[], tenantId: string }) => {
+      if (!tenantId) {
         throw new Error('No tenant ID available. Please select an organization first.');
       }
       
-      // Add tenantId as both a query parameter and in the body since the server middleware looks in both places
-      const response = await fetch(`/api/chat/rooms?tenantId=${currentTenantId}`, {
+      console.log("Creating chat room with tenantId:", tenantId);
+      
+      // Include tenantId as both a query parameter AND in the request body
+      const response = await fetch(`/api/chat/rooms?tenantId=${tenantId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, type, memberIds, tenantId: currentTenantId })
+        body: JSON.stringify({ 
+          name, 
+          type, 
+          memberIds, 
+          tenantId: tenantId // Include in body as well
+        })
       });
       
       if (!response.ok) {
@@ -636,8 +640,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Function to create a chat room
   const createChatRoom = useCallback(async (name: string, type: string, memberIds: number[]) => {
-    await createChatRoomMutation.mutateAsync({ name, type, memberIds });
-  }, [createChatRoomMutation]);
+    // Get the current tenant ID
+    const tenantId = getCurrentTenantId();
+    if (!tenantId) {
+      throw new Error('No tenant ID available. Please select an organization first.');
+    }
+    await createChatRoomMutation.mutateAsync({ name, type, memberIds, tenantId });
+  }, [createChatRoomMutation, getCurrentTenantId]);
   
   // Add member mutation
   const addMemberMutation = useMutation({

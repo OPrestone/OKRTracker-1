@@ -591,7 +591,7 @@ export function NewChatLayout() {
                     <ChatMessage 
                       key={message.id} 
                       message={message} 
-                      isCurrentUser={message.userId === user?.id} 
+                      isCurrentUser={String(message.userId) === String(user?.id)} 
                     />
                   ))}
                   <div ref={messagesEndRef} />
