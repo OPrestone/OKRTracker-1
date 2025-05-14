@@ -130,8 +130,12 @@ export default function CreateObjective() {
     mutationFn: async (data: ObjectiveFormValues) => {
       const response = await apiRequest("POST", "/api/objectives", data);
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create objective");
+        const errorData = await response.json();
+        // Check if it's a permissions error
+        if (response.status === 403) {
+          throw new Error(errorData.error || "Unauthorized. Only organization owners and admins can create objectives.");
+        }
+        throw new Error(errorData.message || errorData.error || "Failed to create objective");
       }
       return await response.json();
     },
