@@ -2942,17 +2942,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/chat/messages/:id", async (req, res, next) => {
+  app.delete("/api/chat/messages/:id", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
       const messageId = parseInt(req.params.id);
-      const message = await storage.getMessage(messageId);
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Get message with tenant filtering to ensure it belongs to current tenant
+      const message = await storage.getMessage(messageId, tenantId);
       
       if (!message) {
-        return res.status(404).send("Message not found");
+        return res.status(404).send("Message not found in this organization");
       }
       
       // Only the author can delete their message
@@ -2960,7 +2967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).send("You can only delete your own messages");
       }
       
-      await storage.deleteMessage(messageId);
+      await storage.deleteMessage(messageId, tenantId);
       res.status(204).end();
     } catch (error) {
       next(error);
@@ -2968,17 +2975,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reactions
-  app.post("/api/chat/messages/:messageId/reactions", async (req, res, next) => {
+  app.post("/api/chat/messages/:messageId/reactions", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
       }
       
       const messageId = parseInt(req.params.messageId);
-      const message = await storage.getMessage(messageId);
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Get message with tenant filtering to ensure it belongs to current tenant
+      const message = await storage.getMessage(messageId, tenantId);
       
       if (!message) {
-        return res.status(404).send("Message not found");
+        return res.status(404).send("Message not found in this organization");
       }
       
       // Check if user is a member of this room
@@ -2992,7 +3006,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertReactionSchema.parse({
         ...req.body,
         messageId,
-        userId: req.user.id
+        userId: req.user.id,
+        tenantId: tenantId // Add tenant ID to the reaction
       });
       
       const reaction = await storage.addReaction(validatedData);
@@ -3002,7 +3017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/chat/messages/:messageId/reactions/:emoji", async (req, res, next) => {
+  app.delete("/api/chat/messages/:messageId/reactions/:emoji", withTenant, async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Unauthorized");
@@ -3010,8 +3025,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const messageId = parseInt(req.params.messageId);
       const emoji = req.params.emoji;
+      const tenantId = req.tenantId;
       
-      await storage.removeReaction(req.user.id, messageId, emoji);
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+      
+      // Verify that the message exists in this tenant
+      const message = await storage.getMessage(messageId, tenantId);
+      
+      if (!message) {
+        return res.status(404).send("Message not found in this organization");
+      }
+      
+      await storage.removeReaction(req.user.id, messageId, emoji, tenantId);
       res.status(204).end();
     } catch (error) {
       next(error);
