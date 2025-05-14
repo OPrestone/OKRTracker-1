@@ -4437,6 +4437,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   }
   // });
   
+  // Get performance metrics for a specific team
+  app.get("/api/teams/:teamId/performance", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const teamId = req.params.teamId;
+      const tenantId = req.tenantId;
+      
+      if (!teamId) {
+        return res.status(400).json({ error: "Team ID is required" });
+      }
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      console.log(`Getting performance data for team ${teamId} in tenant ${tenantId}`);
+      const teamPerformance = await storage.getTeamPerformance(teamId, tenantId);
+      res.json(teamPerformance);
+    } catch (error) {
+      console.error(`Error fetching team performance:`, error);
+      next(error);
+    }
+  });
+  
+  // Get performance metrics for all teams in the tenant
+  app.get("/api/teams-performance", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      console.log(`Getting performance data for all teams in tenant ${tenantId}`);
+      const teamsPerformance = await storage.getTeamsPerformance(tenantId);
+      res.json(teamsPerformance);
+    } catch (error) {
+      console.error(`Error fetching teams performance:`, error);
+      next(error);
+    }
+  });
+  
   // Team users endpoint
   app.get("/api/teams/:teamId/users", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
