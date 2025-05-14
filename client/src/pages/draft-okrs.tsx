@@ -276,12 +276,12 @@ export default function DraftOKRs() {
     setNewDraftData({
       title: "",
       description: "",
-      keyResults: [{ id: 1, title: "" }]
+      keyResults: [{ id: "", title: "", objective_id: "" }]
     });
     setCreateDialogOpen(true);
   };
 
-  const handleNewDraftKeyResultChange = (id: number, newTitle: string) => {
+  const handleNewDraftKeyResultChange = (id: string, newTitle: string) => {
     setNewDraftData(prev => ({
       ...prev,
       keyResults: prev.keyResults.map(kr => 
