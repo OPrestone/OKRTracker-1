@@ -157,39 +157,56 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
   
   const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Create payload with selected objectives and key results
-    const payload = {
-      keyResultId: keyResult?.id || null,
-      progress,
-      confidenceLevel: confidence,
-      template: checkInTemplate,
-      focusLastWeek,
-      goalsThisWeek,
-      challenges,
-      needsForOKRs,
-      selectedObjectives,
-      selectedKeyResults,
-      teamId: selectedTeam || null
-    };
-    
-    // Log the payload for debugging (This would be replaced with an API call in production)
-    console.log("Check-in submission payload:", payload);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Create payload with selected objectives and key results
+      const payload = {
+        keyResultId: keyResult?.id || null,
+        progress,
+        confidenceLevel: confidence,
+        content: `Focus Last Week: ${focusLastWeek}\n\nGoals This Week: ${goalsThisWeek}\n\nChallenges: ${challenges}\n\nNeeds: ${needsForOKRs}`,
+        type: checkInType,
+        template: checkInTemplate,
+        objectiveIds: selectedObjectives,
+        keyResultIds: selectedKeyResults,
+        teamId: selectedTeam || null
+      };
+      
+      // Make API call to create the check-in
+      const response = await fetch('/api/check-ins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error creating check-in: ${response.statusText}`);
+      }
+      
+      // Success
       toast({
         title: "Check-in submitted",
         description: "Your weekly OKR check-in has been recorded with " + 
           selectedObjectives.length + " objectives and " + 
           selectedKeyResults.length + " key results.",
       });
+      
       onClose();
-    }, 1000);
+    } catch (error) {
+      console.error("Error submitting check-in:", error);
+      toast({
+        title: "Error submitting check-in",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   // Function to get the current user
