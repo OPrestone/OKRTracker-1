@@ -908,7 +908,7 @@ export default function TeamDetailPage() {
                         <span>New Objective</span>
                       </Button>
                     </div>
-                  </CardTitle>
+                  </div>
                   <CardDescription>
                     All team objectives and their current progress status
                   </CardDescription>
