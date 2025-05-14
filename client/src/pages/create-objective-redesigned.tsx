@@ -283,14 +283,31 @@ export default function CreateObjective() {
 
   const onSubmit = (values: ObjectiveFormValues) => {
     // Validate key results before submission
-    if (progressDriver === "key-results" && keyResults.some(kr => !kr.title || kr.title.length < 3)) {
-      toast({
-        title: "Validation Error",
-        description: "Each key result must have a title of at least 3 characters",
-        variant: "destructive",
-      });
-      setActiveTab("key-results");
-      return;
+    if (progressDriver === "key-results") {
+      // Check if any key result doesn't have a title or has a title shorter than 3 characters
+      const emptyKeyResults = keyResults.filter(kr => !kr.title || kr.title.trim().length < 3);
+      
+      if (emptyKeyResults.length > 0) {
+        toast({
+          title: "Validation Error",
+          description: "Each key result must have a title of at least 3 characters",
+          variant: "destructive",
+        });
+        setCurrentStep(3); // Ensure we're on the key results step
+        return;
+      }
+      
+      // If there are no key results defined, add a default one
+      if (keyResults.length === 0) {
+        setKeyResults([{ 
+          title: "Achieve target goal", 
+          description: "Default key result", 
+          start_value: "0", 
+          current_value: "0", 
+          target_value: "100",
+          format: "number"
+        }]);
+      }
     }
 
     // Create the objective with key results
@@ -340,6 +357,21 @@ export default function CreateObjective() {
   const handleKeyResultChange = (index: number, field: keyof KeyResult, value: string | number) => {
     const newKeyResults = [...keyResults];
     newKeyResults[index] = { ...newKeyResults[index], [field]: value };
+    
+    // Calculate progress based on values if it's a numeric field
+    if (field === 'current_value' || field === 'target_value' || field === 'start_value') {
+      const kr = newKeyResults[index];
+      const start = parseFloat(kr.start_value) || 0;
+      const current = parseFloat(kr.current_value) || 0;
+      const target = parseFloat(kr.target_value) || 100;
+      
+      // Only calculate if target is different from start to avoid division by zero
+      if (target !== start) {
+        const progress = ((current - start) / (target - start)) * 100;
+        newKeyResults[index].progress = Math.max(0, Math.min(100, progress));
+      }
+    }
+    
     setKeyResults(newKeyResults);
   };
 
