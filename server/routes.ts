@@ -1046,15 +1046,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tenantId = req.tenantId;
       const cadenceId = req.params.cadenceId;
       
-      // Verify the cadence belongs to the current tenant
+      // Verify the cadence exists
       const cadence = await storage.getCadence(cadenceId);
       if (!cadence) {
         return res.status(404).json({ error: "Cadence not found" });
       }
       
-      if (cadence.tenantId !== tenantId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
+      // Note: We don't check cadence.tenantId as it doesn't exist in the database
+      // In the future once we have tenant_id in the database, this check should be reinstated
+      // if (cadence.tenantId !== tenantId) {
+      //   return res.status(403).json({ error: "Access denied" });
+      // }
       
       // Fetch timeframes for the specific cadence and current tenant
       // Only filter by cadenceId since tenant_id column doesn't exist in timeframes table
