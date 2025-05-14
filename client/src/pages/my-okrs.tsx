@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, TrendingUp, Clock } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 
 interface KeyResult {
   id: number;
@@ -30,6 +31,7 @@ interface OKR {
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
   const [_, navigate] = useLocation();
+  const { canCreateObjectives } = useUserPermissions();
   
   const myOKRs: OKR[] = [
     {
@@ -213,13 +215,15 @@ export default function MyOKRs() {
             </p>
           </div>
           
-          <Button 
-            onClick={() => navigate("/create-objective")}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create OKR
-          </Button>
+          {canCreateObjectives() && (
+            <Button 
+              onClick={() => navigate("/create-objective")}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create OKR
+            </Button>
+          )}
         </div>
         
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
