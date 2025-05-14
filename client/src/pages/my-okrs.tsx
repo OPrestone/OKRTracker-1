@@ -17,13 +17,14 @@ interface KeyResult {
   id: string;
   title: string;
   description?: string;
-  currentValue: number;
-  targetValue: number;
-  startValue: number;
-  format?: string;
+  currentValue: string; // Changed from number to string to match database
+  targetValue: string; // Changed from number to string to match database
+  startValue: string; // Changed from number to string to match database
   objectiveId: string;
-  ownerId: string;
+  assignedToId?: string; // Changed from ownerId to assignedToId to match database
   status?: string;
+  tenantId?: string; // Added tenantId to match database
+  progress?: number; // Added progress from database
   createdAt: string;
 }
 
@@ -160,10 +161,19 @@ export default function MyOKRs() {
   };
   
   // Calculate key result progress based on current, target and start values
-  const calculateProgressPercentage = (current: number, target: number, start: number) => {
-    if (target === start) return 0;
+  const calculateProgressPercentage = (current: string, target: string, start: string) => {
+    // Convert string values to numbers
+    const currentNum = parseFloat(current);
+    const targetNum = parseFloat(target);
+    const startNum = parseFloat(start);
+    
+    // Check for valid numbers and prevent division by zero
+    if (isNaN(currentNum) || isNaN(targetNum) || isNaN(startNum) || targetNum === startNum) {
+      return 0;
+    }
+    
     const progress = Math.min(100, Math.max(0, 
-      ((current - start) / (target - start)) * 100
+      ((currentNum - startNum) / (targetNum - startNum)) * 100
     ));
     return Math.round(progress);
   };
@@ -247,11 +257,14 @@ export default function MyOKRs() {
                       <div className="space-y-3">
                         {okr.keyResults.map((kr) => {
                           // Calculate progress for key result
-                          const krProgress = calculateProgressPercentage(
-                            kr.currentValue, 
-                            kr.targetValue, 
-                            kr.startValue
-                          );
+                          // Use the progress field from the database if available, otherwise calculate it
+                          const krProgress = kr.progress !== undefined 
+                            ? kr.progress 
+                            : calculateProgressPercentage(
+                                kr.currentValue, 
+                                kr.targetValue, 
+                                kr.startValue
+                              );
                           
                           return (
                             <div key={kr.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
