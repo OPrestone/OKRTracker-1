@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useUserPermissions } from '@/hooks/use-user-permissions';
 import {
   Dialog,
   DialogContent,
