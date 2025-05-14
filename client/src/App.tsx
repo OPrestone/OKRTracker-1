@@ -44,6 +44,7 @@ import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
 import WellnessPulse from "@/pages/wellness-pulse";
 import Configure from "@/pages/configure";
+import TestLoginPage from "@/pages/test-login-page";
 
 // Import tenant-related pages
 import TenantsPage from "@/pages/tenants-page";
@@ -92,6 +93,7 @@ function AppRoutes() {
   return (
     <Switch>
       <AuthGuard path="/auth" component={AuthPage} />
+      <Route path="/test-login" component={TestLoginPage} />
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/home" component={Home} />
