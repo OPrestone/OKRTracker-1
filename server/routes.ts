@@ -4112,12 +4112,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/objectives/approved", withTenant, async (req, res, next) => {
     try {
       const tenantId = req.tenantId;
+      console.log(`Getting approved objectives for tenant ${tenantId}`);
+      
       const approvedObjectives = await storage.getApprovedObjectives(tenantId);
       
-      console.log(`Found ${approvedObjectives.length} approved objectives for tenant ${tenantId}`);
+      console.log(`Found ${approvedObjectives ? approvedObjectives.length : 0} approved objectives for tenant ${tenantId}`);
+      
+      // Return empty array if no objectives found instead of 404
+      if (!approvedObjectives || approvedObjectives.length === 0) {
+        return res.json([]);
+      }
       
       res.json(approvedObjectives);
     } catch (error) {
+      console.error("Error getting approved objectives:", error);
       next(error);
     }
   });

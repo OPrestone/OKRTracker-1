@@ -846,39 +846,63 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getApprovedObjectives(tenantId: string): Promise<Objective[]> {
-    // Select all columns that exist in the actual database
-    const results = await db.select({
-      id: objectives.id,
-      title: objectives.title,
-      description: objectives.description,
-      ownerId: objectives.ownerId,
-      teamId: objectives.teamId,
-      timeframeId: objectives.timeframeId,
-      status: objectives.status,
-      progress: objectives.progress,
-      parentId: objectives.parentId,
-      tenantId: objectives.tenantId,
-      level: objectives.level,
-      isApproved: objectives.isApproved,
-      createdAt: objectives.createdAt,
-    }).from(objectives)
-      .where(and(
-        eq(objectives.tenantId, tenantId),
-        eq(objectives.isApproved, true)
-      ));
-    
-    // For each objective, fetch and add its key results
-    const objectivesWithKeyResults = await Promise.all(
-      results.map(async (objective) => {
-        const keyResultsList = await this.getKeyResultsByObjective(objective.id);
-        return {
-          ...objective,
-          keyResults: keyResultsList || []
-        };
-      })
-    );
-    
-    return objectivesWithKeyResults;
+    try {
+      console.log(`Looking for approved objectives with tenantId: ${tenantId}`);
+      
+      // First check if there are any approved objectives at all
+      const count = await db.select({ count: sql`count(*)` })
+        .from(objectives)
+        .where(and(
+          eq(objectives.tenantId, tenantId),
+          eq(objectives.isApproved, true)
+        ));
+        
+      console.log(`Found ${count[0]?.count || 0} approved objectives with tenantId: ${tenantId}`);
+      
+      // If no objectives found, return empty array
+      if (!count[0] || parseInt(count[0].count as string) === 0) {
+        return [];
+      }
+      
+      // Select all columns that exist in the actual database
+      const results = await db.select({
+        id: objectives.id,
+        title: objectives.title,
+        description: objectives.description,
+        ownerId: objectives.ownerId,
+        teamId: objectives.teamId,
+        timeframeId: objectives.timeframeId,
+        status: objectives.status,
+        progress: objectives.progress,
+        parentId: objectives.parentId,
+        tenantId: objectives.tenantId,
+        level: objectives.level,
+        isApproved: objectives.isApproved,
+        createdAt: objectives.createdAt,
+      }).from(objectives)
+        .where(and(
+          eq(objectives.tenantId, tenantId),
+          eq(objectives.isApproved, true)
+        ));
+      
+      console.log(`Retrieved ${results.length} approved objectives from the database`);
+      
+      // For each objective, fetch and add its key results
+      const objectivesWithKeyResults = await Promise.all(
+        results.map(async (objective) => {
+          const keyResultsList = await this.getKeyResultsByObjective(objective.id);
+          return {
+            ...objective,
+            keyResults: keyResultsList || []
+          };
+        })
+      );
+      
+      return objectivesWithKeyResults;
+    } catch (error) {
+      console.error("Error in getApprovedObjectives:", error);
+      return [];
+    }
   }
   
   async approveObjective(id: string): Promise<Objective> {
