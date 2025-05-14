@@ -102,23 +102,57 @@ export default function DraftOKRs() {
   const [creating, setCreating] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
+  
+  // Fetch objectives with status="draft" from the API
+  const { 
+    data: draftObjectives,
+    isLoading: loadingObjectives,
+    error: objectivesError
+  } = useQuery<DraftObjective[]>({
+    queryKey: ["/api/objectives", "draft"],
+    queryFn: async () => {
+      const response = await fetch("/api/objectives?status=draft");
+      if (!response.ok) {
+        throw new Error("Failed to fetch draft objectives");
+      }
+      return response.json();
+    }
+  });
+  
+  // Fetch key results for draft objectives
+  const {
+    data: keyResults,
+    isLoading: loadingKeyResults,
+    error: keyResultsError
+  } = useQuery<KeyResult[]>({
+    queryKey: ["/api/key-results"],
+    enabled: !!draftObjectives && draftObjectives.length > 0,
+  });
+  
+  // Combine objectives with their key results
+  const draftObjectivesWithKeyResults = draftObjectives?.map(objective => ({
+    ...objective,
+    keyResults: keyResults?.filter(kr => kr.objective_id === objective.id) || []
+  })) || [];
+  
   const [editFormData, setEditFormData] = useState<{
     title: string;
     description: string;
-    keyResults: { id: number; title: string }[];
+    keyResults: KeyResult[];
   }>({
     title: "",
     description: "",
     keyResults: []
   });
+  
   const [newDraftData, setNewDraftData] = useState<{
     title: string;
     description: string;
-    keyResults: { id: number; title: string }[];
+    keyResults: KeyResult[];
   }>({
     title: "",
     description: "",
-    keyResults: [{ id: 1, title: "" }]
+    keyResults: [{ id: "", title: "", objective_id: "" }]
   });
 
   const handleEdit = (objective: DraftObjective) => {
@@ -126,7 +160,7 @@ export default function DraftOKRs() {
     setEditFormData({
       title: objective.title,
       description: objective.description,
-      keyResults: [...objective.keyResults] // Create a copy to avoid mutation
+      keyResults: objective.keyResults ? [...objective.keyResults] : [] // Create a copy to avoid mutation, handle undefined
     });
     setEditDialogOpen(true);
   };
@@ -237,16 +271,16 @@ export default function DraftOKRs() {
   };
 
   const addNewDraftKeyResult = () => {
-    // Generate a unique ID for the new key result
-    const newId = Math.max(0, ...newDraftData.keyResults.map(kr => kr.id)) + 1;
+    // Generate a unique temporary ID for the new key result
+    const tempId = `temp-${Date.now()}`;
     
     setNewDraftData(prev => ({
       ...prev,
-      keyResults: [...prev.keyResults, { id: newId, title: "" }]
+      keyResults: [...prev.keyResults, { id: tempId, title: "", objective_id: "" }]
     }));
   };
 
-  const removeNewDraftKeyResult = (id: number) => {
+  const removeNewDraftKeyResult = (id: string) => {
     setNewDraftData(prev => ({
       ...prev,
       keyResults: prev.keyResults.filter(kr => kr.id !== id)
@@ -302,75 +336,113 @@ export default function DraftOKRs() {
         </Button>
       </div>
 
-      {draftObjectives && draftObjectives.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {draftObjectives.map((objective) => (
-            <Card key={objective.id} className="border-l-4 border-l-amber-400">
-              <CardHeader>
-                <div className="flex justify-between items-start mb-2">
-                  <Badge variant="outline" className="bg-amber-50">Draft</Badge>
-                  <div className="text-sm text-gray-500">Created {objective.createdAt}</div>
-                </div>
-                <CardTitle>{objective.title}</CardTitle>
-                <CardDescription className="mt-2">
-                  {objective.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                  <ul className="space-y-1 text-sm text-gray-700">
-                    {objective.keyResults.map((kr) => (
-                      <li key={kr.id} className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>{kr.title}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <Separator className="my-4" />
-                <div className="flex items-center">
-                  <Avatar className="h-8 w-8 mr-2">
-                    <AvatarFallback>{`${objective.owner.firstName[0]}${objective.owner.lastName[0]}`}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-sm">
-                    <p className="font-medium">{objective.owner.firstName} {objective.owner.lastName}</p>
-                    <p className="text-xs text-gray-500">Draft Owner</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="grid grid-cols-3 gap-2 pt-0">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(objective)}>
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleAIReview(objective)}>
-                  <Sparkles className="h-4 w-4 mr-1 text-purple-500" />
-                  AI Review
-                </Button>
-                <Button size="sm" onClick={() => handleSubmit(objective)}>
-                  Submit
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+      {/* Loading state */}
+      {(loadingObjectives || loadingKeyResults) && (
+        <div className="flex justify-center items-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+          <p>Loading draft objectives...</p>
         </div>
-      ) : (
-        <Card>
+      )}
+      
+      {/* Error state */}
+      {(objectivesError || keyResultsError) && (
+        <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle>No draft objectives</CardTitle>
+            <CardTitle className="text-red-600">Error Loading Data</CardTitle>
             <CardDescription>
-              You don't have any draft objectives yet.
+              {objectivesError ? objectivesError.message : keyResultsError?.message}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={handleNewDraft}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create your first draft
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
             </Button>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Data loaded successfully */}
+      {!loadingObjectives && !loadingKeyResults && !objectivesError && !keyResultsError && (
+        <>
+          {draftObjectivesWithKeyResults && draftObjectivesWithKeyResults.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {draftObjectivesWithKeyResults.map((objective) => (
+                <Card key={objective.id} className="border-l-4 border-l-amber-400">
+                  <CardHeader>
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant="outline" className="bg-amber-50">Draft</Badge>
+                      <div className="text-sm text-gray-500">
+                        {objective.created_at ? `Created ${new Date(objective.created_at).toLocaleDateString()}` : ''}
+                      </div>
+                    </div>
+                    <CardTitle>{objective.title}</CardTitle>
+                    <CardDescription className="mt-2">
+                      {objective.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Key Results</h4>
+                      {objective.keyResults && objective.keyResults.length > 0 ? (
+                        <ul className="space-y-1 text-sm text-gray-700">
+                          {objective.keyResults.map((kr) => (
+                            <li key={kr.id} className="flex items-start">
+                              <span className="mr-2">•</span>
+                              <span>{kr.title}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No key results defined yet</p>
+                      )}
+                    </div>
+                    <Separator className="my-4" />
+                    <div className="flex items-center">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback>
+                          {objective.owner_id ? objective.owner_id.substring(0, 2) : "??"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-sm">
+                        <p className="font-medium">Owner ID: {objective.owner_id || "Not assigned"}</p>
+                        <p className="text-xs text-gray-500">Draft Owner</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="grid grid-cols-3 gap-2 pt-0">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(objective)}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => handleAIReview(objective)}>
+                      <Sparkles className="h-4 w-4 mr-1 text-purple-500" />
+                      AI Review
+                    </Button>
+                    <Button size="sm" onClick={() => handleSubmit(objective)}>
+                      Submit
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>No draft objectives</CardTitle>
+                <CardDescription>
+                  You don't have any draft objectives yet.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" onClick={handleNewDraft}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create your first draft
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* AI Review Dialog */}
