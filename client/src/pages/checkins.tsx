@@ -707,16 +707,19 @@ export default function CheckIns() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {keyResults && keyResults.filter(kr => 
+                      {keyResults && Array.isArray(keyResults) ? keyResults.filter(kr => 
                         // Filter key results that need check-ins (no recent check-ins or low progress)
-                        kr.status !== 'completed' && parseInt(kr.progress?.toString() || '0') < 100
+                        kr && kr.status !== 'completed' && parseInt(kr.progress?.toString() || '0') < 100
                       ).map((kr) => {
                         // Find the objective for this key result
-                        const objective = objectives?.find(obj => obj.id === kr.objectiveId);
+                        const objective = objectives && Array.isArray(objectives) ? 
+                          objectives.find(obj => obj && kr && obj.id === kr.objectiveId) : null;
                         // Find the assigned user
-                        const owner = users?.find(user => user.id === kr.assignedToId);
+                        const owner = users && Array.isArray(users) ? 
+                          users.find(user => user && kr && user.id === kr.assignedToId) : null;
                         // Find the last check-in for this key result
-                        const lastCheckIn = checkIns?.find(c => c.keyResultId === kr.id);
+                        const lastCheckIn = checkIns && Array.isArray(checkIns) ? 
+                          checkIns.find(c => c && kr && c.keyResultId === kr.id) : null;
                         
                         return (
                           <TableRow key={kr.id} className="h-16">
@@ -757,7 +760,7 @@ export default function CheckIns() {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
+                    }) : null}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -845,11 +848,13 @@ export default function CheckIns() {
               </div>
             </div>
             
-            {checkIns && checkIns.map((checkIn) => {
+            {checkIns && Array.isArray(checkIns) ? checkIns.map((checkIn) => {
               // Find the related key result
-              const keyResult = keyResults?.find(kr => kr.id === checkIn.keyResultId);
+              const keyResult = keyResults && Array.isArray(keyResults) ? 
+                keyResults.find(kr => kr && checkIn && kr.id === checkIn.keyResultId) : null;
               // Find the related objective
-              const objective = objectives?.find(obj => obj.id === keyResult?.objectiveId);
+              const objective = objectives && Array.isArray(objectives) ? 
+                objectives.find(obj => obj && keyResult && obj.id === keyResult.objectiveId) : null;
               
               return (
                 <Card key={checkIn.id} className="overflow-hidden">
@@ -892,13 +897,13 @@ export default function CheckIns() {
                         <p>{checkIn.comment}</p>
                       </div>
                       
-                      {checkIn.comments.length > 0 && (
+                      {checkIn.comments && Array.isArray(checkIn.comments) && checkIn.comments.length > 0 && (
                         <div className="mt-6">
                           <p className="font-medium text-muted-foreground mb-2">
                             Feedback ({checkIn.comments.length})
                           </p>
                           <div className="space-y-4">
-                            {checkIn.comments.map((comment) => (
+                            {checkIn.comments && Array.isArray(checkIn.comments) ? checkIn.comments.map((comment) => (
                               <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                   <Avatar className="h-6 w-6">
@@ -911,7 +916,7 @@ export default function CheckIns() {
                                 </div>
                                 <p className="text-sm">{comment.content}</p>
                               </div>
-                            ))}
+                            )) : null}
                           </div>
                         </div>
                       )}
@@ -934,7 +939,7 @@ export default function CheckIns() {
                 </CardContent>
               </Card>
             );
-          })}
+          }) : null}
           </div>
         </TabsContent>
         
@@ -1034,16 +1039,17 @@ export default function CheckIns() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {teams && teams.map((team) => {
+                    {teams && Array.isArray(teams) ? teams.map((team) => {
+                      if (!team) return null;
                       // Count check-ins related to this team
-                      const teamObjectives = objectives?.filter(obj => obj.teamId === team.id) || [];
+                      const teamObjectives = objectives && Array.isArray(objectives) ? 
+                        objectives.filter(obj => obj && team && obj.teamId === team.id) : [];
                       const teamObjectiveIds = teamObjectives.map(obj => obj.id);
-                      const teamKeyResults = keyResults?.filter(kr => 
-                        kr.objectiveId && teamObjectiveIds.includes(kr.objectiveId)
-                      ) || [];
-                      const teamCheckIns = checkIns?.filter(checkIn =>
-                        teamKeyResults.some(kr => kr.id === checkIn.keyResultId)
-                      ) || [];
+                      const teamKeyResults = keyResults && Array.isArray(keyResults) ? 
+                        keyResults.filter(kr => kr && kr.objectiveId && teamObjectiveIds.includes(kr.objectiveId)) : [];
+                      const teamCheckIns = checkIns && Array.isArray(checkIns) ? 
+                        checkIns.filter(checkIn => checkIn && teamKeyResults.some(kr => kr && kr.id === checkIn.keyResultId))
+                       : [];
                       
                       // Calculate average progress
                       const totalProgress = teamKeyResults.reduce(
@@ -1101,7 +1107,7 @@ export default function CheckIns() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
+                  }) : null}
                   </TableBody>
                 </Table>
               </CardContent>
