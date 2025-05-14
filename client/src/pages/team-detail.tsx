@@ -41,7 +41,8 @@ import {
   Info,
   Activity,
   ThumbsUp,
-  CalendarDays
+  CalendarDays,
+  UserPlus
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { CreateObjectiveModal } from "@/components/team/create-objective-modal";
+import { AddTeamMemberModal } from "@/components/team/add-team-member-modal";
 
 interface TeamObjective {
   id: string;
@@ -106,6 +109,10 @@ export default function TeamDetailPage() {
   // State for active tab and animation triggers
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [expandedObjective, setExpandedObjective] = useState<string | null>(null);
+  
+  // State for modal controls
+  const [isCreateObjectiveModalOpen, setIsCreateObjectiveModalOpen] = useState(false);
+  const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
   
   // Query for teams data (either by ID or by finding team by slug)
   const { data: team, isLoading: teamLoading, error: teamError } = useQuery({
