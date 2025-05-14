@@ -127,9 +127,11 @@ export interface IStorage {
   createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>;
   getCheckIn(id: string): Promise<CheckIn | undefined>;
   getCheckInsByUser(userId: string): Promise<CheckIn[]>;
+  getCheckInsByUserId(userId: string, tenantId: string): Promise<CheckIn[]>;
   getCheckInsByObjective(objectiveId: string): Promise<CheckIn[]>;
   getCheckInsByKeyResult(keyResultId: string): Promise<CheckIn[]>;
   getRecentCheckIns(limit: number): Promise<CheckIn[]>;
+  getFeedbackForUser(userId: string, tenantId: string): Promise<any[]>;
   
   // Chat Rooms
   createChatRoom(chatRoom: InsertChatRoom): Promise<ChatRoom>;
