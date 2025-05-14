@@ -835,7 +835,16 @@ export const insertFinancialAccountSchema = createInsertSchema(financialAccounts
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
-export const insertCycleSchema = createInsertSchema(cycles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCycleSchema = createInsertSchema(cycles)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    startDate: z.string().or(z.date()).transform(val => 
+      typeof val === 'string' ? new Date(val) : val
+    ),
+    endDate: z.string().or(z.date()).transform(val => 
+      typeof val === 'string' ? new Date(val) : val
+    )
+  });
 
 // TYPES
 
