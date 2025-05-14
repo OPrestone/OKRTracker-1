@@ -1437,6 +1437,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Get objectives owned by the current user
+  app.get("/api/my-objectives", withTenant, ensureAuthenticated, async (req, res, next) => {
+    try {
+      const ownerId = req.user.id;
+      const tenantId = req.tenantId;
+      
+      // Get objectives by owner and filter by tenant
+      const allOwnerObjectives = await storage.getObjectivesByOwner(ownerId);
+      const objectives = allOwnerObjectives.filter(obj => obj.tenantId === tenantId);
+      
+      // Get key results for each objective
+      const objectivesWithKeyResults = await Promise.all(
+        objectives.map(async (objective) => {
+          const keyResults = await storage.getKeyResultsByObjective(objective.id);
+          return {
+            ...objective,
+            keyResults: keyResults
+          };
+        })
+      );
+      
+      res.json(objectivesWithKeyResults);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   app.post("/api/objectives", withTenant, async (req, res, next) => {
     try {
