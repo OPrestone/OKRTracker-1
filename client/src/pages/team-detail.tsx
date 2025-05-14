@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
@@ -30,12 +30,24 @@ import {
   Smile,
   Heart,
   Award,
-  PlusCircle
+  PlusCircle,
+  Calendar,
+  Clock,
+  BarChart3,
+  LineChart,
+  ArrowUpRight,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Activity
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TeamObjective {
