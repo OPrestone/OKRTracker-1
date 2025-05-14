@@ -65,6 +65,7 @@ export default function CreateCheckInDialog({
   const queryClient = useQueryClient();
   const [selectedKeyResultProgress, setSelectedKeyResultProgress] = useState<number | null>(null);
   const [updateObjectiveProgress, setUpdateObjectiveProgress] = useState(objectiveProgress);
+  const { currentTenant } = useTenantContext();
 
   const { data: keyResults = [] } = useQuery<KeyResult[]>({
     queryKey: ["/api/key-results", { objectiveId }],
@@ -97,18 +98,14 @@ export default function CreateCheckInDialog({
     }
   };
 
-  // Import useTenantContext hook 
-  import { useTenantContext } from "@/hooks/use-tenant-context";
-  
-  // Add this near the top of your component
-  const { currentTenant } = useTenantContext();
+
 
   const createCheckInMutation = useMutation({
     mutationFn: async (data: CheckInFormValues) => {
       const response = await apiRequest("POST", "/api/check-ins", {
         ...data,
         objectiveId,
-        tenantId: currentTenant?.id // Add tenant ID to the request
+        tenantId: currentTenant?.id
       });
       return response.json();
     },

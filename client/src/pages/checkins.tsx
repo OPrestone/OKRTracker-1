@@ -175,7 +175,7 @@ function CheckInForm({ keyResult, onClose }: { keyResult?: any; onClose: () => v
         objectiveIds: selectedObjectives,
         keyResultIds: selectedKeyResults,
         teamId: selectedTeam || null,
-        tenantId: currentTenant?.id // Add the tenant ID to the payload
+        tenantId: currentTenant?.id
       };
       
       // Make API call to create the check-in
