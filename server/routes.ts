@@ -925,10 +925,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Fetch cadences for the current tenant only
-      const cadencesList = await db.select()
-        .from(cadences)
-        .where(eq(cadences.tenantId, tenantId));
+      // Fetch all cadences for now as tenant_id column doesn't exist in the database yet
+      // Once the database schema is updated with tenant_id, we'll filter by tenant
+      const cadencesList = await db.select().from(cadences);
       
       res.json(cadencesList);
     } catch (error) {
@@ -1058,14 +1057,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fetch timeframes for the specific cadence and current tenant
+      // Only filter by cadenceId since tenant_id column doesn't exist in timeframes table
       const timeframesList = await db.select()
         .from(timeframes)
-        .where(
-          and(
-            eq(timeframes.cadenceId, cadenceId),
-            eq(timeframes.tenantId, tenantId)
-          )
-        );
+        .where(eq(timeframes.cadenceId, cadenceId));
       
       res.json(timeframesList);
     } catch (error) {
