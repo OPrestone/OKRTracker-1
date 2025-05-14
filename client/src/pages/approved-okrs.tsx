@@ -61,16 +61,60 @@ const ApprovedOKRs = () => {
   const [, navigate] = useLocation();
   const isAdmin = user?.isAdmin || user?.role === 'owner';
 
-  // Fetch approved objectives
+  // Fetch approved objectives with current tenant ID
   const { data: approvedObjectives = [], isLoading, error } = useQuery<ObjectiveWithKeyResults[]>({
     queryKey: ['/api/objectives/approved'],
     enabled: !!user,
+    queryFn: async ({ queryKey }) => {
+      // Try to get tenant ID from session storage, default to user's default tenant if not found
+      let tenantId = sessionStorage.getItem('currentTenantId');
+      
+      // If tenant ID is not found in session storage, check if user has a default tenant
+      if (!tenantId && user?.defaultTenant && user.tenants && user.tenants.length > 0) {
+        // Find the default tenant in the user's tenant list
+        const defaultTenant = user.tenants.find(tenant => tenant.id === user.defaultTenant);
+        if (defaultTenant) {
+          tenantId = defaultTenant.id;
+          console.log('Using default tenant ID from user:', tenantId);
+        }
+      }
+      
+      if (!tenantId) {
+        console.error('No tenant ID found in session storage or user defaults');
+        throw new Error('No tenant ID available. Please select a tenant first.');
+      }
+      
+      const response = await apiRequest('GET', `${queryKey[0]}?tenantId=${tenantId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch approved objectives');
+      }
+      return response.json();
+    },
   });
 
   // Mutation for unapproving an objective
   const unapproveObjectiveMutation = useMutation({
     mutationFn: async (objectiveId: string) => {
-      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/unapprove`);
+      // Try to get tenant ID from session storage, default to user's default tenant if not found
+      let tenantId = sessionStorage.getItem('currentTenantId');
+      
+      // If tenant ID is not found in session storage, check if user has a default tenant
+      if (!tenantId && user?.defaultTenant && user.tenants && user.tenants.length > 0) {
+        // Find the default tenant in the user's tenant list
+        const defaultTenant = user.tenants.find(tenant => tenant.id === user.defaultTenant);
+        if (defaultTenant) {
+          tenantId = defaultTenant.id;
+          console.log('Using default tenant ID from user for unapprove:', tenantId);
+        }
+      }
+      
+      if (!tenantId) {
+        console.error('No tenant ID found in session storage or user defaults for unapprove action');
+        throw new Error('No tenant ID available. Please select a tenant first.');
+      }
+      
+      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/unapprove?tenantId=${tenantId}`);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to unapprove objective');
