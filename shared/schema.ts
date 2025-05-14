@@ -17,6 +17,7 @@ export const userLevelEnum = pgEnum("user_level", ["beginner", "intermediate", "
 export const transactionTypeEnum = pgEnum("transaction_type", ["income", "expense", "transfer"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "canceled", "past_due", "unpaid", "incomplete", "incomplete_expired", "trialing"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "pending", "failed"]);
+export const projectStatusEnum = pgEnum("project_status", ["backlog", "todo", "in-progress", "review", "done"]);
 export const meetingStatusEnum = pgEnum("meeting_status", ["scheduled", "completed", "cancelled", "upcoming"]);
 export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "zoom", "microsoft_teams", "in_person", "other"]);
 
@@ -189,6 +190,22 @@ export const checkIns = pgTableWithUlid("check_ins", {
   notes: text("notes"),
   tenantId: text("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const projects = pgTableWithUlid("projects", {
+  title: text("title").notNull(),
+  description: text("description"),
+  status: projectStatusEnum("status").default("backlog").notNull(),
+  priority: text("priority").notNull(), // low, medium, high, urgent
+  dueDate: timestamp("due_date"),
+  teamId: text("team_id").references(() => teams.id),
+  ownerId: text("owner_id").references(() => users.id).notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  checklistTotal: integer("checklist_total").default(0).notNull(),
+  checklistCompleted: integer("checklist_completed").default(0).notNull(),
+  commentsCount: integer("comments_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const chatRooms = pgTableWithUlid("chat_rooms", {
