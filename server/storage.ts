@@ -37,6 +37,9 @@ export interface IStorage {
   updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team>;
   getAllTeams(): Promise<Team[]>;
   getTeamsByParent(parentId: string): Promise<Team[]>;
+  getTeamsByTenant(tenantId: string): Promise<Team[]>;
+  getTeamPerformance(teamId: string, tenantId: string): Promise<any>;
+  getTeamsPerformance(tenantId: string): Promise<any[]>;
   addUserToTeam(userId: string, teamId: string): Promise<User>;
   removeUserFromTeam(userId: string): Promise<User>;
   
@@ -493,6 +496,156 @@ export class DatabaseStorage implements IStorage {
       ownerId: teams.ownerId,
       createdAt: teams.createdAt
     }).from(teams).where(eq(teams.parentId, parentId));
+  }
+  
+  /**
+   * Get performance metrics for a specific team
+   * @param teamId - The ID of the team
+   * @param tenantId - The tenant ID for context
+   * @returns Comprehensive team performance metrics
+   */
+  async getTeamPerformance(teamId: string, tenantId: string): Promise<any> {
+    try {
+      // Get the team details
+      const team = await this.getTeam(teamId);
+      if (!team) {
+        throw new Error(`Team with id ${teamId} not found`);
+      }
+      
+      // Get team members
+      const teamMembers = await this.getUsersByTeam(teamId);
+      
+      // Get objectives assigned to this team
+      const teamObjectives = await db
+        .select()
+        .from(objectives)
+        .where(and(
+          eq(objectives.teamId, teamId),
+          eq(objectives.tenantId, tenantId)
+        ));
+      
+      // Get all key results for these objectives
+      const objectiveIds = teamObjectives.map(obj => obj.id);
+      const keyResultsForTeam = objectiveIds.length > 0 
+        ? await db
+            .select()
+            .from(keyResults)
+            .where(and(
+              inArray(keyResults.objectiveId, objectiveIds),
+              eq(keyResults.tenantId, tenantId)
+            ))
+        : [];
+      
+      // Calculate overall progress metrics
+      const totalObjectives = teamObjectives.length;
+      const completedObjectives = teamObjectives.filter(obj => obj.progress === 100).length;
+      const onTrackObjectives = teamObjectives.filter(obj => obj.progress >= 70 && obj.progress < 100).length;
+      const atRiskObjectives = teamObjectives.filter(obj => obj.progress >= 40 && obj.progress < 70).length;
+      const behindObjectives = teamObjectives.filter(obj => obj.progress < 40).length;
+      
+      // Calculate key result metrics
+      const totalKeyResults = keyResultsForTeam.length;
+      const completedKeyResults = keyResultsForTeam.filter(kr => kr.progress === 100).length;
+      
+      // Calculate average progress
+      const overallProgress = totalObjectives > 0
+        ? Math.round(teamObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / totalObjectives)
+        : 0;
+      
+      // Get active timeframes for this tenant
+      const activeTimeframes = await this.getTimeframesByTenant(tenantId);
+      
+      // Generate performance data
+      const performance = {
+        team,
+        memberCount: teamMembers.length,
+        metrics: {
+          totalObjectives,
+          completedObjectives,
+          onTrackObjectives,
+          atRiskObjectives,
+          behindObjectives,
+          totalKeyResults,
+          completedKeyResults,
+          overallProgress
+        },
+        objectives: teamObjectives.map(obj => {
+          // Find key results for this objective
+          const objKeyResults = keyResultsForTeam.filter(kr => kr.objectiveId === obj.id);
+          
+          return {
+            ...obj,
+            keyResults: objKeyResults,
+            status: obj.progress >= 70 ? 'on-track' : obj.progress >= 40 ? 'at-risk' : 'behind'
+          };
+        }),
+        timeframes: activeTimeframes
+      };
+      
+      return performance;
+    } catch (error) {
+      console.error(`Error getting performance for team ${teamId}:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get performance metrics for all teams in a tenant
+   * @param tenantId - The tenant ID
+   * @returns Array of team performance metrics
+   */
+  async getTeamsPerformance(tenantId: string): Promise<any[]> {
+    try {
+      // Get all teams for this tenant
+      const teams = await this.getTeamsByTenant(tenantId);
+      
+      // Get performance data for each team
+      const teamsPerformance = await Promise.all(
+        teams.map(async (team) => {
+          try {
+            const performance = await this.getTeamPerformance(team.id, tenantId);
+            return {
+              id: team.id,
+              name: team.name,
+              description: team.description,
+              color: team.color,
+              icon: team.icon,
+              memberCount: performance.memberCount,
+              progress: performance.metrics.overallProgress,
+              objectives: {
+                total: performance.metrics.totalObjectives,
+                completed: performance.metrics.completedObjectives,
+                onTrack: performance.metrics.onTrackObjectives,
+                atRisk: performance.metrics.atRiskObjectives,
+                behind: performance.metrics.behindObjectives
+              },
+              keyResults: {
+                total: performance.metrics.totalKeyResults,
+                completed: performance.metrics.completedKeyResults
+              }
+            };
+          } catch (error) {
+            console.error(`Error getting performance for team ${team.id}:`, error);
+            return {
+              id: team.id,
+              name: team.name,
+              description: team.description,
+              color: team.color,
+              icon: team.icon,
+              memberCount: 0,
+              progress: 0,
+              objectives: { total: 0, completed: 0, onTrack: 0, atRisk: 0, behind: 0 },
+              keyResults: { total: 0, completed: 0 }
+            };
+          }
+        })
+      );
+      
+      return teamsPerformance;
+    } catch (error) {
+      console.error('Error getting teams performance:', error);
+      return [];
+    }
   }
   
   async addUserToTeam(userId: string, teamId: string): Promise<User> {
