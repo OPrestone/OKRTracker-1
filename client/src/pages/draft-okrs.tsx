@@ -320,32 +320,53 @@ export default function DraftOKRs() {
     
     setCreating(true);
     
-    // In a real implementation, we would make an API call to update the draft objective
-    // For example:
+    // Prepare the keyResults data, ensuring all key results have objective_id
+    const preparedKeyResults = editDraftData.keyResults.map(kr => ({
+      ...kr,
+      title: kr.title.trim(),
+      objective_id: editDraftData.id,
+      // For new key results (no ID), we don't include an ID so the server assigns one
+      ...(kr.id ? { id: kr.id } : {})
+    }));
+    
+    // Make API call to update the draft objective
     apiRequest("PATCH", `/api/objectives/${editDraftData.id}`, {
       title: editDraftData.title,
       description: editDraftData.description,
-      keyResults: editDraftData.keyResults.map(kr => ({
-        ...kr,
-        title: kr.title.trim(),
-        objective_id: editDraftData.id
-      }))
+      status: "draft", // Ensure it maintains draft status
+      keyResults: preparedKeyResults
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(updatedObjective => {
         setCreating(false);
         setEditDialogOpen(false);
+        
+        // Optimistically update the local UI data
+        if (draftObjectives && Array.isArray(draftObjectives)) {
+          // Update the client-side cache immediately for instant UI update
+          queryClient.setQueryData(["/api/objectives", "draft"], 
+            draftObjectives.map(obj => 
+              obj.id === updatedObjective.id ? updatedObjective : obj
+            )
+          );
+        }
         
         toast({
           title: "Draft Updated",
           description: "Your draft objective has been updated successfully.",
         });
         
-        // Invalidate the query cache to refetch the data
+        // Invalidate the query cache to refetch the data in the background
         queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft"] });
       })
       .catch(error => {
         setCreating(false);
+        console.error("Error updating draft:", error);
         
         toast({
           title: "Error",
