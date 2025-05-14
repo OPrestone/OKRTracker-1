@@ -517,42 +517,42 @@ export default function CheckIns() {
   const [selectedKeyResult, setSelectedKeyResult] = useState<any>(null);
   const { toast } = useToast();
   const { user, isLoading: isLoadingAuth } = useAuth();
-  const { selectedTenant } = useTenantContext();
+  const { currentTenant, isLoading: isLoadingTenant } = useTenantContext();
   
   // Fetch check-ins data
   const { data: checkIns, isLoading: isLoadingCheckIns, error: checkInsError, refetch: refetchCheckIns } = useQuery({
     queryKey: ['/api/check-ins'],
-    enabled: !!user && !!selectedTenant,
+    enabled: !!user && !!currentTenant,
   });
   
   // Fetch key results for check-ins
   const { data: keyResults, isLoading: isLoadingKeyResults, error: keyResultsError } = useQuery({
     queryKey: ['/api/key-results'],
-    enabled: !!user && !!selectedTenant,
+    enabled: !!user && !!currentTenant,
   });
   
   // Fetch objectives for check-ins
   const { data: objectives, isLoading: isLoadingObjectives, error: objectivesError } = useQuery({
     queryKey: ['/api/objectives'],
-    enabled: !!user && !!selectedTenant,
+    enabled: !!user && !!currentTenant,
   });
   
   // Fetch teams for check-ins
   const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useQuery({
     queryKey: ['/api/teams'],
-    enabled: !!user && !!selectedTenant,
+    enabled: !!user && !!currentTenant,
   });
   
   // Fetch users data
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery({
     queryKey: ['/api/users'],
-    enabled: !!user && !!selectedTenant,
+    enabled: !!user && !!currentTenant,
   });
   
-  const isLoading = isLoadingAuth || isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
+  const isLoading = isLoadingAuth || isLoadingTenant || isLoadingCheckIns || isLoadingKeyResults || isLoadingObjectives || isLoadingUsers || isLoadingTeams;
   
   // Check for any authentication or data loading errors
-  const hasError = !user || checkInsError || keyResultsError || objectivesError || teamsError || usersError;
+  const hasError = !user || !currentTenant || checkInsError || keyResultsError || objectivesError || teamsError || usersError;
   
   // Function to handle opening the check-in modal
   const handleOpenCheckIn = (keyResult: any) => {
@@ -590,6 +590,48 @@ export default function CheckIns() {
     }
   };
   
+  // Show loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Check-ins" subtitle="Keep track of progress and updates on objectives and key results">
+        <div className="container mx-auto py-8 max-w-7xl flex flex-col items-center justify-center h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+            <h3 className="text-lg font-medium">Loading check-ins data...</h3>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+  
+  // Show error state
+  if (hasError) {
+    return (
+      <DashboardLayout title="Check-ins" subtitle="Keep track of progress and updates on objectives and key results">
+        <div className="container mx-auto py-8 max-w-7xl">
+          <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center gap-3 mb-6">
+            <AlertTriangle className="h-5 w-5" />
+            <div>
+              <h3 className="font-medium">Unable to load check-ins</h3>
+              <p className="text-sm text-destructive/80">
+                {!user ? "Please log in to view check-ins" : 
+                 !currentTenant ? "Please select an organization to view check-ins" : 
+                 "There was a problem loading your data. Please try again later."}
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              className="ml-auto border-destructive text-destructive"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Check-ins" subtitle="Keep track of progress and updates on objectives and key results">
       <div className="container mx-auto py-8 max-w-7xl">
