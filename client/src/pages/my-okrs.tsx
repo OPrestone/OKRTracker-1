@@ -5,26 +5,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Target, TrendingUp, Clock } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Plus, Target, TrendingUp, Clock, Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
 import { useUserPermissions } from "@/hooks/use-user-permissions";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
+// Types to match database schema
 interface KeyResult {
-  id: number;
+  id: string;
   title: string;
-  progress: number;
-  dueDate: string;
-  status: "on-track" | "at-risk" | "behind" | "complete";
+  description?: string;
+  currentValue: number;
+  targetValue: number;
+  startValue: number;
+  format?: string;
+  objectiveId: string;
+  ownerId: string;
+  status?: string;
+  createdAt: string;
 }
 
+interface DBObjective {
+  id: string;
+  title: string;
+  description?: string;
+  ownerId: string;
+  teamId?: string;
+  timeframeId: string;
+  status: string;
+  progress: number;
+  parentId?: string;
+  tenantId: string;
+  level: string;
+  createdAt: string;
+}
+
+interface Timeframe {
+  id: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  cadenceId: string;
+  createdAt: string;
+}
+
+// Interface for transformed data structure to match UI needs
 interface OKR {
-  id: number;
+  id: string;
   title: string;
   description: string;
   progress: number;
   timeframe: string;
-  status: "draft" | "active" | "completed" | "pending-approval";
-  type: "personal" | "team" | "company";
+  status: string;
+  type: string;
   keyResults: KeyResult[];
 }
 
@@ -32,154 +69,67 @@ export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
   const [_, navigate] = useLocation();
   const { canCreateObjectives } = useUserPermissions();
+  const { user } = useAuth();
   
-  const myOKRs: OKR[] = [
-    {
-      id: 1,
-      title: "Revolutionize Digital Landscapes",
-      description: "Create groundbreaking digital products that redefine industry standards, pushing boundaries and setting new trends.",
-      progress: 15,
-      timeframe: "Q2 2025",
-      status: "active",
-      type: "personal",
-      keyResults: [
-        {
-          id: 101,
-          title: "Increase User Engagement by 40%",
-          progress: 25,
-          dueDate: "Jun 30, 2025",
-          status: "on-track"
-        },
-        {
-          id: 102,
-          title: "Launch 5 Innovative Digital Products",
-          progress: 0,
-          dueDate: "Sep 15, 2025",
-          status: "behind"
-        },
-        {
-          id: 103,
-          title: "Achieve 90% Positive User Feedback",
-          progress: 20,
-          dueDate: "Aug 1, 2025",
-          status: "at-risk"
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: "Optimize Development Workflow",
-      description: "Improve development processes to increase efficiency, reduce bugs, and accelerate delivery timelines.",
-      progress: 65,
-      timeframe: "Q2 2025",
-      status: "active",
-      type: "team",
-      keyResults: [
-        {
-          id: 201,
-          title: "Reduce bug rate by 30%",
-          progress: 80,
-          dueDate: "May 15, 2025",
-          status: "on-track"
-        },
-        {
-          id: 202,
-          title: "Implement CI/CD pipeline across all projects",
-          progress: 100,
-          dueDate: "Apr 30, 2025",
-          status: "complete"
-        },
-        {
-          id: 203,
-          title: "Increase code review coverage to 95%",
-          progress: 70,
-          dueDate: "Jun 15, 2025",
-          status: "on-track"
-        }
-      ]
-    },
-    {
-      id: 3,
-      title: "Ignite Innovation Fires",
-      description: "Fuel the development of cutting-edge digital solutions, sparking creativity and pioneering advancements.",
-      progress: 0,
-      timeframe: "Q3 2025",
-      status: "pending-approval",
-      type: "personal",
-      keyResults: [
-        {
-          id: 301,
-          title: "Establish innovation lab",
-          progress: 0,
-          dueDate: "Aug 1, 2025",
-          status: "on-track"
-        },
-        {
-          id: 302,
-          title: "Organize 5 innovation workshops",
-          progress: 0,
-          dueDate: "Sep 30, 2025",
-          status: "on-track"
-        }
-      ]
-    }
-  ];
+  // Fetch all objectives
+  const { data: objectives = [], isLoading: loadingObjectives } = useQuery<DBObjective[]>({
+    queryKey: ['/api/objectives'],
+    queryFn: getQueryFn(),
+    enabled: !!user
+  });
   
-  const drafts: OKR[] = [
-    {
-      id: 4,
-      title: "Enhance Team Collaboration",
-      description: "Improve communication and workflows between team members to boost productivity.",
-      progress: 0,
-      timeframe: "Q3 2025",
-      status: "draft",
-      type: "team",
-      keyResults: [
-        {
-          id: 401,
-          title: "Implement new collaboration tools",
-          progress: 0,
-          dueDate: "Oct 15, 2025",
-          status: "on-track"
-        },
-        {
-          id: 402,
-          title: "Conduct weekly sync-up meetings",
-          progress: 0,
-          dueDate: "Ongoing",
-          status: "on-track"
-        }
-      ]
-    }
-  ];
+  // Fetch key results
+  const { data: keyResults = [], isLoading: loadingKeyResults } = useQuery<KeyResult[]>({
+    queryKey: ['/api/key-results'],
+    queryFn: getQueryFn(),
+    enabled: !!user
+  });
   
-  const completedOKRs: OKR[] = [
-    {
-      id: 5,
-      title: "Improve Customer Support Response Time",
-      description: "Reduce support ticket response and resolution times to improve customer satisfaction.",
-      progress: 100,
-      timeframe: "Q1 2025",
-      status: "completed",
-      type: "team",
-      keyResults: [
-        {
-          id: 501,
-          title: "Reduce first response time to under 4 hours",
-          progress: 100,
-          dueDate: "Mar 15, 2025",
-          status: "complete"
-        },
-        {
-          id: 502,
-          title: "Achieve 85% first-contact resolution rate",
-          progress: 100,
-          dueDate: "Mar 30, 2025",
-          status: "complete"
-        }
-      ]
-    }
-  ];
+  // Fetch timeframes for mapping
+  const { data: timeframes = [], isLoading: loadingTimeframes } = useQuery<Timeframe[]>({
+    queryKey: ['/api/timeframes'],
+    queryFn: getQueryFn(),
+    enabled: !!user
+  });
+  
+  // Transform database objectives into OKR format needed for UI
+  const transformObjectivesToOKRs = (): OKR[] => {
+    if (loadingObjectives || loadingKeyResults || loadingTimeframes) return [];
+    
+    return objectives.map(obj => {
+      // Find related key results
+      const objKeyResults = keyResults.filter(kr => kr.objectiveId === obj.id);
+      
+      // Find timeframe
+      const timeframe = timeframes.find(tf => tf.id === obj.timeframeId);
+      
+      return {
+        id: obj.id,
+        title: obj.title,
+        description: obj.description || "",
+        progress: obj.progress,
+        timeframe: timeframe?.name || "Unknown",
+        status: obj.status,
+        type: obj.level, // using level field to determine type
+        keyResults: objKeyResults
+      };
+    });
+  };
+  
+  const myOKRs = transformObjectivesToOKRs();
+  
+  // Filter objectives by user
+  const userOKRs = myOKRs.filter(okr => {
+    // For now, show all objectives as we build out the system, but in future we can filter
+    // to only show those belonging to current user with: okr.ownerId === user?.id
+    return true;
+  });
+  
+  // Filter by status
+  const activeOKRs = userOKRs.filter(okr => okr.status === "active");
+  const pendingApprovalOKRs = userOKRs.filter(okr => okr.status === "pending-approval");
+  const draftOKRs = userOKRs.filter(okr => okr.status === "draft");
+  const completedOKRs = userOKRs.filter(okr => okr.status === "completed");
   
   const getStatusBadge = (status: string) => {
     switch (status) {
