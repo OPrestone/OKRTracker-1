@@ -148,7 +148,7 @@ export default function Cadences() {
 
   // Delete cadence mutation
   const deleteCadenceMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/cadences/${id}`);
     },
     onSuccess: () => {
