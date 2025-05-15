@@ -179,7 +179,7 @@ export default function Cadences() {
   const handleCreateCadence = () => {
     const cadenceData = {
       ...newCadence,
-      startMonth: parseInt(newCadence.startMonth)
+      startMonth: newCadence.startMonth // Keep as string to match the schema
     };
     
     createCadenceMutation.mutate(cadenceData);
