@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { User, Team } from "@shared/schema";
+import { User as UserSchema, Team } from "@shared/schema";
 import { 
   Card, 
   CardContent, 
@@ -38,11 +38,14 @@ import {
   Filter,
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
-  ChevronDown,
-  UserX,
+  Settings,
   UserCheck,
-  Settings
+  AlertCircle,
+  Info,
+  AlertTriangle,
+  User,
+  UserX,
+  ChevronDown
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,7 +63,7 @@ export default function AllUsers() {
   const [isOrgAssignDialogOpen, setIsOrgAssignDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserSchema | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
   const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
     tenantId: "", 
@@ -82,7 +85,7 @@ export default function AllUsers() {
   const { tenantId } = useTenantContext();
   
   // Fetch users
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<UserSchema[]>({
     queryKey: ["/api/users"],
   });
   
@@ -147,7 +150,7 @@ export default function AllUsers() {
     assignTeamMutation.mutate({ id: selectedUser.id, teamId });
   };
   
-  const openTeamAssignDialog = (user: User) => {
+  const openTeamAssignDialog = (user: UserSchema) => {
     setSelectedUser(user);
     setTeamAssignment({ teamId: user.teamId?.toString() || "0" });
     setIsTeamAssignDialogOpen(true);
@@ -930,42 +933,82 @@ export default function AllUsers() {
 
       {/* Delete User Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[475px]">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Remove User from Organization</DialogTitle>
-            <DialogDescription>
-              {selectedUser && 
-                `Are you sure you want to remove ${selectedUser.firstName} ${selectedUser.lastName} from this organization?`
-              }
+            <DialogTitle className="text-xl flex items-center text-red-600">
+              <Trash2 className="h-5 w-5 mr-2" />
+              Remove User
+            </DialogTitle>
+            <DialogDescription className="pt-3">
+              {selectedUser && (
+                <div className="flex items-center gap-2 py-2 border-l-4 border-red-200 pl-3 mb-2 bg-red-50 dark:bg-red-900/10 rounded">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-red-100 text-red-600">
+                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium text-red-700 dark:text-red-200">{selectedUser.firstName} {selectedUser.lastName}</div>
+                    <div className="text-xs text-red-600/70 dark:text-red-400/70">{selectedUser.email}</div>
+                  </div>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
-              <p className="font-medium mb-1">Important:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>The user will lose access to all data in this organization</li>
-                <li>Their role assignments and team memberships in this organization will be removed</li>
-                <li>If they don't belong to any other organizations, their account will be completely deleted</li>
+          <div className="py-4 space-y-4">
+            <div className="rounded-lg border p-4 bg-muted/50">
+              <h4 className="font-medium mb-2 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+                Important Information
+              </h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start">
+                  <span className="bg-background rounded-full h-5 w-5 flex items-center justify-center text-xs mr-2 mt-0.5">1</span>
+                  <span>The user will lose access to all data in this organization</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-background rounded-full h-5 w-5 flex items-center justify-center text-xs mr-2 mt-0.5">2</span>
+                  <span>Their role assignments and team memberships in this organization will be removed</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-background rounded-full h-5 w-5 flex items-center justify-center text-xs mr-2 mt-0.5">3</span>
+                  <span>If they don't belong to any other organizations, their account will be completely deleted</span>
+                </li>
               </ul>
             </div>
             
             {selectedUser?.teamId && (
-              <p className="text-sm">
-                <strong>Team assignment:</strong> This user is currently a member of {' '}
-                {teams.find(t => t.id === selectedUser.teamId)?.name || "a team"} 
-                {' '} and will be removed from it.
-              </p>
-            )}
-            
-            {(selectedUser && users.some(u => u.managerId === selectedUser.id)) && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">
-                <strong>Warning:</strong> This user is a manager for other users. 
-                Those users will no longer have a manager assigned if this user is removed.
+              <div className="rounded-lg border border-primary/20 p-3 bg-primary/5">
+                <p className="text-sm flex items-center">
+                  <Building className="h-4 w-4 mr-2 text-primary" />
+                  <span>
+                    <strong>Team assignment:</strong> This user is currently a member of {' '}
+                    <Badge variant="outline" className="font-normal ml-1">
+                      {teams.find(t => t.id === selectedUser.teamId)?.name || "a team"}
+                    </Badge>
+                    {' '} and will be removed from it.
+                  </span>
+                </p>
               </div>
             )}
             
-            <p className="text-sm font-medium">This action cannot be undone.</p>
+            {(selectedUser && users.some(u => u.managerId === selectedUser.id)) && (
+              <div className="rounded-lg border border-red-200 p-3 bg-red-50 dark:bg-red-900/10">
+                <p className="text-sm flex items-start">
+                  <AlertTriangle className="h-4 w-4 mr-2 text-red-500 mt-0.5" />
+                  <span>
+                    <strong>Warning:</strong> This user is a manager for other users. 
+                    Those users will no longer have a manager assigned if this user is removed.
+                  </span>
+                </p>
+              </div>
+            )}
+            
+            <p className="text-sm font-medium flex items-center text-muted-foreground">
+              <Info className="h-4 w-4 mr-2" />
+              This action cannot be undone.
+            </p>
           </div>
           
           <DialogFooter>
@@ -973,11 +1016,14 @@ export default function AllUsers() {
               Cancel
             </Button>
             <Button 
-              variant="destructive"
+              variant="destructive" 
               onClick={handleDeleteUser}
               disabled={deleteUserMutation.isPending}
             >
-              {deleteUserMutation.isPending ? "Removing..." : "Remove User"}
+              {deleteUserMutation.isPending ? 
+                <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Removing...</> : 
+                <><Trash2 className="h-4 w-4 mr-2" /> Remove User</>
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -987,21 +1033,32 @@ export default function AllUsers() {
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add User to Organization</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl flex items-center">
+              <UserPlus className="h-5 w-5 mr-2 text-primary" />
+              Add User to Organization
+            </DialogTitle>
+            <DialogDescription className="pt-2">
               Add a new or existing user to this organization. Only email is required.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-sm text-blue-800">
-              <p className="font-medium">Note about email invitations:</p>
-              <p>New users will receive an email with account details. If the email already exists in the system, the user will be invited to join this organization.</p>
+          <div className="space-y-6 py-4">
+            <div className="rounded-lg border-l-4 border-l-blue-400 bg-blue-50 dark:bg-blue-950/20 p-4 text-sm">
+              <p className="font-medium flex items-center text-blue-800 dark:text-blue-300">
+                <Mail className="h-4 w-4 mr-2" />
+                Email Invitation Process
+              </p>
+              <p className="mt-1 text-blue-700 dark:text-blue-400">
+                New users will receive an email with account details. If the email already exists in the system, the user will be invited to join this organization.
+              </p>
             </div>
           
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="firstName" className="text-sm font-medium">First Name</label>
+                <label htmlFor="firstName" className="text-sm font-medium flex items-center">
+                  <User className="h-4 w-4 mr-1 text-muted-foreground" />
+                  First Name
+                </label>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -1124,7 +1181,7 @@ export default function AllUsers() {
                     <SelectValue placeholder="Select a team" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Team</SelectItem>
+                    <SelectItem value="none">No Team</SelectItem>
                     {teams.map((team) => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
