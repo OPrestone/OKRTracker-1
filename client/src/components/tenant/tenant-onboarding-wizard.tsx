@@ -1156,6 +1156,28 @@ export default function TenantOnboardingWizard() {
                     )}
                   </CardContent>
                 </Card>
+                
+                {/* Bottom navigation */}
+                <div className="flex justify-between mt-8">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActivePage("plan")}
+                    className="shadow-sm"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Subscription
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    onClick={() => setActivePage("setup")}
+                    className="bg-primary hover:bg-primary/90 shadow-sm"
+                  >
+                    Continue to Setup
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </TabsContent>
               
               {/* Initial Setup */}
