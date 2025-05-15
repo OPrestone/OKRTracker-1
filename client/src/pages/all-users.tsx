@@ -70,7 +70,10 @@ export default function AllUsers() {
     email: '',
     password: '',
     teamId: '',
-    role: 'user'
+    role: 'member', // Change default role to 'member' which is a tenant role
+    tenantRole: 'member', // Add tenant role field (separate from system role)
+    department: '',
+    title: ''
   });
   const { toast } = useToast();
   const { tenantId } = useTenantContext();
@@ -194,14 +197,26 @@ export default function AllUsers() {
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUser) => {
       const res = await apiRequest("POST", `/api/users`, {
-        ...userData,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        password: userData.password, // Optional, will be generated if not provided
+        department: userData.department,
+        title: userData.title,
+        role: userData.tenantRole, // Tenant-specific role (member, admin, owner)
+        teamId: userData.teamId ? userData.teamId : null,
         tenantId: tenantId, // Assign user to current tenant
-        teamId: userData.teamId ? Number(userData.teamId) : null,
       });
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // If a team was assigned, also invalidate team members
+      if (data.teamId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/teams", data.teamId, "users"] });
+      }
       
       setIsAddUserDialogOpen(false);
       setNewUser({
@@ -211,18 +226,24 @@ export default function AllUsers() {
         email: '',
         password: '',
         teamId: '',
-        role: 'user'
+        role: 'member',
+        tenantRole: 'member',
+        department: '',
+        title: ''
       });
       
+      const isNewUser = data.isNewUser;
       toast({
-        title: "User created successfully",
-        description: "The new user has been added to the system",
+        title: isNewUser ? "User created successfully" : "User added to organization",
+        description: isNewUser 
+          ? "A new user has been created and added to your organization" 
+          : "Existing user has been added to your organization",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error creating user",
-        description: `There was a problem creating the user: ${error.message}`,
+        description: `There was a problem: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -230,25 +251,35 @@ export default function AllUsers() {
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/users/${id}`);
+    mutationFn: async (userId: string) => {
+      // This endpoint will handle removing the user from current tenant
+      // and only completely delete the user if they don't belong to other tenants
+      const res = await apiRequest("DELETE", `/api/users/${userId}?tenantId=${tenantId}`);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // If user had a team, also invalidate team members
+      if (selectedUser?.teamId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/teams", selectedUser.teamId, "users"] });
+      }
       
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
       
+      const completelyRemoved = data.completelyRemoved;
       toast({
-        title: "User deleted successfully",
-        description: "The user has been permanently removed from the system",
+        title: completelyRemoved ? "User deleted completely" : "User removed from organization",
+        description: completelyRemoved 
+          ? "The user has been permanently removed from the system" 
+          : "The user has been removed from this organization but still exists in other organizations",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error deleting user",
-        description: "There was a problem deleting the user. Please try again.",
+        title: "Error removing user",
+        description: `There was a problem: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -642,15 +673,20 @@ export default function AllUsers() {
 
       {/* Add User Dialog */}
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle>Add User to Organization</DialogTitle>
             <DialogDescription>
-              Create a new user account. All fields are required.
+              Add a new or existing user to this organization. Only email is required.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-sm text-blue-800">
+              <p className="font-medium">Note about email invitations:</p>
+              <p>New users will receive an email with account details. If the email already exists in the system, the user will be invited to join this organization.</p>
+            </div>
+          
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="firstName" className="text-sm font-medium">First Name</label>
@@ -676,18 +712,9 @@ export default function AllUsers() {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium">Username</label>
-              <Input
-                id="username"
-                name="username"
-                value={newUser.username}
-                onChange={handleNewUserInputChange}
-                placeholder="johndoe"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <label htmlFor="email" className="text-sm font-medium flex items-center">
+                Email <span className="text-red-500 ml-1">*</span>
+              </label>
               <Input
                 id="email"
                 name="email"
@@ -695,56 +722,105 @@ export default function AllUsers() {
                 onChange={handleNewUserInputChange}
                 type="email"
                 placeholder="john.doe@example.com"
+                required
               />
             </div>
             
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <Input
-                id="password"
-                name="password"
-                value={newUser.password}
-                onChange={handleNewUserInputChange}
-                type="password"
-                placeholder="••••••••"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-sm font-medium">Username</label>
+                <Input
+                  id="username"
+                  name="username"
+                  value={newUser.username}
+                  onChange={handleNewUserInputChange}
+                  placeholder="johndoe"
+                />
+                <p className="text-xs text-muted-foreground">If left empty, will be generated from email</p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">Password</label>
+                <Input
+                  id="password"
+                  name="password"
+                  value={newUser.password}
+                  onChange={handleNewUserInputChange}
+                  type="password"
+                  placeholder="••••••••"
+                />
+                <p className="text-xs text-muted-foreground">If left empty, a secure password will be generated</p>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <label htmlFor="teamId" className="text-sm font-medium">Team</label>
-              <Select
-                value={newUser.teamId.toString()}
-                onValueChange={(value) => setNewUser(prev => ({ ...prev, teamId: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Team</SelectItem>
-                  {teams.map((team) => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="department" className="text-sm font-medium">Department</label>
+                <Input
+                  id="department"
+                  name="department"
+                  value={newUser.department}
+                  onChange={handleNewUserInputChange}
+                  placeholder="Marketing"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="title" className="text-sm font-medium">Job Title</label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={newUser.title}
+                  onChange={handleNewUserInputChange}
+                  placeholder="Marketing Manager"
+                />
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <label htmlFor="role" className="text-sm font-medium">Role</label>
-              <Select
-                value={newUser.role}
-                onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="tenantRole" className="text-sm font-medium">Organization Role</label>
+                <Select
+                  value={newUser.tenantRole}
+                  onValueChange={(value) => setNewUser(prev => ({ ...prev, tenantRole: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  <strong>Member:</strong> Regular user
+                  <br />
+                  <strong>Admin:</strong> Can manage users/teams
+                  <br />
+                  <strong>Owner:</strong> Full organization control
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="teamId" className="text-sm font-medium">Assign to Team</label>
+                <Select
+                  value={newUser.teamId.toString()}
+                  onValueChange={(value) => setNewUser(prev => ({ ...prev, teamId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Team</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           
@@ -754,9 +830,9 @@ export default function AllUsers() {
             </Button>
             <Button 
               onClick={handleCreateUser}
-              disabled={createUserMutation.isPending || !newUser.username || !newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password}
+              disabled={createUserMutation.isPending || !newUser.email}
             >
-              {createUserMutation.isPending ? "Creating..." : "Create User"}
+              {createUserMutation.isPending ? "Adding..." : "Add User"}
             </Button>
           </DialogFooter>
         </DialogContent>
