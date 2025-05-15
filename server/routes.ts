@@ -748,12 +748,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a name field from firstName and lastName if not provided
       if (!userData.name && userData.firstName && userData.lastName) {
         userData.name = `${userData.firstName} ${userData.lastName}`;
+      } else if (!userData.name) {
+        userData.name = userData.email || userData.username || 'New User';
+      }
+      
+      // Generate a random password if not provided
+      if (!userData.password) {
+        userData.password = crypto.randomUUID().substring(0, 8);
+        
+        // Note: in a production environment, we would send an email to the user
+        // with instructions to set their password
+        console.log(`Generated temporary password for new user: ${userData.password}`);
       }
       
       // Validate and prepare user data
       const validatedData = {
         ...userData,
-        tenantId: req.tenantId // Assign to current tenant
+        tenantId: req.tenantId, // Assign to current tenant
+        firstLogin: true, // Flag for forcing password change on first login
       };
       
       // Create the user
@@ -1065,9 +1077,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "You do not have admin permissions in this tenant" });
       }
       
-      await storage.deleteUser(userId);
+      // First, remove the user-tenant relationship
+      await db
+        .delete(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ));
       
-      res.status(200).json({ success: true, message: "User deleted successfully" });
+      // Check if the user has any other tenant associations
+      const remainingTenants = await db
+        .select()
+        .from(usersToTenants)
+        .where(eq(usersToTenants.userId, userId));
+      
+      // If there are no other tenants the user belongs to, delete the user entirely
+      if (remainingTenants.length === 0) {
+        await storage.deleteUser(userId);
+      }
+      
+      res.status(200).json({ success: true, message: "User successfully removed" });
     } catch (error) {
       console.error("Error deleting user:", error);
       next(error);
