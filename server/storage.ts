@@ -1004,8 +1004,17 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Getting timeframes for tenant: ${tenantId}`);
       
-      // Select only columns that exist in the actual database
-      return db.select({
+      // Get all cadences for this tenant
+      const tenantCadences = await this.getCadencesByTenant(tenantId);
+      const cadenceIds = tenantCadences.map(cadence => cadence.id);
+      
+      if (cadenceIds.length === 0) {
+        console.log(`No cadences found for tenant ${tenantId}`);
+        return [];
+      }
+      
+      // Select timeframes that belong to tenant's cadences
+      const timeframesList = await db.select({
         id: timeframes.id,
         name: timeframes.name,
         description: timeframes.description,
@@ -1014,11 +1023,10 @@ export class DatabaseStorage implements IStorage {
         cadenceId: timeframes.cadenceId,
         createdAt: timeframes.createdAt,
         // Exclude fields that don't exist in the actual database: tenant_id, updated_at
-      }).from(timeframes);
+      }).from(timeframes)
+        .where(inArray(timeframes.cadenceId, cadenceIds));
       
-      // Note: Since the database schema doesn't have a tenant_id column in timeframes table,
-      // we're returning all timeframes for now. In a production environment, this should
-      // be filtered by tenant ID once the schema is updated.
+      return timeframesList;
     } catch (error) {
       console.error(`Error getting timeframes for tenant ${tenantId}:`, error);
       return [];
