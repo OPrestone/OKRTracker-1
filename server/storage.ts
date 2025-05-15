@@ -2475,6 +2475,12 @@ export class DatabaseStorage implements IStorage {
         password: projectData.password ? '***' : undefined
       });
       
+      // Ensure we have a tenant_id - this is required
+      let tenantId = projectData.tenant_id || projectData.tenantId;
+      if (!tenantId) {
+        throw new Error("tenant_id is required but was not provided in the project data");
+      }
+      
       // Handle both camelCase and snake_case field names
       // Prefer snake_case but fall back to camelCase
       const dbFields = {
@@ -2491,8 +2497,8 @@ export class DatabaseStorage implements IStorage {
         team_id: projectData.team_id || projectData.teamId,
         // Handle both created_by_id and createdById
         created_by_id: projectData.created_by_id || projectData.createdById,
-        // Handle both tenant_id and tenantId 
-        tenant_id: projectData.tenant_id || projectData.tenantId,
+        // Force tenant_id to be set and not null
+        tenant_id: tenantId,
         // Handle date fields
         start_date: projectData.start_date || projectData.startDate || null,
         due_date: projectData.due_date || projectData.dueDate || null,
@@ -2502,6 +2508,11 @@ export class DatabaseStorage implements IStorage {
       };
       
       console.log("Normalized project data for database:", dbFields);
+      
+      // Double-check that tenant_id is set before inserting
+      if (!dbFields.tenant_id) {
+        throw new Error(`tenant_id is required but was null or undefined: ${JSON.stringify(dbFields)}`);
+      }
       
       const [newProject] = await db.insert(projects)
         .values(dbFields)

@@ -102,20 +102,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Get tenantId from query param, body, or use default from user
-    const requestedTenantId = req.query.tenantId || req.body?.tenantId || (req.user as any).defaultTenantId;
+    // Check all possible places the tenant ID could be provided
+    const requestedTenantId = req.query.tenantId || 
+                            req.query.tenant_id ||
+                            req.body?.tenantId || 
+                            req.body?.tenant_id || 
+                            (req.user as any).defaultTenantId;
     
     // If no tenantId provided or found, return error
     if (!requestedTenantId) {
       return res.status(400).json({ error: "Missing tenantId parameter" });
     }
     
-    (req as any).tenantId = requestedTenantId as string;
+    // Store the tenant ID in both formats to handle both conventions
+    const tenantIdStr = requestedTenantId as string;
+    (req as any).tenantId = tenantIdStr;
+    (req as any).tenant_id = tenantIdStr;
+    
+    console.log(`Setting tenant context: tenantId=${tenantIdStr}`);
     
     // Verify user has access to the requested tenant
     const userTenants = await storage.getUserTenants(req.user.id);
-    const hasTenantAccess = userTenants.some(tenant => tenant.id === (req as any).tenantId);
+    console.log(`User has access to ${userTenants.length} tenants:`, userTenants.map(t => t.id));
+    
+    const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantIdStr);
     
     if (!hasTenantAccess) {
+      console.error(`User ${req.user.id} attempted to access unauthorized tenant ${tenantIdStr}`);
       return res.status(403).json({ error: "Access to tenant denied" });
     }
     
@@ -5084,7 +5097,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataToValidate = {
         ...req.body,
         created_by_id: req.user.id, // Use the current user ID as creator
+        // Set both formats of tenant ID to ensure one is used
         tenant_id: req.tenantId,
+        tenantId: req.tenantId,
         created_at: new Date(),
       };
       
@@ -5094,6 +5109,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Validate the data before saving
         const validatedData = insertProjectSchema.parse(dataToValidate);
         console.log("Validated data:", validatedData);
+        
+        // Check tenant_id before creating the project
+        if (!validatedData.tenant_id) {
+          console.error("tenant_id missing after validation");
+          // Force tenant_id to be set if not present
+          validatedData.tenant_id = req.tenantId;
+        }
         
         // Create the project
         const project = await storage.createProject(validatedData);
