@@ -2469,32 +2469,64 @@ export class DatabaseStorage implements IStorage {
   // Project Management
   async createProject(projectData: any): Promise<Project> {
     try {
-      // Ensure we're using snake_case field names to match the database
-      // and remove any fields not in the table
+      console.log("Raw project data received:", {
+        ...projectData,
+        // Don't log sensitive fields
+        password: projectData.password ? '***' : undefined
+      });
+      
+      // Handle both camelCase and snake_case field names
+      // Prefer snake_case but fall back to camelCase
       const dbFields = {
         title: projectData.title,
         description: projectData.description,
         status: projectData.status,
-        priority: projectData.priority,
-        assigned_to_id: projectData.assigned_to_id,
-        team_id: projectData.team_id,
-        created_by_id: projectData.created_by_id,
-        tenant_id: projectData.tenant_id,
-        due_date: projectData.due_date,
-        created_at: projectData.created_at || new Date()
+        // Priority handling - can come in as string or number
+        priority: typeof projectData.priority === 'number' ? 
+                  projectData.priority : 
+                  this.convertPriorityToNumber(projectData.priority),
+        // Handle both assigned_to_id and assignedToId
+        assigned_to_id: projectData.assigned_to_id || projectData.assignedToId,
+        // Handle both team_id and teamId
+        team_id: projectData.team_id || projectData.teamId,
+        // Handle both created_by_id and createdById
+        created_by_id: projectData.created_by_id || projectData.createdById,
+        // Handle both tenant_id and tenantId 
+        tenant_id: projectData.tenant_id || projectData.tenantId,
+        // Handle date fields
+        start_date: projectData.start_date || projectData.startDate || null,
+        due_date: projectData.due_date || projectData.dueDate || null,
+        created_at: projectData.created_at || projectData.createdAt || new Date(),
+        // Handle tags array
+        tags: projectData.tags || null
       };
       
-      console.log("Creating project with data:", dbFields);
+      console.log("Normalized project data for database:", dbFields);
       
       const [newProject] = await db.insert(projects)
         .values(dbFields)
         .returning();
         
+      console.log("New project created successfully:", newProject);
       return newProject;
     } catch (error) {
       console.error("Error in createProject:", error);
       throw error;
     }
+  }
+  
+  // Helper method to convert priority strings to numbers
+  private convertPriorityToNumber(priority: string | undefined): number {
+    if (!priority) return 2; // Default to medium
+    
+    const priorityMap: Record<string, number> = {
+      low: 1,
+      medium: 2,
+      high: 3,
+      urgent: 4
+    };
+    
+    return priorityMap[priority.toLowerCase()] || 2; // Default to medium
   }
 
   async getProject(id: string): Promise<Project | undefined> {

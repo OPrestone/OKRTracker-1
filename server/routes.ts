@@ -5075,21 +5075,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User authentication required" });
       }
 
-      // Use the created_by_id field instead of ownerId
-      // to match the actual database schema
-      const validatedData = insertProjectSchema.parse({
+      // Log initial request data
+      console.log("Creating project with request body:", req.body);
+      console.log("User ID:", req.user.id);
+      console.log("Tenant ID:", req.tenantId);
+
+      // Add required fields for the database schema
+      const dataToValidate = {
         ...req.body,
         created_by_id: req.user.id, // Use the current user ID as creator
         tenant_id: req.tenantId,
         created_at: new Date(),
-      });
+      };
       
-      const project = await storage.createProject(validatedData);
-      res.status(201).json(project);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
+      console.log("Data to validate:", dataToValidate);
+      
+      try {
+        // Validate the data before saving
+        const validatedData = insertProjectSchema.parse(dataToValidate);
+        console.log("Validated data:", validatedData);
+        
+        // Create the project
+        const project = await storage.createProject(validatedData);
+        console.log("Project created successfully:", project);
+        res.status(201).json(project);
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ error: validationError.errors });
+        }
+        throw validationError;
       }
+    } catch (error) {
       console.error("Project creation error:", error);
       next(error);
     }

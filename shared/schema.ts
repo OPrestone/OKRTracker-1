@@ -915,12 +915,27 @@ export const insertProjectSchema = createInsertSchema(projects)
     // Make created_by_id, tenant_id required but other fields optional
     created_by_id: z.string(),
     tenant_id: z.string(),
+    // Allow "tenantId" as well as "tenant_id" to handle both formats
+    tenantId: z.string().optional(),
     title: z.string(),
     description: z.string().optional(),
     status: z.enum(["backlog", "todo", "in-progress", "review", "done"]).default("backlog"),
-    priority: z.number().optional(),
-    start_date: z.date().optional().nullable(),
-    due_date: z.date().optional().nullable(),
+    // Allow priority to be either a number or a string (like "low", "medium", "high")
+    priority: z.union([
+      z.number(), 
+      z.string().transform(val => {
+        // Convert string priorities to numbers
+        const priorityMap: Record<string, number> = {
+          low: 1,
+          medium: 2,
+          high: 3,
+          urgent: 4
+        };
+        return priorityMap[val.toLowerCase()] || 2; // Default to medium if unknown
+      })
+    ]).optional(),
+    start_date: z.union([z.date(), z.string().transform(val => new Date(val))]).optional().nullable(),
+    due_date: z.union([z.date(), z.string().transform(val => new Date(val))]).optional().nullable(),
     assigned_to_id: z.string().optional().nullable(),
     team_id: z.string().optional().nullable(),
     tags: z.array(z.string()).optional().nullable()
