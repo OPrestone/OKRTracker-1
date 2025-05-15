@@ -634,26 +634,40 @@ export default function AllUsers() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">Delete User</DialogTitle>
+            <DialogTitle className="text-red-600">Remove User from Organization</DialogTitle>
             <DialogDescription>
               {selectedUser && 
-                `Are you sure you want to delete ${selectedUser.firstName} ${selectedUser.lastName}? This action cannot be undone.`
+                `Are you sure you want to remove ${selectedUser.firstName} ${selectedUser.lastName} from this organization?`
               }
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-2 py-4">
-            <p className="text-sm text-gray-600">
-              Deleting this user will remove all their information and permissions from the system.
-              {selectedUser?.teamId && " They will also be removed from their assigned team."}
-            </p>
+          <div className="space-y-4 py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+              <p className="font-medium mb-1">Important:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>The user will lose access to all data in this organization</li>
+                <li>Their role assignments and team memberships in this organization will be removed</li>
+                <li>If they don't belong to any other organizations, their account will be completely deleted</li>
+              </ul>
+            </div>
+            
+            {selectedUser?.teamId && (
+              <p className="text-sm">
+                <strong>Team assignment:</strong> This user is currently a member of {' '}
+                {teams.find(t => t.id === selectedUser.teamId)?.name || "a team"} 
+                {' '} and will be removed from it.
+              </p>
+            )}
             
             {(selectedUser && users.some(u => u.managerId === selectedUser.id)) && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">
                 <strong>Warning:</strong> This user is a manager for other users. 
-                Those users will no longer have a manager assigned.
+                Those users will no longer have a manager assigned if this user is removed.
               </div>
             )}
+            
+            <p className="text-sm font-medium">This action cannot be undone.</p>
           </div>
           
           <DialogFooter>
@@ -665,7 +679,7 @@ export default function AllUsers() {
               onClick={handleDeleteUser}
               disabled={deleteUserMutation.isPending}
             >
-              {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
+              {deleteUserMutation.isPending ? "Removing..." : "Remove User"}
             </Button>
           </DialogFooter>
         </DialogContent>
