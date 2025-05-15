@@ -135,7 +135,7 @@ export default function Timeframes() {
 
   // Update timeframe mutation
   const updateTimeframeMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
       const res = await apiRequest("PATCH", `/api/timeframes/${id}`, data);
       return await res.json();
     },
@@ -162,7 +162,7 @@ export default function Timeframes() {
 
   // Delete timeframe mutation
   const deleteTimeframeMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/timeframes/${id}`);
     },
     onSuccess: () => {
@@ -213,7 +213,7 @@ export default function Timeframes() {
   const handleCreateTimeframe = () => {
     const timeframeData = {
       ...newTimeframe,
-      cadenceId: parseInt(newTimeframe.cadenceId),
+      cadenceId: newTimeframe.cadenceId, // cadenceId is already a string, no need to convert
       startDate: newTimeframe.startDate.toISOString(),
       endDate: newTimeframe.endDate.toISOString()
     };
@@ -226,7 +226,7 @@ export default function Timeframes() {
     
     const timeframeData = {
       ...editTimeframe,
-      cadenceId: parseInt(editTimeframe.cadenceId),
+      cadenceId: editTimeframe.cadenceId, // cadenceId is already a string, no need to convert
       startDate: editTimeframe.startDate.toISOString(),
       endDate: editTimeframe.endDate.toISOString()
     };
@@ -243,7 +243,7 @@ export default function Timeframes() {
   };
 
   // Find cadence name by ID
-  const getCadenceName = (cadenceId: number | null | undefined) => {
+  const getCadenceName = (cadenceId: string | null | undefined) => {
     if (!cadenceId || !cadences) return "None";
     const cadence = cadences.find(c => c.id === cadenceId);
     return cadence ? cadence.name : "Unknown";
