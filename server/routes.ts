@@ -5071,10 +5071,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Tenant ID is required" });
       }
 
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ error: "User authentication required" });
+      }
+
+      // Use the created_by_id field instead of ownerId
+      // to match the actual database schema
       const validatedData = insertProjectSchema.parse({
         ...req.body,
-        tenantId: req.tenantId,
-        createdAt: new Date(),
+        created_by_id: req.user.id, // Use the current user ID as creator
+        tenant_id: req.tenantId,
+        created_at: new Date(),
       });
       
       const project = await storage.createProject(validatedData);
@@ -5083,6 +5090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: error.errors });
       }
+      console.error("Project creation error:", error);
       next(error);
     }
   });

@@ -2467,9 +2467,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Project Management
-  async createProject(project: InsertProject): Promise<Project> {
-    const [newProject] = await db.insert(projects).values(project).returning();
-    return newProject;
+  async createProject(projectData: any): Promise<Project> {
+    try {
+      // Ensure we're using snake_case field names to match the database
+      // and remove any fields not in the table
+      const dbFields = {
+        title: projectData.title,
+        description: projectData.description,
+        status: projectData.status,
+        priority: projectData.priority,
+        assigned_to_id: projectData.assigned_to_id,
+        team_id: projectData.team_id,
+        created_by_id: projectData.created_by_id,
+        tenant_id: projectData.tenant_id,
+        due_date: projectData.due_date,
+        created_at: projectData.created_at || new Date()
+      };
+      
+      console.log("Creating project with data:", dbFields);
+      
+      const [newProject] = await db.insert(projects)
+        .values(dbFields)
+        .returning();
+        
+      return newProject;
+    } catch (error) {
+      console.error("Error in createProject:", error);
+      throw error;
+    }
   }
 
   async getProject(id: string): Promise<Project | undefined> {
@@ -2489,27 +2514,44 @@ export class DatabaseStorage implements IStorage {
 
   async getProjectsByTenant(tenantId: string): Promise<Project[]> {
     // Only select the fields that exist in the database schema
-    // and avoid selecting columns that might not be in the actual database
+    // Use snake_case for column names to match the database and camelCase in the output
+    // to match frontend expectations
     try {
-      return await db.select({
-        id: projects.id,
-        title: projects.title,
-        description: projects.description,
-        status: projects.status,
-        priority: projects.priority,
-        dueDate: projects.dueDate,
-        teamId: projects.teamId,
-        // Removed objectiveId as it doesn't exist in the database yet
-        tenantId: projects.tenantId,
-        ownerId: projects.ownerId,
-        checklistTotal: projects.checklistTotal,
-        checklistCompleted: projects.checklistCompleted,
-        commentsCount: projects.commentsCount,
-        createdAt: projects.createdAt
-      })
-        .from(projects)
-        .where(eq(projects.tenantId, tenantId))
-        .orderBy(projects.status, projects.priority);
+      // Using raw SQL query to avoid schema conflicts
+      const result = await db.execute(`
+        SELECT 
+          id, 
+          title, 
+          description, 
+          status, 
+          priority, 
+          due_date, 
+          team_id, 
+          created_by_id, 
+          tenant_id, 
+          created_at
+        FROM projects 
+        WHERE tenant_id = $1
+        ORDER BY status, priority
+      `, [tenantId]);
+      
+      // Transform the results to match the frontend schema
+      return result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        status: row.status,
+        priority: row.priority,
+        dueDate: row.due_date,
+        teamId: row.team_id,
+        ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
+        tenantId: row.tenant_id,
+        createdAt: row.created_at,
+        // Add default values for any missing fields that frontend might expect
+        checklistTotal: 0,
+        checklistCompleted: 0,
+        commentsCount: 0
+      }));
     } catch (error) {
       console.error("Error fetching projects:", error);
       // Return empty array on error to prevent app from crashing
