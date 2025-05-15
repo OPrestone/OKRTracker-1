@@ -38,6 +38,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup test auth routes for debugging session issues
   setupTestAuthRoutes(app);
   
+  // Add a route for project-related diagnostics
+  app.get("/api/project-diagnostics", async (req, res) => {
+    try {
+      // Check authentication status
+      const isAuthenticated = req.isAuthenticated();
+      const sessionID = req.sessionID;
+      const userId = req.user?.id || 'none';
+      
+      // Get query parameters
+      const tenantId = req.query.tenantId as string;
+      
+      // Check if we can fetch projects for this tenant
+      let projects = [];
+      let tenantsForUser = [];
+      let error = null;
+      
+      if (isAuthenticated && tenantId) {
+        try {
+          projects = await storage.getProjectsByTenant(tenantId);
+          tenantsForUser = await storage.getUserTenants(userId);
+        } catch (err) {
+          error = err.message;
+        }
+      }
+      
+      // Return diagnostic information
+      res.json({
+        auth: {
+          isAuthenticated,
+          sessionID,
+          userId
+        },
+        tenant: {
+          requestedTenantId: tenantId,
+          tenantsForUser: tenantsForUser.map(t => ({ id: t.id, name: t.name }))
+        },
+        projects: {
+          count: projects.length,
+          error
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Define common middleware
   const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     console.log("Checking authentication:", req.path, "isAuthenticated:", req.isAuthenticated(), "sessionID:", req.sessionID, "user:", req.user ? req.user.id : "none");
