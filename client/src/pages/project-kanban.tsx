@@ -22,7 +22,10 @@ import {
   ListTodo, 
   SortAsc, 
   Filter, 
-  Inbox
+  Inbox,
+  CheckSquare,
+  Search,
+  X
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -753,8 +756,13 @@ export default function ProjectKanban() {
         <div className="container mx-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-neutral-900">Project Kanban</h1>
-              <p className="text-neutral-600 mt-1">
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                <span className="inline-block p-2 bg-primary/10 text-primary rounded-md">
+                  <CheckSquare className="h-6 w-6" />
+                </span>
+                Project Kanban
+              </h1>
+              <p className="text-neutral-600 dark:text-neutral-400 mt-1">
                 Manage your projects with drag-and-drop kanban boards
               </p>
             </div>
@@ -767,9 +775,14 @@ export default function ProjectKanban() {
                     Add Project
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
-                    <DialogTitle>Create new project</DialogTitle>
+                    <DialogTitle className="text-xl flex items-center gap-2">
+                      <span className="text-primary">
+                        <PlusCircle className="h-5 w-5" />
+                      </span>
+                      Create New Project
+                    </DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(data => createProjectMutation.mutate(data))} className="space-y-4 py-4">
@@ -903,25 +916,57 @@ export default function ProjectKanban() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">Project Kanban</h1>
-            <p className="text-neutral-600 mt-1">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+              <span className="inline-block p-2 bg-primary/10 text-primary rounded-md">
+                <CheckSquare className="h-6 w-6" />
+              </span>
+              Project Kanban
+            </h1>
+            <p className="text-neutral-600 dark:text-neutral-400 mt-1 max-w-md">
               Manage your projects with drag-and-drop kanban boards
             </p>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative w-full sm:w-64">
+              <Input
+                placeholder="Search projects..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 w-full"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="h-4 w-4" />
+              </div>
+              {search && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0" 
+                  onClick={() => setSearch("")}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+            
             <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
                   Add Project
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Create new project</DialogTitle>
+                  <DialogTitle className="text-xl flex items-center gap-2">
+                    <span className="text-primary">
+                      <PlusCircle className="h-5 w-5" />
+                    </span>
+                    Create New Project
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(data => createProjectMutation.mutate(data))} className="space-y-4 py-4">
@@ -1041,7 +1086,7 @@ export default function ProjectKanban() {
           </div>
         </div>
         
-        <div className="overflow-x-auto pb-4">
+        <div className="overflow-x-auto pb-8">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -1049,7 +1094,7 @@ export default function ProjectKanban() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-4 min-h-[calc(100vh-200px)]">
+            <div className="flex gap-6 min-h-[calc(100vh-240px)] p-1">
               {filteredColumns.map(column => (
                 <KanbanColumn 
                   key={column.id} 
@@ -1060,7 +1105,7 @@ export default function ProjectKanban() {
               
               <DragOverlay>
                 {activeId ? (
-                  <div className="w-[300px] opacity-80">
+                  <div className="w-[320px] opacity-90 rotate-1 scale-105 shadow-xl">
                     <KanbanCard project={findProject(activeId)!} />
                   </div>
                 ) : null}
