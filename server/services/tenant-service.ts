@@ -508,7 +508,15 @@ class TenantService {
               )`
         );
         
-        // TODO: Send invitation email with temp password
+        // Import email service for sending invitation emails
+        const { emailService } = await import('./email-service');
+        
+        // Send invitation email
+        await emailService.sendTenantInvitationEmail(
+          email,
+          tenantId,
+          role
+        );
       }
       
       // Add user to tenant
