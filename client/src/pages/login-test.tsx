@@ -1,200 +1,175 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { useLocation } from "wouter";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Link, useLocation } from "wouter";
+
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export default function LoginTest() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [sessionInfo, setSessionInfo] = useState<{
+    sessionId: string;
+    counter: number;
+    timestamp: string;
+  } | null>(null);
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { username: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
     },
-    onSuccess: (data) => {
-      console.log("Login successful:", data);
+  });
+
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof loginSchema>) => {
+      const response = await apiRequest("POST", "/api/login", values);
+      return await response.json();
+    },
+    onSuccess: () => {
       toast({
-        title: "Login successful",
-        description: `Welcome back, ${data.username || "user"}!`,
+        title: "Login Successful",
+        description: "You have successfully logged in",
       });
       
-      // Clear any existing queries to ensure fresh data after login
-      queryClient.invalidateQueries();
-      
-      // Redirect to dashboard
+      // Redirect to dashboard or home page
       setLocation("/");
     },
     onError: (error: Error) => {
       toast({
-        title: "Login failed",
+        title: "Login Failed",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate({ username, password });
+  const onSubmit = (values: z.infer<typeof loginSchema>) => {
+    loginMutation.mutate(values);
   };
 
-  // Test auth check
-  const checkAuth = async () => {
+  // Check session info
+  const checkSession = async () => {
     try {
-      const res = await fetch('/api/test-session', {
-        credentials: 'include'
+      const response = await fetch('/api/test-session', {
+        credentials: 'include' // Important for cookies/session
       });
-      const data = await res.json();
-      console.log('Session data:', data);
+      const data = await response.json();
+      setSessionInfo(data);
+      
       toast({
-        title: "Session Check",
-        description: `Session ID: ${data.sessionId}, Counter: ${data.counter}`,
+        title: "Session Checked",
+        description: `Session ID: ${data.sessionId.substring(0, 8)}...`,
       });
     } catch (error) {
-      console.error('Session check error:', error);
       toast({
         title: "Session Check Failed",
-        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Test login
-  const testLogin = async () => {
-    try {
-      const res = await fetch('/api/test-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username: 'test', password: 'test123' }),
-        credentials: 'include'
-      });
-      const data = await res.json();
-      console.log('Test login result:', data);
-      
-      if (data.success) {
-        toast({
-          title: "Test Login Successful",
-          description: `Session ID: ${data.sessionId}`,
-        });
-      } else {
-        toast({
-          title: "Test Login Failed",
-          description: data.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Test login error:', error);
-      toast({
-        title: "Test Login Failed",
-        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Check test auth
-  const checkTestAuth = async () => {
-    try {
-      const res = await fetch('/api/test-auth-check', {
-        credentials: 'include'
-      });
-      const data = await res.json();
-      console.log('Test auth check result:', data);
-      
-      toast({
-        title: data.authenticated ? "Test Authenticated" : "Not Authenticated",
-        description: data.authenticated ? `User: ${data.user.username}` : data.message,
-        variant: data.authenticated ? "default" : "destructive",
-      });
-    } catch (error) {
-      console.error('Test auth check error:', error);
-      toast({
-        title: "Test Auth Check Failed",
-        description: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <Card className="w-[450px] shadow-lg">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardTitle className="text-2xl text-center">Login Test Page</CardTitle>
+          <CardDescription className="text-center">
+            This is a diagnostic login page for debugging
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
-            </Button>
-          </form>
+              
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Logging in..." : "Login"}
+              </Button>
+            </form>
+          </Form>
           
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium mb-4">Session Testing Tools</h3>
-            <div className="flex flex-col space-y-2">
-              <Button 
-                variant="outline" 
-                onClick={checkAuth}
-                className="w-full"
-              >
-                Check Session
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={testLogin}
-                className="w-full"
-              >
-                Test Login (test/test123)
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={checkTestAuth}
-                className="w-full"
-              >
-                Check Test Auth
-              </Button>
-            </div>
+          <div className="mt-6">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={checkSession}
+            >
+              Check Session
+            </Button>
           </div>
+          
+          {sessionInfo && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-md text-sm">
+              <div><strong>Session ID:</strong> {sessionInfo.sessionId}</div>
+              <div><strong>Counter:</strong> {sessionInfo.counter}</div>
+              <div><strong>Timestamp:</strong> {sessionInfo.timestamp}</div>
+            </div>
+          )}
         </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="ghost" asChild>
+            <Link href="/auth">Regular Login</Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/project-diagnostics">Project Diagnostics</Link>
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

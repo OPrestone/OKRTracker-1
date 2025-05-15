@@ -1,42 +1,28 @@
+import { Express, Request, Response } from 'express';
+
 /**
- * Test authentication endpoints to diagnose session issues
+ * Sets up test authentication routes for debugging purposes
  */
-
-import { Express, Request, Response } from "express";
-import { Session } from "express-session";
-
-// Extend the SessionData interface to include our custom properties
-declare module "express-session" {
-  interface SessionData {
-    counter?: number;
-    isTestAuthenticated?: boolean;
-    testUser?: { id: string; username: string };
-  }
-}
-
 export function setupTestAuthRoutes(app: Express) {
-  // Test route to check session functionality
+  // Test session route - returns session information for debugging
   app.get('/api/test-session', (req: Request, res: Response) => {
     console.log('Session test route called');
     console.log('Session ID:', req.sessionID);
     console.log('Session:', req.session);
     
-    // If no counter exists in session, initialize it
-    if (req.session.counter === undefined) {
-      req.session.counter = 0;
-    }
+    // Update session counter
+    req.session.counter = (req.session.counter || 0) + 1;
     
-    // Increment the counter
-    req.session.counter++;
-    
-    // Explicitly save the session to ensure it persists
+    // Save the updated session
     req.session.save((err) => {
       if (err) {
-        console.error('Failed to save session:', err);
-        return res.status(500).json({ error: 'Session save failed' });
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Failed to save session' });
       }
       
       console.log('Session saved successfully');
+      
+      // Return session information
       res.json({
         sessionId: req.sessionID,
         counter: req.session.counter,
@@ -46,57 +32,39 @@ export function setupTestAuthRoutes(app: Express) {
     });
   });
   
-  // Test route for simple login - no passport
-  app.post('/api/test-login', (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    console.log(`Test login attempt for ${username}`);
-    
-    // Very simple validation - just for test purposes
-    if (username === 'test' && password === 'test123') {
-      // Manually set user data in session
-      req.session.isTestAuthenticated = true;
-      req.session.testUser = { id: 'test-user-id', username };
-      
-      req.session.save((err) => {
-        if (err) {
-          console.error('Failed to save test login session:', err);
-          return res.status(500).json({ error: 'Session save failed' });
+  // Test authentication status route
+  app.get('/api/auth-status', (req: Request, res: Response) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user ? {
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        tenants: req.user.tenants?.map(t => ({ id: t.id, name: t.name, role: t.userRole }))
+      } : null,
+      sessionID: req.sessionID,
+      session: {
+        ...req.session,
+        // Don't expose cookie for security reasons
+        cookie: {
+          expires: req.session.cookie.expires,
+          maxAge: req.session.cookie.maxAge
         }
-        
-        console.log('Test login successful');
-        res.json({
-          success: true,
-          message: 'Test login successful',
-          sessionId: req.sessionID,
-          user: { id: 'test-user-id', username }
-        });
-      });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: 'Invalid test credentials'
-      });
-    }
+      }
+    });
   });
   
-  // Test route to check if test user is authenticated
-  app.get('/api/test-auth-check', (req: Request, res: Response) => {
-    console.log('Test auth check route called');
-    console.log('Session ID:', req.sessionID);
-    console.log('Session data:', req.session);
+  // Test login with debug information
+  app.post('/api/test-login', (req: Request, res: Response, next) => {
+    console.log('Test login attempt with:', {
+      username: req.body.username,
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      cookies: req.headers.cookie
+    });
     
-    if (req.session.isTestAuthenticated && req.session.testUser) {
-      res.json({
-        authenticated: true,
-        user: req.session.testUser,
-        sessionId: req.sessionID,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(401).json({
-        authenticated: false,
-        message: 'Not authenticated in test auth'
-      });
-    }
+    // Pass to regular login handler
+    // This expects passport.authenticate middleware to be configured elsewhere
+    next();
   });
 }

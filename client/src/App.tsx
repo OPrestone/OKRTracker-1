@@ -7,6 +7,7 @@ import Teams from "@/pages/teams";
 import TeamsRedesigned from "@/pages/teams-redesigned";
 import TeamDetail from "@/pages/team-detail";
 import UserDetail from "@/pages/single-profile";
+import ProjectDiagnostics from "@/pages/project-diagnostics";
 
 import UsersPage from "@/pages/users";
 import AllUsers from "@/pages/all-users";
@@ -250,7 +251,7 @@ function AppRoutes() {
       <ProtectedRoute path="/timeline-editor" component={TimelineEditor} />
       <ProtectedRoute path="/custom-dashboard" component={CustomDashboard} />
       <ProtectedRoute path="/project-kanban" component={ProjectKanban} />
-
+      <Route path="/project-diagnostics" component={ProjectDiagnostics} />
 
       <ProtectedRoute path="/import-financial" component={FinancePage} />
       
