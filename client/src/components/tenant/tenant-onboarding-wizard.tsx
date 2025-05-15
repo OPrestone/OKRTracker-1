@@ -388,6 +388,63 @@ export default function TenantOnboardingWizard() {
     ]);
   };
   
+  // Function to invite a user by email
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("member");
+  const [isInviting, setIsInviting] = useState(false);
+  
+  const inviteUser = () => {
+    if (!inviteEmail) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const currentUsers = form.getValues("team.users") || [];
+    
+    // Check for duplicate email
+    if (currentUsers.some(user => user.email === inviteEmail)) {
+      toast({
+        title: "Duplicate email",
+        description: "This email address has already been added",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsInviting(true);
+    
+    // Add to team members
+    form.setValue("team.users", [
+      ...currentUsers,
+      {
+        email: inviteEmail,
+        role: inviteRole,
+        selected: true,
+        name: "",
+        department: "",
+      }
+    ]);
+    
+    // Show success toast
+    toast({
+      title: "Invitation added",
+      description: `${inviteEmail} will be invited when you create the organization`,
+      variant: "default",
+    });
+    
+    // Reset form
+    setInviteEmail("");
+    setIsInviting(false);
+  };
+  
   // Check if current step is valid
   const isCurrentStepValid = () => {
     switch (activePage) {
@@ -397,6 +454,14 @@ export default function TenantOnboardingWizard() {
       case "plan":
         return form.getValues().plan.agreeToTerms;
       case "team":
+        // Team members validation - email format check
+        const team = form.getValues().team.users || [];
+        // If there are team members, validate their emails
+        if (team.length > 0) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const validEmails = team.every(member => emailRegex.test(member.email));
+          return validEmails;
+        }
         // Team members are optional
         return true;
       case "setup":
@@ -742,44 +807,115 @@ export default function TenantOnboardingWizard() {
                 
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-6">
-                      <div className="flex gap-3 items-center">
-                        <div className="rounded-full bg-amber-100 p-2 text-amber-600">
-                          <FileUp className="h-4 w-4" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {/* Import members section */}
+                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
+                        <div className="flex gap-3 items-center">
+                          <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+                            <FileUp className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-amber-800">Import Team Members</h4>
+                            <p className="text-sm text-amber-700">
+                              Quickly add multiple team members by importing a CSV file
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-800">Import Team Members</h4>
-                          <p className="text-sm text-amber-700">
-                            Quickly add multiple team members by importing a CSV file
-                          </p>
+                        
+                        <div className="mt-4">
+                          <CSVImport 
+                            templateFields={["name", "email", "department", "role"]}
+                            templateName="Team Members"
+                            onImport={(data) => {
+                              // Convert imported data to the required format
+                              const formattedData = data.map(user => ({
+                                name: user.name || "",
+                                email: user.email || "",
+                                department: user.department || "",
+                                role: (user.role || "member").toLowerCase(),
+                                selected: true
+                              }));
+                              
+                              // Set the imported data to the form
+                              form.setValue("team.users", formattedData);
+                              
+                              // Show success toast
+                              toast({
+                                title: "Team imported",
+                                description: `Successfully imported ${data.length} team members.`,
+                                variant: "default"
+                              });
+                            }}
+                          />
                         </div>
                       </div>
                       
-                      <div className="mt-4">
-                        <CSVImport 
-                          templateFields={["name", "email", "department", "role"]}
-                          templateName="Team Members"
-                          onImport={(data) => {
-                            // Convert imported data to the required format
-                            const formattedData = data.map(user => ({
-                              name: user.name || "",
-                              email: user.email || "",
-                              department: user.department || "",
-                              role: (user.role || "member").toLowerCase(),
-                              selected: true
-                            }));
-                            
-                            // Set the imported data to the form
-                            form.setValue("team.users", formattedData);
-                            
-                            // Show success toast
-                            toast({
-                              title: "Team imported",
-                              description: `Successfully imported ${data.length} team members.`,
-                              variant: "default"
-                            });
-                          }}
-                        />
+                      {/* Invite by email section */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                        <div className="flex gap-3 items-center">
+                          <div className="rounded-full bg-blue-100 p-2 text-blue-600">
+                            <Mail className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-blue-800">Invite by Email</h4>
+                            <p className="text-sm text-blue-700">
+                              Invite specific team members to join your organization
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 space-y-3">
+                          <div className="flex flex-col space-y-2">
+                            <Label htmlFor="invite-email" className="text-sm text-blue-800">
+                              Email Address
+                            </Label>
+                            <Input 
+                              id="invite-email"
+                              value={inviteEmail}
+                              onChange={(e) => setInviteEmail(e.target.value)}
+                              placeholder="colleague@example.com"
+                              className="border-blue-200 focus-visible:ring-blue-500"
+                            />
+                          </div>
+                          
+                          <div className="flex flex-col space-y-2">
+                            <Label htmlFor="invite-role" className="text-sm text-blue-800">
+                              Role
+                            </Label>
+                            <Select
+                              value={inviteRole}
+                              onValueChange={setInviteRole}
+                            >
+                              <SelectTrigger id="invite-role" className="border-blue-200 focus-visible:ring-blue-500">
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="member">Member</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <Button 
+                            type="button" 
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            onClick={inviteUser}
+                            disabled={isInviting || !inviteEmail}
+                          >
+                            {isInviting ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Inviting...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="mr-2 h-4 w-4" />
+                                Invite User
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     
@@ -831,7 +967,26 @@ export default function TenantOnboardingWizard() {
                                     render={({ field }) => (
                                       <FormItem className="mb-0">
                                         <FormControl>
-                                          <Input placeholder="Email" {...field} />
+                                          <Input 
+                                            placeholder="Email" 
+                                            {...field}
+                                            onBlur={(e) => {
+                                              field.onBlur();
+                                              // Validate email format
+                                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                              if (e.target.value && !emailRegex.test(e.target.value)) {
+                                                toast({
+                                                  title: "Invalid email format",
+                                                  description: "Please enter a valid email address",
+                                                  variant: "destructive",
+                                                });
+                                              }
+                                            }}
+                                            className={
+                                              field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)
+                                                ? "border-red-300 focus-visible:ring-red-500"
+                                                : ""
+                                            }/>
                                         </FormControl>
                                       </FormItem>
                                     )}
