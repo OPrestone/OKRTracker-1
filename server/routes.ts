@@ -716,6 +716,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json([]);
     }
   });
+  
+  // Create new user with tenant assignment
+  app.post("/api/users", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      // Only admins or owners can create users
+      const user = req.user as User;
+      
+      // Check if the current user has proper permissions
+      const userTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, user.id),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+      
+      if (userTenant.length === 0) {
+        return res.status(403).json({ error: "Not authorized to create users in this tenant" });
+      }
+      
+      const userRole = userTenant[0].role;
+      if (userRole !== 'admin' && userRole !== 'owner') {
+        return res.status(403).json({ error: "Only admins or owners can create new users" });
+      }
+      
+      // Extract data for user creation
+      const { teamId, ...userData } = req.body;
+      
+      // Create a name field from firstName and lastName if not provided
+      if (!userData.name && userData.firstName && userData.lastName) {
+        userData.name = `${userData.firstName} ${userData.lastName}`;
+      }
+      
+      // Validate and prepare user data
+      const validatedData = {
+        ...userData,
+        tenantId: req.tenantId // Assign to current tenant
+      };
+      
+      // Create the user
+      const newUser = await storage.createUser(validatedData);
+      
+      // Add the user to the tenant
+      await db.insert(usersToTenants).values({
+        id: `utt_${crypto.randomUUID().replace(/-/g, '')}`,
+        userId: newUser.id,
+        tenantId: req.tenantId,
+        role: userData.role === 'admin' ? 'admin' : 'member', // Only allow admin or member roles
+      });
+      
+      // If a team is specified, add the user to that team
+      if (teamId) {
+        await storage.addUserToTeam(newUser.id, teamId);
+      }
+      
+      // Return the created user without password
+      const { password, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      next(error);
+    }
+  });
 
   app.get("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
