@@ -224,6 +224,7 @@ export function CSVImport({
         <Button 
           variant="outline" 
           size="sm"
+          type="button"
           onClick={downloadSampleTemplate}
           className="text-xs"
         >
