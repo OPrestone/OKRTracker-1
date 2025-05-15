@@ -110,9 +110,8 @@ export const cadences = pgTableWithUlid("cadences", {
   // The database has 'period' column instead of 'period_days'
   period: text("period"), // e.g., 'weekly', 'quarterly'
   startMonth: text("start_month"),
-  // Note: tenant_id doesn't exist in the actual database table
-  // but we keep the schema definition for future migration
-  // tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  // Tenant ID to ensure cadences are organization-specific
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // updatedAt column doesn't exist in the actual database table
   // updatedAt: timestamp("updated_at").defaultNow().notNull(),
