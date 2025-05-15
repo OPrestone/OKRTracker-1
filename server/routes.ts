@@ -784,6 +784,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.addUserToTeam(newUser.id, teamId);
       }
       
+      // If email is provided, send notification with account details
+      if (userData.email) {
+        try {
+          // Import the email service
+          const { emailService } = await import('./services/email-service');
+          
+          // Send account creation email
+          await emailService.sendNewUserAccountEmail(
+            userData.email,
+            userData.password || 'temporary-password', // The password (may be user provided or generated)
+            req.tenantId || '',
+            userData.role || 'member',
+            (user as any).name || 'Admin'
+          );
+        } catch (emailError) {
+          console.error('Failed to send user invitation email:', emailError);
+          // Don't fail the user creation if email fails
+        }
+      }
+      
       // Return the created user without password
       const { password, ...userWithoutPassword } = newUser;
       res.status(201).json(userWithoutPassword);
