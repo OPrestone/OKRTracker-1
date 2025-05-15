@@ -167,11 +167,15 @@ export default function Cadences() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setNewCadence(prev => ({ ...prev, [name]: value }));
+    // Convert startMonth to integer if that's the field being updated
+    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
+    setNewCadence(prev => ({ ...prev, [name]: newValue }));
   };
 
   const handleEditSelectChange = (name: string, value: string) => {
-    setEditCadence(prev => ({ ...prev, [name]: value }));
+    // Convert startMonth to integer if that's the field being updated
+    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
+    setEditCadence(prev => ({ ...prev, [name]: newValue }));
   };
 
   const resetNewCadenceForm = () => {
@@ -179,7 +183,7 @@ export default function Cadences() {
       name: "",
       description: "",
       period: "quarterly",
-      startMonth: "1"
+      startMonth: 1 // Using integer now
     });
   };
 
@@ -298,18 +302,11 @@ export default function Cadences() {
                     <SelectValue placeholder="Select start month" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">January</SelectItem>
-                    <SelectItem value="2">February</SelectItem>
-                    <SelectItem value="3">March</SelectItem>
-                    <SelectItem value="4">April</SelectItem>
-                    <SelectItem value="5">May</SelectItem>
-                    <SelectItem value="6">June</SelectItem>
-                    <SelectItem value="7">July</SelectItem>
-                    <SelectItem value="8">August</SelectItem>
-                    <SelectItem value="9">September</SelectItem>
-                    <SelectItem value="10">October</SelectItem>
-                    <SelectItem value="11">November</SelectItem>
-                    <SelectItem value="12">December</SelectItem>
+                    {MONTH_NAMES.map((month, index) => (
+                      <SelectItem key={index} value={(index + 1).toString()}>
+                        {month}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -397,18 +394,11 @@ export default function Cadences() {
                   <SelectValue placeholder="Select start month" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">January</SelectItem>
-                  <SelectItem value="2">February</SelectItem>
-                  <SelectItem value="3">March</SelectItem>
-                  <SelectItem value="4">April</SelectItem>
-                  <SelectItem value="5">May</SelectItem>
-                  <SelectItem value="6">June</SelectItem>
-                  <SelectItem value="7">July</SelectItem>
-                  <SelectItem value="8">August</SelectItem>
-                  <SelectItem value="9">September</SelectItem>
-                  <SelectItem value="10">October</SelectItem>
-                  <SelectItem value="11">November</SelectItem>
-                  <SelectItem value="12">December</SelectItem>
+                  {MONTH_NAMES.map((month, index) => (
+                    <SelectItem key={index} value={(index + 1).toString()}>
+                      {month}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
