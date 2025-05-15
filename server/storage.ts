@@ -2484,21 +2484,21 @@ export class DatabaseStorage implements IStorage {
       // Handle both camelCase and snake_case field names
       // Prefer snake_case but fall back to camelCase
       const dbFields = {
-        title: projectData.title,
-        description: projectData.description,
-        status: projectData.status,
+        title: projectData.title || "Untitled Project",
+        description: projectData.description || "",
+        status: projectData.status || "todo",
         // Priority handling - can come in as string or number
         priority: typeof projectData.priority === 'number' ? 
                   projectData.priority : 
                   this.convertPriorityToNumber(projectData.priority),
         // Handle both assigned_to_id and assignedToId
-        assigned_to_id: projectData.assigned_to_id || projectData.assignedToId,
+        assigned_to_id: projectData.assigned_to_id || projectData.assignedToId || null,
         // Handle both team_id and teamId
-        team_id: projectData.team_id || projectData.teamId,
+        team_id: projectData.team_id || projectData.teamId || null,
         // Handle both created_by_id and createdById
-        created_by_id: projectData.created_by_id || projectData.createdById,
-        // Force tenant_id to be set and not null
-        tenant_id: tenantId,
+        created_by_id: projectData.created_by_id || projectData.createdById || null,
+        // Force tenant_id to be set and not null - Use direct assignment, not from the object
+        tenant_id: String(tenantId), // Force to string and cannot be null
         // Handle date fields
         start_date: projectData.start_date || projectData.startDate || null,
         due_date: projectData.due_date || projectData.dueDate || null,
@@ -2514,12 +2514,59 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`tenant_id is required but was null or undefined: ${JSON.stringify(dbFields)}`);
       }
       
-      const [newProject] = await db.insert(projects)
-        .values(dbFields)
-        .returning();
+      // Direct SQL query to ensure tenant_id is set correctly
+      try {
+        console.log("About to execute SQL insert with these fields:", JSON.stringify(dbFields, null, 2));
         
-      console.log("New project created successfully:", newProject);
-      return newProject;
+        // Create SQL insert that explicitly sets the tenant_id
+        const [newProject] = await db.insert(projects)
+          .values({
+            ...dbFields,
+            tenant_id: String(tenantId) // Make sure this is not null
+          })
+          .returning();
+          
+        console.log("New project created successfully:", newProject);
+        return newProject;
+      } catch (innerError) {
+        console.error("Database insertion error:", innerError);
+        // Try a fallback approach with direct values
+        console.log("Attempting fallback approach with direct values");
+        
+        // Create a SQL query with explicit values
+        const sqlQuery = `
+          INSERT INTO projects (
+            title, description, status, priority, 
+            assigned_to_id, team_id, created_by_id, tenant_id, 
+            start_date, due_date, created_at, tags
+          ) VALUES (
+            $1, $2, $3, $4, 
+            $5, $6, $7, $8, 
+            $9, $10, $11, $12
+          ) RETURNING *
+        `;
+        
+        const values = [
+          dbFields.title,
+          dbFields.description,
+          dbFields.status,
+          dbFields.priority,
+          dbFields.assigned_to_id,
+          dbFields.team_id,
+          dbFields.created_by_id,
+          String(tenantId), // Ensure tenant_id is not null
+          dbFields.start_date,
+          dbFields.due_date,
+          dbFields.created_at,
+          dbFields.tags
+        ];
+        
+        console.log("Executing fallback SQL with values:", values);
+        
+        const result = await pool.query(sqlQuery, values);
+        console.log("Fallback insert successful:", result.rows[0]);
+        return result.rows[0];
+      }
     } catch (error) {
       console.error("Error in createProject:", error);
       throw error;
