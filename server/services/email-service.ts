@@ -12,6 +12,12 @@ class EmailService {
     } else {
       this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
     }
+    
+    // Set APPLICATION_URL in environment if it doesn't exist
+    if (!process.env.APPLICATION_URL) {
+      process.env.APPLICATION_URL = 'http://localhost:5000';
+      console.log(`APPLICATION_URL not set, defaulting to ${process.env.APPLICATION_URL}`);
+    }
   }
   
   /**
@@ -31,13 +37,14 @@ class EmailService {
       }
       
       const inviterDisplay = inviterName || 'An administrator';
+      const tenantName = tenant.display_name || tenant.name || 'your organization';
       
       // Email content
-      const subject = `You've been invited to join ${tenant.name} on OKR Platform`;
+      const subject = `You've been invited to join ${tenantName} on OKR Platform`;
       const text = `
         Hello,
         
-        ${inviterDisplay} has invited you to join ${tenant.name} on OKR Platform as a ${role}.
+        ${inviterDisplay} has invited you to join ${tenantName} on OKR Platform as a ${role}.
         
         To accept this invitation, please visit:
         ${this.getApplicationUrl()}/auth?invitation=true&email=${encodeURIComponent(recipientEmail)}&tenant=${tenantId}
@@ -57,7 +64,7 @@ class EmailService {
           </div>
           <div style="border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; padding: 20px;">
             <p>Hello,</p>
-            <p>${inviterDisplay} has invited you to join <strong>${tenant.name}</strong> on OKR Platform as a <strong>${role}</strong>.</p>
+            <p>${inviterDisplay} has invited you to join <strong>${tenantName}</strong> on OKR Platform as a <strong>${role}</strong>.</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${this.getApplicationUrl()}/auth?invitation=true&email=${encodeURIComponent(recipientEmail)}&tenant=${tenantId}" 
                  style="background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
@@ -90,6 +97,7 @@ class EmailService {
         html
       });
       
+      console.log(`Invitation email sent to ${recipientEmail} for tenant ${tenantName}`);
       return true;
     } catch (error) {
       console.error('Error sending invitation email:', error);
