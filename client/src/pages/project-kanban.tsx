@@ -6,7 +6,24 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, MoreHorizontal, Calendar, MessageSquare, CheckCircle, Clock, AlertCircle, PlusCircle, Loader2 } from "lucide-react";
+import { 
+  Plus, 
+  MoreHorizontal, 
+  Calendar, 
+  MessageSquare, 
+  CheckCircle, 
+  Clock, 
+  AlertCircle, 
+  PlusCircle, 
+  Loader2, 
+  Circle, 
+  Timer, 
+  Eye, 
+  ListTodo, 
+  SortAsc, 
+  Filter, 
+  Inbox
+} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -108,18 +125,44 @@ function KanbanCard({ project }: { project: Project }) {
 
 function ProjectCard({ project }: { project: Project }) {
   const { toast } = useToast();
+  
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "low":
-        return "bg-green-100 text-green-800";
+        return {
+          bg: "bg-emerald-50 dark:bg-emerald-950/30",
+          border: "border-emerald-200 dark:border-emerald-800",
+          text: "text-emerald-700 dark:text-emerald-400",
+          icon: "text-emerald-500"
+        };
       case "medium":
-        return "bg-blue-100 text-blue-800";
+        return {
+          bg: "bg-blue-50 dark:bg-blue-950/30",
+          border: "border-blue-200 dark:border-blue-800",
+          text: "text-blue-700 dark:text-blue-400",
+          icon: "text-blue-500"
+        };
       case "high":
-        return "bg-orange-100 text-orange-800";
+        return {
+          bg: "bg-amber-50 dark:bg-amber-950/30",
+          border: "border-amber-200 dark:border-amber-800",
+          text: "text-amber-700 dark:text-amber-400",
+          icon: "text-amber-500"
+        };
       case "urgent":
-        return "bg-red-100 text-red-800";
+        return {
+          bg: "bg-rose-50 dark:bg-rose-950/30",
+          border: "border-rose-200 dark:border-rose-800",
+          text: "text-rose-700 dark:text-rose-400",
+          icon: "text-rose-500"
+        };
       default:
-        return "bg-gray-100 text-gray-800";
+        return {
+          bg: "bg-gray-50 dark:bg-gray-800/30",
+          border: "border-gray-200 dark:border-gray-700",
+          text: "text-gray-700 dark:text-gray-400",
+          icon: "text-gray-500"
+        };
     }
   };
   
@@ -144,84 +187,147 @@ function ProjectCard({ project }: { project: Project }) {
     },
   });
   
-  // Format date for display
+  // Format date for display with distance calculation
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
     
     try {
       const date = new Date(dateString);
-      // Use short date format (e.g., "May 15, 2025")
-      return date.toLocaleDateString('en-US', { 
+      const today = new Date();
+      const diffTime = date.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      let dateDisplay = date.toLocaleDateString('en-US', { 
         month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
+        day: 'numeric'
       });
+      
+      let statusDisplay = "";
+      if (diffDays < 0) {
+        statusDisplay = "Overdue";
+      } else if (diffDays === 0) {
+        statusDisplay = "Due today";
+      } else if (diffDays === 1) {
+        statusDisplay = "Due tomorrow";
+      } else if (diffDays <= 7) {
+        statusDisplay = `Due in ${diffDays} days`;
+      } else {
+        statusDisplay = "Due";
+      }
+      
+      return { dateDisplay, statusDisplay, diffDays };
     } catch (error) {
-      // If date is invalid, return the original string
-      return dateString;
+      // If date is invalid, return a default
+      return { dateDisplay: dateString, statusDisplay: "Due", diffDays: 0 };
     }
   };
 
-  return (
-    <Card className="shadow-sm hover:shadow transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <Badge className={getPriorityColor(project.priority)}>
-            {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
-          </Badge>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem 
-                className="text-red-600"
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this project?')) {
-                    deleteProjectMutation.mutate(project.id);
-                  }
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        <h3 className="font-semibold text-base mb-1">{project.title}</h3>
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{project.description}</p>
-        
-        {project.dueDate && (
-          <div className="flex items-center text-xs text-gray-500 mb-3">
-            <Calendar className="h-3 w-3 mr-1" />
-            <span>Due {formatDate(project.dueDate)}</span>
-          </div>
-        )}
+  // Calculate completion percentage if there's a checklist
+  const completionPercentage = project.checklistTotal > 0
+    ? Math.round((project.checklistCompleted / project.checklistTotal) * 100)
+    : 0;
+    
+  const priorityColors = getPriorityColor(project.priority);
+  const formattedDate = project.dueDate ? formatDate(project.dueDate) : null;
+  
+  // Determine if the due date indicates this is overdue
+  const isOverdue = formattedDate && formattedDate.diffDays < 0;
 
-        <div className="flex justify-between items-center mt-2">
-          <div className="flex -space-x-2">
-            {project.assignees.map((assignee, index) => (
-              <Avatar key={index} className="h-6 w-6 border-2 border-white">
-                <AvatarFallback className="text-xs">{assignee.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            ))}
+  return (
+    <Card className={`shadow-sm hover:shadow-md transition-all border ${priorityColors.border} overflow-hidden`}>
+      <CardContent className="p-0">
+        {/* Priority indicator bar at the top */}
+        <div className={`h-1 w-full ${priorityColors.bg}`}></div>
+        
+        <div className="p-4">
+          {/* Card header with title and dropdown */}
+          <div className="flex justify-between items-start mb-3">
+            <Badge variant="outline" className={`${priorityColors.text} ${priorityColors.border} ${priorityColors.bg}`}>
+              {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-slate-100">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  Move to...
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-600"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this project?')) {
+                      deleteProjectMutation.mutate(project.id);
+                    }
+                  }}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
-          <div className="flex items-center gap-2">
-            {project.comments > 0 && (
-              <span className="text-xs text-gray-500 flex items-center">
-                <MessageSquare className="h-3 w-3 mr-1" />
-                {project.comments}
-              </span>
+          {/* Card title and description */}
+          <h3 className="font-semibold text-base mb-2 line-clamp-2">{project.title}</h3>
+          <p className="text-sm text-gray-500 mb-4 line-clamp-2">{project.description}</p>
+          
+          {/* Card footer with metadata */}
+          <div className="flex flex-col gap-2">
+            {/* Due date info */}
+            {formattedDate && (
+              <div className={`flex items-center text-xs ${isOverdue ? 'text-rose-600' : 'text-gray-500'} mb-1`}>
+                <Calendar className={`h-3 w-3 mr-1 ${isOverdue ? 'text-rose-600' : 'text-gray-400'}`} />
+                <span>{formattedDate.statusDisplay}: {formattedDate.dateDisplay}</span>
+              </div>
             )}
+            
+            {/* Progress bar if there's a checklist */}
             {project.checklistTotal > 0 && (
-              <span className="text-xs text-gray-500 flex items-center">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {project.checklistCompleted}/{project.checklistTotal}
-              </span>
+              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+                <div 
+                  className="h-full bg-primary" 
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
             )}
+            
+            <div className="flex justify-between items-center">
+              {/* Assignees avatars */}
+              <div className="flex -space-x-2">
+                {project.assignees && project.assignees.length > 0 ? (
+                  project.assignees.map((assignee, index) => (
+                    <Avatar key={index} className="h-7 w-7 border-2 border-white">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                        {assignee.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400">Unassigned</span>
+                )}
+              </div>
+              
+              {/* Task metadata */}
+              <div className="flex items-center gap-3">
+                {project.comments > 0 && (
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <MessageSquare className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                    {project.comments}
+                  </span>
+                )}
+                {project.checklistTotal > 0 && (
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <CheckCircle className="h-3.5 w-3.5 mr-1 text-gray-400" />
+                    {project.checklistCompleted}/{project.checklistTotal}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -230,44 +336,128 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 function KanbanColumn({ column, projects }: { column: KanbanColumn; projects: Project[] }) {
-  const getStatusIcon = (status: string) => {
+  const getStatusStyles = (status: string) => {
     switch (status) {
       case "backlog":
-        return <Clock className="h-4 w-4 mr-2 text-gray-500" />;
+        return {
+          icon: <Clock className="h-5 w-5 mr-2 text-slate-500" />,
+          headerBg: "bg-slate-100 dark:bg-slate-800/50",
+          hoverBg: "bg-slate-50/80 dark:bg-slate-800/30",
+          border: "border-slate-200 dark:border-slate-700",
+          count: "bg-slate-200/70 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+        };
       case "todo":
-        return <PlusCircle className="h-4 w-4 mr-2 text-blue-500" />;
+        return {
+          icon: <ListTodo className="h-5 w-5 mr-2 text-blue-500" />,
+          headerBg: "bg-blue-50 dark:bg-blue-950/30",
+          hoverBg: "bg-blue-50/50 dark:bg-blue-950/20",
+          border: "border-blue-100 dark:border-blue-900/50",
+          count: "bg-blue-100 text-blue-700 dark:bg-blue-900/70 dark:text-blue-300"
+        };
       case "in-progress":
-        return <Clock className="h-4 w-4 mr-2 text-orange-500" />;
+        return {
+          icon: <Timer className="h-5 w-5 mr-2 text-amber-500" />,
+          headerBg: "bg-amber-50 dark:bg-amber-950/30",
+          hoverBg: "bg-amber-50/50 dark:bg-amber-950/20",
+          border: "border-amber-100 dark:border-amber-900/50",
+          count: "bg-amber-100 text-amber-700 dark:bg-amber-900/70 dark:text-amber-300"
+        };
       case "review":
-        return <AlertCircle className="h-4 w-4 mr-2 text-purple-500" />;
+        return {
+          icon: <Eye className="h-5 w-5 mr-2 text-purple-500" />,
+          headerBg: "bg-purple-50 dark:bg-purple-950/30",
+          hoverBg: "bg-purple-50/50 dark:bg-purple-950/20",
+          border: "border-purple-100 dark:border-purple-900/50",
+          count: "bg-purple-100 text-purple-700 dark:bg-purple-900/70 dark:text-purple-300"
+        };
       case "done":
-        return <CheckCircle className="h-4 w-4 mr-2 text-green-500" />;
+        return {
+          icon: <CheckCircle className="h-5 w-5 mr-2 text-emerald-500" />,
+          headerBg: "bg-emerald-50 dark:bg-emerald-950/30",
+          hoverBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+          border: "border-emerald-100 dark:border-emerald-900/50",
+          count: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/70 dark:text-emerald-300"
+        };
       default:
-        return null;
+        return {
+          icon: <Circle className="h-5 w-5 mr-2 text-gray-500" />,
+          headerBg: "bg-gray-100 dark:bg-gray-800/50",
+          hoverBg: "bg-gray-50/80 dark:bg-gray-800/30",
+          border: "border-gray-200 dark:border-gray-700",
+          count: "bg-gray-200/70 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+        };
     }
   };
 
+  const styles = getStatusStyles(column.id);
+
   return (
-    <div className="bg-gray-50 rounded-lg p-3 min-w-[300px] h-full">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
-          {getStatusIcon(column.id)}
-          <h3 className="text-sm font-medium">{column.title}</h3>
-          <Badge variant="outline" className="ml-2 text-xs font-normal">
-            {projects.length}
-          </Badge>
+    <div className={`bg-white dark:bg-slate-900 rounded-lg shadow-sm border ${styles.border} min-w-[320px] max-w-[350px] flex flex-col h-full`}>
+      {/* Column header with colored background */}
+      <div className={`${styles.headerBg} rounded-t-lg p-3 border-b ${styles.border}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            {styles.icon}
+            <h3 className="text-sm font-medium">{column.title}</h3>
+            <div className={`ml-2 text-xs font-medium px-2 py-0.5 rounded-full ${styles.count}`}>
+              {projects.length}
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-white/20">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem>
+                <Plus className="h-4 w-4 mr-2" />
+                Add project
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <SortAsc className="h-4 w-4 mr-2" />
+                Sort by
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Plus className="h-4 w-4" />
-        </Button>
       </div>
       
-      <div className="space-y-3">
+      {/* Project cards container */}
+      <div className="flex-1 p-2 space-y-3 overflow-y-auto transition-colors"
+           style={{
+             maxHeight: "calc(100vh - 230px)",
+           }}>
         <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((project) => (
             <SortableItem key={project.id} project={project} />
           ))}
         </SortableContext>
+        
+        {/* Empty state when no projects */}
+        {projects.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            <Inbox className="h-8 w-8 mb-2 opacity-20" />
+            <p>No projects yet</p>
+            <p className="text-xs mt-1">Drag projects here or add a new one</p>
+          </div>
+        )}
+      </div>
+      
+      {/* Quick add button at the bottom */}
+      <div className={`p-2 border-t ${styles.border}`}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full flex items-center justify-center text-xs text-gray-500 hover:text-gray-700"
+        >
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Add project
+        </Button>
       </div>
     </div>
   );

@@ -2488,7 +2488,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProjectsByTenant(tenantId: string): Promise<Project[]> {
-    return await db.select()
+    // Only select the fields that exist in the database schema
+    // and avoid selecting the owner_id field that's causing the error
+    return await db.select({
+      id: projects.id,
+      title: projects.title,
+      description: projects.description,
+      status: projects.status,
+      priority: projects.priority,
+      dueDate: projects.dueDate,
+      teamId: projects.teamId,
+      objectiveId: projects.objectiveId,
+      tenantId: projects.tenantId,
+      checklistTotal: projects.checklistTotal,
+      checklistCompleted: projects.checklistCompleted,
+      commentsCount: projects.commentsCount,
+      createdAt: projects.createdAt
+    })
       .from(projects)
       .where(eq(projects.tenantId, tenantId))
       .orderBy(projects.status, projects.priority);
