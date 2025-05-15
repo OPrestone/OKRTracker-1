@@ -105,6 +105,7 @@ export interface IStorage {
   createCadence(cadence: InsertCadence): Promise<Cadence>;
   getCadence(id: string): Promise<Cadence | undefined>;
   getAllCadences(): Promise<Cadence[]>;
+  getCadencesByTenant(tenantId: string): Promise<Cadence[]>;
   
   // Timeframes
   createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe>;
@@ -921,6 +922,11 @@ export class DatabaseStorage implements IStorage {
 
   // Cadences
   async createCadence(cadence: InsertCadence): Promise<Cadence> {
+    // Make sure tenant_id is included in the cadence data
+    if (!cadence.tenantId) {
+      throw new Error("Tenant ID is required for creating a cadence");
+    }
+    
     const [newCadence] = await db.insert(cadences).values(cadence).returning();
     return newCadence;
   }
@@ -932,6 +938,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllCadences(): Promise<Cadence[]> {
     return db.select().from(cadences);
+  }
+  
+  async getCadencesByTenant(tenantId: string): Promise<Cadence[]> {
+    return db.select().from(cadences).where(eq(cadences.tenantId, tenantId));
   }
   
   async updateCadence(id: string, cadence: Partial<InsertCadence>): Promise<Cadence> {

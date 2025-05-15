@@ -1328,9 +1328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Fetch all cadences for now as tenant_id column doesn't exist in the database yet
-      // Once the database schema is updated with tenant_id, we'll filter by tenant
-      const cadencesList = await db.select().from(cadences);
+      // Fetch cadences for the current tenant
+      const cadencesList = await storage.getCadencesByTenant(tenantId);
       
       res.json(cadencesList);
     } catch (error) {
@@ -1449,23 +1448,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tenantId = req.tenantId;
       const cadenceId = req.params.cadenceId;
       
-      // Verify the cadence exists
+      // Verify the cadence exists and belongs to the tenant
       const cadence = await storage.getCadence(cadenceId);
       if (!cadence) {
         return res.status(404).json({ error: "Cadence not found" });
       }
       
-      // Note: We don't check cadence.tenantId as it doesn't exist in the database
-      // In the future once we have tenant_id in the database, this check should be reinstated
-      // if (cadence.tenantId !== tenantId) {
-      //   return res.status(403).json({ error: "Access denied" });
-      // }
+      if (cadence.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
       
-      // Fetch timeframes for the specific cadence and current tenant
-      // Only filter by cadenceId since tenant_id column doesn't exist in timeframes table
-      const timeframesList = await db.select()
-        .from(timeframes)
-        .where(eq(timeframes.cadenceId, cadenceId));
+      // Fetch timeframes for the specific cadence
+      const timeframesList = await storage.getTimeframesByCadence(cadenceId);
       
       res.json(timeframesList);
     } catch (error) {
