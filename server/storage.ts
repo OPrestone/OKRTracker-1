@@ -1158,7 +1158,25 @@ export class DatabaseStorage implements IStorage {
     return updatedTimeframe;
   }
   
-  async deleteTimeframe(id: string): Promise<void> {
+  async deleteTimeframe(id: string, tenantId?: string): Promise<void> {
+    // First verify the timeframe exists 
+    const timeframe = await this.getTimeframe(id);
+    if (!timeframe) {
+      throw new Error(`Timeframe with id ${id} not found`);
+    }
+    
+    // If tenantId is provided, verify the timeframe belongs to this tenant
+    if (tenantId && timeframe.tenantId && timeframe.tenantId !== tenantId) {
+      throw new Error(`Access denied: Timeframe does not belong to tenant ${tenantId}`);
+    }
+    
+    // Check if timeframe has objectives
+    const objectives = await this.getObjectivesByTimeframe(id);
+    if (objectives.length > 0) {
+      throw new Error("Cannot delete timeframe with associated objectives");
+    }
+    
+    // Proceed with deletion
     await db.delete(timeframes).where(eq(timeframes.id, id));
   }
 

@@ -1549,26 +1549,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = req.params.id;
       const tenantId = req.tenantId;
       
-      // Verify the timeframe belongs to the current tenant
-      const timeframe = await storage.getTimeframe(id);
-      if (!timeframe) {
-        return res.status(404).json({ error: "Timeframe not found" });
+      try {
+        // This will handle all validations including tenant check, existence check,
+        // and the check for associated objectives
+        await storage.deleteTimeframe(id, tenantId);
+        res.status(204).end();
+      } catch (error) {
+        if (error.message?.includes("not found")) {
+          return res.status(404).json({ error: error.message });
+        } else if (error.message?.includes("Access denied")) {
+          return res.status(403).json({ error: error.message });
+        } else if (error.message?.includes("associated objectives")) {
+          return res.status(400).json({ error: error.message });
+        } else {
+          throw error; // Pass unknown errors to the error handler
+        }
       }
-      
-      if (timeframe.tenantId !== tenantId) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-      
-      // Check if timeframe has objectives
-      const objectives = await storage.getObjectivesByTimeframe(id);
-      if (objectives.length > 0) {
-        return res.status(400).json({ 
-          error: "Cannot delete timeframe with associated objectives" 
-        });
-      }
-      
-      await storage.deleteTimeframe(id);
-      res.status(204).end();
     } catch (error) {
       next(error);
     }
