@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+
+// Helper for month names
+const MONTH_NAMES = [
+  "January", "February", "March", "April", 
+  "May", "June", "July", "August", 
+  "September", "October", "November", "December"
+];
 import { 
   Table,
   TableBody,
@@ -67,7 +74,7 @@ export default function Cadences() {
     name: "",
     description: "",
     period: "quarterly",
-    startMonth: "1"
+    startMonth: 1 // Using integer now
   });
 
   // Edit cadence form state
@@ -75,7 +82,7 @@ export default function Cadences() {
     name: "",
     description: "",
     period: "quarterly",
-    startMonth: "1" 
+    startMonth: 1 // Using integer now
   });
 
   // Fetch cadences
@@ -177,25 +184,17 @@ export default function Cadences() {
   };
 
   const handleCreateCadence = () => {
-    const cadenceData = {
-      ...newCadence,
-      startMonth: newCadence.startMonth // Keep as string to match the schema
-    };
-    
-    createCadenceMutation.mutate(cadenceData);
+    // startMonth is already an integer, no need to convert
+    createCadenceMutation.mutate(newCadence);
   };
 
   const handleUpdateCadence = () => {
     if (!selectedCadence) return;
     
-    const cadenceData = {
-      ...editCadence,
-      startMonth: editCadence.startMonth // Keep as string to match the schema
-    };
-    
+    // startMonth is already an integer, no need to convert
     updateCadenceMutation.mutate({
       id: selectedCadence.id,
-      data: cadenceData
+      data: editCadence
     });
   };
 
