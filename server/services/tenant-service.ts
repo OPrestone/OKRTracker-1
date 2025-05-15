@@ -454,6 +454,77 @@ class TenantService {
       throw error;
     }
   }
+  
+  // Invite a user to a tenant
+  async inviteUserToTenant(
+    email: string,
+    tenantId: string,
+    role: 'owner' | 'admin' | 'member' = 'member'
+  ): Promise<any> {
+    try {
+      // First, check if the user already exists
+      const { rows: existingUsers } = await db.execute(
+        sql`SELECT * FROM users WHERE email = ${email} LIMIT 1`
+      );
+      
+      let userId: string;
+      
+      if (existingUsers.length > 0) {
+        // User exists, get their ID
+        userId = existingUsers[0].id;
+        
+        // Check if they're already in this tenant
+        const { rows: existingMembership } = await db.execute(
+          sql`SELECT * FROM users_to_tenants 
+              WHERE user_id = ${userId} AND tenant_id = ${tenantId} 
+              LIMIT 1`
+        );
+        
+        if (existingMembership.length > 0) {
+          // Update role if different
+          if (existingMembership[0].role !== role) {
+            await db.execute(
+              sql`UPDATE users_to_tenants 
+                  SET role = ${role} 
+                  WHERE user_id = ${userId} AND tenant_id = ${tenantId}`
+            );
+          }
+          
+          return { success: true, message: 'User role updated', user: existingUsers[0] };
+        }
+      } else {
+        // User doesn't exist, create them
+        const tempPassword = Math.random().toString(36).substring(2, 15);
+        userId = ulid();
+        
+        await db.execute(
+          sql`INSERT INTO users (id, email, username, password, name)
+              VALUES (
+                ${userId}, 
+                ${email}, 
+                ${email.split('@')[0]}, 
+                ${'temppassword'}, 
+                ${email.split('@')[0]}
+              )`
+        );
+        
+        // TODO: Send invitation email with temp password
+      }
+      
+      // Add user to tenant
+      const userToTenantId = ulid();
+      
+      await db.execute(
+        sql`INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default)
+            VALUES (${userToTenantId}, ${userId}, ${tenantId}, ${role}, FALSE)`
+      );
+      
+      return { success: true, message: 'User invited successfully' };
+    } catch (error) {
+      console.error('Error inviting user to tenant:', error);
+      throw error;
+    }
+  }
 }
 
 export const tenantService = new TenantService();

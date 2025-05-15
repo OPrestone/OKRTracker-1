@@ -221,13 +221,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tenants", ensureAuthenticated, async (req, res, next) => {
     try {
       const user = req.user as User;
-      const validatedData = insertTenantSchema.omit({ slug: true }).parse(req.body);
       
+      // Extract the setup and users data before validation
+      const { setup, users, ...restData } = req.body;
+      
+      // Validate the tenant data
+      const validatedData = insertTenantSchema.omit({ slug: true }).parse(restData);
+      
+      // Create the tenant
       const { tenant, userToTenant } = await tenantService.createTenant(
         validatedData,
         user,
         "owner"
       );
+      
+      // Handle initial setup with OKRs if needed
+      if (setup?.createInitialOKRs) {
+        try {
+          if (setup.importedOKRs && Array.isArray(setup.importedOKRs) && setup.importedOKRs.length > 0) {
+            // Process imported OKRs from CSV
+            await processImportedOKRs(tenant.id, setup.importedOKRs);
+            console.log(`Processed ${setup.importedOKRs.length} imported OKRs for tenant ${tenant.id}`);
+          } else if (setup.template) {
+            // Process template-based OKRs
+            await createOKRsFromTemplate(tenant.id, setup.template);
+            console.log(`Created OKRs from template "${setup.template}" for tenant ${tenant.id}`);
+          }
+        } catch (setupError) {
+          console.error("Error processing initial OKRs setup:", setupError);
+          // Don't fail the entire request if just the OKR setup fails
+        }
+      }
+      
+      // Add users if provided
+      if (users && Array.isArray(users) && users.length > 0) {
+        try {
+          for (const userData of users) {
+            if (userData.selected && userData.email) {
+              await tenantService.inviteUserToTenant(
+                userData.email,
+                tenant.id, 
+                userData.role || 'member'
+              );
+            }
+          }
+          console.log(`Processed ${users.filter(u => u.selected).length} users for tenant ${tenant.id}`);
+        } catch (userError) {
+          console.error("Error processing users:", userError);
+          // Don't fail the entire request if just the user setup fails
+        }
+      }
       
       res.status(201).json({ tenant, userToTenant });
     } catch (error) {
@@ -5049,6 +5092,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 // Initialize sample data for testing
+// Helper function to process OKRs imported from CSV
+async function processImportedOKRs(tenantId: string, importedData: any[]) {
+  try {
+    for (const entry of importedData) {
+      // Create an objective if we have a title
+      if (entry.objective_title) {
+        // Generate a ULID for the objective
+        const objectiveId = ulid();
+        
+        // Create the objective
+        await db.execute(
+          sql`INSERT INTO objectives (
+                id, 
+                title, 
+                description, 
+                level, 
+                status, 
+                tenant_id, 
+                created_at
+              ) VALUES (
+                ${objectiveId},
+                ${entry.objective_title},
+                ${entry.objective_description || ''},
+                ${'company'}, 
+                ${'draft'},
+                ${tenantId},
+                ${new Date()}
+              )`
+        );
+        
+        // Create a key result if it has a title
+        if (entry.key_result_title) {
+          // Generate a ULID for the key result
+          const keyResultId = ulid();
+          
+          // Parse numeric values with fallbacks
+          const startValue = entry.key_result_start_value ? 
+            parseFloat(entry.key_result_start_value) : 0;
+          
+          const targetValue = entry.key_result_target_value ? 
+            parseFloat(entry.key_result_target_value) : 100;
+          
+          const currentValue = entry.key_result_current_value ? 
+            parseFloat(entry.key_result_current_value) : startValue;
+          
+          // Calculate progress percentage
+          const range = targetValue - startValue;
+          const progress = range !== 0 ? 
+            Math.min(100, Math.max(0, ((currentValue - startValue) / range) * 100)) : 0;
+          
+          // Create the key result
+          await db.execute(
+            sql`INSERT INTO key_results (
+                  id,
+                  title,
+                  description,
+                  start_value,
+                  current_value,
+                  target_value,
+                  progress,
+                  status,
+                  objective_id,
+                  tenant_id,
+                  created_at
+                ) VALUES (
+                  ${keyResultId},
+                  ${entry.key_result_title},
+                  ${entry.key_result_description || ''},
+                  ${startValue},
+                  ${currentValue},
+                  ${targetValue},
+                  ${progress},
+                  ${'draft'},
+                  ${objectiveId},
+                  ${tenantId},
+                  ${new Date()}
+                )`
+          );
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error processing imported OKRs:", error);
+    throw error;
+  }
+}
+
+// Helper function to create OKRs from a template
+async function createOKRsFromTemplate(tenantId: string, templateId: string) {
+  try {
+    // Define templates for different types of OKRs
+    const templates: Record<string, { objectives: Array<{ title: string, description: string, keyResults: Array<{ title: string, description: string }> }> }> = {
+      'startup': {
+        objectives: [
+          {
+            title: 'Achieve Product-Market Fit',
+            description: 'Find the right product that solves real customer problems and has market demand',
+            keyResults: [
+              { title: 'Conduct 50 customer interviews', description: 'Gather feedback from potential users to understand their needs' },
+              { title: 'Reach 80% user satisfaction score', description: 'Measure satisfaction through surveys and feedback' },
+              { title: 'Achieve 40% monthly active user retention', description: 'Track how many users return to use the product monthly' }
+            ]
+          },
+          {
+            title: 'Build a High-Performing Team',
+            description: 'Recruit and develop talented individuals who work well together',
+            keyResults: [
+              { title: 'Hire 5 key team members', description: 'Fill critical roles in engineering, design, and product' },
+              { title: 'Implement weekly team feedback sessions', description: 'Create a culture of continuous improvement' },
+              { title: 'Achieve 90% team satisfaction score', description: 'Measure team happiness and engagement' }
+            ]
+          },
+          {
+            title: 'Establish Sustainable Growth',
+            description: 'Create repeatable, scalable growth channels',
+            keyResults: [
+              { title: 'Achieve 20% month-over-month user growth', description: 'Increase total user base consistently' },
+              { title: 'Identify 3 profitable marketing channels', description: 'Find channels with positive ROI' },
+              { title: 'Reduce customer acquisition cost by 25%', description: 'Lower the cost to acquire new customers' }
+            ]
+          }
+        ]
+      },
+      'sales': {
+        objectives: [
+          {
+            title: 'Increase Revenue Growth',
+            description: 'Accelerate sales to meet or exceed quarterly targets',
+            keyResults: [
+              { title: 'Achieve $1M in quarterly revenue', description: 'Total revenue from all products and services' },
+              { title: 'Increase average deal size by 15%', description: 'Focus on higher-value opportunities' },
+              { title: 'Reduce sales cycle by 20%', description: 'Shorten time from lead to closed deal' }
+            ]
+          },
+          {
+            title: 'Expand Customer Base',
+            description: 'Add new logos and enter new markets',
+            keyResults: [
+              { title: 'Acquire 50 new customers', description: 'First-time buyers of our products or services' },
+              { title: 'Enter 2 new market segments', description: 'Expand into new industries or verticals' },
+              { title: 'Achieve 25% growth in new territories', description: 'Increase sales in recently entered regions' }
+            ]
+          },
+          {
+            title: 'Improve Sales Team Performance',
+            description: 'Enhance productivity and effectiveness of sales representatives',
+            keyResults: [
+              { title: 'Increase quota attainment to 85%', description: 'Percentage of reps meeting or exceeding targets' },
+              { title: 'Reduce ramp time for new hires to 60 days', description: 'Time until new sales reps are fully productive' },
+              { title: 'Implement weekly sales coaching for all reps', description: 'Regular skill development and feedback' }
+            ]
+          }
+        ]
+      },
+      'product': {
+        objectives: [
+          {
+            title: 'Enhance Product Experience',
+            description: 'Improve usability and satisfaction for all users',
+            keyResults: [
+              { title: 'Increase Net Promoter Score to 50', description: 'Measure of how likely users are to recommend the product' },
+              { title: 'Reduce user onboarding time by 30%', description: 'Time until new users complete key actions' },
+              { title: 'Decrease support tickets by 25%', description: 'Reduction in user-reported issues' }
+            ]
+          },
+          {
+            title: 'Accelerate Feature Development',
+            description: 'Ship new capabilities faster without sacrificing quality',
+            keyResults: [
+              { title: 'Launch 3 major features this quarter', description: 'New capabilities that deliver significant user value' },
+              { title: 'Reduce development cycle time by 20%', description: 'Time from feature specification to release' },
+              { title: 'Maintain 99.9% quality standards', description: 'Measured by automated test coverage and defect rates' }
+            ]
+          },
+          {
+            title: 'Optimize Data-Driven Decision Making',
+            description: 'Use metrics and analytics to guide product evolution',
+            keyResults: [
+              { title: 'Implement analytics for 100% of new features', description: 'Every feature has success metrics defined' },
+              { title: 'Conduct 10 A/B tests quarterly', description: 'Systematic experimentation to validate assumptions' },
+              { title: 'Increase feature adoption by 35%', description: 'Percentage of users engaging with new capabilities' }
+            ]
+          }
+        ]
+      }
+    };
+    
+    // Get the requested template
+    const template = templates[templateId];
+    if (!template) {
+      throw new Error(`Template "${templateId}" not found`);
+    }
+    
+    // Create objectives and key results from the template
+    for (const objective of template.objectives) {
+      // Generate a ULID for the objective
+      const objectiveId = ulid();
+      
+      // Create the objective
+      await db.execute(
+        sql`INSERT INTO objectives (
+              id, 
+              title, 
+              description, 
+              level, 
+              status, 
+              tenant_id, 
+              created_at
+            ) VALUES (
+              ${objectiveId},
+              ${objective.title},
+              ${objective.description},
+              ${'company'}, 
+              ${'draft'},
+              ${tenantId},
+              ${new Date()}
+            )`
+      );
+      
+      // Create key results for this objective
+      for (const kr of objective.keyResults) {
+        // Generate a ULID for the key result
+        const keyResultId = ulid();
+        
+        // Create the key result
+        await db.execute(
+          sql`INSERT INTO key_results (
+                id,
+                title,
+                description,
+                start_value,
+                current_value,
+                target_value,
+                progress,
+                status,
+                objective_id,
+                tenant_id,
+                created_at
+              ) VALUES (
+                ${keyResultId},
+                ${kr.title},
+                ${kr.description},
+                ${0},
+                ${0},
+                ${100},
+                ${0},
+                ${'draft'},
+                ${objectiveId},
+                ${tenantId},
+                ${new Date()}
+              )`
+        );
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error creating OKRs from template:", error);
+    throw error;
+  }
+}
+
 async function initializeData() {
   try {
     // Attempt to get users, but handle missing columns gracefully
