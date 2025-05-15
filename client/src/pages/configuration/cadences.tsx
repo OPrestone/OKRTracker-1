@@ -124,7 +124,7 @@ export default function Cadences() {
 
   // Update cadence mutation
   const updateCadenceMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: CadenceFormState }) => {
+    mutationFn: async ({ id, data }: { id: string, data: CadenceFormState }) => {
       const res = await apiRequest("PATCH", `/api/cadences/${id}`, data);
       return await res.json();
     },
@@ -303,7 +303,7 @@ export default function Cadences() {
               <div className="grid gap-2">
                 <Label htmlFor="startMonth">Start Month</Label>
                 <Select 
-                  value={newCadence.startMonth} 
+                  value={newCadence.startMonth.toString()} 
                   onValueChange={(value) => handleSelectChange("startMonth", value)}
                 >
                   <SelectTrigger id="startMonth">
@@ -395,7 +395,7 @@ export default function Cadences() {
             <div className="grid gap-2">
               <Label htmlFor="editStartMonth">Start Month</Label>
               <Select 
-                value={editCadence.startMonth} 
+                value={editCadence.startMonth.toString()} 
                 onValueChange={(value) => handleEditSelectChange("startMonth", value)}
               >
                 <SelectTrigger id="editStartMonth">
