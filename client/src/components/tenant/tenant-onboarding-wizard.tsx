@@ -373,7 +373,12 @@ export default function TenantOnboardingWizard() {
     setActivePage(stepId);
   };
   
-  const addTeamMember = () => {
+  const addTeamMember = (e?: React.MouseEvent) => {
+    // Prevent form submission if event is provided
+    if (e) {
+      e.preventDefault();
+    }
+    
     const currentUsers = form.getValues("team.users") || [];
     
     form.setValue("team.users", [
@@ -393,7 +398,10 @@ export default function TenantOnboardingWizard() {
   const [inviteRole, setInviteRole] = useState("member");
   const [isInviting, setIsInviting] = useState(false);
   
-  const inviteUser = () => {
+  const inviteUser = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent form submission
+    e.preventDefault();
+    
     if (!inviteEmail) return;
     
     // Basic email validation
@@ -900,7 +908,7 @@ export default function TenantOnboardingWizard() {
                           <Button 
                             type="button" 
                             className="w-full bg-blue-600 hover:bg-blue-700"
-                            onClick={inviteUser}
+                            onClick={(e) => inviteUser(e)}
                             disabled={isInviting || !inviteEmail}
                           >
                             {isInviting ? (
@@ -926,7 +934,7 @@ export default function TenantOnboardingWizard() {
                           type="button" 
                           variant="outline" 
                           size="sm"
-                          onClick={addTeamMember}
+                          onClick={(e) => addTeamMember(e)}
                         >
                           <Plus className="h-3.5 w-3.5 mr-1.5" />
                           Add Member
@@ -943,7 +951,7 @@ export default function TenantOnboardingWizard() {
                           <Button 
                             type="button" 
                             variant="secondary" 
-                            onClick={addTeamMember}
+                            onClick={(e) => addTeamMember(e)}
                           >
                             <Plus className="h-4 w-4 mr-1.5" />
                             Add Team Member
