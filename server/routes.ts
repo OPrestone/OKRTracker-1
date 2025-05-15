@@ -721,14 +721,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       // Only admins or owners can create users
-      const user = req.user as User;
+      const currentUser = req.user as User;
       
-      // Check if the current user has proper permissions
+      // Check if the current user has proper permissions in this tenant
       const userTenant = await db
         .select()
         .from(usersToTenants)
         .where(and(
-          eq(usersToTenants.userId, user.id),
+          eq(usersToTenants.userId, currentUser.id),
           eq(usersToTenants.tenantId, req.tenantId)
         ))
         .limit(1);
@@ -738,80 +738,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userRole = userTenant[0].role;
-      if (userRole !== 'admin' && userRole !== 'owner') {
+      if (userRole !== 'admin' && userRole !== 'owner' && !currentUser.isAdmin) {
         return res.status(403).json({ error: "Only admins or owners can create new users" });
       }
       
-      // Extract data for user creation
-      const { teamId, ...userData } = req.body;
+      // Extract and validate data for user creation
+      const { 
+        teamId, 
+        email, 
+        firstName, 
+        lastName, 
+        role = 'member',
+        username,
+        department,
+        title,
+        ...otherData 
+      } = req.body;
       
-      // Create a name field from firstName and lastName if not provided
-      if (!userData.name && userData.firstName && userData.lastName) {
-        userData.name = `${userData.firstName} ${userData.lastName}`;
-      } else if (!userData.name) {
-        userData.name = userData.email || userData.username || 'New User';
+      // Validate email format
+      if (!email || !email.includes('@')) {
+        return res.status(400).json({ error: "Valid email address is required" });
       }
       
-      // Generate a random password if not provided
-      if (!userData.password) {
-        userData.password = crypto.randomUUID().substring(0, 8);
+      // Validate role is acceptable
+      if (role !== 'admin' && role !== 'member' && role !== 'viewer') {
+        return res.status(400).json({ error: "Role must be 'admin', 'member', or 'viewer'" });
+      }
+      
+      // Check if user with this email already exists in ANY tenant
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      
+      let userId;
+      let isNewUser = false;
+      
+      // Generate a secure temporary password
+      const tempPassword = generateSecurePassword();
+      console.log(`Generated secure temporary password for user: ${tempPassword}`);
+      
+      if (existingUser.length > 0) {
+        // User exists, check if already in this tenant
+        userId = existingUser[0].id;
         
-        // Note: in a production environment, we would send an email to the user
-        // with instructions to set their password
-        console.log(`Generated temporary password for new user: ${userData.password}`);
+        const userInTenant = await db
+          .select()
+          .from(usersToTenants)
+          .where(and(
+            eq(usersToTenants.userId, userId),
+            eq(usersToTenants.tenantId, req.tenantId)
+          ))
+          .limit(1);
+        
+        if (userInTenant.length > 0) {
+          return res.status(409).json({ 
+            error: "User with this email already exists in this organization",
+            userId: userId
+          });
+        }
+      } else {
+        // Create a new user
+        isNewUser = true;
+        
+        // Create a name field from firstName and lastName
+        const name = firstName && lastName 
+          ? `${firstName} ${lastName}` 
+          : email.split('@')[0];
+        
+        // Generate a username if not provided
+        const generatedUsername = username || email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // Hash the temporary password
+        const { hashPassword } = await import('./auth');
+        const hashedPassword = await hashPassword(tempPassword);
+        
+        // Prepare user data
+        const userData = {
+          email,
+          username: generatedUsername,
+          password: hashedPassword,
+          firstName: firstName || '',
+          lastName: lastName || '',
+          name,
+          department: department || '',
+          title: title || '',
+          role: 'user',  // This is the system role, not tenant role
+          firstLogin: true,
+          walkthroughCompleted: false,
+          introVideoWatched: false,
+          onboardingProgress: 0,
+          ...otherData
+        };
+        
+        // Create the user
+        const newUser = await storage.createUser(userData);
+        userId = newUser.id;
       }
       
-      // Validate and prepare user data
-      const validatedData = {
-        ...userData,
-        tenantId: req.tenantId, // Assign to current tenant
-        firstLogin: true, // Flag for forcing password change on first login
-      };
-      
-      // Create the user
-      const newUser = await storage.createUser(validatedData);
-      
-      // Add the user to the tenant
+      // Add the user to the tenant with the specified role
+      const userToTenantId = `utt_${crypto.randomUUID().replace(/-/g, '')}`;
       await db.insert(usersToTenants).values({
-        id: `utt_${crypto.randomUUID().replace(/-/g, '')}`,
-        userId: newUser.id,
+        id: userToTenantId,
+        userId: userId,
         tenantId: req.tenantId,
-        role: userData.role === 'admin' ? 'admin' : 'member', // Only allow admin or member roles
+        role: role,
+        isDefault: false, // New users need to explicitly set a default tenant
+        createdAt: new Date()
       });
       
       // If a team is specified, add the user to that team
       if (teamId) {
-        await storage.addUserToTeam(newUser.id, teamId);
+        await storage.addUserToTeam(userId, teamId);
       }
       
-      // If email is provided, send notification with account details
-      if (userData.email) {
-        try {
-          // Import the email service
-          const { emailService } = await import('./services/email-service');
-          
-          // Send account creation email
+      // Send email notification
+      try {
+        // Import the email service
+        const { emailService } = await import('./services/email-service');
+        
+        // Get tenant details for the email
+        const tenant = await tenantService.getTenantById(req.tenantId);
+        const tenantName = tenant?.name || 'Organization';
+        
+        if (isNewUser) {
+          // Send account creation email for new users
           await emailService.sendNewUserAccountEmail(
-            userData.email,
-            userData.password || 'temporary-password', // The password (may be user provided or generated)
-            req.tenantId || '',
-            userData.role || 'member',
-            (user as any).name || 'Admin'
+            email,
+            tempPassword,
+            req.tenantId,
+            role,
+            currentUser.name || 'Admin'
           );
-        } catch (emailError) {
-          console.error('Failed to send user invitation email:', emailError);
-          // Don't fail the user creation if email fails
+        } else {
+          // Send tenant invitation email for existing users
+          await emailService.sendTenantInvitationEmail(
+            email,
+            currentUser.name || 'Admin',
+            tenantName,
+            req.tenantId,
+            role
+          );
         }
+      } catch (emailError) {
+        console.error('Failed to send user invitation email:', emailError);
+        // Don't fail the user creation if email fails
       }
       
-      // Return the created user without password
-      const { password, ...userWithoutPassword } = newUser;
-      res.status(201).json(userWithoutPassword);
+      // Get the full user data to return
+      const user = await storage.getUser(userId);
+      
+      // Return the user data without sensitive information
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(201).json({
+        ...userWithoutPassword,
+        isNewUser,
+        tenantRole: role
+      });
     } catch (error) {
       console.error("Error creating user:", error);
       next(error);
     }
   });
+  
+  // Function to generate a secure temporary password
+  function generateSecurePassword() {
+    const length = 12;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    let password = '';
+    
+    // Ensure at least one character from each category
+    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; // Uppercase
+    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]; // Lowercase
+    password += '0123456789'[Math.floor(Math.random() * 10)]; // Number
+    password += '!@#$%^&*()'[Math.floor(Math.random() * 10)]; // Special
+    
+    // Fill the rest
+    for (let i = 4; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
+    }
+    
+    // Shuffle the password
+    return password.split('').sort(() => 0.5 - Math.random()).join('');
+  }
 
   app.get("/api/users/:id", ensureAuthenticated, withTenant, async (req, res) => {
     try {
@@ -1050,11 +1161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/users/:userId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const currentUser = req.user as User;
-      if (!(currentUser.isAdmin || currentUser.role === "admin")) {
-        return res.status(403).json({ error: "Forbidden - Admin access required to delete users" });
-      }
-      
       const userId = req.params.userId;
+      const tenantId = req.tenantId;
       
       // Prevent deleting yourself
       if (userId === currentUser.id) {
@@ -1073,7 +1181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(usersToTenants)
         .where(and(
           eq(usersToTenants.userId, userId),
-          eq(usersToTenants.tenantId, req.tenantId)
+          eq(usersToTenants.tenantId, tenantId)
         ))
         .limit(1);
       
@@ -1081,29 +1189,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "User does not belong to current tenant" });
       }
       
-      // User can only be deleted by an admin of the same tenant
-      // First, check if current user is admin in this tenant
-      const adminInTenant = await db
+      // Check user's permissions in this tenant
+      const currentUserRoleInTenant = await db
         .select()
         .from(usersToTenants)
         .where(and(
           eq(usersToTenants.userId, currentUser.id),
-          eq(usersToTenants.tenantId, req.tenantId),
-          eq(usersToTenants.role, "admin")
+          eq(usersToTenants.tenantId, tenantId)
         ))
         .limit(1);
+        
+      // Check if current user is admin in the tenant or is a global admin
+      const isAdmin = 
+        (currentUserRoleInTenant.length > 0 && 
+          (currentUserRoleInTenant[0].role === 'admin' || currentUserRoleInTenant[0].role === 'owner')) ||
+        currentUser.isAdmin === true;
       
-      if (adminInTenant.length === 0 && !currentUser.isAdmin) {
+      if (!isAdmin) {
         return res.status(403).json({ error: "You do not have admin permissions in this tenant" });
       }
       
-      // First, remove the user-tenant relationship
+      // Check if the target user is an owner
+      if (userInTenant[0].role === 'owner') {
+        // Count number of owners in this tenant
+        const ownersCount = await db
+          .select({ count: sql`count(*)` })
+          .from(usersToTenants)
+          .where(and(
+            eq(usersToTenants.tenantId, tenantId),
+            eq(usersToTenants.role, 'owner')
+          ));
+        
+        // Convert count to number
+        const ownerCount = Number(ownersCount[0].count);
+        
+        // If this is the only owner, prevent deletion
+        if (ownerCount <= 1) {
+          return res.status(400).json({ 
+            error: "Cannot remove the only owner of the tenant. Transfer ownership to another user first." 
+          });
+        }
+      }
+      
+      // Start by removing any team relationships in this tenant
+      try {
+        // Get user's teams in this tenant
+        const userTeams = await db
+          .select()
+          .from(teams)
+          .where(eq(teams.tenantId, tenantId));
+        
+        // Remove user from all teams in this tenant that they belong to
+        if (userTeams.length > 0) {
+          for (const team of userTeams) {
+            // Only attempt to remove if the user is in the team
+            if (team.memberIds && team.memberIds.includes(userId)) {
+              await storage.removeUserFromTeam(userId, team.id);
+            }
+          }
+        }
+      } catch (teamError) {
+        console.error("Error removing user from teams:", teamError);
+        // Don't fail the entire operation if this part fails
+      }
+      
+      // Remove the user from this tenant
       await db
         .delete(usersToTenants)
         .where(and(
           eq(usersToTenants.userId, userId),
-          eq(usersToTenants.tenantId, req.tenantId)
+          eq(usersToTenants.tenantId, tenantId)
         ));
+      
+      console.log(`Removed user ${userId} from tenant ${tenantId}`);
       
       // Check if the user has any other tenant associations
       const remainingTenants = await db
@@ -1111,12 +1269,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(usersToTenants)
         .where(eq(usersToTenants.userId, userId));
       
+      let fullDeletion = false;
+      
       // If there are no other tenants the user belongs to, delete the user entirely
       if (remainingTenants.length === 0) {
-        await storage.deleteUser(userId);
+        // Perform cleanup of user data before complete deletion
+        try {
+          // Clean up user data from various tables
+          // This could include removing user badges, feedback, mood entries, etc.
+          
+          // For now, we'll just delete the user
+          await storage.deleteUser(userId);
+          fullDeletion = true;
+          
+          console.log(`User ${userId} has no remaining tenants - completely deleted`);
+        } catch (cleanupError) {
+          console.error("Error during user cleanup:", cleanupError);
+          return res.status(500).json({ 
+            error: "Error during user cleanup. User was removed from tenant but some data may remain." 
+          });
+        }
+      } else {
+        console.log(`User ${userId} remains in ${remainingTenants.length} other tenants`);
       }
       
-      res.status(200).json({ success: true, message: "User successfully removed" });
+      res.status(200).json({ 
+        success: true, 
+        message: fullDeletion ? 
+          "User successfully removed from system" : 
+          "User successfully removed from organization"
+      });
     } catch (error) {
       console.error("Error deleting user:", error);
       next(error);
