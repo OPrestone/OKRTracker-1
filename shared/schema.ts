@@ -123,9 +123,7 @@ export const timeframes = pgTableWithUlid("timeframes", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   cadenceId: text("cadence_id").references(() => cadences.id),
-  // Note: tenant_id doesn't exist in the actual database table
-  // but we keep the schema definition for future migration
-  // tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // updatedAt column doesn't exist in the actual database table
   // updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -516,11 +514,10 @@ export const timeframesRelations = relations(timeframes, ({ one, many }) => ({
     fields: [timeframes.cadenceId],
     references: [cadences.id]
   }),
-  // Note: tenant relation removed as tenant_id doesn't exist in the actual database table
-  // tenant: one(tenants, {
-  //   fields: [timeframes.tenantId],
-  //   references: [tenants.id]
-  // }),
+  tenant: one(tenants, {
+    fields: [timeframes.tenantId],
+    references: [tenants.id]
+  }),
   objectives: many(objectives)
 }));
 
