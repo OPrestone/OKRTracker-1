@@ -963,13 +963,54 @@ export class DatabaseStorage implements IStorage {
 
   // Timeframes
   async createTimeframe(timeframe: InsertTimeframe): Promise<Timeframe> {
+    // Make sure tenant_id is included in the timeframe data if the schema supports it
+    if ('tenantId' in timeframe && !timeframe.tenantId) {
+      throw new Error("Tenant ID is required for creating a timeframe");
+    }
+    
+    // If cadenceId is provided, verify it exists
+    if (timeframe.cadenceId) {
+      const cadence = await this.getCadence(timeframe.cadenceId);
+      if (!cadence) {
+        throw new Error(`Cadence with ID ${timeframe.cadenceId} not found`);
+      }
+      
+      // If both tenantId values are provided, ensure they match
+      if ('tenantId' in timeframe && cadence.tenantId && timeframe.tenantId !== cadence.tenantId) {
+        throw new Error("Timeframe and cadence must belong to the same tenant");
+      }
+    }
+    
     const [newTimeframe] = await db.insert(timeframes).values(timeframe).returning();
     return newTimeframe;
   }
 
   async getTimeframe(id: string): Promise<Timeframe | undefined> {
-    const [timeframe] = await db.select().from(timeframes).where(eq(timeframes.id, id));
-    return timeframe;
+    try {
+      // Get the timeframe record
+      const [timeframe] = await db.select().from(timeframes).where(eq(timeframes.id, id));
+      
+      if (!timeframe) {
+        return undefined;
+      }
+      
+      // If we have a cadenceId, get the cadence to determine the tenant
+      if (timeframe.cadenceId) {
+        const cadence = await this.getCadence(timeframe.cadenceId);
+        if (cadence && cadence.tenantId) {
+          // Add the tenant ID from the cadence to the timeframe (virtual field)
+          return {
+            ...timeframe,
+            tenantId: cadence.tenantId
+          };
+        }
+      }
+      
+      return timeframe;
+    } catch (error) {
+      console.error(`Error getting timeframe ${id}:`, error);
+      return undefined;
+    }
   }
 
   async getAllTimeframes(): Promise<Timeframe[]> {
@@ -1034,13 +1075,44 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateTimeframe(id: string, timeframe: Partial<InsertTimeframe>): Promise<Timeframe> {
+    // First, get the existing timeframe to ensure it exists
+    const existingTimeframe = await this.getTimeframe(id);
+    if (!existingTimeframe) {
+      throw new Error(`Timeframe with id ${id} not found`);
+    }
+    
+    // If updating cadenceId, verify the cadence exists and belongs to the right tenant
+    if (timeframe.cadenceId) {
+      const cadence = await this.getCadence(timeframe.cadenceId);
+      if (!cadence) {
+        throw new Error(`Cadence with ID ${timeframe.cadenceId} not found`);
+      }
+      
+      // If both have tenantId fields, ensure tenants match
+      if ('tenantId' in existingTimeframe && 'tenantId' in cadence) {
+        const existingTenantId = existingTimeframe.tenantId;
+        const cadenceTenantId = cadence.tenantId;
+        
+        if (existingTenantId && cadenceTenantId && existingTenantId !== cadenceTenantId) {
+          throw new Error("Timeframe and cadence must belong to the same tenant");
+        }
+      }
+    }
+    
+    // If attempting to update tenantId directly, ensure it's not changing
+    if ('tenantId' in timeframe && 'tenantId' in existingTimeframe) {
+      if (timeframe.tenantId && existingTimeframe.tenantId && timeframe.tenantId !== existingTimeframe.tenantId) {
+        throw new Error("Cannot change tenant ownership of a timeframe");
+      }
+    }
+    
     const [updatedTimeframe] = await db.update(timeframes)
       .set(timeframe)
       .where(eq(timeframes.id, id))
       .returning();
     
     if (!updatedTimeframe) {
-      throw new Error(`Timeframe with id ${id} not found`);
+      throw new Error(`Timeframe with id ${id} not found after update`);
     }
     
     return updatedTimeframe;

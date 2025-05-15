@@ -1428,9 +1428,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Fetch all timeframes for now as tenant_id column doesn't exist in the database yet
-      // Once the database schema is updated with tenant_id, we'll filter by tenant
-      const timeframesList = await db.select().from(timeframes);
+      // Fetch timeframes for the current tenant using the improved method
+      // that filters timeframes by looking at the cadence's tenant
+      const timeframesList = await storage.getTimeframesByTenant(tenantId);
       
       res.json(timeframesList);
     } catch (error) {

@@ -809,211 +809,284 @@ export default function TenantOnboardingWizard() {
               {/* Team */}
               <TabsContent value="team" className="mt-0 space-y-6">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
-                  <p className="text-gray-500">Add your team members to your organization</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Build Your Team</h2>
+                  <p className="text-gray-500">Add key people who will collaborate in your organization</p>
                 </div>
                 
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      {/* Import members section */}
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                        <div className="flex gap-3 items-center">
-                          <div className="rounded-full bg-amber-100 p-2 text-amber-600">
-                            <FileUp className="h-4 w-4" />
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
+                        <Users className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <CardTitle>Team Members</CardTitle>
+                        <CardDescription>Invite collaborators to get started with your OKRs</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 pb-8 relative">
+                    {/* Role descriptions for guidance */}
+                    <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-green-50 border border-green-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center mb-2">
+                          <div className="bg-green-100 p-1.5 rounded-full mr-2">
+                            <Landmark className="h-4 w-4 text-green-600" />
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-amber-800">Import Team Members</h4>
-                            <p className="text-sm text-amber-700">
-                              Quickly add multiple team members by importing a CSV file
-                            </p>
-                          </div>
+                          <h4 className="font-semibold text-green-800">Admin</h4>
                         </div>
-                        
-                        <div className="mt-4">
-                          <CSVImport 
-                            templateFields={["name", "email", "department", "role"]}
-                            templateName="Team Members"
-                            onImport={(data) => {
-                              // Convert imported data to the required format
-                              const formattedData = data.map(user => ({
-                                name: user.name || "",
-                                email: user.email || "",
-                                department: user.department || "",
-                                role: (user.role || "member").toLowerCase(),
-                                selected: true
-                              }));
-                              
-                              // Set the imported data to the form
-                              form.setValue("team.users", formattedData);
-                              
-                              // Show success toast
-                              toast({
-                                title: "Team imported",
-                                description: `Successfully imported ${data.length} team members.`,
-                                variant: "default"
-                              });
-                            }}
-                          />
-                        </div>
+                        <p className="text-sm text-green-700">
+                          Can manage all aspects of the organization, including users, teams, and OKRs
+                        </p>
                       </div>
                       
-                      {/* Invite by email section */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                        <div className="flex gap-3 items-center">
-                          <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                            <Mail className="h-4 w-4" />
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center mb-2">
+                          <div className="bg-blue-100 p-1.5 rounded-full mr-2">
+                            <Target className="h-4 w-4 text-blue-600" />
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-blue-800">Invite by Email</h4>
-                            <p className="text-sm text-blue-700">
-                              Invite specific team members to join your organization
-                            </p>
-                          </div>
+                          <h4 className="font-semibold text-blue-800">Member</h4>
                         </div>
-                        
-                        <div className="mt-4 space-y-3">
-                          <div className="flex flex-col space-y-2">
-                            <Label htmlFor="invite-email" className="text-sm text-blue-800">
-                              Email Address
-                            </Label>
-                            <Input 
-                              id="invite-email"
-                              value={inviteEmail}
-                              onChange={(e) => setInviteEmail(e.target.value)}
-                              placeholder="colleague@example.com"
-                              className="border-blue-200 focus-visible:ring-blue-500"
-                            />
+                        <p className="text-sm text-blue-700">
+                          Can create and manage their own OKRs and contribute to team objectives
+                        </p>
+                      </div>
+                      
+                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center mb-2">
+                          <div className="bg-amber-100 p-1.5 rounded-full mr-2">
+                            <BarChart3 className="h-4 w-4 text-amber-600" />
                           </div>
-                          
-                          <div className="flex flex-col space-y-2">
-                            <Label htmlFor="invite-role" className="text-sm text-blue-800">
-                              Role
-                            </Label>
-                            <Select
-                              value={inviteRole}
-                              onValueChange={setInviteRole}
-                            >
-                              <SelectTrigger id="invite-role" className="border-blue-200 focus-visible:ring-blue-500">
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="viewer">Viewer</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <Button 
-                            type="button" 
-                            className="w-full bg-blue-600 hover:bg-blue-700"
-                            onClick={(e) => inviteUser(e)}
-                            disabled={isInviting || !inviteEmail}
-                          >
-                            {isInviting ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Inviting...
-                              </>
-                            ) : (
-                              <>
-                                <Mail className="mr-2 h-4 w-4" />
-                                Invite User
-                              </>
-                            )}
-                          </Button>
+                          <h4 className="font-semibold text-amber-800">Viewer</h4>
                         </div>
+                        <p className="text-sm text-amber-700">
+                          Can view objectives and progress but cannot create or edit OKRs
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-800">Team Members</h4>
+                    {/* Quick add methods */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                      {/* Bulk import */}
+                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start mb-4">
+                          <div className="flex-shrink-0 bg-indigo-600 rounded-full p-2.5 mr-4 shadow-sm">
+                            <FileUp className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg text-indigo-900 mb-1">Bulk Import</h3>
+                            <p className="text-indigo-700 text-sm mb-4">
+                              Import your entire team from a CSV file with email, name, department, and role
+                            </p>
+                            <CSVImport 
+                              templateFields={["name", "email", "department", "role"]}
+                              templateName="Team Members"
+                              onImport={(data) => {
+                                // Convert imported data to the required format
+                                const formattedData = data.map(user => ({
+                                  name: user.name || "",
+                                  email: user.email || "",
+                                  department: user.department || "",
+                                  role: (user.role || "member").toLowerCase(),
+                                  selected: true
+                                }));
+                                
+                                // Set the imported data to the form
+                                form.setValue("team.users", formattedData);
+                                
+                                // Show success toast
+                                toast({
+                                  title: "Team imported successfully!",
+                                  description: `Added ${data.length} team members to your organization.`,
+                                  variant: "default"
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Quick invite */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start mb-4">
+                          <div className="flex-shrink-0 bg-blue-600 rounded-full p-2.5 mr-4 shadow-sm">
+                            <Mail className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-grow">
+                            <h3 className="font-semibold text-lg text-blue-900 mb-1">Quick Invite</h3>
+                            <p className="text-blue-700 text-sm mb-4">
+                              Send invitations to individual team members to join your organization
+                            </p>
+                            
+                            <div className="flex flex-col space-y-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="md:col-span-2">
+                                  <Input 
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    placeholder="Email address"
+                                    className="border-blue-200 focus-visible:ring-blue-500 h-10"
+                                  />
+                                </div>
+                                <div>
+                                  <Select
+                                    value={inviteRole}
+                                    onValueChange={setInviteRole}
+                                  >
+                                    <SelectTrigger className="border-blue-200 focus-visible:ring-blue-500 h-10">
+                                      <SelectValue placeholder="Role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="member">Member</SelectItem>
+                                      <SelectItem value="viewer">Viewer</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              <Button 
+                                type="button" 
+                                className="bg-blue-600 hover:bg-blue-700 w-full"
+                                onClick={(e) => inviteUser(e)}
+                                disabled={isInviting || !inviteEmail}
+                              >
+                                {isInviting ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Inviting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Add Team Member
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Team Members List */}
+                    <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
+                      <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-800">
+                          Your Team ({teamMembers.length})
+                        </h3>
                         <Button 
                           type="button" 
                           variant="outline" 
                           size="sm"
                           onClick={(e) => addTeamMember(e)}
+                          className="shadow-sm hover:bg-gray-50"
                         >
                           <Plus className="h-3.5 w-3.5 mr-1.5" />
-                          Add Member
+                          Add Manually
                         </Button>
                       </div>
                       
                       {teamMembers.length === 0 ? (
-                        <div className="border border-dashed rounded-lg p-8 text-center">
-                          <UserPlus className="h-10 w-10 mx-auto text-gray-400 mb-4" />
-                          <h4 className="text-base font-medium text-gray-800 mb-2">No team members added yet</h4>
-                          <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
-                            Import team members from CSV or add them manually. You can also add team members later from the organization settings.
+                        <div className="flex flex-col items-center justify-center py-16 px-4 bg-gray-50/50">
+                          <div className="bg-gray-100 rounded-full p-4 mb-4">
+                            <Users className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <h4 className="text-lg font-medium text-gray-800 mb-2">Your team is empty</h4>
+                          <p className="text-gray-500 text-center max-w-md mb-6">
+                            Add team members using one of the methods above or manually add them one by one.
                           </p>
                           <Button 
                             type="button" 
-                            variant="secondary" 
+                            variant="default" 
                             onClick={(e) => addTeamMember(e)}
+                            className="shadow-sm"
                           >
-                            <Plus className="h-4 w-4 mr-1.5" />
-                            Add Team Member
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Start Adding Team Members
                           </Button>
                         </div>
                       ) : (
-                        <div className="border rounded-lg overflow-hidden bg-white">
-                          <div className="bg-muted/30 px-4 py-3 text-sm font-medium text-gray-600 grid grid-cols-12 gap-4">
-                            <div className="col-span-5">Email</div>
-                            <div className="col-span-3">Name</div>
-                            <div className="col-span-3">Role</div>
+                        <div className="divide-y divide-gray-100">
+                          <div className="bg-gray-50 px-6 py-3 text-sm font-medium text-gray-600 grid grid-cols-12 gap-4 hidden md:grid">
+                            <div className="col-span-5">User</div>
+                            <div className="col-span-4">Department</div>
+                            <div className="col-span-2">Role</div>
                             <div className="col-span-1 text-right">Actions</div>
                           </div>
-                          <div className="divide-y">
-                            {teamMembers.map((_, index) => (
-                              <div key={index} className="px-4 py-3 grid grid-cols-12 gap-4 items-center text-sm">
-                                <div className="col-span-5">
+                          <div>
+                            {teamMembers.map((member, index) => (
+                              <div key={index} className="px-6 py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center hover:bg-gray-50/50 transition-colors">
+                                <div className="md:col-span-5 flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center">
+                                  <div className="flex items-center mb-2 md:mb-0 md:mr-3">
+                                    <Avatar className="h-8 w-8 mr-3">
+                                      <AvatarFallback className="bg-primary/10 text-primary">
+                                        {member.name ? member.name.charAt(0).toUpperCase() : (member.email ? member.email.charAt(0).toUpperCase() : 'U')}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="md:hidden font-medium text-gray-800">User</div>
+                                  </div>
+                                  <div className="flex flex-col md:flex-col space-y-2">
+                                    <FormField
+                                      control={form.control}
+                                      name={`team.users.${index}.email`}
+                                      render={({ field }) => (
+                                        <FormItem className="mb-0">
+                                          <FormControl>
+                                            <Input 
+                                              placeholder="Email address" 
+                                              {...field}
+                                              onBlur={(e) => {
+                                                field.onBlur();
+                                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                                if (e.target.value && !emailRegex.test(e.target.value)) {
+                                                  toast({
+                                                    title: "Invalid email",
+                                                    description: "Please enter a valid email address",
+                                                    variant: "destructive",
+                                                  });
+                                                }
+                                              }}
+                                              className={
+                                                field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)
+                                                  ? "border-red-300 focus-visible:ring-red-500"
+                                                  : ""
+                                              }/>
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name={`team.users.${index}.name`}
+                                      render={({ field }) => (
+                                        <FormItem className="mb-0">
+                                          <FormControl>
+                                            <Input placeholder="Full name (optional)" {...field} />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </div>
+                                
+                                <div className="md:col-span-4 flex items-center">
+                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Department</div>
                                   <FormField
                                     control={form.control}
-                                    name={`team.users.${index}.email`}
+                                    name={`team.users.${index}.department`}
                                     render={({ field }) => (
-                                      <FormItem className="mb-0">
+                                      <FormItem className="mb-0 w-full">
                                         <FormControl>
-                                          <Input 
-                                            placeholder="Email" 
-                                            {...field}
-                                            onBlur={(e) => {
-                                              field.onBlur();
-                                              // Validate email format
-                                              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                              if (e.target.value && !emailRegex.test(e.target.value)) {
-                                                toast({
-                                                  title: "Invalid email format",
-                                                  description: "Please enter a valid email address",
-                                                  variant: "destructive",
-                                                });
-                                              }
-                                            }}
-                                            className={
-                                              field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)
-                                                ? "border-red-300 focus-visible:ring-red-500"
-                                                : ""
-                                            }/>
+                                          <Input placeholder="Department (optional)" {...field} />
                                         </FormControl>
                                       </FormItem>
                                     )}
                                   />
                                 </div>
-                                <div className="col-span-3">
-                                  <FormField
-                                    control={form.control}
-                                    name={`team.users.${index}.name`}
-                                    render={({ field }) => (
-                                      <FormItem className="mb-0">
-                                        <FormControl>
-                                          <Input placeholder="Name (optional)" {...field} />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                                <div className="col-span-3">
+                                
+                                <div className="md:col-span-2 flex items-center">
+                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Role</div>
                                   <FormField
                                     control={form.control}
                                     name={`team.users.${index}.role`}
@@ -1025,7 +1098,7 @@ export default function TenantOnboardingWizard() {
                                         >
                                           <FormControl>
                                             <SelectTrigger>
-                                              <SelectValue placeholder="Role" />
+                                              <SelectValue placeholder="Select role" />
                                             </SelectTrigger>
                                           </FormControl>
                                           <SelectContent>
@@ -1038,11 +1111,13 @@ export default function TenantOnboardingWizard() {
                                     )}
                                   />
                                 </div>
-                                <div className="col-span-1 text-right">
+                                
+                                <div className="md:col-span-1 flex md:justify-end">
                                   <Button
                                     type="button"
                                     variant="ghost"
                                     size="icon"
+                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
                                     onClick={() => {
                                       const currentUsers = form.getValues("team.users") || [];
                                       const newUsers = [
@@ -1050,22 +1125,35 @@ export default function TenantOnboardingWizard() {
                                         ...currentUsers.slice(index + 1)
                                       ];
                                       form.setValue("team.users", newUsers);
+                                      
+                                      toast({
+                                        title: "Team member removed",
+                                        variant: "default",
+                                      });
                                     }}
                                   >
-                                    <X className="h-4 w-4 text-gray-500" />
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
                             ))}
                           </div>
-                          {teamMembers.length > 0 && (
-                            <div className="bg-muted/20 px-4 py-3 text-sm text-gray-500">
-                              {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''} added
-                            </div>
-                          )}
+                        </div>
+                      )}
+                      
+                      {teamMembers.length > 0 && (
+                        <div className="bg-gray-50 px-6 py-3 text-sm text-gray-500 border-t">
+                          {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''} added to your organization
                         </div>
                       )}
                     </div>
+                    
+                    {/* Helpful tip */}
+                    {teamMembers.length > 0 && (
+                      <div className="mt-6 text-center text-gray-500 text-sm">
+                        <p>You can always add more team members later from your organization settings</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
