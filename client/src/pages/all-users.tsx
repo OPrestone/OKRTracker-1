@@ -3,19 +3,12 @@ import DashboardLayout from "@/layouts/dashboard-layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { User, Team } from "@shared/schema";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle, 
+  CardFooter 
 } from "@/components/ui/card";
 import { 
   DropdownMenu, 
@@ -29,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, 
   UserPlus, 
@@ -40,7 +34,15 @@ import {
   Phone,
   Building,
   Users,
-  Building2
+  Building2,
+  Filter,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  ChevronDown,
+  UserX,
+  UserCheck,
+  Settings
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -50,6 +52,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Progress } from "@/components/ui/progress";
 
 export default function AllUsers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -352,15 +355,22 @@ export default function AllUsers() {
         const user = row.original;
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
+            <Avatar className="h-10 w-10 border-2 border-primary/10">
               <AvatarImage src="" alt={`${user.firstName} ${user.lastName}`} />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                {`${user.firstName[0]}${user.lastName[0]}`}
+              <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                {`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`}
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{user.firstName} {user.lastName}</div>
-              <div className="text-sm text-muted-foreground">@{user.username}</div>
+              <div className="font-semibold text-foreground">{user.firstName} {user.lastName}</div>
+              <div className="text-sm text-muted-foreground flex items-center">
+                <span className="mr-2">@{user.username}</span>
+                {user.title && (
+                  <Badge variant="outline" className="text-xs">
+                    {user.title}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -371,15 +381,35 @@ export default function AllUsers() {
       header: "Contact",
       cell: ({ row }) => {
         const user = row.original;
+        // Get user's role in the current tenant
+        const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
+        const tenantRole = userTenantRelation?.userRole || 'member';
+        
         return (
-          <div className="text-sm">
-            <div className="flex items-center text-gray-700">
-              <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-              {user.email}
+          <div className="space-y-1">
+            <div className="flex items-center">
+              <Mail className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+              <span className="text-sm font-medium">{user.email}</span>
             </div>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Phone className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-              Language: {user.language || 'en'}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                <Building2 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{user.department || 'No Department'}</span>
+              </div>
+              <Badge 
+                variant={
+                  tenantRole === 'owner' ? 'default' : 
+                  tenantRole === 'admin' ? 'secondary' : 
+                  'outline'
+                }
+                className={
+                  tenantRole === 'owner' ? 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/10' : 
+                  tenantRole === 'admin' ? 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/10' : 
+                  'bg-green-500/10 text-green-600 hover:bg-green-500/10'
+                }
+              >
+                {tenantRole.charAt(0).toUpperCase() + tenantRole.slice(1)}
+              </Badge>
             </div>
           </div>
         );
@@ -387,37 +417,44 @@ export default function AllUsers() {
     },
     {
       accessorKey: "teamId",
-      header: "Team",
+      header: "Team & Status",
       cell: ({ row }) => {
         const user = row.original;
+        const status = user.status || 'active';
+        const isActive = status === 'active';
+        
         return (
-          <>
+          <div className="space-y-2">
             <div className="flex items-center">
-              <Building className="h-4 w-4 mr-1.5 text-gray-400" />
-              <span>
+              <Building className="h-4 w-4 mr-1.5 text-muted-foreground" />
+              <span className="font-medium">
                 {user.teamId ? 
                   teams.find(t => t.id === user.teamId)?.name || 'Loading...' : 
                   'No Team'}
               </span>
             </div>
+            
+            <div className="flex items-center">
+              {isActive ? (
+                <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/10 flex items-center">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Active
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-gray-500 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Inactive
+                </Badge>
+              )}
+            </div>
+            
             {user.managerId && (
-              <div className="text-xs text-gray-500 mt-0.5">
-                Manager: {users.find(u => u.id === user.managerId)?.firstName || 'Loading...'}
+              <div className="text-xs text-muted-foreground flex items-center">
+                <span className="mr-1">Reports to:</span>
+                <span className="font-medium">{users.find(u => u.id === user.managerId)?.firstName || 'Loading...'}</span>
               </div>
             )}
-          </>
-        );
-      },
-    },
-    {
-      accessorKey: "role",
-      header: "Role",
-      cell: ({ row }) => {
-        const role = row.original.role || 'user';
-        return (
-          <Badge variant={getRoleBadgeVariant(role)}>
-            {role.charAt(0).toUpperCase() + role.slice(1)}
-          </Badge>
+          </div>
         );
       },
     },
@@ -426,39 +463,80 @@ export default function AllUsers() {
       header: "Onboarding",
       cell: ({ row }) => {
         const progress = row.original.onboardingProgress || 0;
+        const getProgressColor = (value: number) => {
+          if (value < 30) return "text-red-500";
+          if (value < 70) return "text-amber-500";
+          return "text-green-500";
+        };
+        
         return (
-          <div className="flex items-center space-x-2">
-            <div className="w-[80px] h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full" 
-                style={{ width: `${progress}%` }}
-              />
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Progress</span>
+              <span className={`text-xs font-medium ${getProgressColor(progress)}`}>
+                {progress}%
+              </span>
             </div>
-            <span className="text-xs text-gray-500">
-              {progress}%
-            </span>
+            <Progress value={progress} className="h-2" />
+            <div className="text-xs text-muted-foreground">
+              {progress < 100 ? "Onboarding in progress" : "Onboarding complete"}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "lastActive",
+      header: "Last Active",
+      cell: ({ row }) => {
+        const user = row.original;
+        const lastActive = user.lastActive ? new Date(user.lastActive) : null;
+        const now = new Date();
+        const diffInDays = lastActive 
+          ? Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)) 
+          : null;
+        
+        return (
+          <div className="space-y-1">
+            {lastActive ? (
+              <>
+                <div className="text-sm font-medium">
+                  {lastActive.toLocaleDateString()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {diffInDays === 0 
+                    ? "Today" 
+                    : diffInDays === 1 
+                      ? "Yesterday" 
+                      : `${diffInDays} days ago`}
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground">Never logged in</div>
+            )}
           </div>
         );
       },
     },
     {
       id: "actions",
+      header: "",
       cell: ({ row }) => {
         const user = row.original;
         return (
-          <div className="text-right">
+          <div className="text-right flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuLabel>User Actions</DropdownMenuLabel>
                 <DropdownMenuItem>
                   <Pencil className="h-4 w-4 mr-2" />
-                  Edit User
+                  Edit Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => openTeamAssignDialog(user)}>
                   <Users className="h-4 w-4 mr-2" />
@@ -468,9 +546,14 @@ export default function AllUsers() {
                   <Building2 className="h-4 w-4 mr-2" />
                   Add to Organization
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <ShieldCheck className="h-4 w-4 mr-2" />
                   Manage Permissions
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reset Password
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -478,7 +561,7 @@ export default function AllUsers() {
                   className="text-red-600"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete User
+                  Remove User
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -488,48 +571,197 @@ export default function AllUsers() {
     },
   ];
 
+  // Filter users by role
+  const filterUsersByRole = (role: string) => {
+    if (role === 'all') return filteredUsers;
+    return filteredUsers.filter(user => {
+      // Get user's role in the current tenant
+      const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
+      return userTenantRelation?.userRole === role;
+    });
+  };
+
+  // Get counts of users by role
+  const userCounts = {
+    all: filteredUsers.length,
+    owner: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'owner').length,
+    admin: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'admin').length,
+    member: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'member').length,
+  };
+
   return (
-    <DashboardLayout title="All Users">
-      <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
-          <p className="text-gray-600">View and manage all users in the system</p>
+    <DashboardLayout title="User Management">
+      <div className="flex flex-col space-y-6">
+        {/* Header with stats */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+            <p className="mt-1 text-muted-foreground">
+              Manage users, roles, and permissions for your organization
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/users"] })}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={openAddUserDialog} size="sm">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button onClick={openAddUserDialog}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
+        {/* User statistics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4 flex flex-row items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
+                <h2 className="text-3xl font-bold">{userCounts.all}</h2>
+              </div>
+              <Users className="h-8 w-8 text-primary opacity-80" />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-row items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Owners</p>
+                <h2 className="text-3xl font-bold">{userCounts.owner}</h2>
+              </div>
+              <ShieldCheck className="h-8 w-8 text-amber-500 opacity-80" />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-row items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Admins</p>
+                <h2 className="text-3xl font-bold">{userCounts.admin}</h2>
+              </div>
+              <Settings className="h-8 w-8 text-blue-500 opacity-80" />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 flex flex-row items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Members</p>
+                <h2 className="text-3xl font-bold">{userCounts.member}</h2>
+              </div>
+              <UserCheck className="h-8 w-8 text-green-500 opacity-80" />
+            </CardContent>
+          </Card>
         </div>
+        
+        {/* Main content */}
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-[450px] w-full rounded-lg" />
+          </div>
+        ) : (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Organization Users</CardTitle>
+              <CardDescription>
+                All users that are part of your organization
+              </CardDescription>
+            </CardHeader>
+            
+            <Tabs defaultValue="all" className="px-4">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="all" className="flex items-center">
+                  <Users className="mr-2 h-4 w-4" />
+                  All Users <Badge className="ml-2 bg-primary/10 text-primary">{userCounts.all}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="owner" className="flex items-center">
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Owners <Badge className="ml-2 bg-amber-500/10 text-amber-600">{userCounts.owner}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="admin" className="flex items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Admins <Badge className="ml-2 bg-blue-500/10 text-blue-600">{userCounts.admin}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="member" className="flex items-center">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Members <Badge className="ml-2 bg-green-500/10 text-green-600">{userCounts.member}</Badge>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <DataTable
+                  columns={userColumns}
+                  data={filterUsersByRole('all')}
+                  searchColumn="username"
+                  searchPlaceholder="Search all users..."
+                  tableTitle="All Users"
+                />
+              </TabsContent>
+              
+              <TabsContent value="owner">
+                <DataTable
+                  columns={userColumns}
+                  data={filterUsersByRole('owner')}
+                  searchColumn="username"
+                  searchPlaceholder="Search owners..."
+                  tableTitle="Organization Owners"
+                />
+              </TabsContent>
+              
+              <TabsContent value="admin">
+                <DataTable
+                  columns={userColumns}
+                  data={filterUsersByRole('admin')}
+                  searchColumn="username"
+                  searchPlaceholder="Search admins..."
+                  tableTitle="Organization Admins"
+                />
+              </TabsContent>
+              
+              <TabsContent value="member">
+                <DataTable
+                  columns={userColumns}
+                  data={filterUsersByRole('member')}
+                  searchColumn="username"
+                  searchPlaceholder="Search members..."
+                  tableTitle="Organization Members"
+                />
+              </TabsContent>
+            </Tabs>
+          </Card>
+        )}
       </div>
-
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-[450px] w-full rounded-lg" />
-        </div>
-      ) : (
-        <DataTable
-          columns={userColumns}
-          data={filteredUsers || []}
-          searchColumn="username"
-          searchPlaceholder="Search users..."
-          tableTitle="All Users"
-        />
-      )}
       
       {/* Team Assignment Dialog */}
       <Dialog open={isTeamAssignDialogOpen} onOpenChange={setIsTeamAssignDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[475px]">
           <DialogHeader>
-            <DialogTitle>Assign User to Team</DialogTitle>
-            <DialogDescription>
-              {selectedUser && `Select a team for ${selectedUser.firstName} ${selectedUser.lastName} or remove from current team.`}
+            <DialogTitle className="text-xl flex items-center">
+              <Users className="h-5 w-5 mr-2 text-primary" />
+              Assign User to Team
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {selectedUser && (
+                <div className="flex items-center gap-2 py-2">
+                  <Avatar className="h-9 w-9 border-2 border-primary/10">
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{selectedUser.firstName} {selectedUser.lastName}</div>
+                    <div className="text-xs text-muted-foreground">{selectedUser.email}</div>
+                  </div>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <label className="text-sm font-medium">Select Team</label>
               <Select
                 value={teamAssignment.teamId.toString()}
                 onValueChange={(value) => setTeamAssignment({ teamId: value })}
@@ -538,14 +770,25 @@ export default function AllUsers() {
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">No Team</SelectItem>
+                  <SelectItem value="0">
+                    <div className="flex items-center">
+                      <UserX className="h-4 w-4 mr-2 text-muted-foreground" />
+                      No Team
+                    </div>
+                  </SelectItem>
                   {teams.map((team) => (
                     <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name}
+                      <div className="flex items-center">
+                        <Building className="h-4 w-4 mr-2 text-primary" />
+                        {team.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground pt-1">
+                Users assigned to a team will appear in team dashboards and reports.
+              </p>
             </div>
           </div>
           
@@ -553,11 +796,11 @@ export default function AllUsers() {
             <Button variant="outline" onClick={() => setIsTeamAssignDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleAssignTeam}
-              disabled={assignTeamMutation.isPending}
-            >
-              {assignTeamMutation.isPending ? "Saving..." : "Save Changes"}
+            <Button onClick={handleAssignTeam} disabled={assignTeamMutation.isPending}>
+              {assignTeamMutation.isPending ? 
+                <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 
+                <><CheckCircle2 className="h-4 w-4 mr-2" /> Save Changes</>
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -565,17 +808,32 @@ export default function AllUsers() {
 
       {/* Organization Assignment Dialog */}
       <Dialog open={isOrgAssignDialogOpen} onOpenChange={setIsOrgAssignDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Add User to Organization</DialogTitle>
-            <DialogDescription>
-              {selectedUser && `Add ${selectedUser.firstName} ${selectedUser.lastName} to an organization with a specific role.`}
+            <DialogTitle className="text-xl flex items-center">
+              <Building2 className="h-5 w-5 mr-2 text-primary" />
+              Add User to Organization
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {selectedUser && (
+                <div className="flex items-center gap-2 py-2">
+                  <Avatar className="h-9 w-9 border-2 border-primary/10">
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{selectedUser.firstName} {selectedUser.lastName}</div>
+                    <div className="text-xs text-muted-foreground">{selectedUser.email}</div>
+                  </div>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
+          <div className="grid gap-5 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Organization</label>
+              <label className="text-sm font-medium">Organization</label>
               <Select
                 value={orgAssignment.tenantId}
                 onValueChange={(value) => setOrgAssignment({ ...orgAssignment, tenantId: value })}
@@ -586,33 +844,70 @@ export default function AllUsers() {
                 <SelectContent>
                   {tenants.map((tenant: any) => (
                     <SelectItem key={tenant.id} value={tenant.id}>
-                      {tenant.name || tenant.displayName || 'Unnamed Organization'}
+                      <div className="flex items-center">
+                        <Building2 className="h-4 w-4 mr-2 text-primary" />
+                        {tenant.name || tenant.displayName || 'Unnamed Organization'}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Role</label>
-              <Select
-                value={orgAssignment.role}
-                onValueChange={(value) => setOrgAssignment({ ...orgAssignment, role: value as "owner" | "admin" | "member" })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                <strong>Owner:</strong> Full access to manage organization settings, members, and all data.<br/>
-                <strong>Admin:</strong> Can manage teams, users, and data but cannot delete the organization.<br/>
-                <strong>Member:</strong> Can participate in teams and access data, but cannot manage organizational settings.
-              </p>
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Role in Organization</label>
+              <div className="grid grid-cols-3 gap-2">
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'member' 
+                      ? 'border-green-500 bg-green-50 dark:bg-green-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'member' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <UserCheck className={`h-6 w-6 ${
+                      orgAssignment.role === 'member' ? 'text-green-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Member</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Basic user access</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'admin' 
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'admin' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <Settings className={`h-6 w-6 ${
+                      orgAssignment.role === 'admin' ? 'text-blue-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Admin</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Manage users & teams</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'owner' 
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'owner' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <ShieldCheck className={`h-6 w-6 ${
+                      orgAssignment.role === 'owner' ? 'text-amber-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Owner</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Full organization control</p>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -621,10 +916,13 @@ export default function AllUsers() {
               Cancel
             </Button>
             <Button 
-              onClick={handleAssignOrg}
+              onClick={handleAssignOrg} 
               disabled={assignOrgMutation.isPending || !orgAssignment.tenantId}
             >
-              {assignOrgMutation.isPending ? "Adding..." : "Add to Organization"}
+              {assignOrgMutation.isPending ? 
+                <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Adding...</> : 
+                <><UserPlus className="h-4 w-4 mr-2" /> Add to Organization</>
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
