@@ -907,7 +907,24 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true,
 export const insertOnboardingSchema = createInsertSchema(onboarding).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFeedbackSchema = createInsertSchema(feedback).omit({ id: true, createdAt: true });
 export const insertTeamMoodSchema = createInsertSchema(teamMoods).omit({ id: true, createdAt: true });
-export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true });
+// Update project insert schema to match the new database column names
+export const insertProjectSchema = createInsertSchema(projects)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    // Explicitly define the shape expected by the frontend
+    // Make created_by_id, tenant_id required but other fields optional
+    created_by_id: z.string(),
+    tenant_id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    status: z.enum(["backlog", "todo", "in-progress", "review", "done"]).default("backlog"),
+    priority: z.number().optional(),
+    start_date: z.date().optional().nullable(),
+    due_date: z.date().optional().nullable(),
+    assigned_to_id: z.string().optional().nullable(),
+    team_id: z.string().optional().nullable(),
+    tags: z.array(z.string()).optional().nullable()
+  });
 export const insertFinancialAccountSchema = createInsertSchema(financialAccounts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
