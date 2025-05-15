@@ -1055,7 +1055,26 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Getting timeframes for tenant: ${tenantId}`);
       
-      // Get all cadences for this tenant
+      // First, try to get timeframes directly by tenant ID
+      const directTimeframes = await db.select({
+        id: timeframes.id,
+        name: timeframes.name,
+        description: timeframes.description,
+        startDate: timeframes.startDate,
+        endDate: timeframes.endDate,
+        cadenceId: timeframes.cadenceId,
+        tenantId: timeframes.tenantId,
+        createdAt: timeframes.createdAt,
+      }).from(timeframes)
+        .where(eq(timeframes.tenantId, tenantId));
+      
+      // If we find timeframes directly, return them
+      if (directTimeframes.length > 0) {
+        return directTimeframes;
+      }
+      
+      // Fallback: get all cadences for this tenant and find timeframes linked to those cadences
+      console.log("No timeframes found directly by tenant ID, checking cadences...");
       const tenantCadences = await this.getCadencesByTenant(tenantId);
       const cadenceIds = tenantCadences.map(cadence => cadence.id);
       
@@ -1065,19 +1084,30 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Select timeframes that belong to tenant's cadences
-      const timeframesList = await db.select({
+      const timeframesFromCadences = await db.select({
         id: timeframes.id,
         name: timeframes.name,
         description: timeframes.description,
         startDate: timeframes.startDate,
         endDate: timeframes.endDate,
         cadenceId: timeframes.cadenceId,
+        tenantId: timeframes.tenantId,
         createdAt: timeframes.createdAt,
-        // Exclude fields that don't exist in the actual database: tenant_id, updated_at
       }).from(timeframes)
         .where(inArray(timeframes.cadenceId, cadenceIds));
       
-      return timeframesList;
+      // For timeframes without a tenant ID, add the tenant ID
+      const timeframesWithTenant = timeframesFromCadences.map(tf => {
+        if (!tf.tenantId) {
+          return {
+            ...tf,
+            tenantId
+          };
+        }
+        return tf;
+      });
+      
+      return timeframesWithTenant;
     } catch (error) {
       console.error(`Error getting timeframes for tenant ${tenantId}:`, error);
       return [];
