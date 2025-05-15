@@ -43,7 +43,7 @@ import {
   AlertCircle,
   Info,
   AlertTriangle,
-  User,
+  User as UserIcon,
   UserX,
   ChevronDown
 } from "lucide-react";
@@ -193,7 +193,7 @@ export default function AllUsers() {
     });
   };
   
-  const openOrgAssignDialog = (user: User) => {
+  const openOrgAssignDialog = (user: UserSchema) => {
     setSelectedUser(user);
     setOrgAssignment({ tenantId: "", role: "member" });
     setIsOrgAssignDialogOpen(true);
@@ -291,7 +291,7 @@ export default function AllUsers() {
     }
   });
   
-  const openDeleteDialog = (user: User) => {
+  const openDeleteDialog = (user: UserSchema) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
@@ -350,7 +350,7 @@ export default function AllUsers() {
   };
   
   // Define the columns for the users table
-  const userColumns: ColumnDef<User>[] = [
+  const userColumns: ColumnDef<UserSchema>[] = [
     {
       accessorKey: "username",
       header: "User",
@@ -1056,7 +1056,7 @@ export default function AllUsers() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="firstName" className="text-sm font-medium flex items-center">
-                  <User className="h-4 w-4 mr-1 text-muted-foreground" />
+                  <UserIcon className="h-4 w-4 mr-1 text-muted-foreground" />
                   First Name
                 </label>
                 <Input
