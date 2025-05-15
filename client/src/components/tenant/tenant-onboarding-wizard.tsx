@@ -14,6 +14,7 @@ import {
   Building2,
   Check, 
   CreditCard,
+  FileUp,
   Loader2,
   Mail,
   Plus,
@@ -21,6 +22,8 @@ import {
   Users,
   X,
 } from "lucide-react";
+
+import { CSVImport } from "@/components/csv/csv-import";
 
 import {
   Form,
@@ -821,6 +824,69 @@ export default function TenantOnboardingWizard() {
                         )}
                       />
                       
+                      {/* Import team members via CSV */}
+                      <div className="mt-8 border border-indigo-100 rounded-lg bg-indigo-50/50 p-4">
+                        <div className="flex gap-3 items-start">
+                          <div className="rounded-full bg-indigo-100 p-2 text-indigo-600 mt-0.5">
+                            <FileUp className="h-4 w-4" />
+                          </div>
+                          <div className="w-full">
+                            <h4 className="text-sm font-semibold text-indigo-800 mb-1">Import Team Members</h4>
+                            <p className="text-sm text-indigo-700 mb-3">
+                              Speed up your setup by importing multiple team members using a CSV file.
+                            </p>
+                            
+                            <CSVImport 
+                              templateFields={["email", "name", "role", "department"]}
+                              templateName="Team Members"
+                              onImport={(data) => {
+                                // Format the imported data to match the form structure
+                                const formattedUsers = data.map((user: any) => ({
+                                  email: user.email,
+                                  role: user.role?.toLowerCase() || "member",
+                                  selected: true,
+                                  name: user.name,
+                                  department: user.department
+                                }));
+                                
+                                // Add the imported users to the form
+                                const currentUsers = form.getValues("team.users") || [];
+                                const mergedUsers = [...currentUsers];
+                                
+                                // Add only users that don't already exist in the form
+                                formattedUsers.forEach(newUser => {
+                                  const existingIndex = mergedUsers.findIndex(
+                                    (u: any) => u.email === newUser.email
+                                  );
+                                  
+                                  if (existingIndex >= 0) {
+                                    // Update existing user
+                                    mergedUsers[existingIndex] = {
+                                      ...mergedUsers[existingIndex],
+                                      ...newUser
+                                    };
+                                  } else {
+                                    // Add new user
+                                    mergedUsers.push(newUser);
+                                  }
+                                });
+                                
+                                // Update the form with the new users
+                                form.setValue("team.users", mergedUsers);
+                                
+                                // Show success toast
+                                toast({
+                                  title: "Team members imported",
+                                  description: `Successfully imported ${formattedUsers.length} team members.`,
+                                  variant: "default"
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Invite team members via email */}
                       <div className="mt-8 border border-blue-100 rounded-lg bg-blue-50/50 p-4">
                         <div className="flex gap-3 items-start">
                           <div className="rounded-full bg-blue-100 p-2 text-blue-600 mt-0.5">
@@ -876,28 +942,64 @@ export default function TenantOnboardingWizard() {
                         <p className="text-gray-600 mt-1">Configure initial OKR settings for your organization</p>
                       </div>
                     
-                      <FormField
-                        control={form.control}
-                        name="setup.createInitialOKRs"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-gray-700 font-medium">
-                                Create initial OKRs from a template
-                              </FormLabel>
-                              <FormDescription className="text-gray-500">
-                                Jump-start your OKR process with a pre-configured template
-                              </FormDescription>
+                      <div className="space-y-6">
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="setup.createInitialOKRs"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="text-gray-700 font-medium">
+                                    Create initial OKRs from a template
+                                  </FormLabel>
+                                  <FormDescription className="text-gray-500">
+                                    Jump-start your OKR process with a pre-configured template
+                                  </FormDescription>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        {/* Import OKRs via CSV */}
+                        <div className="border border-emerald-100 rounded-lg bg-emerald-50/50 p-4">
+                          <div className="flex gap-3 items-start">
+                            <div className="rounded-full bg-emerald-100 p-2 text-emerald-600 mt-0.5">
+                              <FileUp className="h-4 w-4" />
                             </div>
-                          </FormItem>
-                        )}
-                      />
+                            <div className="w-full">
+                              <h4 className="text-sm font-semibold text-emerald-800 mb-1">Import OKRs from CSV</h4>
+                              <p className="text-sm text-emerald-700 mb-3">
+                                Import your existing objectives and key results from a CSV file
+                              </p>
+                              
+                              <CSVImport 
+                                templateFields={["objective_title", "objective_description", "key_result_title", "key_result_description", "key_result_start_value", "key_result_target_value"]}
+                                templateName="OKRs"
+                                onImport={(data) => {
+                                  // Show success toast
+                                  toast({
+                                    title: "OKRs imported",
+                                    description: `Successfully imported ${data.length} OKR entries. These will be processed when you finish creating your organization.`,
+                                    variant: "default"
+                                  });
+                                  
+                                  // Set createInitialOKRs to true since we're importing OKRs
+                                  form.setValue("setup.createInitialOKRs", true);
+                                  form.setValue("setup.importedOKRs", data);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       
                       {form.watch("setup.createInitialOKRs") && (
                         <FormField
