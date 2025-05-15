@@ -196,16 +196,17 @@ export const projects = pgTableWithUlid("projects", {
   title: text("title").notNull(),
   description: text("description"),
   status: projectStatusEnum("status").default("backlog").notNull(),
-  priority: text("priority").notNull(), // low, medium, high, urgent
+  priority: integer("priority"),
   dueDate: timestamp("due_date"),
+  startDate: timestamp("start_date"),
+  assignedToId: text("assigned_to_id").references(() => users.id),
   teamId: text("team_id").references(() => teams.id),
-  ownerId: text("owner_id").references(() => users.id).notNull(),
-  objectiveId: text("objective_id").references(() => objectives.id),
+  // Use created_by_id instead of owner_id to match the actual database schema
+  createdById: text("created_by_id").references(() => users.id),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  checklistTotal: integer("checklist_total").default(0).notNull(),
-  checklistCompleted: integer("checklist_completed").default(0).notNull(),
-  commentsCount: integer("comments_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Add tags field to match database schema
+  tags: text("tags").array(),
 });
 
 export const chatRooms = pgTableWithUlid("chat_rooms", {
@@ -606,17 +607,17 @@ export const checkInsRelations = relations(checkIns, ({ one }) => ({
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
-  owner: one(users, {
-    fields: [projects.ownerId],
+  creator: one(users, {
+    fields: [projects.createdById],
+    references: [users.id]
+  }),
+  assignedTo: one(users, {
+    fields: [projects.assignedToId],
     references: [users.id]
   }),
   team: one(teams, {
     fields: [projects.teamId],
     references: [teams.id]
-  }),
-  objective: one(objectives, {
-    fields: [projects.objectiveId],
-    references: [objectives.id]
   }),
   tenant: one(tenants, {
     fields: [projects.tenantId],

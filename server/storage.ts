@@ -2517,41 +2517,29 @@ export class DatabaseStorage implements IStorage {
     // Use snake_case for column names to match the database and camelCase in the output
     // to match frontend expectations
     try {
-      // Using raw SQL query to avoid schema conflicts
-      const result = await db.execute(`
-        SELECT 
-          id, 
-          title, 
-          description, 
-          status, 
-          priority, 
-          due_date, 
-          team_id, 
-          created_by_id, 
-          tenant_id, 
-          created_at
-        FROM projects 
-        WHERE tenant_id = $1
-        ORDER BY status, priority
-      `, [tenantId]);
-      
-      // Transform the results to match the frontend schema
-      return result.rows.map(row => ({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        status: row.status,
-        priority: row.priority,
-        dueDate: row.due_date,
-        teamId: row.team_id,
-        ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
-        tenantId: row.tenant_id,
-        createdAt: row.created_at,
-        // Add default values for any missing fields that frontend might expect
-        checklistTotal: 0,
-        checklistCompleted: 0,
-        commentsCount: 0
-      }));
+      // Using simpler query to avoid parameter issues
+      return await db.select()
+        .from(projects)
+        .where(eq(projects.tenant_id, tenantId))
+        .then(rows => {
+          // Transform the results to match the frontend schema
+          return rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            status: row.status,
+            priority: row.priority || 'medium',
+            dueDate: row.due_date,
+            teamId: row.team_id,
+            ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
+            tenantId: row.tenant_id,
+            createdAt: row.created_at,
+            // Add default values for any missing fields that frontend might expect
+            checklistTotal: 0,
+            checklistCompleted: 0,
+            commentsCount: 0
+          }));
+        });
     } catch (error) {
       console.error("Error fetching projects:", error);
       // Return empty array on error to prevent app from crashing
