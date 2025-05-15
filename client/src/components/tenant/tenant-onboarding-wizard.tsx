@@ -61,27 +61,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 
-// Example OKR templates
+// OKR templates - must match backend template ids
 const okrTemplates = [
   {
-    id: "growth",
-    name: "Growth & Expansion",
+    id: "startup",
+    name: "Startup Growth",
+    description: "Focus on product-market fit and team building",
+  },
+  {
+    id: "sales",
+    name: "Sales & Revenue",
     description: "Focus on market expansion and revenue growth",
   },
   {
     id: "product",
     name: "Product Development",
     description: "Accelerate product development and innovation",
-  },
-  {
-    id: "customer",
-    name: "Customer Success",
-    description: "Improve customer satisfaction and retention",
-  },
-  {
-    id: "operational",
-    name: "Operational Excellence",
-    description: "Streamline operations and improve efficiency",
   },
 ];
 
@@ -194,6 +189,15 @@ const formSchema = z.object({
     createInitialOKRs: z.boolean().default(false),
     template: z.string().optional(),
     importedOKRs: z.array(z.record(z.string(), z.any())).optional(),
+  }).refine(data => {
+    // If createInitialOKRs is true, either a template or importedOKRs must be provided
+    if (data.createInitialOKRs) {
+      return !!data.template || (data.importedOKRs && data.importedOKRs.length > 0);
+    }
+    return true;
+  }, {
+    message: "Please select a template or import OKRs when 'Create initial OKRs' is checked",
+    path: ["template"]
   }),
   plan: z.object({
     plan: z.enum(["free", "starter", "professional", "enterprise"]),
