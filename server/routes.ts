@@ -1295,6 +1295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(200).json({ 
         success: true, 
+        completelyRemoved: fullDeletion,
         message: fullDeletion ? 
           "User successfully removed from system" : 
           "User successfully removed from organization"
