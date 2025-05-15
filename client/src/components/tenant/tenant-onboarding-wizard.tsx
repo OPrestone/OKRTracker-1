@@ -192,6 +192,7 @@ const formSchema = z.object({
   setup: z.object({
     createInitialOKRs: z.boolean().default(false),
     template: z.string().optional(),
+    importedOKRs: z.array(z.record(z.string(), z.any())).optional(),
   }),
   plan: z.object({
     plan: z.enum(["free", "starter", "professional", "enterprise"]),
@@ -208,6 +209,8 @@ const formSchema = z.object({
       email: z.string().email(),
       role: z.enum(["admin", "member", "viewer"]),
       selected: z.boolean(),
+      name: z.string().optional(),
+      department: z.string().optional(),
     })).optional(),
   }),
 });
@@ -253,6 +256,7 @@ export default function TenantOnboardingWizard() {
       setup: {
         createInitialOKRs: false,
         template: "",
+        importedOKRs: [],
       },
     },
   });
