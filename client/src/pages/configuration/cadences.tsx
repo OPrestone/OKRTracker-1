@@ -190,7 +190,7 @@ export default function Cadences() {
     
     const cadenceData = {
       ...editCadence,
-      startMonth: parseInt(editCadence.startMonth)
+      startMonth: editCadence.startMonth // Keep as string to match the schema
     };
     
     updateCadenceMutation.mutate({
