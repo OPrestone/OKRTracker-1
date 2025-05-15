@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Building2,
-  Check, 
+  Check,
+  CheckCircle,
   CreditCard,
   FileUp,
   Loader2,
@@ -695,149 +696,24 @@ export default function TenantOnboardingWizard() {
                         <p className="text-gray-600 mt-1">Add team members to collaborate on objectives and key results</p>
                       </div>
                       
-                      <FormField
-                        control={form.control}
-                        name="team.users"
-                        render={({ field }) => (
-                          <FormItem className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <FormLabel className="text-gray-800 font-medium text-base">Available Users</FormLabel>
-                              
-                              <Select defaultValue="all">
-                                <SelectTrigger className="h-9 w-[180px]">
-                                  <SelectValue placeholder="Filter users" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All Users</SelectItem>
-                                  <SelectItem value="selected">Selected Only</SelectItem>
-                                  <SelectItem value="unselected">Unselected Only</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <FormControl>
-                              <div className="border rounded-lg overflow-hidden shadow-sm">
-                                <div className="px-4 py-3 bg-gray-50 font-medium text-sm grid grid-cols-5 border-b">
-                                  <div className="col-span-2">User</div>
-                                  <div>Role</div>
-                                  <div>Department</div>
-                                  <div className="text-right">Add</div>
-                                </div>
-                                <div className="divide-y">
-                                  {availableUsers.length > 0 ? (
-                                    availableUsers.map((availableUser: any, index: number) => {
-                                      // Find this user in our form state or create a new entry
-                                      const existingUserIndex = field.value?.findIndex(
-                                        (u: any) => u.email === availableUser.email
-                                      ) ?? -1;
-                                      
-                                      const userInForm = existingUserIndex >= 0
-                                        ? field.value?.[existingUserIndex]
-                                        : { email: availableUser.email, role: "member", selected: false };
-                                      
-                                      const updateUser = (updates: Partial<typeof userInForm>) => {
-                                        const newUsers = [...(field.value || [])];
-                                        
-                                        if (existingUserIndex >= 0) {
-                                          newUsers[existingUserIndex] = { ...userInForm, ...updates };
-                                        } else {
-                                          newUsers.push({ ...userInForm, ...updates });
-                                        }
-                                        
-                                        field.onChange(newUsers);
-                                      };
-                                      
-                                      return (
-                                        <div 
-                                          key={availableUser.id || index} 
-                                          className={`px-4 py-3 grid grid-cols-5 items-center hover:bg-gray-50 transition-colors
-                                            ${userInForm.selected ? "bg-blue-50/70 hover:bg-blue-50/90" : ""}`
-                                          }
-                                        >
-                                          <div className="col-span-2 flex items-center gap-3">
-                                            <Avatar className="h-10 w-10 border">
-                                              <AvatarImage src={availableUser.avatar} alt={availableUser.name} />
-                                              <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                                                {availableUser.name?.charAt(0) || availableUser.email?.charAt(0).toUpperCase()}
-                                              </AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                              <div className="font-medium text-gray-800">{availableUser.name || "Unnamed User"}</div>
-                                              <div className="text-sm text-gray-500">{availableUser.email}</div>
-                                            </div>
-                                          </div>
-                                          <div>
-                                            <Select 
-                                              value={userInForm.role} 
-                                              onValueChange={(value) => updateUser({ role: value as any })}
-                                            >
-                                              <SelectTrigger className="h-9 w-28 focus:ring-2 focus:ring-primary/20">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                <SelectItem value="admin">Admin</SelectItem>
-                                                <SelectItem value="member">Member</SelectItem>
-                                                <SelectItem value="viewer">Viewer</SelectItem>
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <div className="text-sm text-gray-600">
-                                            {availableUser.department || "-"}
-                                          </div>
-                                          <div className="text-right">
-                                            <div className="flex justify-end">
-                                              <Button
-                                                type="button"
-                                                variant={userInForm.selected ? "destructive" : "outline"}
-                                                size="sm"
-                                                className={`px-3 ${userInForm.selected ? "" : "border-primary text-primary hover:bg-primary/5"}`}
-                                                onClick={() => updateUser({ selected: !userInForm.selected })}
-                                              >
-                                                {userInForm.selected ? (
-                                                  <>
-                                                    <X className="h-4 w-4 mr-1" />
-                                                    Remove
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <Plus className="h-4 w-4 mr-1" />
-                                                    Add
-                                                  </>
-                                                )}
-                                              </Button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })
-                                  ) : (
-                                    <div className="p-6 text-center text-gray-500">
-                                      <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                                      <p className="font-medium text-gray-700 mb-1">No users available</p>
-                                      <p className="text-sm">You'll be the only member of this organization. Invite others below.</p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Select users to add to your organization. You can manage this later.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="mb-6">
+                        <h4 className="text-lg font-medium text-gray-700 mb-2">Add Team Members</h4>
+                        <p className="text-gray-600 mb-4">
+                          Add team members to collaborate with in your organization. You can add members via CSV import or invite them directly by email.
+                        </p>
+                      </div>
                       
-                      {/* Import team members via CSV */}
-                      <div className="mt-8 border border-indigo-100 rounded-lg bg-indigo-50/50 p-4">
-                        <div className="flex gap-3 items-start">
-                          <div className="rounded-full bg-indigo-100 p-2 text-indigo-600 mt-0.5">
-                            <FileUp className="h-4 w-4" />
+                      {/* Import team members via CSV - Primary method */}
+                      <div className="mb-8 border-2 border-primary/30 rounded-lg bg-primary/5 p-6 shadow-sm">
+                        <div className="flex gap-4 items-start">
+                          <div className="rounded-full bg-primary/20 p-3 text-primary">
+                            <Users className="h-6 w-6" />
                           </div>
                           <div className="w-full">
-                            <h4 className="text-sm font-semibold text-indigo-800 mb-1">Import Team Members</h4>
-                            <p className="text-sm text-indigo-700 mb-3">
-                              Speed up your setup by importing multiple team members using a CSV file.
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Import Team Members</h4>
+                            <p className="text-gray-600 mb-4">
+                              The fastest way to set up your organization is to import your team using a CSV file. 
+                              Download the template, fill it with your team data, and upload it here.
                             </p>
                             
                             <CSVImport 
@@ -886,6 +762,16 @@ export default function TenantOnboardingWizard() {
                                 });
                               }}
                             />
+                            
+                            {/* Show imported users count if any */}
+                            {form.getValues("team.users")?.length > 0 && (
+                              <div className="mt-4 bg-green-50 text-green-700 px-4 py-2 rounded border border-green-200 flex items-center">
+                                <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+                                <span className="font-medium">
+                                  {form.getValues("team.users").length} team members added
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
