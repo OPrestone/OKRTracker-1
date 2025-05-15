@@ -62,6 +62,14 @@ import { Cadence } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Define form state interface with proper types
+interface CadenceFormState {
+  name: string;
+  description: string;
+  period: string;
+  startMonth: number; // Using number type for startMonth
+}
+
 export default function Cadences() {
   const { toast } = useToast();
   const [isNewCadenceDialogOpen, setIsNewCadenceDialogOpen] = useState(false);
@@ -70,7 +78,7 @@ export default function Cadences() {
   const [selectedCadence, setSelectedCadence] = useState<Cadence | null>(null);
 
   // New cadence form state
-  const [newCadence, setNewCadence] = useState({
+  const [newCadence, setNewCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
     period: "quarterly",
@@ -78,7 +86,7 @@ export default function Cadences() {
   });
 
   // Edit cadence form state
-  const [editCadence, setEditCadence] = useState({
+  const [editCadence, setEditCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
     period: "quarterly",
@@ -92,7 +100,7 @@ export default function Cadences() {
 
   // Create cadence mutation
   const createCadenceMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CadenceFormState) => {
       const res = await apiRequest("POST", "/api/cadences", data);
       return await res.json();
     },
@@ -116,7 +124,7 @@ export default function Cadences() {
 
   // Update cadence mutation
   const updateCadenceMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+    mutationFn: async ({ id, data }: { id: number, data: CadenceFormState }) => {
       const res = await apiRequest("PATCH", `/api/cadences/${id}`, data);
       return await res.json();
     },
@@ -525,7 +533,7 @@ export default function Cadences() {
                                   name: cadence.name,
                                   description: cadence.description || "",
                                   period: cadence.period,
-                                  startMonth: (cadence.startMonth || 1).toString()
+                                  startMonth: cadence.startMonth || 1 // Keep as integer, don't convert to string
                                 });
                                 
                                 setIsEditCadenceDialogOpen(true);
