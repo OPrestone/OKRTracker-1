@@ -701,14 +701,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* Project Management */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/project-kanban"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/project-kanban")} className="flex items-center w-full">
-            <LayoutDashboard className="mr-3 h-5 w-5 text-indigo-400" />
+            <LayoutDashboard className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Project Kanban</span>
           </Link>
         </div>
@@ -716,17 +716,17 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* OKR Management */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/objectives-organizer"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link
             href={getLink("/objectives-organizer")}
             className="flex items-center w-full"
           >
-            <Target className="mr-3 h-5 w-5 text-indigo-400" />
+            <Target className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Objectives Organizer</span>
           </Link>
         </div>
@@ -734,28 +734,28 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* Time-based Management */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/timeline-editor"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/timeline-editor")} className="flex items-center w-full">
-            <Calendar className="mr-3 h-5 w-5 text-indigo-400" />
+            <Calendar className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Timeline Editor</span>
           </Link>
         </div>
 
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/custom-dashboard"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/custom-dashboard")} className="flex items-center w-full">
-            <BarChart3 className="mr-3 h-5 w-5 text-indigo-400" />
+            <BarChart3 className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Custom Dashboard</span>
           </Link>
         </div>
