@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { 
   PieChart, Pie, Cell, LineChart, Line, BarChart as RechartsBarChart, Bar, 

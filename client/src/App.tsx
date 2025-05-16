@@ -39,6 +39,7 @@ import MissionCompanyPage from "@/pages/mission-company";
 import CompanyMission from "@/pages/company-mission";
 import OneOnOneMeetings from "@/pages/one-on-one-meetings";
 import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
+import TestTeamLeader from "@/pages/test-team-leader";
 import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";

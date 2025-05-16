@@ -26,6 +26,7 @@ import Stripe from "stripe";
 import { registerConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
 import { Router } from "express";
+import { createTestTeamLeader } from "./routes/test-team-leader";
 
 // Extend Request interface to include tenantId
 declare global {
@@ -45,6 +46,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register configuration routes
   registerConfigRoutes(app);
+  
+  // Test endpoint to create a team leader account for testing
+  app.post('/api/create-test-team-leader', createTestTeamLeader);
   
   // Register team leader routes
   const apiRouter = Router();
