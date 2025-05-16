@@ -1056,7 +1056,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Getting timeframes for tenant: ${tenantId}`);
       
       // First, try to get timeframes directly by tenant ID
-      const directTimeframes = await db.select({
+      let directTimeframes = await db.select({
         id: timeframes.id,
         name: timeframes.name,
         description: timeframes.description,
@@ -1066,7 +1066,8 @@ export class DatabaseStorage implements IStorage {
         tenantId: timeframes.tenantId,
         createdAt: timeframes.createdAt,
       }).from(timeframes)
-        .where(eq(timeframes.tenantId, tenantId));
+        .where(eq(timeframes.tenantId, tenantId))
+        .orderBy(desc(timeframes.endDate)); // Sort by end date in descending order
       
       // If we find timeframes directly, return them
       if (directTimeframes.length > 0) {
@@ -1094,7 +1095,8 @@ export class DatabaseStorage implements IStorage {
         tenantId: timeframes.tenantId,
         createdAt: timeframes.createdAt,
       }).from(timeframes)
-        .where(inArray(timeframes.cadenceId, cadenceIds));
+        .where(inArray(timeframes.cadenceId, cadenceIds))
+        .orderBy(desc(timeframes.endDate)); // Sort by end date in descending order
       
       // For timeframes without a tenant ID, add the tenant ID
       const timeframesWithTenant = timeframesFromCadences.map(tf => {
