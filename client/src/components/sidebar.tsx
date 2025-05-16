@@ -1066,7 +1066,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             <div
               className={cn(
                 "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
-                location === "/configuration/system-settings"
+                location.includes("/configuration/system-settings")
                   ? "text-white font-medium bg-indigo-900/40"
                   : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
               )}
