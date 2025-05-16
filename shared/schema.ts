@@ -92,7 +92,8 @@ export const accessGroups = pgTableWithUlid("access_groups", {
   permissions: text("permissions").array(),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // updatedAt column does not exist in the actual database table
+  // updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const userAccessGroups = pgTable("user_access_groups", {
