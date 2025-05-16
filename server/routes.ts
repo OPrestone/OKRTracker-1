@@ -1492,11 +1492,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Add tenant ID to the timeframe data
-      const validatedData = insertTimeframeSchema.parse({
+      // Prepare data with proper date types and add tenant ID
+      const formattedData = {
         ...req.body,
+        startDate: new Date(req.body.startDate),
+        endDate: new Date(req.body.endDate),
         tenantId
-      });
+      };
+      
+      // Validate the data
+      const validatedData = insertTimeframeSchema.parse(formattedData);
       
       // If cadenceId is provided, verify it belongs to the current tenant
       if (validatedData.cadenceId) {
@@ -1536,7 +1541,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied" });
       }
       
-      const validatedData = insertTimeframeSchema.partial().parse(req.body);
+      // Format date fields if present
+      const formattedData = { ...req.body };
+      if (formattedData.startDate) {
+        formattedData.startDate = new Date(formattedData.startDate);
+      }
+      if (formattedData.endDate) {
+        formattedData.endDate = new Date(formattedData.endDate);
+      }
+      
+      const validatedData = insertTimeframeSchema.partial().parse(formattedData);
       
       // If cadenceId is being updated, verify it belongs to the current tenant
       if (validatedData.cadenceId) {
