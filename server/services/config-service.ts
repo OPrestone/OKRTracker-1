@@ -133,26 +133,50 @@ export class ConfigService {
     key: string,
     defaultValue?: T
   ): Promise<T | undefined> {
-    // First check if there's a system setting that uses env variable
-    const result = await db.execute(
-      sql`SELECT value, value_type, use_env, env_name FROM system_settings WHERE key = ${key} LIMIT 1`
-    );
+    try {
+      // First check if there's a system setting that uses env variable
+      const result = await db.execute(
+        sql`SELECT value, value_type, use_env, env_name FROM system_settings WHERE key = ${key} LIMIT 1`
+      );
 
-    const rows = result.rows as any[] || [];
-    
-    if (rows.length === 0) {
+      const rows = result.rows as any[] || [];
+      
+      if (rows.length === 0) {
+        // If no database setting exists, check if the key matches an environment variable directly
+        if (process.env[key]) {
+          // Try to infer the type from the environment variable
+          const envValue = process.env[key] || '';
+          // If it looks like a number, boolean, or JSON, parse it accordingly
+          if (/^-?\d+(\.\d+)?$/.test(envValue)) {
+            return parseFloat(envValue) as unknown as T;
+          } else if (envValue.toLowerCase() === 'true' || envValue.toLowerCase() === 'false') {
+            return (envValue.toLowerCase() === 'true') as unknown as T;
+          } else {
+            try {
+              const jsonValue = JSON.parse(envValue);
+              return jsonValue as unknown as T;
+            } catch {
+              // Not JSON, just return as string
+              return envValue as unknown as T;
+            }
+          }
+        }
+        return defaultValue;
+      }
+
+      const setting = rows[0];
+
+      // If setting is configured to use env variable and it exists, use that
+      if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
+        return this.parseValue(process.env[setting.env_name] || null, setting.value_type);
+      }
+
+      // Otherwise use the database value
+      return this.parseValue(setting.value, setting.value_type);
+    } catch (error) {
+      console.error("Error getting system config:", error);
       return defaultValue;
     }
-
-    const setting = rows[0];
-
-    // If setting is configured to use env variable and it exists, use that
-    if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
-      return this.parseValue(process.env[setting.env_name] || null, setting.value_type);
-    }
-
-    // Otherwise use the database value
-    return this.parseValue(setting.value, setting.value_type);
   }
 
   /**
@@ -222,27 +246,63 @@ export class ConfigService {
    * Get all system-wide configuration values
    */
   async getAllSystemConfigs(): Promise<Record<string, any>> {
-    const results = await db.execute(
-      sql`SELECT key, value, value_type, use_env, env_name FROM system_settings`
-    );
+    try {
+      const results = await db.execute(
+        sql`SELECT key, value, value_type, use_env, env_name FROM system_settings`
+      );
 
-    const configs: Record<string, any> = {};
-    const rows = results.rows as any[] || [];
+      const configs: Record<string, any> = {};
+      const rows = results.rows as any[] || [];
+      const processedEnvVars = new Set<string>();
 
-    for (const setting of rows) {
-      // If setting uses env variable and it exists, use that
-      if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
-        configs[setting.key] = this.parseValue(
-          process.env[setting.env_name] || null,
-          setting.value_type
-        );
-      } else {
-        // Otherwise use the database value
-        configs[setting.key] = this.parseValue(setting.value, setting.value_type);
+      for (const setting of rows) {
+        // If setting uses env variable and it exists, use that
+        if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
+          configs[setting.key] = this.parseValue(
+            process.env[setting.env_name] || null,
+            setting.value_type
+          );
+          processedEnvVars.add(setting.env_name);
+        } else {
+          // Otherwise use the database value
+          configs[setting.key] = this.parseValue(setting.value, setting.value_type);
+        }
       }
-    }
+      
+      // Add environment variables that aren't already in the database
+      // Consider only environment variables that might be related to configuration
+      const configEnvPrefixes = ['APP_', 'CONFIG_', 'SETTING_', 'FEATURE_'];
+      
+      for (const key in process.env) {
+        // Skip environment variables that were already processed via database settings
+        if (processedEnvVars.has(key)) continue;
+        
+        // Only include environment variables with configuration-like prefixes
+        if (configEnvPrefixes.some(prefix => key.startsWith(prefix))) {
+          const envValue = process.env[key] || '';
+          
+          // Try to infer the type from the environment variable
+          if (/^-?\d+(\.\d+)?$/.test(envValue)) {
+            configs[key] = parseFloat(envValue);
+          } else if (envValue.toLowerCase() === 'true' || envValue.toLowerCase() === 'false') {
+            configs[key] = envValue.toLowerCase() === 'true';
+          } else {
+            try {
+              const jsonValue = JSON.parse(envValue);
+              configs[key] = jsonValue;
+            } catch {
+              // Not JSON, just use as string
+              configs[key] = envValue;
+            }
+          }
+        }
+      }
 
-    return configs;
+      return configs;
+    } catch (error) {
+      console.error("Error getting system configs:", error);
+      return {};
+    }
   }
 
   /**
