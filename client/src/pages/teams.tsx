@@ -207,6 +207,16 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
           >
             View Team Details
           </Button>
+          
+          {/* Debug section */}
+          <div className="mt-4 p-2 bg-gray-100 rounded-md text-xs">
+            <details>
+              <summary className="font-bold cursor-pointer">Debug: Team Objectives</summary>
+              <pre className="overflow-auto max-h-60 p-2 mt-2 bg-gray-200 rounded">
+                {JSON.stringify(objectives, null, 2)}
+              </pre>
+            </details>
+          </div>
         </div>
       </CardContent>
     </Card>
