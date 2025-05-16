@@ -211,9 +211,19 @@ export default function Timeframes() {
   };
 
   const handleCreateTimeframe = () => {
+    // Check if cadenceId is provided and not empty
+    if (!newTimeframe.cadenceId || newTimeframe.cadenceId.trim() === "") {
+      toast({
+        title: "Error creating timeframe",
+        description: "Cadence selection is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const timeframeData = {
-      ...newTimeframe,
-      cadenceId: newTimeframe.cadenceId, // cadenceId is already a string, no need to convert
+      name: newTimeframe.name,
+      cadenceId: newTimeframe.cadenceId,
       startDate: newTimeframe.startDate.toISOString(),
       endDate: newTimeframe.endDate.toISOString()
     };
@@ -224,9 +234,19 @@ export default function Timeframes() {
   const handleUpdateTimeframe = () => {
     if (!selectedTimeframe) return;
     
+    // Check if cadenceId is provided and not empty
+    if (!editTimeframe.cadenceId || editTimeframe.cadenceId.trim() === "") {
+      toast({
+        title: "Error updating timeframe",
+        description: "Cadence selection is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const timeframeData = {
-      ...editTimeframe,
-      cadenceId: editTimeframe.cadenceId, // cadenceId is already a string, no need to convert
+      name: editTimeframe.name,
+      cadenceId: editTimeframe.cadenceId,
       startDate: editTimeframe.startDate.toISOString(),
       endDate: editTimeframe.endDate.toISOString()
     };
