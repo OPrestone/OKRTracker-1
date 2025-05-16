@@ -1201,10 +1201,12 @@ export default function Configure() {
     }
   });
 
+  // State for confirmation dialog
+  const [showAccountSettingsConfirmation, setShowAccountSettingsConfirmation] = useState(false);
+  const [pendingAccountSettingsData, setPendingAccountSettingsData] = useState<AccountSettingsFormValues | null>(null);
+  
   // Handler for saving account settings
   const handleSaveAccountSettings = (data: AccountSettingsFormValues) => {
-    setIsGeneralSaving(true);
-    
     // Check if logo is required but not uploaded
     if (!logoFile) {
       toast({
@@ -1212,12 +1214,21 @@ export default function Configure() {
         description: "Please upload a company logo to save your settings.",
         variant: "destructive",
       });
-      setIsGeneralSaving(false);
       return;
     }
     
-    // Submit the account settings form
-    accountSettingsMutation.mutate(data);
+    // Show confirmation dialog for important changes
+    setPendingAccountSettingsData(data);
+    setShowAccountSettingsConfirmation(true);
+  };
+  
+  // Handler for confirming and submitting account settings changes
+  const confirmAndSaveAccountSettings = () => {
+    if (pendingAccountSettingsData) {
+      setIsGeneralSaving(true);
+      accountSettingsMutation.mutate(pendingAccountSettingsData);
+      setShowAccountSettingsConfirmation(false);
+    }
   };
 
   // Handler for saving general settings
