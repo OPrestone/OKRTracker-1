@@ -1554,15 +1554,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied" });
       }
       
-      // Format date fields if present
+      // Process and validate date fields if present
       const formattedData = { ...req.body };
+      
       if (formattedData.startDate) {
-        formattedData.startDate = new Date(formattedData.startDate);
-      }
-      if (formattedData.endDate) {
-        formattedData.endDate = new Date(formattedData.endDate);
+        const startDate = new Date(formattedData.startDate);
+        if (isNaN(startDate.getTime())) {
+          return res.status(400).json({ error: "Invalid start date format" });
+        }
+        formattedData.startDate = startDate;
       }
       
+      if (formattedData.endDate) {
+        const endDate = new Date(formattedData.endDate);
+        if (isNaN(endDate.getTime())) {
+          return res.status(400).json({ error: "Invalid end date format" });
+        }
+        formattedData.endDate = endDate;
+      }
+      
+      // Now validate the data with the schema
       const validatedData = insertTimeframeSchema.partial().parse(formattedData);
       
       // If cadenceId is being updated, verify it belongs to the current tenant
