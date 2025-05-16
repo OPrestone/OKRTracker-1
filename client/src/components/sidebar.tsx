@@ -764,33 +764,33 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         <button
           onClick={() => setReportsExpanded(!reportsExpanded)}
           className={cn(
-            "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/reports" ||
               location === "/okr-reports" ||
               location === "/export-reports" ||
               location === "/team-performance" ||
               location === "/ai-recommendations"
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
-          <PieChart className="mr-3 h-5 w-5 text-indigo-400" />
+          <PieChart className="mr-3 h-4 w-4 text-indigo-200" />
           <span>Reports & Analytics</span>
           {reportsExpanded ? (
-            <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
+            <ChevronUp className="ml-auto h-4 w-4 text-indigo-200" />
           ) : (
-            <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
+            <ChevronDown className="ml-auto h-4 w-4 text-indigo-200" />
           )}
         </button>
 
         {reportsExpanded && (
-          <div className="pl-11 mt-1 mb-1">
+          <div className="pl-10 pr-4 mt-2 mb-2 space-y-1">
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/reports"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link href={getLink("/reports")} className="w-full">
@@ -800,10 +800,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/okr-reports"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link href={getLink("/okr-reports")} className="w-full">
@@ -813,24 +813,24 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/export-reports"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link href={getLink("/export-reports")} className="w-full flex items-center">
-                <FileOutput className="mr-2 h-4 w-4 text-indigo-400" />
+                <FileOutput className="mr-2 h-3 w-3 text-indigo-300" />
                 Export Reports
               </Link>
             </div>
 
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/team-performance"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link href={getLink("/team-performance")} className="w-full">
@@ -840,34 +840,34 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
 
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/ai-recommendations"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link
                 href={getLink("/ai-recommendations")}
                 className="w-full flex items-center"
               >
-                <Brain className="mr-2 h-4 w-4 text-indigo-400" />
+                <Brain className="mr-2 h-3 w-3 text-indigo-300" />
                 Smart Recommendations
               </Link>
             </div>
 
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md",
                 location === "/import-financial"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white bg-indigo-900/60 shadow-sm shadow-indigo-900/30"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link
                 href={getLink("/import-financial")}
                 className="w-full flex items-center"
               >
-                <BarChart3 className="mr-2 h-4 w-4 text-indigo-400" />
+                <BarChart3 className="mr-2 h-3 w-3 text-indigo-300" />
                 Import Financial Data
               </Link>
             </div>
