@@ -1076,29 +1076,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
+      // Make copy of request body
+      const requestData = { ...req.body };
+      
       // Transform permissions object to array of strings
       // The frontend sends permissions as an object like {createOKRs: true, editAllOKRs: false}
       // We need to convert it to an array of strings like ['createOKRs']
       let permissionsArray: string[] = [];
-      if (req.body.permissions && typeof req.body.permissions === 'object') {
-        Object.entries(req.body.permissions).forEach(([key, value]) => {
+      
+      if (requestData.permissions && typeof requestData.permissions === 'object') {
+        // Convert boolean object to array of strings for permissions with value=true
+        Object.entries(requestData.permissions).forEach(([key, value]) => {
           if (value === true) {
             permissionsArray.push(key);
           }
         });
+        
+        // Replace the permissions object with the array
+        requestData.permissions = permissionsArray;
       }
       
       // Ensure tenant_id is set in the validated data
-      const validatedData = insertAccessGroupSchema.parse({
-        name: req.body.name,
-        description: req.body.description,
+      const validatedData = {
+        name: requestData.name,
+        description: requestData.description,
         permissions: permissionsArray,
         tenantId
-      });
+      };
       
       const accessGroup = await storage.createAccessGroup(validatedData);
       res.status(201).json(accessGroup);
     } catch (error) {
+      console.error("Error creating access group:", error);
       next(error);
     }
   });
@@ -1125,10 +1134,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this access group" });
       }
       
+      // Make copy of request body to avoid modifying original
+      const requestData = { ...req.body };
+      
       // Transform permissions object to array of strings
       let permissionsArray: string[] = [];
-      if (req.body.permissions && typeof req.body.permissions === 'object') {
-        Object.entries(req.body.permissions).forEach(([key, value]) => {
+      if (requestData.permissions && typeof requestData.permissions === 'object') {
+        Object.entries(requestData.permissions).forEach(([key, value]) => {
           if (value === true) {
             permissionsArray.push(key);
           }
@@ -1137,8 +1149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Build the update data
       const updateData = {
-        name: req.body.name,
-        description: req.body.description,
+        name: requestData.name,
+        description: requestData.description,
         permissions: permissionsArray
       };
       
@@ -1146,6 +1158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedAccessGroup = await storage.updateAccessGroup(id, updateData);
       res.json(updatedAccessGroup);
     } catch (error) {
+      console.error("Error updating access group:", error);
       next(error);
     }
   });
@@ -1172,10 +1185,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this access group" });
       }
       
-      // Transform permissions object to array of strings if it exists in the request
+      // Make copy of request body to avoid modifying original
       let updateData: any = { ...req.body };
       delete updateData.id; // Remove id from update data
       
+      // Transform permissions object to array of strings if it exists in the request
       if (updateData.permissions && typeof updateData.permissions === 'object') {
         const permissionsArray: string[] = [];
         Object.entries(updateData.permissions).forEach(([key, value]) => {
@@ -1190,6 +1204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedAccessGroup = await storage.updateAccessGroup(id, updateData);
       res.json(updatedAccessGroup);
     } catch (error) {
+      console.error("Error patching access group:", error);
       next(error);
     }
   });
