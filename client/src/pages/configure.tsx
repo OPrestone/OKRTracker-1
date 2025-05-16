@@ -1687,28 +1687,45 @@ export default function Configure() {
                     <Label className="text-base font-medium">Company Address</Label>
 
                     {/* Street Address */}
-                    <div className="space-y-2">
-                      <Label htmlFor="street-address" className="flex items-center">
-                        Street Address <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Input
-                        id="street-address"
-                        placeholder="123 Main Street"
-                        required
-                      />
-                    </div>
+                    <FormField
+                      control={accountForm.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center">
+                            Street Address <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="123 Main Street"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     {/* Address Line 2 - Optional */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="address-line2">Address Line 2</Label>
-                        <span className="text-sm text-gray-500">Optional</span>
-                      </div>
-                      <Input
-                        id="address-line2"
-                        placeholder="Suite 100"
-                      />
-                    </div>
+                    <FormField
+                      control={accountForm.control}
+                      name="addressLine2"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Address Line 2</FormLabel>
+                            <span className="text-sm text-gray-500">Optional</span>
+                          </div>
+                          <FormControl>
+                            <Input 
+                              placeholder="Suite 100"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     {/* Country */}
                     <FormField
