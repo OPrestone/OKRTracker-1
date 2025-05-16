@@ -995,7 +995,7 @@ export default function Configure() {
           </div>
 
           <Tabs defaultValue="general" className="mb-8">
-            <TabsList className="grid w-full md:w-auto grid-cols-6 md:grid-flow-col md:auto-cols-max gap-2">
+            <TabsList className="grid w-full md:w-auto grid-cols-7 md:grid-flow-col md:auto-cols-max gap-2">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 <span>General</span>
@@ -1019,6 +1019,10 @@ export default function Configure() {
               <TabsTrigger value="cycles" className="flex items-center gap-2">
                 <CalendarRange className="h-4 w-4" />
                 <span>Cycles</span>
+              </TabsTrigger>
+              <TabsTrigger value="system-config" className="flex items-center gap-2">
+                <Server className="h-4 w-4" />
+                <span>System Config</span>
               </TabsTrigger>
             </TabsList>
 
