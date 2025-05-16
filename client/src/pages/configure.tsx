@@ -1122,8 +1122,11 @@ export default function Configure() {
       country: "us",
       state: "CA",
       city: "San Francisco",
+      postalCode: "94103",
       timezone: "America/Los_Angeles",
       dateFormat: "mm-dd-yyyy",
+      streetAddress: "123 Main Street",
+      addressLine2: "",
     }
   });
 
@@ -2011,28 +2014,44 @@ export default function Configure() {
                       />
 
                       {/* City */}
-                      <div className="space-y-2">
-                        <Label htmlFor="city" className="flex items-center">
-                          City <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          id="city"
-                          placeholder="San Francisco"
-                          required
-                        />
-                      </div>
+                      <FormField
+                        control={accountForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="flex items-center">
+                              City <span className="text-red-500 ml-1">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="San Francisco" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       {/* Postal Code */}
-                      <div className="space-y-2">
-                        <Label htmlFor="postal-code" className="flex items-center">
-                          Postal Code <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          id="postal-code"
-                          placeholder="94103"
-                          required
-                        />
-                      </div>
+                      <FormField
+                        control={accountForm.control}
+                        name="postalCode"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="flex items-center">
+                              Postal Code <span className="text-red-500 ml-1">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="94103" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
 
