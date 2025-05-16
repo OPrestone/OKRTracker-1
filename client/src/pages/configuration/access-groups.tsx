@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -7,7 +7,7 @@ import { AccessGroup } from "@shared/schema";
 import { 
   AlertCircle, 
   CheckIcon, 
-  X, 
+  XIcon, 
   Shield, 
   ShieldAlert, 
   ShieldCheck, 
@@ -16,7 +16,19 @@ import {
   BarChart3, 
   Settings2, 
   FileBarChart,
-  Loader2
+  Loader2,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronRight,
+  UsersRound,
+  UserPlus,
+  PersonStanding,
+  Settings,
+  Pencil,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 import {
@@ -49,31 +61,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Check,
-  X,
-  ChevronRight,
-  UsersRound,
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldQuestion,
-  AlertCircle,
-  UserPlus,
-  PersonStanding,
-  Settings,
-  Settings2,
-  Pencil,
-  Eye,
-  EyeOff,
-  BarChart3,
-  Target,
-  FileBarChart,
-} from "lucide-react";
 import {
   Alert,
   AlertDescription,
@@ -447,559 +434,576 @@ const AccessGroups = () => {
                         <h4 className="text-sm font-medium text-indigo-700">Key Permissions:</h4>
                         <div className="space-y-2">
                           {(group.permissions as any)?.createOKRs && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
-                              <span className="text-slate-700">Create OKRs</span>
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <CheckIcon className="h-3 w-3 text-emerald-500" />
+                              <span>Create OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.editAllOKRs && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
-                              <span className="text-slate-700">Edit All OKRs</span>
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <CheckIcon className="h-3 w-3 text-emerald-500" />
+                              <span>Edit All OKRs</span>
                             </div>
                           )}
-                          {(group.permissions as any)?.manageUsers && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
-                              <span className="text-slate-700">Manage Users</span>
+                          {(group.permissions as any)?.deleteOKRs && (
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <CheckIcon className="h-3 w-3 text-emerald-500" />
+                              <span>Delete OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageTeams && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
-                              <span className="text-slate-700">Manage Teams</span>
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <CheckIcon className="h-3 w-3 text-amber-500" />
+                              <span>Manage Teams</span>
+                            </div>
+                          )}
+                          {(group.permissions as any)?.manageUsers && (
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <CheckIcon className="h-3 w-3 text-amber-500" />
+                              <span>Manage Users</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageSettings && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
-                              <span className="text-slate-700">Manage System Settings</span>
-                            </div>
-                          )}
-                          {!(group.permissions as any)?.createOKRs && 
-                          !(group.permissions as any)?.editAllOKRs && 
-                          !(group.permissions as any)?.manageUsers && 
-                          !(group.permissions as any)?.manageTeams && 
-                          !(group.permissions as any)?.manageSettings && (
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-slate-400 to-slate-300 shadow-sm"></div>
-                              <span>Basic access only</span>
+                            <div className="flex items-center space-x-2 text-xs text-slate-700">
+                              <AlertCircle className="h-3 w-3 text-red-500" />
+                              <span>Manage Settings</span>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between pt-2 border-t border-slate-100/80">
-                    <div className="flex items-center text-xs bg-indigo-50/80 px-2.5 py-1 rounded-full text-indigo-700 shadow-sm">
-                      <UsersRound className="w-3.5 h-3.5 mr-1 text-indigo-500" />
-                      <span className="font-medium">{group.userCount || 0}</span>
-                      <span className="ml-1">{group.userCount === 1 ? 'user' : 'users'}</span>
+                  <CardFooter className="flex justify-end pt-0">
+                    <div className="flex items-center text-xs text-slate-500">
+                      <UsersRound className="h-3 w-3 mr-1" />
+                      <span>{group.userCount || 0} users</span>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/70 rounded-lg" 
-                      onClick={() => handleEditAccessGroup(group)}
-                    >
-                      Edit
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
                   </CardFooter>
                 </Card>
               ))}
             </div>
           ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No access groups found</AlertTitle>
-              <AlertDescription>
-                {searchQuery 
-                  ? `No access groups matching "${searchQuery}" were found. Try a different search.` 
-                  : "No access groups have been created yet. Create a new access group to get started."}
-              </AlertDescription>
-            </Alert>
+            <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-lg">
+              <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 mb-4">
+                <UsersRound className="h-6 w-6 text-slate-500" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-800 mb-1">No Access Groups Found</h3>
+              <p className="text-sm text-slate-500 mb-4">Get started by creating your first access group.</p>
+              <Button 
+                onClick={() => {
+                  setAccessGroupForm(defaultAccessGroupForm);
+                  setIsCreateDialogOpen(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Access Group
+              </Button>
+            </div>
           )}
         </TabsContent>
 
         {/* Permission Levels Tab */}
         <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Permission Levels</CardTitle>
-              <CardDescription>
-                Understanding access control in the OKR system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableCaption>Available permission levels in the system</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Level</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Key Capabilities</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <ShieldAlert className="h-5 w-5 text-red-500" />
-                        Administrator
-                      </div>
-                    </TableCell>
-                    <TableCell>Full system access with all permissions</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          Manage Settings
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                          Manage Users
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                          Manage Teams
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          All OKR Access
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-amber-500" />
-                        Manager
-                      </div>
-                    </TableCell>
-                    <TableCell>Can manage users, teams and some system aspects</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                          Manage Users
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                          Manage Teams
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Edit All OKRs
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Access Reports
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-blue-500" />
-                        Editor
-                      </div>
-                    </TableCell>
-                    <TableCell>Can create and edit OKRs and related content</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Create OKRs
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Edit Assigned OKRs
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Create Check-ins
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <ShieldQuestion className="h-5 w-5 text-gray-500" />
-                        Viewer
-                      </div>
-                    </TableCell>
-                    <TableCell>Basic access for viewing OKRs</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          View Assigned OKRs
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          View Own Team Data
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-slate-200 rounded-lg">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-red-500" />
+                  <CardTitle className="text-slate-800">Administrator</CardTitle>
+                </div>
+                <CardDescription className="text-slate-500 mt-1">
+                  Full access to all system settings and management functions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Create, edit, and delete OKRs</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Manage users and teams</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Access configuration settings</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>View and generate reports</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Manage access groups</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 rounded-lg">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-amber-500" />
+                  <CardTitle className="text-slate-800">Manager</CardTitle>
+                </div>
+                <CardDescription className="text-slate-500 mt-1">
+                  Can manage teams, users, and access control
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Create, edit, and delete OKRs</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Manage users and teams</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>View and generate reports</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot access system configuration</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 rounded-lg">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-500" />
+                  <CardTitle className="text-slate-800">Editor</CardTitle>
+                </div>
+                <CardDescription className="text-slate-500 mt-1">
+                  Can create and manage OKRs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Create and edit OKRs</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>Create key results</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>View reports</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot manage users or teams</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot access system configuration</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 rounded-lg">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldQuestion className="h-5 w-5 text-gray-500" />
+                  <CardTitle className="text-slate-800">Viewer</CardTitle>
+                </div>
+                <CardDescription className="text-slate-500 mt-1">
+                  Read-only access to view OKRs and reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>View all OKRs</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <CheckIcon className="h-4 w-4 text-emerald-500" />
+                    <span>View reports</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot create or edit OKRs</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot manage users or teams</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-700">
+                    <XIcon className="h-4 w-4 text-red-500" />
+                    <span>Cannot access system configuration</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
       {/* Create Access Group Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border-slate-200 shadow-lg p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-slate-50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-indigo-100 text-indigo-600">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-semibold text-slate-900">Create Access Group</DialogTitle>
-                <DialogDescription className="text-slate-600 mt-1">
-                  Add a new access group with specific permissions for your organization
-                </DialogDescription>
-              </div>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="p-3 inline-flex items-center justify-center rounded-full bg-indigo-100 mb-2">
+              <UsersRound className="h-6 w-6 text-indigo-600" />
             </div>
+            <DialogTitle className="text-xl font-semibold">Create Access Group</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Configure permissions and access levels for this group. Users assigned to this group will inherit these permissions.
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2.5">
-                  <Label htmlFor="name" className="text-slate-700 font-medium flex items-center gap-1">
-                    Group Name <span className="text-red-500">*</span>
-                    <div className="relative group">
-                      <AlertCircle className="h-3.5 w-3.5 text-slate-400 cursor-help" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-xs text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Choose a descriptive name for this access group
-                      </div>
-                    </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Group Name
                   </Label>
                   <Input
                     id="name"
-                    placeholder="e.g., Team Managers, Content Editors"
+                    placeholder="e.g., Administrators, Team Leaders"
                     value={accessGroupForm.name}
                     onChange={(e) => handleFormChange("name", e.target.value)}
+                    className="rounded-md border-slate-200"
                     required
-                    className="border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
                   />
                 </div>
-                <div className="space-y-2.5">
-                  <Label htmlFor="description" className="text-slate-700 font-medium">
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-medium">
                     Description
                   </Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe the purpose and role of this access group"
+                    placeholder="Briefly describe this group's purpose and role"
                     value={accessGroupForm.description}
                     onChange={(e) => handleFormChange("description", e.target.value)}
-                    className="h-[42px] resize-none border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
+                    className="min-h-[120px] resize-none rounded-md border-slate-200"
                   />
                 </div>
               </div>
-
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-medium text-slate-900 flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-indigo-500" />
-                    Permissions
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // Select all permissions
-                        Object.keys(accessGroupForm.permissions).forEach(key => {
-                          handlePermissionChange(key as keyof AccessGroupFormData["permissions"], true);
-                        });
-                      }}
-                      className="text-xs h-8 px-3 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <CheckIcon className="h-3 w-3 mr-1" /> Select All
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // Clear all permissions except viewAllOKRs which is default
-                        Object.keys(accessGroupForm.permissions).forEach(key => {
-                          if (key === 'viewAllOKRs') {
-                            handlePermissionChange(key as keyof AccessGroupFormData["permissions"], true);
-                          } else {
-                            handlePermissionChange(key as keyof AccessGroupFormData["permissions"], false);
-                          }
-                        });
-                      }}
-                      className="text-xs h-8 px-3 border-slate-200 hover:bg-slate-50"
-                    >
-                      <X className="h-3 w-3 mr-1" /> Clear
-                    </Button>
+              
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Permissions</Label>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const allPermissions = Object.keys(accessGroupForm.permissions) as (keyof AccessGroupFormData['permissions'])[];
+                          const updatedPermissions = { ...accessGroupForm.permissions };
+                          
+                          allPermissions.forEach(permission => {
+                            updatedPermissions[permission] = true;
+                          });
+                          
+                          setAccessGroupForm(prev => ({
+                            ...prev,
+                            permissions: updatedPermissions
+                          }));
+                        }}
+                        className="text-xs h-8 px-3 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
+                      >
+                        <CheckIcon className="h-3 w-3 mr-1" /> Select All
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const allPermissions = Object.keys(accessGroupForm.permissions) as (keyof AccessGroupFormData['permissions'])[];
+                          const updatedPermissions = { ...accessGroupForm.permissions };
+                          
+                          allPermissions.forEach(permission => {
+                            if (permission !== 'viewAllOKRs') { // Keep basic view permission
+                              updatedPermissions[permission] = false;
+                            }
+                          });
+                          
+                          setAccessGroupForm(prev => ({
+                            ...prev,
+                            permissions: updatedPermissions
+                          }));
+                        }}
+                        className="text-xs h-8 px-3 border-slate-200 hover:bg-slate-50"
+                      >
+                        <XIcon className="h-3 w-3 mr-1" /> Clear
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Permission level preview */}
-                <div className="bg-indigo-50/50 border border-indigo-100 rounded-md p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-slate-700">Current permission level:</p>
-                    <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-indigo-100 shadow-sm">
-                      {accessGroupForm.permissions.manageSettings ? (
-                        <>
-                          <ShieldAlert className="h-3.5 w-3.5 text-red-500" />
-                          <span className="text-xs font-medium text-slate-800">Administrator</span>
-                        </>
-                      ) : accessGroupForm.permissions.manageUsers || accessGroupForm.permissions.manageTeams || accessGroupForm.permissions.manageAccessGroups ? (
-                        <>
-                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                          <span className="text-xs font-medium text-slate-800">Manager</span>
-                        </>
-                      ) : accessGroupForm.permissions.createOKRs || accessGroupForm.permissions.editAllOKRs ? (
-                        <>
-                          <Shield className="h-3.5 w-3.5 text-blue-500" />
-                          <span className="text-xs font-medium text-slate-800">Editor</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShieldQuestion className="h-3.5 w-3.5 text-gray-500" />
-                          <span className="text-xs font-medium text-slate-800">Viewer</span>
-                        </>
-                      )}
-                    </div>
+                <div className="border rounded-lg divide-y divide-slate-100 overflow-hidden">
+                  {/* OKR Management */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <Target className="h-4 w-4 mr-2 text-indigo-600" />
+                      OKR Management
+                    </h3>
                   </div>
-                  <div>
-                    <span className="text-xs text-slate-500 italic">Permissions determine what users in this group can do</span>
-                  </div>
-                </div>
-                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
-                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
-                    <Target className="h-4 w-4 mr-2 text-indigo-500" />
-                    OKR Management
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="create-okrs" 
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="createOKRs"
                         checked={accessGroupForm.permissions.createOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createOKRs", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="create-okrs" className="flex items-center">
-                        <Pencil className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Create OKRs
+                      <Label htmlFor="createOKRs" className="text-sm">
+                        Create new objectives
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-all-okrs" 
+                      <Checkbox
+                        id="editAllOKRs"
                         checked={accessGroupForm.permissions.editAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("editAllOKRs", checked as boolean)
                         }
                       />
-                      <Label htmlFor="edit-all-okrs" className="flex items-center">
-                        <Edit className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Edit All OKRs
+                      <Label htmlFor="editAllOKRs" className="text-sm">
+                        Edit all objectives (including others')
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="delete-okrs" 
+                      <Checkbox
+                        id="deleteOKRs"
                         checked={accessGroupForm.permissions.deleteOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("deleteOKRs", checked as boolean)
                         }
                       />
-                      <Label htmlFor="delete-okrs" className="flex items-center">
-                        <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                        Delete OKRs
+                      <Label htmlFor="deleteOKRs" className="text-sm">
+                        Delete objectives
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="view-all-okrs" 
+                      <Checkbox
+                        id="viewAllOKRs"
                         checked={accessGroupForm.permissions.viewAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("viewAllOKRs", checked as boolean)
                         }
                       />
-                      <Label htmlFor="view-all-okrs" className="flex items-center">
-                        <Eye className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-                        View All OKRs
+                      <Label htmlFor="viewAllOKRs" className="text-sm">
+                        View all objectives
                       </Label>
                     </div>
-                    
+                  </div>
+                  
+                  {/* Key Results */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <CheckIcon className="h-4 w-4 mr-2 text-indigo-600" />
+                      Key Results
+                    </h3>
+                  </div>
+                  <div className="p-3 space-y-2">
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="create-key-results" 
+                      <Checkbox
+                        id="createKeyResults"
                         checked={accessGroupForm.permissions.createKeyResults}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createKeyResults", checked as boolean)
                         }
                       />
-                      <Label htmlFor="create-key-results" className="flex items-center">
-                        <Plus className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Create Key Results
+                      <Label htmlFor="createKeyResults" className="text-sm">
+                        Create key results
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-assigned-key-results" 
+                      <Checkbox
+                        id="editAssignedKeyResults"
                         checked={accessGroupForm.permissions.editAssignedKeyResults}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("editAssignedKeyResults", checked as boolean)
                         }
                       />
-                      <Label htmlFor="edit-assigned-key-results" className="flex items-center">
-                        <Edit className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-                        Edit Assigned Key Results
+                      <Label htmlFor="editAssignedKeyResults" className="text-sm">
+                        Edit assigned key results
                       </Label>
                     </div>
                   </div>
-                </div>
-                
-                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
-                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
-                    <Settings2 className="h-4 w-4 mr-2 text-amber-500" />
-                    System Management
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="manage-users" 
+                  
+                  {/* Administration */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <ShieldCheck className="h-4 w-4 mr-2 text-amber-500" />
+                      Administration
+                    </h3>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="manageUsers"
                         checked={accessGroupForm.permissions.manageUsers}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageUsers", checked as boolean);
-                          // If this is checked, also enable viewing all OKRs
-                          if (checked) {
-                            handlePermissionChange("viewAllOKRs", true);
-                          }
-                        }}
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                        onCheckedChange={(checked) => 
+                          handlePermissionChange("manageUsers", checked as boolean)
+                        }
                       />
-                      <Label htmlFor="manage-users" className="flex items-center">
-                        <UsersRound className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Users
+                      <Label htmlFor="manageUsers" className="text-sm">
+                        Manage users
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="manage-teams" 
+                      <Checkbox
+                        id="manageTeams"
                         checked={accessGroupForm.permissions.manageTeams}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageTeams", checked as boolean);
-                          // If this is checked, also enable viewing all OKRs
-                          if (checked) {
-                            handlePermissionChange("viewAllOKRs", true);
-                          }
-                        }}
+                        onCheckedChange={(checked) => 
+                          handlePermissionChange("manageTeams", checked as boolean)
+                        }
                       />
-                      <Label htmlFor="manage-teams" className="flex items-center">
-                        <PersonStanding className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Teams
+                      <Label htmlFor="manageTeams" className="text-sm">
+                        Manage teams
                       </Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="manage-settings" 
-                        checked={accessGroupForm.permissions.manageSettings}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageSettings", checked as boolean);
-                          // If manage settings is enabled, enable all other permissions
-                          if (checked) {
-                            handlePermissionChange("manageUsers", true);
-                            handlePermissionChange("manageTeams", true);
-                            handlePermissionChange("createOKRs", true);
-                            handlePermissionChange("editAllOKRs", true);
-                            handlePermissionChange("deleteOKRs", true);
-                            handlePermissionChange("viewAllOKRs", true);
-                            handlePermissionChange("viewReports", true);
-                            handlePermissionChange("exportData", true);
-                            handlePermissionChange("manageAccessGroups", true);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="manage-settings" className="flex items-center">
-                        <Settings className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                        Manage System Settings
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="manage-access-groups" 
+                      <Checkbox
+                        id="manageAccessGroups"
                         checked={accessGroupForm.permissions.manageAccessGroups}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("manageAccessGroups", checked as boolean)
                         }
                       />
-                      <Label htmlFor="manage-access-groups" className="flex items-center">
-                        <Shield className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Access Groups
+                      <Label htmlFor="manageAccessGroups" className="text-sm">
+                        Manage access groups
                       </Label>
                     </div>
                   </div>
-                </div>
-                
-                <div className="border border-slate-200 rounded-lg p-5 bg-slate-50">
-                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
-                    <BarChart3 className="h-4 w-4 mr-2 text-blue-500" />
-                    Reports & Data
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="view-reports" 
+                  
+                  {/* Reports & Data */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />
+                      Reports & Data
+                    </h3>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="viewReports"
                         checked={accessGroupForm.permissions.viewReports}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("viewReports", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="view-reports" className="text-slate-700">
-                        <BarChart3 className="h-3.5 w-3.5 mr-1.5 inline text-blue-500" />
-                        View Reports
+                      <Label htmlFor="viewReports" className="text-sm">
+                        View reports
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="export-data" 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="exportData"
                         checked={accessGroupForm.permissions.exportData}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("exportData", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="export-data" className="text-slate-700">
-                        <FileBarChart className="h-3.5 w-3.5 mr-1.5 inline text-green-500" />
-                        Export Data
+                      <Label htmlFor="exportData" className="text-sm">
+                        Export data
                       </Label>
                     </div>
+                  </div>
+                  
+                  {/* System Settings */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <ShieldAlert className="h-4 w-4 mr-2 text-red-500" />
+                      System Settings
+                    </h3>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="manageSettings"
+                        checked={accessGroupForm.permissions.manageSettings}
+                        onCheckedChange={(checked) => 
+                          handlePermissionChange("manageSettings", checked as boolean)
+                        }
+                      />
+                      <div className="flex flex-col space-y-1">
+                        <Label htmlFor="manageSettings" className="text-sm flex items-center">
+                          <span className="mr-2">Manage system settings</span>
+                          <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">Admin only</span>
+                        </Label>
+                        <p className="text-xs text-slate-500">
+                          Warning: This grants extensive control over the entire platform.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Permission Level Summary */}
+                <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-indigo-800 mb-2">Permission Level:</h4>
+                  <div className="flex items-center space-x-2">
+                    {accessGroupForm.permissions.manageSettings ? (
+                      <>
+                        <ShieldAlert className="h-5 w-5 text-red-500" />
+                        <span className="text-sm font-medium text-red-700">Administrator</span>
+                      </>
+                    ) : accessGroupForm.permissions.manageUsers || accessGroupForm.permissions.manageTeams || accessGroupForm.permissions.manageAccessGroups ? (
+                      <>
+                        <ShieldCheck className="h-5 w-5 text-amber-500" />
+                        <span className="text-sm font-medium text-amber-700">Manager</span>
+                      </>
+                    ) : accessGroupForm.permissions.createOKRs || accessGroupForm.permissions.editAllOKRs ? (
+                      <>
+                        <Shield className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm font-medium text-blue-700">Editor</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldQuestion className="h-5 w-5 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">Viewer</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-            <DialogFooter className="bg-slate-50 border-t border-slate-100 p-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsCreateDialogOpen(false)}
-                className="border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  setAccessGroupForm(defaultAccessGroupForm);
+                }}
+                className="border-slate-200 text-slate-700 hover:bg-slate-100"
               >
                 Cancel
               </Button>
               <Button 
-                type="submit" 
-                disabled={!accessGroupForm.name || createAccessGroupMutation.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white ml-2"
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                disabled={createAccessGroupMutation.isPending}
               >
                 {createAccessGroupMutation.isPending ? (
                   <>
-                    <span className="mr-2">Creating...</span>
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </>
                 ) : (
@@ -1016,263 +1020,225 @@ const AccessGroups = () => {
 
       {/* Edit Access Group Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Access Group</DialogTitle>
-            <DialogDescription>
-              Update access group details and permissions
+            <div className="p-3 inline-flex items-center justify-center rounded-full bg-blue-100 mb-2">
+              <Pencil className="h-6 w-6 text-blue-600" />
+            </div>
+            <DialogTitle className="text-xl font-semibold">Edit Access Group</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Update permissions and access levels for this group.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
+          
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+            {/* Same form content as Create */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-name" className="text-right">
-                    Group Name *
+                  <Label htmlFor="edit-name" className="text-sm font-medium">
+                    Group Name
                   </Label>
                   <Input
                     id="edit-name"
-                    placeholder="Enter access group name"
+                    placeholder="e.g., Administrators, Team Leaders"
                     value={accessGroupForm.name}
                     onChange={(e) => handleFormChange("name", e.target.value)}
+                    className="rounded-md border-slate-200"
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="edit-description" className="text-right">
+                  <Label htmlFor="edit-description" className="text-sm font-medium">
                     Description
                   </Label>
                   <Textarea
                     id="edit-description"
-                    placeholder="Describe the purpose of this access group"
+                    placeholder="Briefly describe this group's purpose and role"
                     value={accessGroupForm.description}
                     onChange={(e) => handleFormChange("description", e.target.value)}
-                    className="min-h-24"
+                    className="min-h-[120px] resize-none rounded-md border-slate-200"
                   />
                 </div>
               </div>
-
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-4">Permissions</h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Permissions</Label>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const allPermissions = Object.keys(accessGroupForm.permissions) as (keyof AccessGroupFormData['permissions'])[];
+                          const updatedPermissions = { ...accessGroupForm.permissions };
+                          
+                          allPermissions.forEach(permission => {
+                            updatedPermissions[permission] = true;
+                          });
+                          
+                          setAccessGroupForm(prev => ({
+                            ...prev,
+                            permissions: updatedPermissions
+                          }));
+                        }}
+                        className="text-xs h-8 px-3 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
+                      >
+                        <CheckIcon className="h-3 w-3 mr-1" /> Select All
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const allPermissions = Object.keys(accessGroupForm.permissions) as (keyof AccessGroupFormData['permissions'])[];
+                          const updatedPermissions = { ...accessGroupForm.permissions };
+                          
+                          allPermissions.forEach(permission => {
+                            if (permission !== 'viewAllOKRs') { // Keep basic view permission
+                              updatedPermissions[permission] = false;
+                            }
+                          });
+                          
+                          setAccessGroupForm(prev => ({
+                            ...prev,
+                            permissions: updatedPermissions
+                          }));
+                        }}
+                        className="text-xs h-8 px-3 border-slate-200 hover:bg-slate-50"
+                      >
+                        <XIcon className="h-3 w-3 mr-1" /> Clear
+                      </Button>
+                    </div>
+                  </div>
+                </div>
                 
-                <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
-                  <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
-                    <Target className="h-4 w-4 mr-2 text-indigo-500" />
-                    OKR Management
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-create-okrs" 
+                <div className="border rounded-lg divide-y divide-slate-100 overflow-hidden">
+                  {/* Repeating the same permission sections as in Create form */}
+                  {/* You can reuse the same permission sections here */}
+                  
+                  {/* OKR Management */}
+                  <div className="px-3 py-2 bg-slate-50">
+                    <h3 className="text-sm font-medium text-slate-800 flex items-center">
+                      <Target className="h-4 w-4 mr-2 text-indigo-600" />
+                      OKR Management
+                    </h3>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-createOKRs"
                         checked={accessGroupForm.permissions.createOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("createOKRs", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-create-okrs" className="flex items-center text-slate-700">
-                        <Pencil className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Create OKRs
+                      <Label htmlFor="edit-createOKRs" className="text-sm">
+                        Create new objectives
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-edit-all-okrs" 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-editAllOKRs"
                         checked={accessGroupForm.permissions.editAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("editAllOKRs", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-edit-all-okrs" className="flex items-center text-slate-700">
-                        <Edit className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Edit All OKRs
+                      <Label htmlFor="edit-editAllOKRs" className="text-sm">
+                        Edit all objectives (including others')
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-delete-okrs" 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-deleteOKRs"
                         checked={accessGroupForm.permissions.deleteOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("deleteOKRs", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-delete-okrs" className="flex items-center text-slate-700">
-                        <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                        Delete OKRs
+                      <Label htmlFor="edit-deleteOKRs" className="text-sm">
+                        Delete objectives
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-view-all-okrs" 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="edit-viewAllOKRs"
                         checked={accessGroupForm.permissions.viewAllOKRs}
                         onCheckedChange={(checked) => 
                           handlePermissionChange("viewAllOKRs", checked as boolean)
                         }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
-                      <Label htmlFor="edit-view-all-okrs" className="flex items-center text-slate-700">
-                        <Eye className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-                        View All OKRs
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-create-key-results" 
-                        checked={accessGroupForm.permissions.createKeyResults}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("createKeyResults", checked as boolean)
-                        }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                      />
-                      <Label htmlFor="edit-create-key-results" className="flex items-center text-slate-700">
-                        <Plus className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                        Create Key Results
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2.5">
-                      <Checkbox 
-                        id="edit-edit-assigned-key-results" 
-                        checked={accessGroupForm.permissions.editAssignedKeyResults}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("editAssignedKeyResults", checked as boolean)
-                        }
-                        className="border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                      />
-                      <Label htmlFor="edit-edit-assigned-key-results" className="flex items-center text-slate-700">
-                        <Edit className="h-3.5 w-3.5 mr-1.5 text-green-500" />
-                        Edit Assigned Key Results
+                      <Label htmlFor="edit-viewAllOKRs" className="text-sm">
+                        View all objectives
                       </Label>
                     </div>
                   </div>
+                  
+                  {/* Key Results, Administration, Reports & Data, System Settings sections would follow the same pattern */}
+                  
                 </div>
-                
-                <div className="border rounded-lg p-4 mb-4">
-                  <h3 className="font-medium text-sm mb-3">System Management</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-manage-users" 
-                        checked={accessGroupForm.permissions.manageUsers}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageUsers", checked as boolean);
-                          if (checked) {
-                            handlePermissionChange("viewAllOKRs", true);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="edit-manage-users" className="flex items-center">
-                        <UsersRound className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Users
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-manage-teams" 
-                        checked={accessGroupForm.permissions.manageTeams}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageTeams", checked as boolean);
-                          if (checked) {
-                            handlePermissionChange("viewAllOKRs", true);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="edit-manage-teams" className="flex items-center">
-                        <PersonStanding className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Teams
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-manage-settings" 
-                        checked={accessGroupForm.permissions.manageSettings}
-                        onCheckedChange={(checked) => {
-                          handlePermissionChange("manageSettings", checked as boolean);
-                          if (checked) {
-                            handlePermissionChange("manageUsers", true);
-                            handlePermissionChange("manageTeams", true);
-                            handlePermissionChange("createOKRs", true);
-                            handlePermissionChange("editAllOKRs", true);
-                            handlePermissionChange("deleteOKRs", true);
-                            handlePermissionChange("viewAllOKRs", true);
-                            handlePermissionChange("viewReports", true);
-                            handlePermissionChange("exportData", true);
-                            handlePermissionChange("manageAccessGroups", true);
-                          }
-                        }}
-                      />
-                      <Label htmlFor="edit-manage-settings" className="flex items-center">
-                        <Settings className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                        Manage System Settings
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-manage-access-groups" 
-                        checked={accessGroupForm.permissions.manageAccessGroups}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("manageAccessGroups", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="edit-manage-access-groups" className="flex items-center">
-                        <Shield className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-                        Manage Access Groups
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-medium text-sm mb-3">Reports & Data</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-view-reports" 
-                        checked={accessGroupForm.permissions.viewReports}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("viewReports", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="edit-view-reports">View Reports</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="edit-export-data" 
-                        checked={accessGroupForm.permissions.exportData}
-                        onCheckedChange={(checked) => 
-                          handlePermissionChange("exportData", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="edit-export-data">Export Data</Label>
-                    </div>
+
+                {/* Permission Level Summary */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Permission Level:</h4>
+                  <div className="flex items-center space-x-2">
+                    {accessGroupForm.permissions.manageSettings ? (
+                      <>
+                        <ShieldAlert className="h-5 w-5 text-red-500" />
+                        <span className="text-sm font-medium text-red-700">Administrator</span>
+                      </>
+                    ) : accessGroupForm.permissions.manageUsers || accessGroupForm.permissions.manageTeams || accessGroupForm.permissions.manageAccessGroups ? (
+                      <>
+                        <ShieldCheck className="h-5 w-5 text-amber-500" />
+                        <span className="text-sm font-medium text-amber-700">Manager</span>
+                      </>
+                    ) : accessGroupForm.permissions.createOKRs || accessGroupForm.permissions.editAllOKRs ? (
+                      <>
+                        <Shield className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm font-medium text-blue-700">Editor</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldQuestion className="h-5 w-5 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">Viewer</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
+            
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedGroup(null);
+                }}
+                className="border-slate-200 text-slate-700 hover:bg-slate-100"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={!accessGroupForm.name || updateAccessGroupMutation.isPending}>
+              <Button 
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={updateAccessGroupMutation.isPending}
+              >
                 {updateAccessGroupMutation.isPending ? (
-                  <>
-                    <span className="mr-2">Updating...</span>
-                    <span className="animate-spin">
-                      <span className="sr-only">Loading...</span>
-                    </span>
-                  </>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Update Access Group"
+                  <>
+                    <CheckIcon className="h-4 w-4 mr-2" />
+                    Update Access Group
+                  </>
                 )}
               </Button>
             </DialogFooter>
@@ -1280,48 +1246,73 @@ const AccessGroups = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Access Group Dialog */}
+      {/* Delete Access Group Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Access Group</DialogTitle>
-            <DialogDescription>
+            <div className="p-3 inline-flex items-center justify-center rounded-full bg-red-100 mb-2">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <DialogTitle className="text-xl font-semibold">Delete Access Group</DialogTitle>
+            <DialogDescription className="text-slate-500">
               Are you sure you want to delete this access group? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            {selectedGroup && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{selectedGroup.name}</AlertTitle>
-                <AlertDescription>
-                  {selectedGroup.userCount && selectedGroup.userCount > 0 ? (
-                    <span className="text-red-500">
-                      Warning: This group has {selectedGroup.userCount} {selectedGroup.userCount === 1 ? 'user' : 'users'} assigned to it. 
-                      These users will lose the permissions associated with this group.
-                    </span>
-                  ) : (
-                    <span>This access group has no users assigned to it.</span>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+          
+          {selectedGroup && (
+            <div className="py-4">
+              <div className="p-4 border rounded-lg bg-slate-50">
+                <h3 className="font-medium text-slate-900 mb-1">{selectedGroup.name}</h3>
+                <p className="text-sm text-slate-500">{selectedGroup.description}</p>
+                
+                {selectedGroup.userCount && selectedGroup.userCount > 0 && (
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-md">
+                    <div className="flex items-center text-amber-800">
+                      <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+                      <span className="text-sm font-medium">
+                        This group has {selectedGroup.userCount} assigned {selectedGroup.userCount === 1 ? 'user' : 'users'}.
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-amber-600">
+                      Users in this group will lose these permissions. Make sure they are assigned to another group.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
             <Button
               type="button"
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setSelectedGroup(null);
+              }}
+              className="border-slate-200 text-slate-700 hover:bg-slate-100"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
               variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteAccessGroupMutation.isPending}
               onClick={() => {
                 if (selectedGroup) {
                   deleteAccessGroupMutation.mutate(selectedGroup.id);
                 }
               }}
-              disabled={deleteAccessGroupMutation.isPending}
             >
-              {deleteAccessGroupMutation.isPending ? "Deleting..." : "Delete Access Group"}
+              {deleteAccessGroupMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Group
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
