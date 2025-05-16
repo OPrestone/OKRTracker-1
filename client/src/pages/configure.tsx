@@ -62,7 +62,7 @@ function SystemConfigManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const toast = useToast();
 
   // Fetch all system configurations
   const systemConfigsQuery = useQuery({
@@ -339,7 +339,7 @@ function TenantConfigManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const toast = useToast();
 
   // Fetch all tenant configurations
   const tenantConfigsQuery = useQuery({
