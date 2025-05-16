@@ -1492,17 +1492,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
+      // Convert date strings to actual Date objects
+      // We need to ensure the dates are valid before trying to create Date objects
+      const startDate = req.body.startDate ? new Date(req.body.startDate) : null;
+      const endDate = req.body.endDate ? new Date(req.body.endDate) : null;
+      
+      if (!startDate || isNaN(startDate.getTime())) {
+        return res.status(400).json({ error: "Invalid start date format" });
+      }
+      
+      if (!endDate || isNaN(endDate.getTime())) {
+        return res.status(400).json({ error: "Invalid end date format" });
+      }
+      
       // Prepare data with proper date types and add tenant ID
       const formattedData = {
         ...req.body,
-        startDate: new Date(req.body.startDate),
-        endDate: new Date(req.body.endDate),
+        startDate,
+        endDate,
         tenantId
       };
       
-      // Validate the data
+      // Now validate with the schema
       const validatedData = insertTimeframeSchema.parse(formattedData);
-      
+    
       // If cadenceId is provided, verify it belongs to the current tenant
       if (validatedData.cadenceId) {
         const cadence = await storage.getCadence(validatedData.cadenceId);
