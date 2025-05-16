@@ -23,6 +23,7 @@ import StatusSettings from "@/pages/configuration/status-settings";
 import AccessGroups from "@/pages/configuration/access-groups";
 import SystemSettings from "@/pages/configuration/system-settings";
 import AuthPage from "@/pages/auth-page";
+import AdminLogin from "@/pages/admin-login";
 import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
 import ApprovedOKRs from "@/pages/approved-okrs";
