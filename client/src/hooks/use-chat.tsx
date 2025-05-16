@@ -15,10 +15,10 @@ type User = {
 };
 
 type ChatRoom = {
-  id: number;
+  id: string;
   name: string;
   type: string;
-  createdBy: number;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
   unreadCount?: number;
@@ -29,11 +29,11 @@ type ChatRoomWithMembers = ChatRoom & {
 };
 
 type ChatRoomMember = {
-  userId: number;
-  chatRoomId: number;
+  userId: string;
+  chatRoomId: string;
   role: string;
   joinedAt: string;
-  lastReadMessageId: number | null;
+  lastReadMessageId: string | null;
   user: User;
 };
 
@@ -86,18 +86,18 @@ type ChatContext = {
   isLoadingMessages: boolean;
   hasMoreMessages: boolean;
   loadMoreMessages: () => void;
-  selectRoom: (id: number) => void;
+  selectRoom: (id: string) => void;
   sendMessage: (message: MessageInput) => Promise<void>;
-  editMessage: (id: number, content: string) => Promise<void>;
-  deleteMessage: (id: number) => Promise<void>;
-  addReaction: (messageId: number, emoji: string) => Promise<void>;
-  removeReaction: (messageId: number, emoji: string) => Promise<void>;
-  typing: Set<number>;
+  editMessage: (id: string, content: string) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
+  addReaction: (messageId: string, emoji: string) => Promise<void>;
+  removeReaction: (messageId: string, emoji: string) => Promise<void>;
+  typing: Set<string>;
   startTyping: () => void;
   stopTyping: () => void;
-  createChatRoom: (name: string, type: string, memberIds: number[]) => Promise<void>;
-  addMemberToChatRoom: (roomId: number, userId: number) => Promise<void>;
-  removeMemberFromChatRoom: (roomId: number, userId: number) => Promise<void>;
+  createChatRoom: (name: string, type: string, memberIds: string[]) => Promise<void>;
+  addMemberToChatRoom: (roomId: string, userId: string) => Promise<void>;
+  removeMemberFromChatRoom: (roomId: string, userId: string) => Promise<void>;
   getCurrentTenantId: () => string | null;
 };
 
@@ -348,7 +348,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [hasMoreMessages, isLoadingMessages, refetchMessages]);
   
   // Function to select a room
-  const selectRoom = useCallback((id: number) => {
+  const selectRoom = useCallback((id: string) => {
     setCurrentRoomId(id);
   }, []);
   
@@ -650,7 +650,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Add member mutation
   const addMemberMutation = useMutation({
-    mutationFn: async ({ roomId, userId }: { roomId: number, userId: number }) => {
+    mutationFn: async ({ roomId, userId }: { roomId: string, userId: string }) => {
       const response = await fetch(`/api/chat/rooms/${roomId}/members`, {
         method: 'POST',
         headers: {

@@ -24,7 +24,7 @@ export function ChatSidebar() {
   const [open, setOpen] = useState(false);
   const [chatName, setChatName] = useState("");
   const [chatType, setChatType] = useState("direct");
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
   // Get current tenant ID
   const tenantId = getCurrentTenantId();
