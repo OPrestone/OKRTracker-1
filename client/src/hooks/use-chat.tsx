@@ -721,13 +721,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Remove member mutation
   const removeMemberMutation = useMutation({
-    mutationFn: async ({ roomId, userId }: { roomId: number, userId: number }) => {
-      const response = await fetch(`/api/chat/rooms/${roomId}/members/${userId}`, {
-        method: 'DELETE'
+    mutationFn: async ({ roomId, userId }: { roomId: string, userId: string }) => {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/rooms/${roomId}/members/${userId}?tenantId=${currentTenantId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to remove member from chat room');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to remove member from chat room');
       }
     },
     onSuccess: () => {
@@ -749,7 +759,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to remove a member from a chat room
-  const removeMemberFromChatRoom = useCallback(async (roomId: number, userId: number) => {
+  const removeMemberFromChatRoom = useCallback(async (roomId: string, userId: string) => {
     await removeMemberMutation.mutateAsync({ roomId, userId });
   }, [removeMemberMutation]);
   
