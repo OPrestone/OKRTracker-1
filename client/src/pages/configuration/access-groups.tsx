@@ -389,43 +389,43 @@ const AccessGroups = () => {
           ) : filteredAccessGroups && filteredAccessGroups.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredAccessGroups.map(group => (
-                <Card key={group.id} className="relative overflow-hidden group hover:shadow-md transition-all duration-200 border border-slate-200">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
+                <Card key={group.id} className="relative overflow-hidden group hover:shadow-md transition-all duration-200 border border-slate-200 rounded-lg bg-gradient-to-br from-white to-slate-50">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-600 to-indigo-400 shadow-sm"></div>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-slate-800">{group.name}</CardTitle>
-                        <div className="flex items-center text-xs px-2.5 py-1 rounded-full bg-slate-100">
+                        <div className="flex items-center text-xs px-2.5 py-1 rounded-full bg-indigo-100/80 shadow-sm">
                           {getPermissionLevel(group).icon}
                           <span className="ml-1 font-medium">{getPermissionLevel(group).label}</span>
                         </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-70 hover:opacity-100 hover:bg-slate-100">
-                            <Settings className="h-4 w-4 text-slate-600" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-70 hover:opacity-100 hover:bg-indigo-100/70 rounded-full">
+                            <Settings className="h-4 w-4 text-indigo-600" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel className="text-xs font-medium text-slate-500">Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-56 rounded-lg border-slate-200 shadow-md">
+                          <DropdownMenuLabel className="text-xs font-medium text-indigo-500">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleEditAccessGroup(group)} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => handleEditAccessGroup(group)} className="cursor-pointer focus:bg-indigo-50 focus:text-indigo-700">
                             <Edit className="h-4 w-4 mr-2 text-blue-600" />
                             Edit Group
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteAccessGroup(group)} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => handleDeleteAccessGroup(group)} className="cursor-pointer focus:bg-indigo-50 focus:text-indigo-700">
                             <Trash2 className="h-4 w-4 mr-2 text-red-600" />
                             Delete Group
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setActiveTab("users")} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => setActiveTab("users")} className="cursor-pointer focus:bg-indigo-50 focus:text-indigo-700">
                             <UserPlus className="h-4 w-4 mr-2 text-emerald-600" />
                             Manage Users
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <CardDescription className="text-slate-500">{group.description}</CardDescription>
+                    <CardDescription className="text-slate-500 mt-1">{group.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
