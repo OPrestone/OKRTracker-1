@@ -47,9 +47,539 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import DashboardLayout from "@/layouts/dashboard-layout";
+
+// SystemConfigManager component for managing system-wide configurations
+function SystemConfigManager() {
+  const [configs, setConfigs] = useState<Record<string, any>>({});
+  const [newConfigKey, setNewConfigKey] = useState('');
+  const [newConfigValue, setNewConfigValue] = useState('');
+  const [newConfigType, setNewConfigType] = useState<string>('string');
+  const [newConfigUseEnv, setNewConfigUseEnv] = useState(false);
+  const [newConfigEnvName, setNewConfigEnvName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch all system configurations
+  const systemConfigsQuery = useQuery({
+    queryKey: ['/api/system-config'],
+    onSuccess: (data) => {
+      setConfigs(data);
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error loading configurations",
+        description: "Failed to load system configurations.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  });
+
+  // Save configuration mutation
+  const saveConfigMutation = useMutation({
+    mutationFn: async (configData: {
+      key: string;
+      value: any;
+      valueType: string;
+      useEnv: boolean;
+      envName?: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/system-config', configData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuration saved",
+        description: "The system configuration has been updated successfully."
+      });
+      setNewConfigKey('');
+      setNewConfigValue('');
+      setNewConfigType('string');
+      setNewConfigUseEnv(false);
+      setNewConfigEnvName('');
+      setIsSaving(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/system-config'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error saving configuration",
+        description: "Failed to save system configuration.",
+        variant: "destructive"
+      });
+      setIsSaving(false);
+    }
+  });
+
+  // Delete configuration mutation
+  const deleteConfigMutation = useMutation({
+    mutationFn: async (key: string) => {
+      const response = await apiRequest('DELETE', `/api/system-config/${key}`);
+      return key;
+    },
+    onSuccess: (key) => {
+      toast({
+        title: "Configuration deleted",
+        description: `The configuration "${key}" has been removed.`
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/system-config'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting configuration",
+        description: "Failed to delete system configuration.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle saving a new configuration
+  const handleSaveConfig = () => {
+    if (!newConfigKey.trim()) {
+      toast({
+        title: "Validation error",
+        description: "Configuration key is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    saveConfigMutation.mutate({
+      key: newConfigKey,
+      value: newConfigValue,
+      valueType: newConfigType,
+      useEnv: newConfigUseEnv,
+      envName: newConfigUseEnv ? newConfigEnvName : undefined
+    });
+  };
+
+  // Handle deleting a configuration
+  const handleDeleteConfig = (key: string) => {
+    if (confirm(`Are you sure you want to delete the configuration "${key}"?`)) {
+      deleteConfigMutation.mutate(key);
+    }
+  };
+
+  // Display loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Existing Configurations</h3>
+        
+        {Object.keys(configs).length === 0 ? (
+          <div className="text-center p-4 border rounded-md bg-neutral-50">
+            <p className="text-muted-foreground">No system configurations found.</p>
+          </div>
+        ) : (
+          <div className="border rounded-md overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Key</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Environment Variable</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(configs).map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell className="font-medium">{key}</TableCell>
+                    <TableCell>
+                      {typeof value === 'object' 
+                        ? <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">{JSON.stringify(value)}</code>
+                        : String(value)
+                      }
+                    </TableCell>
+                    <TableCell>{typeof value}</TableCell>
+                    <TableCell>
+                      {configs[key]?.useEnv ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          {configs[key]?.envName}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-500">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteConfig(key)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4 border-t pt-6">
+        <h3 className="text-lg font-medium">Add New Configuration</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="config-key">Configuration Key</Label>
+            <Input
+              id="config-key"
+              placeholder="Enter key name"
+              value={newConfigKey}
+              onChange={(e) => setNewConfigKey(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="config-value">Configuration Value</Label>
+            <Input
+              id="config-value"
+              placeholder="Enter value"
+              value={newConfigValue}
+              onChange={(e) => setNewConfigValue(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="config-type">Value Type</Label>
+            <Select 
+              value={newConfigType}
+              onValueChange={(value) => setNewConfigType(value)}
+            >
+              <SelectTrigger id="config-type">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="string">String</SelectItem>
+                <SelectItem value="number">Number</SelectItem>
+                <SelectItem value="boolean">Boolean</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="use-env"
+              checked={newConfigUseEnv}
+              onCheckedChange={setNewConfigUseEnv}
+            />
+            <Label htmlFor="use-env">Use Environment Variable</Label>
+          </div>
+
+          {newConfigUseEnv && (
+            <div className="space-y-2">
+              <Label htmlFor="env-name">Environment Variable Name</Label>
+              <Input
+                id="env-name"
+                placeholder="e.g. APP_CONFIG_KEY"
+                value={newConfigEnvName}
+                onChange={(e) => setNewConfigEnvName(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                If specified, the system will look for this environment variable and use its value instead
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            className="flex items-center gap-2"
+            onClick={handleSaveConfig}
+            disabled={isSaving || !newConfigKey.trim()}
+          >
+            {isSaving ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Configuration
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// TenantConfigManager component for managing tenant-specific configurations
+function TenantConfigManager() {
+  const [configs, setConfigs] = useState<Record<string, any>>({});
+  const [newConfigKey, setNewConfigKey] = useState('');
+  const [newConfigValue, setNewConfigValue] = useState('');
+  const [newConfigType, setNewConfigType] = useState<string>('string');
+  const [newConfigDescription, setNewConfigDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch all tenant configurations
+  const tenantConfigsQuery = useQuery({
+    queryKey: ['/api/tenant-config'],
+    onSuccess: (data) => {
+      setConfigs(data);
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error loading configurations",
+        description: "Failed to load tenant configurations.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  });
+
+  // Save configuration mutation
+  const saveConfigMutation = useMutation({
+    mutationFn: async (configData: {
+      key: string;
+      value: any;
+      valueType: string;
+      description?: string;
+    }) => {
+      const response = await apiRequest('POST', '/api/tenant-config', configData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuration saved",
+        description: "The tenant configuration has been updated successfully."
+      });
+      setNewConfigKey('');
+      setNewConfigValue('');
+      setNewConfigType('string');
+      setNewConfigDescription('');
+      setIsSaving(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/tenant-config'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error saving configuration",
+        description: "Failed to save tenant configuration.",
+        variant: "destructive"
+      });
+      setIsSaving(false);
+    }
+  });
+
+  // Delete configuration mutation
+  const deleteConfigMutation = useMutation({
+    mutationFn: async (key: string) => {
+      const response = await apiRequest('DELETE', `/api/tenant-config/${key}`);
+      return key;
+    },
+    onSuccess: (key) => {
+      toast({
+        title: "Configuration deleted",
+        description: `The configuration "${key}" has been removed.`
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/tenant-config'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting configuration",
+        description: "Failed to delete tenant configuration.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle saving a new configuration
+  const handleSaveConfig = () => {
+    if (!newConfigKey.trim()) {
+      toast({
+        title: "Validation error",
+        description: "Configuration key is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    saveConfigMutation.mutate({
+      key: newConfigKey,
+      value: newConfigValue,
+      valueType: newConfigType,
+      description: newConfigDescription || undefined
+    });
+  };
+
+  // Handle deleting a configuration
+  const handleDeleteConfig = (key: string) => {
+    if (confirm(`Are you sure you want to delete the configuration "${key}"?`)) {
+      deleteConfigMutation.mutate(key);
+    }
+  };
+
+  // Display loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Organization Settings</h3>
+        
+        {Object.keys(configs).length === 0 ? (
+          <div className="text-center p-4 border rounded-md bg-neutral-50">
+            <p className="text-muted-foreground">No tenant-specific configurations found.</p>
+          </div>
+        ) : (
+          <div className="border rounded-md overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Key</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(configs).map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell className="font-medium">{key}</TableCell>
+                    <TableCell>
+                      {typeof value === 'object' 
+                        ? <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">{JSON.stringify(value)}</code>
+                        : String(value)
+                      }
+                    </TableCell>
+                    <TableCell>{typeof value}</TableCell>
+                    <TableCell>
+                      {configs[key]?.description || <span className="text-gray-500">No description</span>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteConfig(key)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4 border-t pt-6">
+        <h3 className="text-lg font-medium">Add New Organization Setting</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="tenant-config-key">Setting Key</Label>
+            <Input
+              id="tenant-config-key"
+              placeholder="Enter key name"
+              value={newConfigKey}
+              onChange={(e) => setNewConfigKey(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tenant-config-value">Setting Value</Label>
+            <Input
+              id="tenant-config-value"
+              placeholder="Enter value"
+              value={newConfigValue}
+              onChange={(e) => setNewConfigValue(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="tenant-config-type">Value Type</Label>
+            <Select 
+              value={newConfigType}
+              onValueChange={(value) => setNewConfigType(value)}
+            >
+              <SelectTrigger id="tenant-config-type">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="string">String</SelectItem>
+                <SelectItem value="number">Number</SelectItem>
+                <SelectItem value="boolean">Boolean</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tenant-config-description">Description (Optional)</Label>
+            <Textarea
+              id="tenant-config-description"
+              placeholder="Enter description"
+              value={newConfigDescription}
+              onChange={(e) => setNewConfigDescription(e.target.value)}
+              className="h-20"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            className="flex items-center gap-2"
+            onClick={handleSaveConfig}
+            disabled={isSaving || !newConfigKey.trim()}
+          >
+            {isSaving ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Setting
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Form schema for creating and updating cycles
 const cycleFormSchema = z.object({
