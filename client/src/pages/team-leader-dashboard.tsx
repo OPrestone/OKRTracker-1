@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import Header from "@/components/header";
 import { 
   PieChart, Pie, Cell, LineChart, Line, BarChart as RechartsBarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
@@ -121,8 +122,8 @@ export default function TeamLeaderDashboard() {
   // Loading state
   if (isTeamLeader.isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
+      <DashboardLayout title="Team Leader Dashboard">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2">Checking permissions...</span>
         </div>
@@ -133,8 +134,8 @@ export default function TeamLeaderDashboard() {
   // Error state
   if (isTeamLeader.isError) {
     return (
-      <DashboardLayout>
-        <div className="container mx-auto py-6">
+      <DashboardLayout title="Team Leader Dashboard">
+        <div className="container mx-auto">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
@@ -148,9 +149,11 @@ export default function TeamLeaderDashboard() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto py-6">
-        <h1 className="text-3xl font-bold mb-6">Team Leader Dashboard</h1>
+    <DashboardLayout 
+      title="Team Leader Dashboard" 
+      subtitle="Team performance metrics and management tools"
+    >
+      <div className="container mx-auto">
         
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
