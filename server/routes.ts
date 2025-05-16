@@ -2433,10 +2433,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectives = await storage.getObjectivesByTeam(teamId);
       
       // Filter objectives by current tenant
+      // Debug message to verify we're getting objectives by team correctly
+      console.log(`Getting objectives for team ${teamId}, found ${objectives.length} objectives`);
+      
       const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
+      console.log(`After tenant filtering, returning ${tenantObjectives.length} objectives`);
       
       res.json(tenantObjectives);
     } catch (error) {
+      console.error("Error getting team objectives:", error);
       next(error);
     }
   });

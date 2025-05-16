@@ -1340,8 +1340,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getObjectivesByTeam(teamId: string): Promise<Objective[]> {
+    // Verify we are querying objectives, not teams (this is important!)
+    console.log(`Getting objectives for team ID: ${teamId}`);
+    
     // Select only columns that exist in the actual database
-    return db.select({
+    const result = await db.select({
       id: objectives.id,
       title: objectives.title,
       description: objectives.description,
@@ -1356,6 +1359,13 @@ export class DatabaseStorage implements IStorage {
       createdAt: objectives.createdAt,
       // Exclude updatedAt and statusReason which don't exist in the database
     }).from(objectives).where(eq(objectives.teamId, teamId));
+    
+    console.log(`Found ${result.length} objectives for team ${teamId}`);
+    if (result.length > 0) {
+      console.log(`Sample objective: ${JSON.stringify(result[0])}`);
+    }
+    
+    return result;
   }
 
   async getObjectivesByTimeframe(timeframeId: string): Promise<Objective[]> {
