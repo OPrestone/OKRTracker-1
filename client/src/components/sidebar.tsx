@@ -1062,6 +1062,23 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 Timeframes
               </Link>
             </div>
+
+            <div
+              className={cn(
+                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                location === "/configuration/system-settings"
+                  ? "text-white font-medium bg-indigo-900/40"
+                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+              )}
+            >
+              <Link
+                href={getLink("/configuration/system-settings")}
+                className="w-full flex items-center"
+              >
+                <Settings className="h-4 w-4 mr-2 text-indigo-400" />
+                System Settings
+              </Link>
+            </div>
           </div>
         )}
       </nav>
