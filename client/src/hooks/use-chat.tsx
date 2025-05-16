@@ -38,8 +38,8 @@ type ChatRoomMember = {
 };
 
 type Attachment = {
-  id: number;
-  messageId: number;
+  id: string;
+  messageId: string;
   type: string;
   url: string;
   name: string;
@@ -48,19 +48,19 @@ type Attachment = {
 };
 
 type Reaction = {
-  userId: number;
-  messageId: number;
+  userId: string;
+  messageId: string;
   emoji: string;
   createdAt: string;
   user: User;
 };
 
 type Message = {
-  id: number;
-  chatRoomId: number;
-  userId: number;
+  id: string;
+  chatRoomId: string;
+  userId: string;
   content: string;
-  replyToId: number | null;
+  replyToId: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -71,7 +71,7 @@ type Message = {
 
 type MessageInput = {
   content: string;
-  replyToId?: number | null;
+  replyToId?: string | null;
 };
 
 type ReactionInput = {
@@ -161,12 +161,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [currentRoomId, setCurrentRoomId] = useState<number | null>(null);
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
-  const [typing, setTyping] = useState<Set<number>>(new Set());
-  const typingTimeoutRef = useRef<Record<number, NodeJS.Timeout>>({});
-  const [oldestMessageId, setOldestMessageId] = useState<number | null>(null);
+  const [typing, setTyping] = useState<Set<string>>(new Set());
+  const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [oldestMessageId, setOldestMessageId] = useState<string | null>(null);
   
   // Setup WebSocket
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
