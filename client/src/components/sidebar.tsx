@@ -616,18 +616,18 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <button
             onClick={() => setTenantsExpanded(!tenantsExpanded)}
             className={cn(
-              "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+              "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
               location === "/tenants" || location.startsWith("/tenants/") || location.includes("/organization/")
-                ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-                : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
             )}
           >
-            <Building className="mr-3 h-5 w-5 text-indigo-400" />
+            <Building className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Organizations</span>
             {tenantsExpanded ? (
-              <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
+              <ChevronUp className="ml-auto h-4 w-4 text-indigo-200" />
             ) : (
-              <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
+              <ChevronDown className="ml-auto h-4 w-4 text-indigo-200" />
             )}
           </button>
         )}
@@ -642,10 +642,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             {/* Global Organization Management */}
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center py-2 px-3 text-sm transition-all duration-200 rounded-md mb-1",
                 location === "/tenants"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white font-medium bg-indigo-800/60 shadow-sm"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link href="/tenants" className="w-full">
@@ -663,10 +663,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 </div>
                 <div
                   className={cn(
-                    "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                    "flex items-center py-2 px-3 text-sm transition-all duration-200 rounded-md mb-1",
                     (location.startsWith(`/${selectedTenant.id}`) && !location.includes("/subscription"))
-                      ? "text-white font-medium bg-indigo-900/40"
-                      : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                      ? "text-white font-medium bg-indigo-800/60 shadow-sm"
+                      : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
                   )}
                 >
                   <Link href={`/${selectedTenant.id}`} className="w-full">
@@ -677,10 +677,10 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
                 {/* Billing & Subscription */}
                 <div
                   className={cn(
-                    "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                    "flex items-center py-2 px-3 text-sm transition-all duration-200 rounded-md mb-1",
                     location.includes("/subscription")
-                      ? "text-white font-medium bg-indigo-900/40"
-                      : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                      ? "text-white font-medium bg-indigo-800/60 shadow-sm"
+                      : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
                   )}
                 >
                   <Link href={`/${selectedTenant.id}/subscription`} className="w-full">
@@ -693,8 +693,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         )}
 
         {/* Drag & Drop Section */}
-        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+        <div className="px-5 pt-5 pb-2 text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center">
+          <div className="h-4 w-0.5 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-600 mr-2.5 shadow-sm"></div>
           Drag & Drop Interfaces
         </div>
 
