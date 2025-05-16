@@ -307,6 +307,14 @@ const TeamCard = ({
                     </Button>
                   </div>
                 )}
+                
+                {/* Debug section */}
+                <details className="mt-3 text-xs bg-gray-50 p-2 rounded border border-gray-200">
+                  <summary className="font-medium cursor-pointer">Debug Objectives Data</summary>
+                  <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40 text-[10px]">
+                    {JSON.stringify(objectives, null, 2)}
+                  </pre>
+                </details>
               </div>
             ) : null}
           </div>
