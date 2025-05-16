@@ -885,14 +885,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {(isCurrentUserAdmin() || user?.isAdmin) && (
           <div
             className={cn(
-              "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+              "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
               location === "/configure"
-                ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-                : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
             )}
           >
             <Link href={getLink("/configure")} className="flex items-center w-full">
-              <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
+              <MessageSquare className="mr-3 h-4 w-4 text-indigo-200" />
               <span>Configurations</span>
             </Link>
           </div>
@@ -903,38 +903,38 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           <button
             onClick={() => setConfigExpanded(!configExpanded)}
             className={cn(
-              "w-full flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+              "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
               location.includes("/configuration/")
-                ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-                : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
             )}
           >
-            <Settings className="mr-3 h-5 w-5 text-indigo-400" />
+            <Settings className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Configure</span>
             {configExpanded ? (
-              <ChevronUp className="ml-auto h-4 w-4 text-gray-400" />
+              <ChevronUp className="ml-auto h-4 w-4 text-indigo-200" />
             ) : (
-              <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
+              <ChevronDown className="ml-auto h-4 w-4 text-indigo-200" />
             )}
           </button>
         )}
 
         {/* Configuration submenu - Only for admins/owners */}
         {configExpanded && (isCurrentUserAdmin() || user?.isAdmin) && (
-          <div className="pl-11 mt-1 mb-1">
+          <div className="pl-8 mt-1 mb-1 space-y-1">
             <div
               className={cn(
-                "flex items-center pl-4 pr-4 py-2 text-sm transition-colors duration-200 rounded-sm",
+                "flex items-center py-2 text-sm transition-all duration-200 rounded-md mx-2 px-3",
                 location === "/configuration/general"
-                  ? "text-white font-medium bg-indigo-900/40"
-                  : "text-gray-400 hover:text-white hover:bg-indigo-900/30",
+                  ? "text-white font-medium bg-indigo-800/50 shadow-sm"
+                  : "text-slate-300 hover:text-white hover:bg-indigo-900/40",
               )}
             >
               <Link
                 href={getLink("/configuration/general")}
                 className="w-full flex items-center"
               >
-                <Settings className="h-4 w-4 mr-2 text-indigo-400" />
+                <Settings className="h-3 w-3 mr-2 text-indigo-300" />
                 General Settings
               </Link>
             </div>
