@@ -85,16 +85,15 @@ export async function createTestTeamLeader(req: Request, res: Response) {
       })
       .returning();
     
-    // Assign user as team member and leader
+    // Connect user to team by setting the teamId field in the users table
+    // Since we don't have a separate team_members table, users are part of teams directly
     await db
-      .insert(teamMembers)
-      .values({
-        id: ulid(),
-        userId: newUser.id,
-        teamId: team.id,
-        role: "leader",
-        createdAt: new Date()
-      });
+      .update(users)
+      .set({
+        teamId: team.id, 
+        role: "team_leader" // Set the user's role to team leader
+      })
+      .where(eq(users.id, newUser.id));
       
     // Create some test team members
     const testMembers = [
@@ -115,8 +114,11 @@ export async function createTestTeamLeader(req: Request, res: Response) {
           password: await hashPassword("password123"),
           firstName: testMember.name.split(' ')[0],
           lastName: testMember.name.split(' ')[1],
-          role: "member",
+          role: testMember.role,
+          teamId: team.id, // Assign directly to the team
           createdAt: new Date(),
+          name: testMember.name, // Set full name
+          tenantId: tenantId // Set tenant ID
         })
         .returning();
       
@@ -128,17 +130,6 @@ export async function createTestTeamLeader(req: Request, res: Response) {
           tenantId: tenantId,
           role: "member",
           isDefault: true,
-          createdAt: new Date()
-        });
-      
-      // Assign to team
-      await db
-        .insert(teamMembers)
-        .values({
-          id: ulid(),
-          userId: member.id,
-          teamId: team.id,
-          role: testMember.role,
           createdAt: new Date()
         });
     }

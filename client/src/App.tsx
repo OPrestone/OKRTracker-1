@@ -134,6 +134,7 @@ function AppRoutes() {
       
       {/* Dashboards */}
       <ProtectedRoute path="/team-leader-dashboard" component={TeamLeaderDashboard} />
+      <ProtectedRoute path="/test-team-leader" component={TestTeamLeader} />
       <ProtectedRoute path="/checkins" component={Checkins} />
       <ProtectedRoute path="/one-on-one-meetings" component={OneOnOneMeetings} />
       
