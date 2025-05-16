@@ -1076,24 +1076,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
-      // Ensure permissions is an array if provided
-      let permissions = req.body.permissions;
-      if (permissions && !Array.isArray(permissions)) {
-        // If it's an object with keys, convert to array of values
-        permissions = Object.values(permissions);
-      } else if (!permissions) {
-        permissions = [];
+      // Transform permissions object to array of strings
+      // The frontend sends permissions as an object like {createOKRs: true, editAllOKRs: false}
+      // We need to convert it to an array of strings like ['createOKRs']
+      let permissionsArray: string[] = [];
+      if (req.body.permissions && typeof req.body.permissions === 'object') {
+        Object.entries(req.body.permissions).forEach(([key, value]) => {
+          if (value === true) {
+            permissionsArray.push(key);
+          }
+        });
       }
       
       // Ensure tenant_id is set in the validated data
       const validatedData = insertAccessGroupSchema.parse({
-        ...req.body,
-        permissions,
+        name: req.body.name,
+        description: req.body.description,
+        permissions: permissionsArray,
         tenantId
       });
       
       const accessGroup = await storage.createAccessGroup(validatedData);
       res.status(201).json(accessGroup);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update access group endpoint
+  app.put("/api/access-groups/:id", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Get the existing access group
+      const existingAccessGroup = await storage.getAccessGroup(id);
+      
+      if (!existingAccessGroup) {
+        return res.status(404).json({ error: "Access group not found" });
+      }
+      
+      // Verify tenant access
+      if (existingAccessGroup.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this access group" });
+      }
+      
+      // Transform permissions object to array of strings
+      let permissionsArray: string[] = [];
+      if (req.body.permissions && typeof req.body.permissions === 'object') {
+        Object.entries(req.body.permissions).forEach(([key, value]) => {
+          if (value === true) {
+            permissionsArray.push(key);
+          }
+        });
+      }
+      
+      // Build the update data
+      const updateData = {
+        name: req.body.name,
+        description: req.body.description,
+        permissions: permissionsArray
+      };
+      
+      // Update the access group
+      const updatedAccessGroup = await storage.updateAccessGroup(id, updateData);
+      res.json(updatedAccessGroup);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Also support PATCH for updates
+  app.patch("/api/access-groups/:id", withTenant, async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const id = req.params.id;
+      const tenantId = req.tenantId;
+      
+      // Get the existing access group
+      const existingAccessGroup = await storage.getAccessGroup(id);
+      
+      if (!existingAccessGroup) {
+        return res.status(404).json({ error: "Access group not found" });
+      }
+      
+      // Verify tenant access
+      if (existingAccessGroup.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this access group" });
+      }
+      
+      // Transform permissions object to array of strings if it exists in the request
+      let updateData: any = { ...req.body };
+      delete updateData.id; // Remove id from update data
+      
+      if (updateData.permissions && typeof updateData.permissions === 'object') {
+        const permissionsArray: string[] = [];
+        Object.entries(updateData.permissions).forEach(([key, value]) => {
+          if (value === true) {
+            permissionsArray.push(key);
+          }
+        });
+        updateData.permissions = permissionsArray;
+      }
+      
+      // Update the access group
+      const updatedAccessGroup = await storage.updateAccessGroup(id, updateData);
+      res.json(updatedAccessGroup);
     } catch (error) {
       next(error);
     }

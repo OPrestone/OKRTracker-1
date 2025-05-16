@@ -848,7 +848,13 @@ export const financialBudgetsRelations = relations(financialBudgets, ({ one }) =
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });
-export const insertAccessGroupSchema = createInsertSchema(accessGroups).omit({ id: true, createdAt: true, updatedAt: true });
+// Custom schema for access groups to ensure permissions is properly handled as an array
+export const insertAccessGroupSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  permissions: z.array(z.string()),
+  tenantId: z.string()
+});
 export const insertCadenceSchema = createInsertSchema(cadences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTimeframeSchema = createInsertSchema(timeframes).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertObjectiveSchema = createInsertSchema(objectives).omit({ id: true, createdAt: true, updatedAt: true });
