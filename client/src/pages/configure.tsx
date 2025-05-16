@@ -4281,6 +4281,39 @@ export default function Configure() {
                 </CardContent>
               </Card>
             </TabsContent>
+            
+            {/* System Configuration */}
+            <TabsContent value="system-config" className="space-y-6 pt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Server className="h-5 w-5" />
+                    System Configuration
+                  </CardTitle>
+                  <CardDescription>
+                    Manage system-wide settings and environment variables
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SystemConfigManager />
+                </CardContent>
+              </Card>
+              
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="h-5 w-5" />
+                    Tenant Configuration
+                  </CardTitle>
+                  <CardDescription>
+                    Manage organization-specific settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TenantConfigManager />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           {/* Integrations */}
