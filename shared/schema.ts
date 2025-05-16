@@ -210,8 +210,7 @@ export const chatRooms = pgTableWithUlid("chat_rooms", {
   name: text("name"),
   type: chatRoomTypeEnum("type").default("group").notNull(),
   description: text("description"),
-  createdBy: integer("created_by").notNull(),
-  // Added tenant_id column that now exists in the database
+  createdBy: text("created_by").notNull(), // Changed to text type for string IDs
   tenantId: text("tenant_id").references(() => tenants.id),
   // Note: These columns don't exist in the actual database, but we keep them in the schema
   // for potential future migrations
