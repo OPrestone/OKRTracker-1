@@ -1061,6 +1061,8 @@ const accountSettingsSchema = z.object({
   phone: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   industry: z.string().min(1, "Industry is required"),
+  streetAddress: z.string().min(1, "Street address is required"),
+  addressLine2: z.string().optional(),
   country: z.string().min(1, "Country is required"),
   state: z.string().min(1, "State/Province is required"),
   city: z.string().min(1, "City is required"),
