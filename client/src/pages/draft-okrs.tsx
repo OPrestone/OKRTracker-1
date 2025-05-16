@@ -118,8 +118,27 @@ export default function DraftOKRs() {
   const { data: draftObjectives, isLoading, error } = useQuery<DraftObjective[]>({
     queryKey: ["/api/objectives", "draft"],
     queryFn: async () => {
-      const tenantId = sessionStorage.getItem('selectedTenantId') || '';
-      const response = await fetch(`/api/objectives?status=draft&tenantId=${tenantId}`);
+      // Get the tenant ID from context, localStorage, or the default tenant
+      const tenantId = sessionStorage.getItem('selectedTenantId') || localStorage.getItem('defaultTenantId') || '';
+      
+      if (!tenantId) {
+        // If no tenant ID is available, fetch the user's tenants first
+        const userResponse = await fetch('/api/user');
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.defaultTenant) {
+            localStorage.setItem('defaultTenantId', userData.defaultTenant);
+          }
+        }
+      }
+      
+      // Try again with the tenant ID (might have been set in the previous step)
+      const effectiveTenantId = tenantId || localStorage.getItem('defaultTenantId') || '';
+      if (!effectiveTenantId) {
+        throw new Error("No tenant selected. Please select an organization first.");
+      }
+      
+      const response = await fetch(`/api/objectives?status=draft&tenantId=${effectiveTenantId}`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch draft objectives");
@@ -132,7 +151,8 @@ export default function DraftOKRs() {
         ...objective,
         keyResults: objective.keyResults || []
       }));
-    }
+    },
+    retry: 1
   });
 
   const handleEdit = (objective: DraftObjective) => {
