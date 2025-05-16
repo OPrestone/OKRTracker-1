@@ -2972,20 +2972,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const memberIds = req.body.memberIds.filter((id: string) => id !== req.user.id);
         
         if (memberIds.length > 0) {
-          // Check if these users belong to the current tenant
-          const tenantUsersCount = await db.select({ count: sql`count(*)` })
+          // Find all users that belong to the current tenant
+          const tenantUsers = await db.select()
             .from(usersToTenants)
             .where(
               and(
                 eq(usersToTenants.tenantId, tenantId),
                 inArray(usersToTenants.userId, memberIds)
               )
-            )
-            .then(result => Number(result[0]?.count || 0));
+            );
           
-          // If the count doesn't match the number of requested members, some users don't belong to this tenant
-          if (tenantUsersCount !== memberIds.length) {
-            return res.status(403).json({ error: "Some users don't belong to the current organization" });
+          const validUserIds = tenantUsers.map(u => u.userId);
+          
+          // Filter out member IDs that don't belong to the tenant
+          req.body.memberIds = [req.user.id, ...validUserIds];
+          
+          // If no valid members found (besides the creator), log a warning
+          if (validUserIds.length === 0 && memberIds.length > 0) {
+            console.warn("No valid members found for chat room creation in tenant:", tenantId);
           }
         }
       }

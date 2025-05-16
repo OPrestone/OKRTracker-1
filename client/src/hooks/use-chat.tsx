@@ -586,7 +586,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           return {
             ...msg,
             reactions: msg.reactions.filter(r => 
-              !(r.userId === Number(user.id) && r.emoji === emoji)
+              !(r.userId === user.id && r.emoji === emoji)
             )
           };
         }
