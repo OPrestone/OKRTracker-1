@@ -173,7 +173,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
                     index < objectives.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <span>{objective.name}</span>
+                  <span>{objective.title}</span>
                   <Badge 
                     variant="outline"
                     className={
