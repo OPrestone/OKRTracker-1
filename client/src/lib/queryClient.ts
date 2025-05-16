@@ -96,12 +96,22 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     try {
       // Enhanced debugging: log the request attempt
-      console.log(`Making API request: ${queryKey[0]}`);
+      console.log(`Making API request with queryKey:`, queryKey);
+      
+      // Handle array-based path parameters
+      let url = '';
+      if (Array.isArray(queryKey) && queryKey.length > 1) {
+        // Convert array path parameters into a proper URL path
+        // e.g. ['/api/teams', '123', 'objectives'] => '/api/teams/123/objectives'
+        url = queryKey.join('/').replace(/\/+/g, '/');
+        console.log(`Constructed URL from array path: ${url}`);
+      } else {
+        url = queryKey[0] as string;
+      }
       
       // Add tenant query parameter if available
       const tenantId = getCurrentTenantFromUrl();
-      const urlKey = queryKey[0] as string;
-      const urlObj = new URL(urlKey, window.location.origin);
+      const urlObj = new URL(url, window.location.origin);
       
       // Only add tenantId if it exists and not already in the URL
       if (tenantId && !urlObj.searchParams.has('tenantId')) {
