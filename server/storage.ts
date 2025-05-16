@@ -887,12 +887,40 @@ export class DatabaseStorage implements IStorage {
 
   // Access Groups
   async createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup> {
-    const [newAccessGroup] = await db.insert(accessGroups).values(accessGroup).returning();
+    // Create a trimmed version with only the fields that exist in the database
+    const accessGroupToInsert = {
+      name: accessGroup.name,
+      description: accessGroup.description,
+      permissions: accessGroup.permissions,
+      tenantId: accessGroup.tenantId,
+    };
+    
+    const [newAccessGroup] = await db.insert(accessGroups)
+      .values(accessGroupToInsert)
+      .returning({
+        id: accessGroups.id,
+        name: accessGroups.name,
+        description: accessGroups.description,
+        permissions: accessGroups.permissions,
+        tenantId: accessGroups.tenantId,
+        createdAt: accessGroups.createdAt
+      });
+      
     return newAccessGroup;
   }
 
   async getAccessGroup(id: string): Promise<AccessGroup | undefined> {
-    const [accessGroup] = await db.select().from(accessGroups).where(eq(accessGroups.id, id));
+    const [accessGroup] = await db.select({
+      id: accessGroups.id,
+      name: accessGroups.name,
+      description: accessGroups.description,
+      permissions: accessGroups.permissions,
+      tenantId: accessGroups.tenantId,
+      createdAt: accessGroups.createdAt
+    })
+    .from(accessGroups)
+    .where(eq(accessGroups.id, id));
+    
     return accessGroup;
   }
 
@@ -916,8 +944,17 @@ export class DatabaseStorage implements IStorage {
   async getAccessGroupsByTenant(tenantId: string): Promise<AccessGroup[]> {
     try {
       console.log(`Getting access groups for tenant: ${tenantId}`);
-      return db.select().from(accessGroups)
-        .where(eq(accessGroups.tenantId, tenantId));
+      // Select specific columns to avoid issues with schema mismatches
+      return db.select({
+        id: accessGroups.id,
+        name: accessGroups.name,
+        description: accessGroups.description,
+        permissions: accessGroups.permissions,
+        tenantId: accessGroups.tenantId,
+        createdAt: accessGroups.createdAt
+      })
+      .from(accessGroups)
+      .where(eq(accessGroups.tenantId, tenantId));
     } catch (error) {
       console.error(`Error getting access groups for tenant ${tenantId}:`, error);
       return [];

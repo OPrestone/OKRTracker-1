@@ -431,34 +431,34 @@ const AccessGroups = () => {
                     <div className="space-y-2">
                       <div className="flex flex-col space-y-1.5">
                         <h4 className="text-sm font-medium text-indigo-700">Key Permissions:</h4>
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                           {(group.permissions as any)?.createOKRs && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
                               <span className="text-slate-700">Create OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.editAllOKRs && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
                               <span className="text-slate-700">Edit All OKRs</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageUsers && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
                               <span className="text-slate-700">Manage Users</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageTeams && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
                               <span className="text-slate-700">Manage Teams</span>
                             </div>
                           )}
                           {(group.permissions as any)?.manageSettings && (
                             <div className="flex items-center gap-2 text-sm">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm"></div>
                               <span className="text-slate-700">Manage System Settings</span>
                             </div>
                           )}
@@ -468,7 +468,7 @@ const AccessGroups = () => {
                           !(group.permissions as any)?.manageTeams && 
                           !(group.permissions as any)?.manageSettings && (
                             <div className="flex items-center gap-2 text-sm text-slate-500">
-                              <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-slate-400 to-slate-300 shadow-sm"></div>
                               <span>Basic access only</span>
                             </div>
                           )}
