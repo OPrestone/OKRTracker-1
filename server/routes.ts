@@ -1076,9 +1076,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tenantId = req.tenantId;
       
+      // Ensure permissions is an array if provided
+      let permissions = req.body.permissions;
+      if (permissions && !Array.isArray(permissions)) {
+        // If it's an object with keys, convert to array of values
+        permissions = Object.values(permissions);
+      } else if (!permissions) {
+        permissions = [];
+      }
+      
       // Ensure tenant_id is set in the validated data
       const validatedData = insertAccessGroupSchema.parse({
         ...req.body,
+        permissions,
         tenantId
       });
       
