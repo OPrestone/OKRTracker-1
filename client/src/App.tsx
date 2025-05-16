@@ -101,6 +101,7 @@ function AppRoutes() {
   return (
     <Switch>
       <AuthGuard path="/auth" component={AuthPage} />
+      <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-login" component={TestLoginPage} />
       <Route path="/login-test" component={LoginTest} />
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
