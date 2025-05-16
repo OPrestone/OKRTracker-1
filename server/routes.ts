@@ -3011,7 +3011,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chatRoomId: chatRoom.id,
         userId: req.user.id,
         role: "admin",
-        lastRead: new Date(),
         joinedAt: new Date()
       });
       
@@ -3021,11 +3020,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.body.memberIds.map(async (userId: string) => {
             if (userId !== req.user.id) { // Skip creator as they're already added
               await storage.addUserToChatRoom({
-                id: createId(), // Generate a unique ID for each member
+                id: ulid(), // Generate a unique ID for each member
                 chatRoomId: chatRoom.id,
                 userId,
                 role: "member",
-                lastRead: new Date(),
                 joinedAt: new Date()
               });
             }
