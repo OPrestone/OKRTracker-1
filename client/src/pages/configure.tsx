@@ -1054,7 +1054,27 @@ function CyclesList() {
   );
 }
 
+// Define the Account Settings form schema with validation
+const accountSettingsSchema = z.object({
+  companyName: z.string().min(2, "Company name is required"),
+  adminEmail: z.string().email("Please enter a valid email address"),
+  phone: z.string().optional(),
+  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  industry: z.string().min(1, "Industry is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State/Province is required"),
+  city: z.string().min(1, "City is required"),
+  timezone: z.string().min(1, "Timezone is required"),
+  dateFormat: z.string().min(1, "Date format is required"),
+});
+
+// Account Settings form submission type
+type AccountSettingsFormValues = z.infer<typeof accountSettingsSchema>;
+
 export default function Configure() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   // General settings states
   const [isGeneralSaving, setIsGeneralSaving] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -1070,8 +1090,6 @@ export default function Configure() {
   const [isSecuritySaving, setIsSecuritySaving] = useState(false);
   const [isLdapSaving, setIsLdapSaving] = useState(false);
   const [isSsoSaving, setIsSsoSaving] = useState(false);
-
-
   const [isPermissionSaving, setIsPermissionSaving] = useState(false);
   const [isEmailTemplateSaving, setIsEmailTemplateSaving] = useState(false);
   const [isTeamSaving, setIsTeamSaving] = useState(false);
@@ -1087,7 +1105,66 @@ export default function Configure() {
   const [isGoogleCalendarConnecting, setIsGoogleCalendarConnecting] = useState(false);
   const [isJiraConnecting, setIsJiraConnecting] = useState(false);
 
+  // Account Settings form
+  const accountForm = useForm<AccountSettingsFormValues>({
+    resolver: zodResolver(accountSettingsSchema),
+    defaultValues: {
+      companyName: "Acme Corporation",
+      adminEmail: "admin@acmecorp.com",
+      phone: "+1 (555) 123-4567",
+      website: "https://acmecorp.com",
+      industry: "technology",
+      country: "us",
+      state: "CA",
+      city: "San Francisco",
+      timezone: "America/Los_Angeles",
+      dateFormat: "mm-dd-yyyy",
+    }
+  });
 
+  // Account Settings form submission handler
+  const accountSettingsMutation = useMutation({
+    mutationFn: async (data: AccountSettingsFormValues) => {
+      const response = await apiRequest("POST", "/api/account-settings", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account settings saved",
+        description: "Your account settings have been updated successfully.",
+      });
+      setIsGeneralSaving(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/account-settings'] });
+    },
+    onError: (error) => {
+      console.error("Error saving account settings:", error);
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your account settings. Please try again.",
+        variant: "destructive",
+      });
+      setIsGeneralSaving(false);
+    }
+  });
+
+  // Handler for saving account settings
+  const handleSaveAccountSettings = (data: AccountSettingsFormValues) => {
+    setIsGeneralSaving(true);
+    
+    // Check if logo is required but not uploaded
+    if (!logoFile) {
+      toast({
+        title: "Logo required",
+        description: "Please upload a company logo to save your settings.",
+        variant: "destructive",
+      });
+      setIsGeneralSaving(false);
+      return;
+    }
+    
+    // Submit the account settings form
+    accountSettingsMutation.mutate(data);
+  };
 
   // Handler for saving general settings
   const handleSaveGeneralSettings = () => {
