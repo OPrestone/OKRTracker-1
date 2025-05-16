@@ -67,17 +67,20 @@ import {
 // Define TeamObjective interface
 interface TeamObjective {
   id: string;
-  title: string;  // Primary title field
-  name: string;   // Alternative name field (some components may use this)
-  description: string;
-  level: string;
-  ownerId: string;
-  teamId: string;
-  timeframeId: string;
-  status: "on_track" | "at_risk" | "behind" | "completed";
+  title: string;  // Primary title field 
+  description?: string;
+  level?: string;
+  ownerId?: string;
+  teamId?: string;
+  timeframeId?: string;
+  status?: "on_track" | "at_risk" | "behind" | "completed";
   progress: number;
-  parentId: string | null;
-  createdAt: string;
+  parentId?: string | null;
+  createdAt?: string;
+  // Add computed property that maps title to name for backward compatibility
+  get name(): string {
+    return this.title;
+  }
 }
 
 const TeamMember = ({ user }: { user: User }) => {
