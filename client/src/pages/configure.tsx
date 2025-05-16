@@ -1106,10 +1106,11 @@ const accountSettingsSchema = z.object({
 type AccountSettingsFormValues = z.infer<typeof accountSettingsSchema>;
 
 export default function Configure() {
+  // State for account settings confirmation dialog
+  const [showAccountSettingsConfirmation, setShowAccountSettingsConfirmation] = useState(false);
+  const [pendingAccountSettingsData, setPendingAccountSettingsData] = useState<AccountSettingsFormValues | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // We'll use the account form that's defined below
   
   // We'll use the account settings mutation that's defined below
   
@@ -2249,6 +2250,8 @@ export default function Configure() {
                   </div>
                     </form>
                   </Form>
+                  
+
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                   <div className="flex flex-col md:flex-row gap-4 items-center border rounded-lg p-3 bg-gray-50 w-full md:w-auto">
