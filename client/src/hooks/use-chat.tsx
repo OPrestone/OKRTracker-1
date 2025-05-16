@@ -560,13 +560,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Remove reaction mutation
   const removeReactionMutation = useMutation({
-    mutationFn: async ({ messageId, emoji }: { messageId: number, emoji: string }) => {
-      const response = await fetch(`/api/chat/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`, {
-        method: 'DELETE'
+    mutationFn: async ({ messageId, emoji }: { messageId: string, emoji: string }) => {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/messages/${messageId}/reactions/${encodeURIComponent(emoji)}?tenantId=${currentTenantId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to remove reaction');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to remove reaction');
       }
     },
     onSuccess: (_, { messageId, emoji }) => {
@@ -593,13 +603,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to remove a reaction
-  const removeReaction = useCallback(async (messageId: number, emoji: string) => {
+  const removeReaction = useCallback(async (messageId: string, emoji: string) => {
     await removeReactionMutation.mutateAsync({ messageId, emoji });
   }, [removeReactionMutation]);
   
   // Create chat room mutation
   const createChatRoomMutation = useMutation({
-    mutationFn: async ({ name, type, memberIds, tenantId }: { name: string, type: string, memberIds: number[], tenantId: string }) => {
+    mutationFn: async ({ name, type, memberIds, tenantId }: { name: string, type: string, memberIds: string[], tenantId: string }) => {
       if (!tenantId) {
         throw new Error('No tenant ID available. Please select an organization first.');
       }
@@ -661,16 +671,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Add member mutation
   const addMemberMutation = useMutation({
     mutationFn: async ({ roomId, userId }: { roomId: string, userId: string }) => {
-      const response = await fetch(`/api/chat/rooms/${roomId}/members`, {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/rooms/${roomId}/members?tenantId=${currentTenantId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ userId, role: 'member' })
+        body: JSON.stringify({ 
+          userId, 
+          role: 'member',
+          tenantId: currentTenantId
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to add member to chat room');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to add member to chat room');
       }
       
       return response.json();
@@ -694,7 +715,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to add a member to a chat room
-  const addMemberToChatRoom = useCallback(async (roomId: number, userId: number) => {
+  const addMemberToChatRoom = useCallback(async (roomId: string, userId: string) => {
     await addMemberMutation.mutateAsync({ roomId, userId });
   }, [addMemberMutation]);
   
