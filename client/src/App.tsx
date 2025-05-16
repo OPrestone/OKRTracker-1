@@ -21,6 +21,7 @@ import Timeframes from "@/pages/configuration/timeframes";
 import Cycles from "@/pages/configuration/cycles";
 import StatusSettings from "@/pages/configuration/status-settings";
 import AccessGroups from "@/pages/configuration/access-groups";
+import SystemSettings from "@/pages/configuration/system-settings";
 import AuthPage from "@/pages/auth-page";
 import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
@@ -200,6 +201,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/timeframes" component={Timeframes} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/access-groups" component={AccessGroups} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/configuration/system-settings" component={SystemSettings} />
       
       {/* Legacy routes - keep for backward compatibility */}
       {/* ID-based routes - these need to be later to avoid catching slug-based routes */}
@@ -242,6 +244,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/configuration/timeframes" component={Timeframes} />
       <ProtectedRoute path="/organization/:organisation/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/organization/:organisation/configuration/access-groups" component={AccessGroups} />
+      <ProtectedRoute path="/organization/:organisation/configuration/system-settings" component={SystemSettings} />
       {/* Onboarding */}
       <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
       <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
@@ -265,6 +268,7 @@ function AppRoutes() {
       <ProtectedRoute path="/configuration/timeframes" component={Timeframes} />
       <ProtectedRoute path="/configuration/cycles" component={Cycles} />
       <ProtectedRoute path="/configuration/access-groups" component={AccessGroups} />
+      <ProtectedRoute path="/configuration/system-settings" component={SystemSettings} />
       <Route component={NotFound} />
     </Switch>
   );
