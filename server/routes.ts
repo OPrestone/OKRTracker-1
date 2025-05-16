@@ -840,15 +840,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate a username if not provided
         const generatedUsername = username || email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // Hash the temporary password
+        // Hash the password (either the provided one or a generated one)
         const { hashPassword } = await import('./auth');
-        const hashedPassword = await hashPassword(tempPassword);
+        const passwordToUse = req.body.password || tempPassword;
+        const hashedPassword = await hashPassword(passwordToUse);
         
         // Prepare user data
         const userData = {
           email,
           username: generatedUsername,
-          password: hashedPassword,
+          password: hashedPassword,  // Properly hashed password
           firstName: firstName || '',
           lastName: lastName || '',
           name,
