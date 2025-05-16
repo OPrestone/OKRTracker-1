@@ -4,6 +4,20 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { AccessGroup } from "@shared/schema";
+import { 
+  AlertCircle, 
+  CheckIcon, 
+  X, 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  ShieldQuestion,
+  Target, 
+  BarChart3, 
+  Settings2, 
+  FileBarChart,
+  Loader2
+} from "lucide-react";
 
 import {
   Card,
@@ -697,7 +711,7 @@ const AccessGroups = () => {
                       }}
                       className="text-xs h-8 px-3 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
                     >
-                      <Check className="h-3 w-3 mr-1" /> Select All
+                      <CheckIcon className="h-3 w-3 mr-1" /> Select All
                     </Button>
                     <Button 
                       type="button" 
@@ -986,10 +1000,13 @@ const AccessGroups = () => {
                 {createAccessGroupMutation.isPending ? (
                   <>
                     <span className="mr-2">Creating...</span>
-                    <span className="animate-spin">⟳</span>
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   </>
                 ) : (
-                  "Create Access Group"
+                  <>
+                    <CheckIcon className="h-4 w-4 mr-2" />
+                    Create Access Group
+                  </>
                 )}
               </Button>
             </DialogFooter>
