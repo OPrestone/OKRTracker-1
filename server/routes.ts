@@ -18,9 +18,11 @@ import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";
 import { stripeService } from "./services/stripe-service";
 import { tenantService } from "./services/tenant-service";
+import { configService } from "./services/config-service";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
+import { registerConfigRoutes } from "./routes/config-routes";
 
 // Extend Request interface to include tenantId
 declare global {
