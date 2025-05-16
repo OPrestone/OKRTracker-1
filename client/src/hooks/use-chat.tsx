@@ -368,7 +368,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ id, message }: { id: number, message: MessageInput }) => {
+    mutationFn: async ({ id, message }: { id: string, message: MessageInput }) => {
       const currentTenantId = getCurrentTenantId();
       
       if (!currentTenantId) {
@@ -423,7 +423,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   
   // Edit message mutation
   const editMessageMutation = useMutation({
-    mutationFn: async ({ id, content }: { id: number, content: string }) => {
+    mutationFn: async ({ id, content }: { id: string, content: string }) => {
       const currentTenantId = getCurrentTenantId();
       
       if (!currentTenantId) {
@@ -463,13 +463,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to edit a message
-  const editMessage = useCallback(async (id: number, content: string) => {
+  const editMessage = useCallback(async (id: string, content: string) => {
     await editMessageMutation.mutateAsync({ id, content });
   }, [editMessageMutation]);
   
   // Delete message mutation
   const deleteMessageMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const currentTenantId = getCurrentTenantId();
       
       if (!currentTenantId) {
@@ -501,23 +501,33 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to delete a message
-  const deleteMessage = useCallback(async (id: number) => {
+  const deleteMessage = useCallback(async (id: string) => {
     await deleteMessageMutation.mutateAsync(id);
   }, [deleteMessageMutation]);
   
   // Add reaction mutation
   const addReactionMutation = useMutation({
-    mutationFn: async ({ messageId, emoji }: { messageId: number, emoji: string }) => {
-      const response = await fetch(`/api/chat/messages/${messageId}/reactions`, {
+    mutationFn: async ({ messageId, emoji }: { messageId: string, emoji: string }) => {
+      const currentTenantId = getCurrentTenantId();
+      
+      if (!currentTenantId) {
+        throw new Error('No tenant ID available. Please select an organization first.');
+      }
+      
+      const response = await fetch(`/api/chat/messages/${messageId}/reactions?tenantId=${currentTenantId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ emoji })
+        body: JSON.stringify({ 
+          emoji,
+          tenantId: currentTenantId
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to add reaction');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to add reaction');
       }
       
       return response.json();
@@ -544,7 +554,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to add a reaction
-  const addReaction = useCallback(async (messageId: number, emoji: string) => {
+  const addReaction = useCallback(async (messageId: string, emoji: string) => {
     await addReactionMutation.mutateAsync({ messageId, emoji });
   }, [addReactionMutation]);
   
