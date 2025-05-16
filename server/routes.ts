@@ -3004,12 +3004,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const chatRoom = await storage.createChatRoom(validatedData);
       
-      // Add the creator as a member and admin
+      // Add the creator as a member and admin with a generated ID
       await storage.addUserToChatRoom({
+        id: createId(), // Generate a unique ID for the member
         chatRoomId: chatRoom.id,
         userId: req.user.id,
         role: "admin",
-        tenantId: tenantId
+        lastRead: new Date(),
+        joinedAt: new Date()
       });
       
       // Add other members if specified
@@ -3018,10 +3020,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.body.memberIds.map(async (userId: string) => {
             if (userId !== req.user.id) { // Skip creator as they're already added
               await storage.addUserToChatRoom({
+                id: createId(), // Generate a unique ID for each member
                 chatRoomId: chatRoom.id,
                 userId,
                 role: "member",
-                tenantId: tenantId
+                lastRead: new Date(),
+                joinedAt: new Date()
               });
             }
           })
