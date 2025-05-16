@@ -521,21 +521,21 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         )}
 
         {/* Team Engagement Menu */}
-        <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-          <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
+        <div className="px-5 pt-5 pb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wide flex items-center">
+          <span className="bg-indigo-400 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-400/50"></span>
           Team Engagement
         </div>
         
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/checkins" || location.includes("/checkins")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/checkins")} className="flex items-center w-full">
-            <CalendarCheck className="mr-3 h-5 w-5 text-indigo-400" />
+            <CalendarCheck className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Check-ins</span>
           </Link>
         </div>
@@ -543,17 +543,17 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* One-on-One Meetings */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/one-on-one-meetings" || location.includes("/one-on-one-meetings")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link
             href={getLink("/one-on-one-meetings")}
             className="flex items-center w-full"
           >
-            <Users className="mr-3 h-5 w-5 text-indigo-400" />
+            <Users className="mr-3 h-4 w-4 text-indigo-200" />
             <span>1:1 Meetings</span>
           </Link>
         </div>
@@ -561,14 +561,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* Team Communication */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/chat" || location.includes("/chat")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/chat")} className="flex items-center w-full">
-            <MessageSquare className="mr-3 h-5 w-5 text-indigo-400" />
+            <MessageSquare className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Chat</span>
           </Link>
         </div>
@@ -576,14 +576,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* Team Feedback */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/feedback-wall" || location.includes("/feedback-wall")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/feedback-wall")} className="flex items-center w-full">
-            <Award className="mr-3 h-5 w-5 text-indigo-400" />
+            <Award className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Feedback Wall</span>
           </Link>
         </div>
@@ -591,14 +591,14 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {/* Team Wellness */}
         <div
           className={cn(
-            "flex items-center pl-4 pr-4 py-2.5 text-sm font-medium transition-colors duration-200",
+            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
             location === "/wellness-pulse" || location.includes("/wellness-pulse")
-              ? "bg-indigo-900/30 text-white border-l-2 border-indigo-500"
-              : "text-gray-300 hover:bg-indigo-900/20 hover:text-white",
+              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
           )}
         >
           <Link href={getLink("/wellness-pulse")} className="flex items-center w-full">
-            <Activity className="mr-3 h-5 w-5 text-indigo-400" />
+            <Activity className="mr-3 h-4 w-4 text-indigo-200" />
             <span>Wellness Pulse</span>
           </Link>
         </div>
