@@ -1796,56 +1796,73 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserChatRooms(userId: string, tenantId?: string): Promise<(ChatRoom & { unreadCount: number })[]> {
-    // Get all chat rooms where the user is a member
-    const members = await db.select()
-      .from(chatRoomMembers)
-      .where(eq(chatRoomMembers.userId, userId));
-    
-    if (members.length === 0) {
-      return [];
-    }
-    
-    const roomIds = members.map(m => m.chatRoomId);
-    
-    // Get the rooms the user is a member of, filtering by tenant_id if provided
-    let roomsQuery = db.select().from(chatRooms).where(inArray(chatRooms.id, roomIds));
-    
-    // Filter by tenant_id if provided (using the newly added column)
-    if (tenantId) {
-      roomsQuery = roomsQuery.where(eq(chatRooms.tenantId, tenantId));
-    }
-    
-    const rooms = await roomsQuery;
-    
-    // If no rooms found, return empty array
-    if (rooms.length === 0) {
-      return [];
-    }
-    
-    // Get unread counts for each room
-    const results = await Promise.all(rooms.map(async (room) => {
-      const member = members.find(m => m.chatRoomId === room.id);
-      if (!member) {
-        return { ...room, unreadCount: 0 };
+    try {
+      // Get all chat rooms where the user is a member
+      const members = await db.select()
+        .from(chatRoomMembers)
+        .where(eq(chatRoomMembers.userId, userId));
+      
+      if (members.length === 0) {
+        return [];
       }
       
-      // Count messages newer than user's last read timestamp or joined time
-      const lastRead = member.lastRead || member.joinedAt;
+      const roomIds = members.map(m => m.chatRoomId);
       
-      const unreadMessages = await db.select({ count: count() })
-        .from(messages)
-        .where(
-          and(
-            eq(messages.chatRoomId, room.id),
-            gt(messages.createdAt, lastRead),
-            ne(messages.userId, userId) // Don't count user's own messages
-          )
-        );
+      // Get the rooms the user is a member of, filtering by tenant_id if provided
+      // Using a more explicit column selection to avoid issues with columns that might not exist
+      let roomsQuery = db.select({
+        id: chatRooms.id,
+        name: chatRooms.name,
+        type: chatRooms.type,
+        description: chatRooms.description,
+        createdBy: chatRooms.createdBy,
+        tenantId: chatRooms.tenantId,
+        createdAt: chatRooms.createdAt,
+        updatedAt: chatRooms.updatedAt
+      })
+      .from(chatRooms)
+      .where(inArray(chatRooms.id, roomIds));
       
-      return { ...room, unreadCount: unreadMessages[0]?.count || 0 };
-    }));
-    
-    return results;
+      // Filter by tenant_id if provided
+      if (tenantId) {
+        roomsQuery = roomsQuery.where(eq(chatRooms.tenantId, tenantId));
+      }
+      
+        const rooms = await roomsQuery;
+      
+      // If no rooms found, return empty array
+      if (rooms.length === 0) {
+        return [];
+      }
+      
+      // Get unread counts for each room
+      const results = await Promise.all(rooms.map(async (room) => {
+        const member = members.find(m => m.chatRoomId === room.id);
+        if (!member) {
+          return { ...room, unreadCount: 0 };
+        }
+        
+        // Count messages newer than user's last read timestamp or joined time
+        const lastRead = member.lastRead || member.joinedAt;
+        
+        const unreadMessages = await db.select({ count: count() })
+          .from(messages)
+          .where(
+            and(
+              eq(messages.chatRoomId, room.id),
+              gt(messages.createdAt, lastRead),
+              ne(messages.userId, userId) // Don't count user's own messages
+            )
+          );
+        
+        return { ...room, unreadCount: unreadMessages[0]?.count || 0 };
+      }));
+      
+      return results;
+    } catch (error) {
+      console.error('Error getting user chat rooms:', error);
+      return [];
+    }
   }
 
   async getChatRoomsByType(type: string, tenantId?: string): Promise<ChatRoom[]> {
