@@ -14,6 +14,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
+import { ulid } from "ulid";
 import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";
 import { stripeService } from "./services/stripe-service";
@@ -3006,7 +3007,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add the creator as a member and admin with a generated ID
       await storage.addUserToChatRoom({
-        id: createId(), // Generate a unique ID for the member
+        id: ulid(), // Generate a unique ID for the member
         chatRoomId: chatRoom.id,
         userId: req.user.id,
         role: "admin",

@@ -67,7 +67,10 @@ export class ConfigService {
       sql`SELECT id FROM tenant_settings WHERE tenant_id = ${tenantId} AND key = ${key} LIMIT 1`
     );
 
-    if (existingSettings.length > 0) {
+    // Convert raw SQL result to usable format
+    const rows = existingSettings.rows as any[] || [];
+    
+    if (rows.length > 0) {
       // Update existing setting
       await db.execute(sql`
         UPDATE tenant_settings
@@ -101,8 +104,9 @@ export class ConfigService {
     );
 
     const configs: Record<string, any> = {};
+    const rows = results.rows as any[] || [];
 
-    for (const setting of results) {
+    for (const setting of rows) {
       configs[setting.key] = this.parseValue(setting.value, setting.value_type);
     }
 
@@ -134,15 +138,17 @@ export class ConfigService {
       sql`SELECT value, value_type, use_env, env_name FROM system_settings WHERE key = ${key} LIMIT 1`
     );
 
-    if (result.length === 0) {
+    const rows = result.rows as any[] || [];
+    
+    if (rows.length === 0) {
       return defaultValue;
     }
 
-    const setting = result[0];
+    const setting = rows[0];
 
     // If setting is configured to use env variable and it exists, use that
     if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
-      return this.parseValue(process.env[setting.env_name], setting.value_type);
+      return this.parseValue(process.env[setting.env_name] || null, setting.value_type);
     }
 
     // Otherwise use the database value
@@ -183,8 +189,10 @@ export class ConfigService {
     const existingSettings = await db.execute(
       sql`SELECT id FROM system_settings WHERE key = ${key} LIMIT 1`
     );
-
-    if (existingSettings.length > 0) {
+    
+    const rows = existingSettings.rows as any[] || [];
+    
+    if (rows.length > 0) {
       // Update existing setting
       await db.execute(sql`
         UPDATE system_settings
@@ -219,12 +227,13 @@ export class ConfigService {
     );
 
     const configs: Record<string, any> = {};
+    const rows = results.rows as any[] || [];
 
-    for (const setting of results) {
+    for (const setting of rows) {
       // If setting uses env variable and it exists, use that
       if (setting.use_env && setting.env_name && process.env[setting.env_name]) {
         configs[setting.key] = this.parseValue(
-          process.env[setting.env_name],
+          process.env[setting.env_name] || null,
           setting.value_type
         );
       } else {
