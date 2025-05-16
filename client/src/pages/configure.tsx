@@ -1064,16 +1064,21 @@ const accountSettingsSchema = z.object({
   country: z.string().min(1, "Country is required"),
   state: z.string().min(1, "State/Province is required"),
   city: z.string().min(1, "City is required"),
+  postalCode: z.string().optional(),
   timezone: z.string().min(1, "Timezone is required"),
   dateFormat: z.string().min(1, "Date format is required"),
 });
 
-// Account Settings form submission type
+// Define form value type based on the schema
 type AccountSettingsFormValues = z.infer<typeof accountSettingsSchema>;
 
 export default function Configure() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // We'll use the account form that's defined below
+  
+  // We'll use the account settings mutation that's defined below
   
   // General settings states
   const [isGeneralSaving, setIsGeneralSaving] = useState(false);
@@ -1641,29 +1646,40 @@ export default function Configure() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <Form {...accountForm}>
+                    <form id="account-settings-form" onSubmit={accountForm.handleSubmit(handleSaveAccountSettings)} className="space-y-6">
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="company-name" className="flex items-center">
-                        Company Name <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Input
-                        id="company-name"
-                        defaultValue="Acme Corporation"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-email" className="flex items-center">
-                        Admin Email <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Input
-                        id="admin-email"
-                        defaultValue="admin@acmecorp.com"
-                        type="email"
-                        required
-                      />
-                    </div>
+                    <FormField
+                      control={accountForm.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center">
+                            Company Name <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={accountForm.control}
+                      name="adminEmail"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center">
+                            Admin Email <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   {/* Company Address */}
@@ -1695,18 +1711,24 @@ export default function Configure() {
                     </div>
 
                     {/* Country */}
-                    <div className="space-y-2">
-                      <Label htmlFor="country" className="flex items-center">
-                        Country <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                      <Select defaultValue="us" required>
-                        <SelectTrigger id="country">
-                          <SelectValue placeholder="Select country" />
-                        </SelectTrigger>
-                        <SelectContent className="h-[300px]">
-                          <SelectItem value="af">Afghanistan</SelectItem>
-                          <SelectItem value="al">Albania</SelectItem>
-                          <SelectItem value="dz">Algeria</SelectItem>
+                    <FormField
+                      control={accountForm.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center">
+                            Country <span className="text-red-500 ml-1">*</span>
+                          </FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="h-[300px]">
+                              <SelectItem value="af">Afghanistan</SelectItem>
+                              <SelectItem value="al">Albania</SelectItem>
+                              <SelectItem value="dz">Algeria</SelectItem>
                           <SelectItem value="as">American Samoa</SelectItem>
                           <SelectItem value="ad">Andorra</SelectItem>
                           <SelectItem value="ao">Angola</SelectItem>
@@ -1945,7 +1967,10 @@ export default function Configure() {
                           <SelectItem value="zw">Zimbabwe</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* State/Province */}
