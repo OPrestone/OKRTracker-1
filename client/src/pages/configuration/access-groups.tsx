@@ -427,10 +427,10 @@ const AccessGroups = () => {
                     </div>
                     <CardDescription className="text-slate-500 mt-1">{group.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pb-2">
                     <div className="space-y-2">
                       <div className="flex flex-col space-y-1.5">
-                        <h4 className="text-sm font-medium text-slate-700">Key Permissions:</h4>
+                        <h4 className="text-sm font-medium text-indigo-700">Key Permissions:</h4>
                         <div className="space-y-1.5">
                           {(group.permissions as any)?.createOKRs && (
                             <div className="flex items-center gap-2 text-sm">
@@ -476,15 +476,16 @@ const AccessGroups = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between pt-0 border-t border-slate-100">
-                    <div className="text-sm text-slate-500 flex items-center">
-                      <UsersRound className="h-4 w-4 mr-1.5 text-indigo-500 opacity-80" />
-                      <span>{group.userCount || 0} {group.userCount === 1 ? 'user' : 'users'}</span>
+                  <CardFooter className="flex justify-between pt-2 border-t border-slate-100/80">
+                    <div className="flex items-center text-xs bg-indigo-50/80 px-2.5 py-1 rounded-full text-indigo-700 shadow-sm">
+                      <UsersRound className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                      <span className="font-medium">{group.userCount || 0}</span>
+                      <span className="ml-1">{group.userCount === 1 ? 'user' : 'users'}</span>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50" 
+                      className="gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50/70 rounded-lg" 
                       onClick={() => handleEditAccessGroup(group)}
                     >
                       Edit
