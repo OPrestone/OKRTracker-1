@@ -1550,10 +1550,7 @@ export default function Configure() {
                 <CalendarRange className="h-4 w-4" />
                 <span>Cycles</span>
               </TabsTrigger>
-              <TabsTrigger value="system-config" className="flex items-center gap-2">
-                <Server className="h-4 w-4" />
-                <span>System Config</span>
-              </TabsTrigger>
+              {/* Removing System Config tab as it will be integrated into General tab */}
             </TabsList>
 
             {/* General Settings */}
@@ -2556,6 +2553,38 @@ export default function Configure() {
                     )}
                   </Button>
                 </CardFooter>
+              </Card>
+
+              {/* System Configuration - moved from separate tab to General tab */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Server className="h-5 w-5" />
+                    System Configuration
+                  </CardTitle>
+                  <CardDescription>
+                    Manage system-wide settings and environment variables
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <SystemConfigManager />
+                </CardContent>
+              </Card>
+              
+              {/* Tenant Configuration - moved from separate tab to General tab */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="h-5 w-5" />
+                    Tenant Configuration
+                  </CardTitle>
+                  <CardDescription>
+                    Manage organization-specific settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TenantConfigManager />
+                </CardContent>
               </Card>
             </TabsContent>
 
@@ -4282,38 +4311,7 @@ export default function Configure() {
               </Card>
             </TabsContent>
             
-            {/* System Configuration */}
-            <TabsContent value="system-config" className="space-y-6 pt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Server className="h-5 w-5" />
-                    System Configuration
-                  </CardTitle>
-                  <CardDescription>
-                    Manage system-wide settings and environment variables
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <SystemConfigManager />
-                </CardContent>
-              </Card>
-              
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building className="h-5 w-5" />
-                    Tenant Configuration
-                  </CardTitle>
-                  <CardDescription>
-                    Manage organization-specific settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <TenantConfigManager />
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* System Configuration tab removed - functionality moved to General tab */}
           </Tabs>
 
           {/* Integrations */}
