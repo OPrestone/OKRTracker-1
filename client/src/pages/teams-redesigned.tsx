@@ -295,7 +295,7 @@ const TeamCard = ({
                     key={objective.id}
                     className="flex items-center justify-between text-sm p-2 rounded-md bg-gray-50"
                   >
-                    <span className="line-clamp-1 mr-2">{objective.title || objective.name}</span>
+                    <span className="line-clamp-1 mr-2">{objective.title}</span>
                     <TeamStatusBadge status={objective.status} />
                   </div>
                 ))}
