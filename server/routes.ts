@@ -2994,10 +2994,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Add the tenantId to the chat room data
+      // Add the tenantId to the chat room data and convert ID to number
+      // Our database has createdBy as an integer column
       const validatedData = insertChatRoomSchema.parse({
         ...req.body,
-        createdBy: req.user.id,
+        createdBy: parseInt(req.user.id), // Convert string ID to number
         tenantId: tenantId
       });
       

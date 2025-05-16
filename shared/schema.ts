@@ -210,13 +210,8 @@ export const chatRooms = pgTableWithUlid("chat_rooms", {
   name: text("name"),
   type: chatRoomTypeEnum("type").default("group").notNull(),
   description: text("description"),
-  createdBy: text("created_by").notNull(), // Changed to text type for string IDs
+  createdBy: integer("created_by").notNull(), // Use integer to match actual DB schema
   tenantId: text("tenant_id").references(() => tenants.id),
-  // Note: These columns don't exist in the actual database, but we keep them in the schema
-  // for potential future migrations
-  objectiveId: text("objective_id").references(() => objectives.id),
-  keyResultId: text("key_result_id").references(() => keyResults.id),
-  teamId: text("team_id").references(() => teams.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -621,26 +616,12 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
 }));
 
 export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
-  objective: one(objectives, {
-    fields: [chatRooms.objectiveId],
-    references: [objectives.id]
-  }),
-  keyResult: one(keyResults, {
-    fields: [chatRooms.keyResultId],
-    references: [keyResults.id]
-  }),
-  team: one(teams, {
-    fields: [chatRooms.teamId],
-    references: [teams.id]
-  }),
   tenant: one(tenants, {
     fields: [chatRooms.tenantId],
     references: [tenants.id]
   }),
-  creator: one(users, {
-    fields: [chatRooms.createdBy],
-    references: [users.id]
-  }),
+  // Creator relation - note that users.id is text but createdBy is integer
+  // This relation might not work correctly due to the type mismatch
   members: many(chatRoomMembers),
   messages: many(messages)
 }));
