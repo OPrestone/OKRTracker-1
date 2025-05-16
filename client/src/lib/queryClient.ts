@@ -101,9 +101,15 @@ export const getQueryFn: <T>(options: {
       // Handle array-based path parameters
       let url = '';
       if (Array.isArray(queryKey) && queryKey.length > 1) {
-        // Convert array path parameters into a proper URL path
-        // e.g. ['/api/teams', '123', 'objectives'] => '/api/teams/123/objectives'
-        url = queryKey.join('/').replace(/\/+/g, '/');
+        // For routes like ['/api/teams', teamId, 'objectives']
+        let constructedUrl = queryKey[0] as string;
+        
+        // Handle nested routes with variable path parameters
+        for (let i = 1; i < queryKey.length; i++) {
+          constructedUrl += `/${queryKey[i]}`;
+        }
+        
+        url = constructedUrl;
         console.log(`Constructed URL from array path: ${url}`);
       } else {
         url = queryKey[0] as string;
