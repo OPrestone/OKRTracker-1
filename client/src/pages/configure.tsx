@@ -585,8 +585,14 @@ function TenantConfigManager() {
 const cycleFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   type: z.string(),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.date({
+    required_error: "Start date is required",
+    invalid_type_error: "Start date must be a valid date",
+  }),
+  endDate: z.date({
+    required_error: "End date is required",
+    invalid_type_error: "End date must be a valid date",
+  }),
   status: z.string().default("planning"),
   description: z.string().optional(),
   isDefault: z.boolean().default(false)
@@ -612,19 +618,32 @@ function CycleCreateDialog() {
 
   const createCycleMutation = useMutation({
     mutationFn: async (data: CycleFormValues) => {
-      const response = await fetch('/api/cycles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
+      try {
+        // Format the dates properly for API submission
+        const formattedData = {
+          ...data,
+          startDate: data.startDate instanceof Date ? data.startDate.toISOString() : data.startDate,
+          endDate: data.endDate instanceof Date ? data.endDate.toISOString() : data.endDate
+        };
+        
+        const response = await fetch('/api/cycles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formattedData)
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create cycle');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.message || 'Failed to create cycle');
+        }
+
+        return response.json();
+      } catch (err: any) {
+        console.error("Cycle creation request failed:", err);
+        throw new Error(err.message || "Failed to create cycle");
       }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -646,6 +665,7 @@ function CycleCreateDialog() {
   });
 
   function onSubmit(data: CycleFormValues) {
+    // Ensure dates are properly formatted for the server
     createCycleMutation.mutate(data);
   }
 
@@ -1135,18 +1155,31 @@ export default function Configure() {
   // Account Settings form submission handler
   const accountSettingsMutation = useMutation({
     mutationFn: async (data: AccountSettingsFormValues) => {
-      const response = await apiRequest("POST", "/api/account-settings", data);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/account-settings", data);
+        
+        // Check if response is ok before returning the JSON
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.message || `Error: ${response.status} ${response.statusText}`);
+        }
+        
+        return response.json();
+      } catch (err: any) {
+        console.error("Request failed:", err);
+        throw new Error(err.message || "Failed to save account settings");
+      }
     },
     onSuccess: () => {
       toast({
         title: "Account settings saved",
         description: "Your account settings have been updated successfully.",
+        variant: "success",
       });
       setIsGeneralSaving(false);
       queryClient.invalidateQueries({ queryKey: ['/api/account-settings'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error saving account settings:", error);
       toast({
         title: "Error saving settings",
