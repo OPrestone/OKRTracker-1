@@ -912,11 +912,23 @@ export class DatabaseStorage implements IStorage {
   async getAllAccessGroups(): Promise<AccessGroup[]> {
     return db.select().from(accessGroups);
   }
+  
+  async getAccessGroupsByTenant(tenantId: string): Promise<AccessGroup[]> {
+    try {
+      console.log(`Getting access groups for tenant: ${tenantId}`);
+      return db.select().from(accessGroups)
+        .where(eq(accessGroups.tenantId, tenantId));
+    } catch (error) {
+      console.error(`Error getting access groups for tenant ${tenantId}:`, error);
+      return [];
+    }
+  }
 
-  async assignUserToAccessGroup(userId: string, accessGroupId: string): Promise<void> {
+  async assignUserToAccessGroup(userId: string, accessGroupId: string, tenantId: string): Promise<void> {
     await db.insert(userAccessGroups).values({
       userId,
-      accessGroupId
+      accessGroupId,
+      tenantId
     });
   }
 

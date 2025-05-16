@@ -1054,18 +1054,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // app.get("/api/teams/:teamId/users" ...
 
   // Access Groups API
-  app.get("/api/access-groups", async (req, res, next) => {
+  app.get("/api/access-groups", withTenant, async (req, res, next) => {
     try {
-      const accessGroups = await storage.getAllAccessGroups();
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      const accessGroups = await storage.getAccessGroupsByTenant(tenantId);
       res.json(accessGroups);
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/access-groups", async (req, res, next) => {
+  app.post("/api/access-groups", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertAccessGroupSchema.parse(req.body);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const tenantId = req.tenantId;
+      
+      // Ensure tenant_id is set in the validated data
+      const validatedData = insertAccessGroupSchema.parse({
+        ...req.body,
+        tenantId
+      });
+      
       const accessGroup = await storage.createAccessGroup(validatedData);
       res.status(201).json(accessGroup);
     } catch (error) {
