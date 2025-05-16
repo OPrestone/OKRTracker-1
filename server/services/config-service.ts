@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { ulid } from "ulid";
 
 /**
@@ -19,16 +19,24 @@ export class ConfigService {
     key: string,
     defaultValue?: T
   ): Promise<T | undefined> {
-    const result = await db.execute(
-      sql`SELECT value, value_type FROM tenant_settings WHERE tenant_id = ${tenantId} AND key = ${key} LIMIT 1`
-    );
-
-    if (result.length === 0) {
+    try {
+      const result = await db.execute(
+        sql`SELECT value, value_type FROM tenant_settings WHERE tenant_id = ${tenantId} AND key = ${key} LIMIT 1`
+      );
+      
+      // Convert raw SQL result to array
+      const rows = result.rows as any[];
+      
+      if (!rows || rows.length === 0) {
+        return defaultValue;
+      }
+      
+      const setting = rows[0];
+      return this.parseValue(setting.value, setting.value_type);
+    } catch (error) {
+      console.error("Error getting tenant config:", error);
       return defaultValue;
     }
-
-    const setting = result[0];
-    return this.parseValue(setting.value, setting.value_type);
   }
 
   /**

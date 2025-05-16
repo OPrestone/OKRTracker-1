@@ -40,6 +40,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup test auth routes for debugging session issues
   setupTestAuthRoutes(app);
   
+  // Register configuration routes
+  registerConfigRoutes(app);
+  
   // Add a route for project-related diagnostics
   app.get("/api/project-diagnostics", async (req, res) => {
     try {
