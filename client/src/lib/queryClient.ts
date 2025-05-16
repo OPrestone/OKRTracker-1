@@ -101,17 +101,22 @@ export const getQueryFn: <T>(options: {
       // Handle array-based path parameters
       let url = '';
       if (Array.isArray(queryKey) && queryKey.length > 1) {
-        // For special case with teams objectives
-        if (queryKey[0] === '/api/teams' && queryKey.length === 3 && queryKey[2] === 'objectives') {
-          url = `/api/teams/${queryKey[1]}/objectives`;
-          console.log(`Special case - constructed team objectives URL: ${url}`);
+        // For nested routes like teams with objectives or users
+        if (queryKey[0] === '/api/teams' && queryKey.length === 3) {
+          if (queryKey[2] === 'objectives') {
+            url = `/api/teams/${queryKey[1]}/objectives`;
+            console.log(`Constructed team objectives URL: ${url}`);
+          } 
+          else if (queryKey[2] === 'users') {
+            url = `/api/teams/${queryKey[1]}/users`;
+            console.log(`Constructed team users URL: ${url}`);
+          }
+          else {
+            url = `${queryKey[0]}/${queryKey[1]}/${queryKey[2]}`;
+            console.log(`Constructed URL: ${url}`);
+          }
         }
-        // For special case with teams users
-        else if (queryKey[0] === '/api/teams' && queryKey.length === 3 && queryKey[2] === 'users') {
-          url = `/api/teams/${queryKey[1]}/users`;
-          console.log(`Special case - constructed team users URL: ${url}`);
-        }
-        // Default handling for other array-based paths
+        // For other nested routes (my-objectives, timeframes)
         else {
           let constructedUrl = queryKey[0] as string;
           

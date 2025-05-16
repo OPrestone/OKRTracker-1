@@ -77,10 +77,7 @@ interface TeamObjective {
   progress: number;
   parentId?: string | null;
   createdAt?: string;
-  // Add computed property that maps title to name for backward compatibility
-  get name(): string {
-    return this.title;
-  }
+  name?: string; // Include this as a regular property
 }
 
 const TeamMember = ({ user }: { user: User }) => {
@@ -121,7 +118,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
 
   // Calculate progress as average of objectives or default to 0
   const progress = objectives && objectives.length > 0
-    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + obj.progress, 0) / objectives.length
+    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + (typeof obj.progress === 'number' ? obj.progress : 0), 0) / objectives.length
     : 0;
 
   // Get team color or default
