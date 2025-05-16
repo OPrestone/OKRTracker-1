@@ -2122,6 +2122,8 @@ export default function Configure() {
                       </Select>
                     </div>
                   </div>
+                    </form>
+                  </Form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                   <div className="flex flex-col md:flex-row gap-4 items-center border rounded-lg p-3 bg-gray-50 w-full md:w-auto">
