@@ -1991,16 +1991,24 @@ export default function Configure() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* State/Province */}
-                      <div className="space-y-2">
-                        <Label htmlFor="state" className="flex items-center">
-                          State/Province <span className="text-red-500 ml-1">*</span>
-                        </Label>
-                        <Input
-                          id="state"
-                          placeholder="CA"
-                          required
-                        />
-                      </div>
+                      <FormField
+                        control={accountForm.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className="flex items-center">
+                              State/Province <span className="text-red-500 ml-1">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="CA" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       {/* City */}
                       <div className="space-y-2">
@@ -2030,114 +2038,138 @@ export default function Configure() {
 
                   {/* Regional Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select defaultValue="America/Los_Angeles">
-                        <SelectTrigger id="timezone">
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent className="h-[300px]">
-                          <SelectItem value="Pacific/Midway">(UTC-11:00) Midway Island, Samoa</SelectItem>
-                          <SelectItem value="Pacific/Honolulu">(UTC-10:00) Hawaii</SelectItem>
-                          <SelectItem value="America/Anchorage">(UTC-09:00) Alaska</SelectItem>
-                          <SelectItem value="America/Los_Angeles">(UTC-08:00) Pacific Time (US & Canada)</SelectItem>
-                          <SelectItem value="America/Tijuana">(UTC-08:00) Tijuana, Baja California</SelectItem>
-                          <SelectItem value="America/Denver">(UTC-07:00) Mountain Time (US & Canada)</SelectItem>
-                          <SelectItem value="America/Phoenix">(UTC-07:00) Arizona</SelectItem>
-                          <SelectItem value="America/Chihuahua">(UTC-07:00) Chihuahua, La Paz, Mazatlan</SelectItem>
-                          <SelectItem value="America/Chicago">(UTC-06:00) Central Time (US & Canada)</SelectItem>
-                          <SelectItem value="America/Mexico_City">(UTC-06:00) Mexico City</SelectItem>
-                          <SelectItem value="America/Monterrey">(UTC-06:00) Monterrey</SelectItem>
-                          <SelectItem value="America/Regina">(UTC-06:00) Saskatchewan</SelectItem>
-                          <SelectItem value="America/Bogota">(UTC-05:00) Bogota, Lima, Quito, Rio Branco</SelectItem>
-                          <SelectItem value="America/New_York">(UTC-05:00) Eastern Time (US & Canada)</SelectItem>
-                          <SelectItem value="America/Indiana/Indianapolis">(UTC-05:00) Indiana (East)</SelectItem>
-                          <SelectItem value="America/Caracas">(UTC-04:30) Caracas</SelectItem>
-                          <SelectItem value="America/Halifax">(UTC-04:00) Atlantic Time (Canada)</SelectItem>
-                          <SelectItem value="America/Manaus">(UTC-04:00) Manaus</SelectItem>
-                          <SelectItem value="America/Santiago">(UTC-04:00) Santiago</SelectItem>
-                          <SelectItem value="America/La_Paz">(UTC-04:00) La Paz</SelectItem>
-                          <SelectItem value="America/St_Johns">(UTC-03:30) Newfoundland</SelectItem>
-                          <SelectItem value="America/Argentina/Buenos_Aires">(UTC-03:00) Buenos Aires</SelectItem>
-                          <SelectItem value="America/Sao_Paulo">(UTC-03:00) Brasilia</SelectItem>
-                          <SelectItem value="America/Godthab">(UTC-03:00) Greenland</SelectItem>
-                          <SelectItem value="America/Montevideo">(UTC-03:00) Montevideo</SelectItem>
-                          <SelectItem value="Atlantic/South_Georgia">(UTC-02:00) Mid-Atlantic</SelectItem>
-                          <SelectItem value="Atlantic/Azores">(UTC-01:00) Azores</SelectItem>
-                          <SelectItem value="Atlantic/Cape_Verde">(UTC-01:00) Cape Verde Is.</SelectItem>
-                          <SelectItem value="Europe/Dublin">(UTC+00:00) Dublin, Edinburgh, Lisbon, London</SelectItem>
-                          <SelectItem value="Africa/Casablanca">(UTC+00:00) Casablanca</SelectItem>
-                          <SelectItem value="Africa/Monrovia">(UTC+00:00) Monrovia, Reykjavik</SelectItem>
-                          <SelectItem value="Etc/UTC">(UTC+00:00) UTC</SelectItem>
-                          <SelectItem value="Europe/Amsterdam">(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna</SelectItem>
-                          <SelectItem value="Europe/Belgrade">(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague</SelectItem>
-                          <SelectItem value="Europe/Brussels">(UTC+01:00) Brussels, Copenhagen, Madrid, Paris</SelectItem>
-                          <SelectItem value="Europe/Warsaw">(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb</SelectItem>
-                          <SelectItem value="Africa/Lagos">(UTC+01:00) West Central Africa</SelectItem>
-                          <SelectItem value="Asia/Amman">(UTC+02:00) Amman</SelectItem>
-                          <SelectItem value="Europe/Athens">(UTC+02:00) Athens, Bucharest, Istanbul</SelectItem>
-                          <SelectItem value="Asia/Beirut">(UTC+02:00) Beirut</SelectItem>
-                          <SelectItem value="Africa/Cairo">(UTC+02:00) Cairo</SelectItem>
-                          <SelectItem value="Africa/Harare">(UTC+02:00) Harare, Pretoria</SelectItem>
-                          <SelectItem value="Europe/Helsinki">(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius</SelectItem>
-                          <SelectItem value="Asia/Jerusalem">(UTC+02:00) Jerusalem</SelectItem>
-                          <SelectItem value="Europe/Minsk">(UTC+03:00) Minsk</SelectItem>
-                          <SelectItem value="Asia/Baghdad">(UTC+03:00) Baghdad</SelectItem>
-                          <SelectItem value="Asia/Kuwait">(UTC+03:00) Kuwait, Riyadh</SelectItem>
-                          <SelectItem value="Europe/Moscow">(UTC+03:00) Moscow, St. Petersburg, Volgograd</SelectItem>
-                          <SelectItem value="Africa/Nairobi">(UTC+03:00) Nairobi</SelectItem>
-                          <SelectItem value="Asia/Tehran">(UTC+03:30) Tehran</SelectItem>
-                          <SelectItem value="Asia/Dubai">(UTC+04:00) Abu Dhabi, Muscat</SelectItem>
-                          <SelectItem value="Asia/Baku">(UTC+04:00) Baku</SelectItem>
-                          <SelectItem value="Asia/Tbilisi">(UTC+04:00) Tbilisi</SelectItem>
-                          <SelectItem value="Asia/Yerevan">(UTC+04:00) Yerevan</SelectItem>
-                          <SelectItem value="Asia/Kabul">(UTC+04:30) Kabul</SelectItem>
-                          <SelectItem value="Asia/Karachi">(UTC+05:00) Islamabad, Karachi</SelectItem>
-                          <SelectItem value="Asia/Tashkent">(UTC+05:00) Tashkent</SelectItem>
-                          <SelectItem value="Asia/Kolkata">(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi</SelectItem>
-                          <SelectItem value="Asia/Colombo">(UTC+05:30) Sri Jayawardenepura</SelectItem>
-                          <SelectItem value="Asia/Kathmandu">(UTC+05:45) Kathmandu</SelectItem>
-                          <SelectItem value="Asia/Almaty">(UTC+06:00) Almaty, Novosibirsk</SelectItem>
-                          <SelectItem value="Asia/Dhaka">(UTC+06:00) Astana, Dhaka</SelectItem>
-                          <SelectItem value="Asia/Rangoon">(UTC+06:30) Yangon (Rangoon)</SelectItem>
-                          <SelectItem value="Asia/Bangkok">(UTC+07:00) Bangkok, Hanoi, Jakarta</SelectItem>
-                          <SelectItem value="Asia/Krasnoyarsk">(UTC+07:00) Krasnoyarsk</SelectItem>
-                          <SelectItem value="Asia/Hong_Kong">(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi</SelectItem>
-                          <SelectItem value="Asia/Kuala_Lumpur">(UTC+08:00) Kuala Lumpur, Singapore</SelectItem>
-                          <SelectItem value="Asia/Irkutsk">(UTC+08:00) Irkutsk, Ulaan Bataar</SelectItem>
-                          <SelectItem value="Australia/Perth">(UTC+08:00) Perth</SelectItem>
-                          <SelectItem value="Asia/Taipei">(UTC+08:00) Taipei</SelectItem>
-                          <SelectItem value="Asia/Tokyo">(UTC+09:00) Osaka, Sapporo, Tokyo</SelectItem>
-                          <SelectItem value="Asia/Seoul">(UTC+09:00) Seoul</SelectItem>
-                          <SelectItem value="Asia/Yakutsk">(UTC+09:00) Yakutsk</SelectItem>
-                          <SelectItem value="Australia/Adelaide">(UTC+09:30) Adelaide</SelectItem>
-                          <SelectItem value="Australia/Darwin">(UTC+09:30) Darwin</SelectItem>
-                          <SelectItem value="Australia/Brisbane">(UTC+10:00) Brisbane</SelectItem>
-                          <SelectItem value="Australia/Canberra">(UTC+10:00) Canberra, Melbourne, Sydney</SelectItem>
-                          <SelectItem value="Australia/Hobart">(UTC+10:00) Hobart</SelectItem>
-                          <SelectItem value="Pacific/Guam">(UTC+10:00) Guam, Port Moresby</SelectItem>
-                          <SelectItem value="Asia/Vladivostok">(UTC+10:00) Vladivostok</SelectItem>
-                          <SelectItem value="Asia/Magadan">(UTC+11:00) Magadan, Solomon Is., New Caledonia</SelectItem>
-                          <SelectItem value="Pacific/Auckland">(UTC+12:00) Auckland, Wellington</SelectItem>
-                          <SelectItem value="Pacific/Fiji">(UTC+12:00) Fiji, Kamchatka, Marshall Is.</SelectItem>
-                          <SelectItem value="Pacific/Tongatapu">(UTC+13:00) Nuku'alofa</SelectItem>
-                          <SelectItem value="Pacific/Kiritimati">(UTC+14:00) Kiritimati</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="date-format">Date Format</Label>
-                      <Select defaultValue="mm-dd-yyyy">
-                        <SelectTrigger id="date-format">
-                          <SelectValue placeholder="Select date format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mm-dd-yyyy">MM/DD/YYYY</SelectItem>
-                          <SelectItem value="dd-mm-yyyy">DD/MM/YYYY</SelectItem>
-                          <SelectItem value="yyyy-mm-dd">YYYY/MM/DD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <FormField
+                      control={accountForm.control}
+                      name="timezone"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel>Timezone</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select timezone" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="h-[300px]">
+                              <SelectItem value="Pacific/Midway">(UTC-11:00) Midway Island, Samoa</SelectItem>
+                              <SelectItem value="Pacific/Honolulu">(UTC-10:00) Hawaii</SelectItem>
+                              <SelectItem value="America/Anchorage">(UTC-09:00) Alaska</SelectItem>
+                              <SelectItem value="America/Los_Angeles">(UTC-08:00) Pacific Time (US & Canada)</SelectItem>
+                              <SelectItem value="America/Tijuana">(UTC-08:00) Tijuana, Baja California</SelectItem>
+                              <SelectItem value="America/Denver">(UTC-07:00) Mountain Time (US & Canada)</SelectItem>
+                              <SelectItem value="America/Phoenix">(UTC-07:00) Arizona</SelectItem>
+                              <SelectItem value="America/Chihuahua">(UTC-07:00) Chihuahua, La Paz, Mazatlan</SelectItem>
+                              <SelectItem value="America/Chicago">(UTC-06:00) Central Time (US & Canada)</SelectItem>
+                              <SelectItem value="America/Mexico_City">(UTC-06:00) Mexico City</SelectItem>
+                              <SelectItem value="America/Monterrey">(UTC-06:00) Monterrey</SelectItem>
+                              <SelectItem value="America/Regina">(UTC-06:00) Saskatchewan</SelectItem>
+                              <SelectItem value="America/Bogota">(UTC-05:00) Bogota, Lima, Quito, Rio Branco</SelectItem>
+                              <SelectItem value="America/New_York">(UTC-05:00) Eastern Time (US & Canada)</SelectItem>
+                              <SelectItem value="America/Indiana/Indianapolis">(UTC-05:00) Indiana (East)</SelectItem>
+                              <SelectItem value="America/Caracas">(UTC-04:30) Caracas</SelectItem>
+                              <SelectItem value="America/Halifax">(UTC-04:00) Atlantic Time (Canada)</SelectItem>
+                              <SelectItem value="America/Manaus">(UTC-04:00) Manaus</SelectItem>
+                              <SelectItem value="America/Santiago">(UTC-04:00) Santiago</SelectItem>
+                              <SelectItem value="America/La_Paz">(UTC-04:00) La Paz</SelectItem>
+                              <SelectItem value="America/St_Johns">(UTC-03:30) Newfoundland</SelectItem>
+                              <SelectItem value="America/Argentina/Buenos_Aires">(UTC-03:00) Buenos Aires</SelectItem>
+                              <SelectItem value="America/Sao_Paulo">(UTC-03:00) Brasilia</SelectItem>
+                              <SelectItem value="America/Godthab">(UTC-03:00) Greenland</SelectItem>
+                              <SelectItem value="America/Montevideo">(UTC-03:00) Montevideo</SelectItem>
+                              <SelectItem value="Atlantic/South_Georgia">(UTC-02:00) Mid-Atlantic</SelectItem>
+                              <SelectItem value="Atlantic/Azores">(UTC-01:00) Azores</SelectItem>
+                              <SelectItem value="Atlantic/Cape_Verde">(UTC-01:00) Cape Verde Is.</SelectItem>
+                              <SelectItem value="Europe/Dublin">(UTC+00:00) Dublin, Edinburgh, Lisbon, London</SelectItem>
+                              <SelectItem value="Africa/Casablanca">(UTC+00:00) Casablanca</SelectItem>
+                              <SelectItem value="Africa/Monrovia">(UTC+00:00) Monrovia, Reykjavik</SelectItem>
+                              <SelectItem value="Etc/UTC">(UTC+00:00) UTC</SelectItem>
+                              <SelectItem value="Europe/Amsterdam">(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna</SelectItem>
+                              <SelectItem value="Europe/Belgrade">(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague</SelectItem>
+                              <SelectItem value="Europe/Brussels">(UTC+01:00) Brussels, Copenhagen, Madrid, Paris</SelectItem>
+                              <SelectItem value="Europe/Warsaw">(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb</SelectItem>
+                              <SelectItem value="Africa/Lagos">(UTC+01:00) West Central Africa</SelectItem>
+                              <SelectItem value="Asia/Amman">(UTC+02:00) Amman</SelectItem>
+                              <SelectItem value="Europe/Athens">(UTC+02:00) Athens, Bucharest, Istanbul</SelectItem>
+                              <SelectItem value="Asia/Beirut">(UTC+02:00) Beirut</SelectItem>
+                              <SelectItem value="Africa/Cairo">(UTC+02:00) Cairo</SelectItem>
+                              <SelectItem value="Africa/Harare">(UTC+02:00) Harare, Pretoria</SelectItem>
+                              <SelectItem value="Europe/Helsinki">(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius</SelectItem>
+                              <SelectItem value="Asia/Jerusalem">(UTC+02:00) Jerusalem</SelectItem>
+                              <SelectItem value="Europe/Minsk">(UTC+03:00) Minsk</SelectItem>
+                              <SelectItem value="Asia/Baghdad">(UTC+03:00) Baghdad</SelectItem>
+                              <SelectItem value="Asia/Kuwait">(UTC+03:00) Kuwait, Riyadh</SelectItem>
+                              <SelectItem value="Europe/Moscow">(UTC+03:00) Moscow, St. Petersburg, Volgograd</SelectItem>
+                              <SelectItem value="Africa/Nairobi">(UTC+03:00) Nairobi</SelectItem>
+                              <SelectItem value="Asia/Tehran">(UTC+03:30) Tehran</SelectItem>
+                              <SelectItem value="Asia/Dubai">(UTC+04:00) Abu Dhabi, Muscat</SelectItem>
+                              <SelectItem value="Asia/Baku">(UTC+04:00) Baku</SelectItem>
+                              <SelectItem value="Asia/Tbilisi">(UTC+04:00) Tbilisi</SelectItem>
+                              <SelectItem value="Asia/Yerevan">(UTC+04:00) Yerevan</SelectItem>
+                              <SelectItem value="Asia/Kabul">(UTC+04:30) Kabul</SelectItem>
+                              <SelectItem value="Asia/Karachi">(UTC+05:00) Islamabad, Karachi</SelectItem>
+                              <SelectItem value="Asia/Tashkent">(UTC+05:00) Tashkent</SelectItem>
+                              <SelectItem value="Asia/Kolkata">(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi</SelectItem>
+                              <SelectItem value="Asia/Colombo">(UTC+05:30) Sri Jayawardenepura</SelectItem>
+                              <SelectItem value="Asia/Kathmandu">(UTC+05:45) Kathmandu</SelectItem>
+                              <SelectItem value="Asia/Almaty">(UTC+06:00) Almaty, Novosibirsk</SelectItem>
+                              <SelectItem value="Asia/Dhaka">(UTC+06:00) Astana, Dhaka</SelectItem>
+                              <SelectItem value="Asia/Rangoon">(UTC+06:30) Yangon (Rangoon)</SelectItem>
+                              <SelectItem value="Asia/Bangkok">(UTC+07:00) Bangkok, Hanoi, Jakarta</SelectItem>
+                              <SelectItem value="Asia/Krasnoyarsk">(UTC+07:00) Krasnoyarsk</SelectItem>
+                              <SelectItem value="Asia/Hong_Kong">(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi</SelectItem>
+                              <SelectItem value="Asia/Kuala_Lumpur">(UTC+08:00) Kuala Lumpur, Singapore</SelectItem>
+                              <SelectItem value="Asia/Irkutsk">(UTC+08:00) Irkutsk, Ulaan Bataar</SelectItem>
+                              <SelectItem value="Australia/Perth">(UTC+08:00) Perth</SelectItem>
+                              <SelectItem value="Asia/Taipei">(UTC+08:00) Taipei</SelectItem>
+                              <SelectItem value="Asia/Tokyo">(UTC+09:00) Osaka, Sapporo, Tokyo</SelectItem>
+                              <SelectItem value="Asia/Seoul">(UTC+09:00) Seoul</SelectItem>
+                              <SelectItem value="Asia/Yakutsk">(UTC+09:00) Yakutsk</SelectItem>
+                              <SelectItem value="Australia/Adelaide">(UTC+09:30) Adelaide</SelectItem>
+                              <SelectItem value="Australia/Darwin">(UTC+09:30) Darwin</SelectItem>
+                              <SelectItem value="Australia/Brisbane">(UTC+10:00) Brisbane</SelectItem>
+                              <SelectItem value="Australia/Canberra">(UTC+10:00) Canberra, Melbourne, Sydney</SelectItem>
+                              <SelectItem value="Australia/Hobart">(UTC+10:00) Hobart</SelectItem>
+                              <SelectItem value="Pacific/Guam">(UTC+10:00) Guam, Port Moresby</SelectItem>
+                              <SelectItem value="Asia/Vladivostok">(UTC+10:00) Vladivostok</SelectItem>
+                              <SelectItem value="Asia/Magadan">(UTC+11:00) Magadan, Solomon Is., New Caledonia</SelectItem>
+                              <SelectItem value="Pacific/Auckland">(UTC+12:00) Auckland, Wellington</SelectItem>
+                              <SelectItem value="Pacific/Fiji">(UTC+12:00) Fiji, Kamchatka, Marshall Is.</SelectItem>
+                              <SelectItem value="Pacific/Tongatapu">(UTC+13:00) Nuku'alofa</SelectItem>
+                              <SelectItem value="Pacific/Kiritimati">(UTC+14:00) Kiritimati</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={accountForm.control}
+                      name="dateFormat"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel>Date Format</FormLabel>
+                          <Select 
+                            value={field.value} 
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select date format" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="mm-dd-yyyy">MM/DD/YYYY</SelectItem>
+                              <SelectItem value="dd-mm-yyyy">DD/MM/YYYY</SelectItem>
+                              <SelectItem value="yyyy-mm-dd">YYYY/MM/DD</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                     </form>
                   </Form>
