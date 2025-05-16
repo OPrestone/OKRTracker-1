@@ -628,23 +628,36 @@ const AccessGroups = () => {
 
       {/* Create Access Group Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-slate-200 shadow-lg p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 bg-slate-50">
-            <DialogTitle className="text-xl font-semibold text-slate-900">Create Access Group</DialogTitle>
-            <DialogDescription className="text-slate-600 mt-1">
-              Add a new access group and define its permissions
-            </DialogDescription>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg border-slate-200 shadow-lg p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-slate-50">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-indigo-100 text-indigo-600">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-semibold text-slate-900">Create Access Group</DialogTitle>
+                <DialogDescription className="text-slate-600 mt-1">
+                  Add a new access group with specific permissions for your organization
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-5 p-6">
-              <div className="grid grid-cols-1 gap-5">
+            <div className="grid gap-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2.5">
-                  <Label htmlFor="name" className="text-slate-700 font-medium">
+                  <Label htmlFor="name" className="text-slate-700 font-medium flex items-center gap-1">
                     Group Name <span className="text-red-500">*</span>
+                    <div className="relative group">
+                      <AlertCircle className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-xs text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Choose a descriptive name for this access group
+                      </div>
+                    </div>
                   </Label>
                   <Input
                     id="name"
-                    placeholder="Enter access group name"
+                    placeholder="e.g., Team Managers, Content Editors"
                     value={accessGroupForm.name}
                     onChange={(e) => handleFormChange("name", e.target.value)}
                     required
@@ -657,17 +670,88 @@ const AccessGroups = () => {
                   </Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe the purpose of this access group"
+                    placeholder="Describe the purpose and role of this access group"
                     value={accessGroupForm.description}
                     onChange={(e) => handleFormChange("description", e.target.value)}
-                    className="min-h-24 border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
+                    className="h-[42px] resize-none border-slate-200 rounded-md focus-visible:ring-indigo-500 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
 
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Permissions</h3>
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-medium text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-indigo-500" />
+                    Permissions
+                  </h3>
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Select all permissions
+                        Object.keys(accessGroupForm.permissions).forEach(key => {
+                          handlePermissionChange(key as keyof AccessGroupFormData["permissions"], true);
+                        });
+                      }}
+                      className="text-xs h-8 px-3 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
+                    >
+                      <Check className="h-3 w-3 mr-1" /> Select All
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Clear all permissions except viewAllOKRs which is default
+                        Object.keys(accessGroupForm.permissions).forEach(key => {
+                          if (key === 'viewAllOKRs') {
+                            handlePermissionChange(key as keyof AccessGroupFormData["permissions"], true);
+                          } else {
+                            handlePermissionChange(key as keyof AccessGroupFormData["permissions"], false);
+                          }
+                        });
+                      }}
+                      className="text-xs h-8 px-3 border-slate-200 hover:bg-slate-50"
+                    >
+                      <X className="h-3 w-3 mr-1" /> Clear
+                    </Button>
+                  </div>
+                </div>
                 
+                {/* Permission level preview */}
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-md p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-slate-700">Current permission level:</p>
+                    <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-indigo-100 shadow-sm">
+                      {accessGroupForm.permissions.manageSettings ? (
+                        <>
+                          <ShieldAlert className="h-3.5 w-3.5 text-red-500" />
+                          <span className="text-xs font-medium text-slate-800">Administrator</span>
+                        </>
+                      ) : accessGroupForm.permissions.manageUsers || accessGroupForm.permissions.manageTeams || accessGroupForm.permissions.manageAccessGroups ? (
+                        <>
+                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                          <span className="text-xs font-medium text-slate-800">Manager</span>
+                        </>
+                      ) : accessGroupForm.permissions.createOKRs || accessGroupForm.permissions.editAllOKRs ? (
+                        <>
+                          <Shield className="h-3.5 w-3.5 text-blue-500" />
+                          <span className="text-xs font-medium text-slate-800">Editor</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldQuestion className="h-3.5 w-3.5 text-gray-500" />
+                          <span className="text-xs font-medium text-slate-800">Viewer</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500 italic">Permissions determine what users in this group can do</span>
+                  </div>
+                </div>
                 <div className="border border-slate-200 rounded-lg p-5 mb-5 bg-slate-50">
                   <h3 className="font-medium text-sm mb-3.5 text-slate-700 flex items-center">
                     <Target className="h-4 w-4 mr-2 text-indigo-500" />

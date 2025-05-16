@@ -887,26 +887,36 @@ export class DatabaseStorage implements IStorage {
 
   // Access Groups
   async createAccessGroup(accessGroup: InsertAccessGroup): Promise<AccessGroup> {
-    // Create a trimmed version with only the fields that exist in the database
-    const accessGroupToInsert = {
-      name: accessGroup.name,
-      description: accessGroup.description,
-      permissions: accessGroup.permissions,
-      tenantId: accessGroup.tenantId,
-    };
-    
-    const [newAccessGroup] = await db.insert(accessGroups)
-      .values(accessGroupToInsert)
-      .returning({
-        id: accessGroups.id,
-        name: accessGroups.name,
-        description: accessGroups.description,
-        permissions: accessGroups.permissions,
-        tenantId: accessGroups.tenantId,
-        createdAt: accessGroups.createdAt
-      });
+    try {
+      // Create a trimmed version with only the fields that exist in the database
+      const accessGroupToInsert = {
+        name: accessGroup.name,
+        description: accessGroup.description,
+        permissions: accessGroup.permissions,
+        tenantId: accessGroup.tenantId,
+        // Note: updatedAt is not included as it doesn't exist in the database
+      };
       
-    return newAccessGroup;
+      console.log("Creating access group with data:", JSON.stringify(accessGroupToInsert));
+      
+      // Only select columns that exist in the database table
+      const [newAccessGroup] = await db.insert(accessGroups)
+        .values(accessGroupToInsert)
+        .returning({
+          id: accessGroups.id,
+          name: accessGroups.name,
+          description: accessGroups.description,
+          permissions: accessGroups.permissions,
+          tenantId: accessGroups.tenantId,
+          createdAt: accessGroups.createdAt
+        });
+      
+      console.log("Successfully created access group:", newAccessGroup);
+      return newAccessGroup;
+    } catch (error) {
+      console.error("Error creating access group in storage:", error);
+      throw error;
+    }
   }
 
   async getAccessGroup(id: string): Promise<AccessGroup | undefined> {
