@@ -2430,11 +2430,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teams/:teamId/objectives", withTenant, async (req, res, next) => {
     try {
       const teamId = req.params.teamId;
+      console.log(`API Route Hit: Team Objectives for team ID ${teamId} requested from tenant ${req.tenantId}`);
+      
       const objectives = await storage.getObjectivesByTeam(teamId);
       
       // Filter objectives by current tenant
       // Debug message to verify we're getting objectives by team correctly
       console.log(`Getting objectives for team ${teamId}, found ${objectives.length} objectives`);
+      if (objectives.length > 0) {
+        console.log(`Sample objective: ${JSON.stringify(objectives[0])}`);
+      }
       
       const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
       console.log(`After tenant filtering, returning ${tenantObjectives.length} objectives`);
