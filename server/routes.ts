@@ -24,6 +24,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
 import { registerConfigRoutes } from "./routes/config-routes";
+import { setupTeamLeaderRoutes } from "./routes/team-leader";
+import { Router } from "express";
 
 // Extend Request interface to include tenantId
 declare global {
@@ -43,6 +45,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register configuration routes
   registerConfigRoutes(app);
+  
+  // Register team leader routes
+  const apiRouter = Router();
+  setupTeamLeaderRoutes(apiRouter);
+  app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics
   app.get("/api/project-diagnostics", async (req, res) => {

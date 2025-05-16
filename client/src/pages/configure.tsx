@@ -1106,9 +1106,6 @@ const accountSettingsSchema = z.object({
 type AccountSettingsFormValues = z.infer<typeof accountSettingsSchema>;
 
 export default function Configure() {
-  // State for account settings confirmation dialog
-  const [showAccountSettingsConfirmation, setShowAccountSettingsConfirmation] = useState(false);
-  const [pendingAccountSettingsData, setPendingAccountSettingsData] = useState<AccountSettingsFormValues | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
