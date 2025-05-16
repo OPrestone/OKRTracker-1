@@ -59,7 +59,7 @@ export function ChatSidebar() {
     }
   };
 
-  const toggleUserSelection = (userId: number) => {
+  const toggleUserSelection = (userId: string) => {
     setSelectedUsers(prev => 
       prev.includes(userId)
         ? prev.filter(id => id !== userId)

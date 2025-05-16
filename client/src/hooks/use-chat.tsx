@@ -639,7 +639,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   });
   
   // Function to create a chat room
-  const createChatRoom = useCallback(async (name: string, type: string, memberIds: number[]) => {
+  const createChatRoom = useCallback(async (name: string, type: string, memberIds: string[]) => {
     // Get the current tenant ID
     const tenantId = getCurrentTenantId();
     if (!tenantId) {
