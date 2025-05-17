@@ -77,7 +77,8 @@ interface TeamObjective {
   progress: number;
   parentId?: string | null;
   createdAt?: string;
-  name?: string; // Include this as a regular property
+  name?: string; // For backwards compatibility with older code
+  tenantId?: string;
 }
 
 const TeamMember = ({ user }: { user: User }) => {
@@ -110,10 +111,10 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
 
   // Use the TeamObjective interface defined above
 
-  // Get objectives for the team
-  const { data: objectives } = useQuery<TeamObjective[]>({
+  // Get objectives for the team with better error handling
+  const { data: objectives, isError: objectivesError } = useQuery<TeamObjective[]>({
     queryKey: ["/api/teams", team.id, "objectives"],
-    enabled: !!team.id,
+    enabled: !!team.id
   });
 
   // Calculate progress as average of objectives or default to 0
@@ -173,7 +174,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
                     index < objectives.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <span>{objective.title}</span>
+                  <span>{objective.title || objective.name}</span>
                   <Badge 
                     variant="outline"
                     className={

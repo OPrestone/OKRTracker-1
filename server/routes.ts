@@ -2432,16 +2432,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teamId = req.params.teamId;
       console.log(`API Route Hit: Team Objectives for team ID ${teamId} requested from tenant ${req.tenantId}`);
       
+      // First, verify the team exists and belongs to the tenant
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        console.log(`Team with ID ${teamId} not found`);
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      if (team.tenantId !== req.tenantId) {
+        console.log(`Team ${teamId} does not belong to tenant ${req.tenantId}`);
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       const objectives = await storage.getObjectivesByTeam(teamId);
       
       // Filter objectives by current tenant
-      // Debug message to verify we're getting objectives by team correctly
       console.log(`Getting objectives for team ${teamId}, found ${objectives.length} objectives`);
       if (objectives.length > 0) {
         console.log(`Sample objective: ${JSON.stringify(objectives[0])}`);
       }
       
-      const tenantObjectives = objectives.filter(obj => obj.tenantId === req.tenantId);
+      // Ensure progress values are always numbers
+      const processedObjectives = objectives.map(obj => ({
+        ...obj,
+        progress: typeof obj.progress === 'number' ? obj.progress : 0,
+        // For backward compatibility, set name = title if name is missing
+        name: obj.title
+      }));
+      
+      const tenantObjectives = processedObjectives.filter(obj => obj.tenantId === req.tenantId);
       console.log(`After tenant filtering, returning ${tenantObjectives.length} objectives`);
       
       res.json(tenantObjectives);
