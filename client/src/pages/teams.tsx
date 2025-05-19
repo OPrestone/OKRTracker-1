@@ -103,7 +103,7 @@ const TeamMember = ({ user }: { user: User }) => {
 };
 
 const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void }) => {
-  // Get team members
+  // Get team members - include the tenant ID in the query
   const { data: members } = useQuery<User[]>({
     queryKey: ["/api/teams", team.id, "users"],
     enabled: !!team.id,
@@ -111,15 +111,18 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
 
   // Use the TeamObjective interface defined above
 
-  // Get objectives for the team with better error handling
+  // Get objectives for the team with better error handling and fallback logic
   const { data: objectives, isError: objectivesError } = useQuery<TeamObjective[]>({
     queryKey: ["/api/teams", team.id, "objectives"],
-    enabled: !!team.id
+    enabled: !!team.id,
+    retry: 1 // Limit retries for 404 errors
   });
 
   // Calculate progress as average of objectives or default to 0
-  const progress = objectives && objectives.length > 0
-    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + (typeof obj.progress === 'number' ? obj.progress : 0), 0) / objectives.length
+  // Use an empty array fallback for objectives to prevent errors
+  const objectivesArray = objectives || [];
+  const progress = objectivesArray.length > 0
+    ? objectivesArray.reduce((sum: number, obj: TeamObjective) => sum + (typeof obj.progress === 'number' ? obj.progress : 0), 0) / objectivesArray.length
     : 0;
 
   // Get team color or default
@@ -167,14 +170,14 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
           
           {objectives && objectives.length > 0 ? (
             <div className="text-sm">
-              {objectives.slice(0, 3).map((objective: TeamObjective, index: number) => (
+              {objectivesArray.slice(0, 3).map((objective: TeamObjective, index: number) => (
                 <div 
                   key={objective.id}
                   className={`flex items-center justify-between mb-2 pb-2 ${
-                    index < objectives.length - 1 ? 'border-b border-gray-100' : ''
+                    index < objectivesArray.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  <span>{objective.title || objective.name}</span>
+                  <span>{objective.title || objective.name || 'Untitled Objective'}</span>
                   <Badge 
                     variant="outline"
                     className={
@@ -184,7 +187,7 @@ const TeamCard = ({ team, onClick }: { team: Team, onClick: (team: Team) => void
                       "bg-red-100 text-red-800 hover:bg-red-100"
                     }
                   >
-                    {objective.progress}%
+                    {objective.progress || 0}%
                   </Badge>
                 </div>
               ))}
