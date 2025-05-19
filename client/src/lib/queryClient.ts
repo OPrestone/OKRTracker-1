@@ -100,36 +100,48 @@ export const getQueryFn: <T>(options: {
       
       // Handle array-based path parameters
       let url = '';
-      if (Array.isArray(queryKey) && queryKey.length > 1) {
-        // For nested routes like teams with objectives or users
-        if (queryKey[0] === '/api/teams' && queryKey.length === 3) {
-          if (queryKey[2] === 'objectives') {
-            url = `/api/teams/${queryKey[1]}/objectives`;
-            console.log(`Constructed team objectives URL: ${url}`);
-          } 
-          else if (queryKey[2] === 'users') {
-            url = `/api/teams/${queryKey[1]}/users`;
-            console.log(`Constructed team users URL: ${url}`);
-          }
-          else {
-            url = `${queryKey[0]}/${queryKey[1]}/${queryKey[2]}`;
-            console.log(`Constructed URL: ${url}`);
+      if (Array.isArray(queryKey)) {
+        // Special case for teams - the second parameter is a tenant ID that should be a query param, not path param
+        if (queryKey[0] === '/api/teams' && queryKey.length === 2 && !queryKey[1].includes('users') && !queryKey[1].includes('objectives')) {
+          // When the query is ['/api/teams', tenantId], we want to use '/api/teams' not '/api/teams/tenantId'
+          url = queryKey[0];
+          console.log(`Teams list URL constructed: ${url}`);
+        }
+        // For team details or nested routes like teams with objectives or users
+        else if (queryKey[0] === '/api/teams' && queryKey.length >= 2) {
+          if (queryKey.length === 3) {
+            if (queryKey[2] === 'objectives') {
+              url = `/api/teams/${queryKey[1]}/objectives`;
+              console.log(`Constructed team objectives URL: ${url}`);
+            } 
+            else if (queryKey[2] === 'users') {
+              url = `/api/teams/${queryKey[1]}/users`;
+              console.log(`Constructed team users URL: ${url}`);
+            }
+            else {
+              url = `/api/teams/${queryKey[1]}/${queryKey[2]}`;
+              console.log(`Constructed nested team URL: ${url}`);
+            }
+          } else {
+            // For single team details: ['/api/teams', teamId]
+            url = `/api/teams/${queryKey[1]}`;
+            console.log(`Constructed team details URL: ${url}`);
           }
         }
         // For other nested routes (my-objectives, timeframes)
         else {
-          let constructedUrl = queryKey[0] as string;
+          url = queryKey[0] as string;
           
           // Handle nested routes with variable path parameters
           for (let i = 1; i < queryKey.length; i++) {
-            constructedUrl += `/${queryKey[i]}`;
+            url += `/${queryKey[i]}`;
           }
           
-          url = constructedUrl;
           console.log(`Constructed URL from array path: ${url}`);
         }
       } else {
-        url = queryKey[0] as string;
+        // Simple string query key
+        url = queryKey as string;
       }
       
       // Add tenant query parameter if available

@@ -246,9 +246,9 @@ const Teams = () => {
   const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch all teams with a flat queryKey to prevent path concatenation
+  // Fetch all teams - using a flat single string queryKey for simplicity
   const { data: teams, isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ["/api/teams"], // Don't include tenant ID in the path, will be added automatically as query param
+    queryKey: "/api/teams", // Use string format to completely avoid path concatenation issues
     staleTime: 0 // Don't cache for this test
   });
 
