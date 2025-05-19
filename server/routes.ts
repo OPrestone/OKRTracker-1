@@ -675,14 +675,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`Creating team for tenant: ${req.tenantId}, owner: ${req.user.id}`);
       
-      // Use the owner ID from the authenticated user
+      // Use the owner ID from the authenticated user and add the tenant ID
       const validatedData = insertTeamSchema.parse({
         ...req.body,
-        ownerId: req.user.id // This links the team to a user in this tenant
+        ownerId: req.user.id, // This links the team to a user in this tenant
+        tenantId: req.tenantId // Critical: Associate team with current tenant
       });
       
       const team = await storage.createTeam(validatedData);
-      console.log(`Created team: ${team.id} with name: ${team.name}`);
+      console.log(`Created team: ${team.id} with name: ${team.name} for tenant: ${team.tenantId}`);
       res.status(201).json(team);
     } catch (error) {
       console.error('Error creating team:', error);
