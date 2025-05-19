@@ -63,11 +63,23 @@ export default function AllUsers() {
   const [isOrgAssignDialogOpen, setIsOrgAssignDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isUpdateUserDialogOpen, setIsUpdateUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserSchema | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
   const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
     tenantId: "", 
     role: "member" 
+  });
+  const [updateUserData, setUpdateUserData] = useState({
+    id: '',
+    username: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    department: '',
+    title: '',
+    teamId: '',
+    tenantRole: 'member',
   });
   const [newUser, setNewUser] = useState({
     username: '',
