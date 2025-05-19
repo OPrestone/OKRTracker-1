@@ -644,6 +644,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Get a single team by ID
+  app.get("/api/teams/:teamId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { teamId } = req.params;
+      console.log(`Getting team with ID: ${teamId} for tenant: ${req.tenantId}`);
+      
+      // Get the team
+      const team = await storage.getTeam(teamId);
+      
+      // Check if team exists
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      // Check if team belongs to tenant
+      if (team.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied - team does not belong to your organization" });
+      }
+      
+      res.json(team);
+    } catch (error) {
+      console.error('Error getting team by ID:', error);
+      next(error);
+    }
+  });
 
   app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {

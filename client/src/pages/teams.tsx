@@ -246,9 +246,10 @@ const Teams = () => {
   const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch all teams
-  const { data: teams, isLoading: teamsLoading } = useQuery<Team[]>({
+  // Fetch all teams - fixed query without tenant ID in URL path
+  const { data: teams, isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
     queryKey: ["/api/teams"],
+    staleTime: 0 // Don't cache for this test
   });
 
   // Fetch team members when a team is selected
