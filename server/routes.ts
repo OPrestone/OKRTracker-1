@@ -1057,23 +1057,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "User does not belong to current tenant" });
       }
       
-      // Check if user is authorized (can only edit own profile unless admin)
-      // First check if the current user is an admin or owner in the current tenant
-      const currentUserTenant = await db
-        .select()
-        .from(usersToTenants)
-        .where(and(
-          eq(usersToTenants.userId, req.user!.id),
-          eq(usersToTenants.tenantId, req.tenantId)
-        ))
-        .limit(1);
-        
-      const isAdminOrOwner = currentUserTenant.length > 0 && 
-        (currentUserTenant[0].role === 'admin' || currentUserTenant[0].role === 'owner');
-        
-      // Allow user to edit own profile or if they are admin/owner in the tenant
-      if (req.user?.id !== id && !isAdminOrOwner) {
-        return res.status(403).send("Not authorized to update this user");
+      // Always allow users to edit their own profile
+      if (req.user?.id === id) {
+        // Allow self-edit
+      } else {
+        // For editing other users, need admin or owner privileges in the tenant
+        try {
+          console.log("Checking tenant role for user", req.user!.id, "in tenant", req.tenantId);
+          const currentUserTenant = await db
+            .select()
+            .from(usersToTenants)
+            .where(and(
+              eq(usersToTenants.userId, req.user!.id),
+              eq(usersToTenants.tenantId, req.tenantId)
+            ))
+            .limit(1);
+          
+          console.log("Current user tenant relationship:", currentUserTenant);
+          
+          // Check if user is admin or owner in this tenant
+          if (currentUserTenant.length === 0) {
+            console.log("User not found in tenant");
+            return res.status(403).json({ error: "Not authorized - user not in tenant" });
+          }
+          
+          const role = currentUserTenant[0].role;
+          console.log("User role in tenant:", role);
+          
+          if (role !== 'admin' && role !== 'owner') {
+            console.log("User lacks required role (admin/owner)");
+            return res.status(403).json({ error: "Not authorized - insufficient privileges" });
+          }
+          
+          // Admin or owner in the tenant, allow the edit
+          console.log("User authorized as", role);
+        } catch (error) {
+          console.error("Error checking tenant role:", error);
+          return res.status(500).json({ error: "Error checking authorization" });
+        }
       }
       
       // Filter out password and username from request if present (these should be handled separately)
