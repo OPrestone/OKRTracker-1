@@ -154,6 +154,7 @@ export function setupAuth(app: Express) {
     try {
       console.log("Registration attempt for username:", req.body.username);
       
+      // Check if user already exists before starting transaction
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
         console.log("Registration failed - username already exists:", req.body.username);
@@ -187,31 +188,43 @@ export function setupAuth(app: Express) {
       
       console.log("Creating new user with tenant:", req.body.username, tenantId);
       console.log("User data:", { ...userData, password: '***' });
-      const user = await storage.createUser(userData);
-      console.log("User created successfully:", user.id);
       
-      // Only create user-tenant relationship if a tenantId was explicitly provided
-      // Otherwise, user will create their own organization during onboarding and be assigned as owner
-      if (tenantId) {
+      // Create user and tenant relationship in a single transaction
+      let user;
+      
+      // Start a transaction
+      await db.transaction(async (tx) => {
         try {
-          const { ulid } = await import("ulid");
-          await db.insert(usersToTenants).values({
-            id: ulid(), // Generate a ULID for the relationship
-            userId: user.id,
-            tenantId: tenantId,
-            role: "member", // Users added during registration are members by default
-            isDefault: true, // Make this the default tenant
-            createdAt: new Date()
-          }).onConflictDoNothing();
-          console.log("User-tenant relationship created");
-        } catch (err) {
-          console.error("Error creating user-tenant relationship:", err);
-          // Non-critical error, continue with registration
+          // Create the user with transaction
+          user = await storage.createUserWithTransaction(tx, userData);
+          console.log("User created successfully in transaction:", user.id);
+          
+          // Only create user-tenant relationship if a tenantId was explicitly provided
+          if (tenantId) {
+            const { ulid } = await import("ulid");
+            // Create the user-tenant relationship within the same transaction
+            await tx.insert(usersToTenants).values({
+              id: ulid(), // Generate a ULID for the relationship
+              userId: user.id,
+              tenantId: tenantId,
+              role: "member", // Users added during registration are members by default
+              isDefault: true, // Make this the default tenant
+              createdAt: new Date()
+            }).onConflictDoNothing();
+            console.log("User-tenant relationship created in transaction");
+          } else {
+            console.log("No tenant relationship created - user will create their own organization");
+          }
+        } catch (txError) {
+          console.error("Transaction failed, rolling back user creation:", txError);
+          throw txError; // Re-throw to trigger rollback
         }
-      } else {
-        console.log("No tenant relationship created - user will create their own organization");
-      }
-
+      });
+      
+      // Transaction completed successfully at this point
+      console.log("Transaction committed successfully");
+      
+      // Log the user in after successful user creation
       req.login(user, (err) => {
         if (err) {
           console.error("Error during login after registration:", err);
@@ -230,7 +243,10 @@ export function setupAuth(app: Express) {
       });
     } catch (error) {
       console.error("Error during registration:", error);
-      next(error);
+      res.status(500).json({ 
+        error: "Registration failed", 
+        message: error.message || "An unexpected error occurred during registration" 
+      });
     }
   });
 

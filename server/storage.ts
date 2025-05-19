@@ -283,6 +283,38 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // Transaction-based user creation to ensure user is only created when all operations succeed
+  async createUserWithTransaction(tx: any, userData: InsertUser): Promise<User> {
+    try {
+      console.log("Creating user with transaction - data:", { ...userData, password: '***' });
+      
+      // Insert the user using the provided transaction
+      const [user] = await tx.insert(users).values(userData).returning();
+      return user;
+    } catch (error) {
+      console.error("Error creating user within transaction:", error);
+      throw error;
+    }
+  }
+  
+  // Add a user to a team using a transaction
+  async addUserToTeamWithTransaction(tx: any, userId: string, teamId: string): Promise<User> {
+    try {
+      console.log(`Adding user ${userId} to team ${teamId} with transaction`);
+      
+      // Update the user's team ID using the provided transaction
+      const [updatedUser] = await tx.update(users)
+        .set({ teamId, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error adding user to team within transaction:", error);
+      throw error;
+    }
+  }
 
   async updateUser(id: string, user: Partial<InsertUser>): Promise<User> {
     const [updatedUser] = await db.update(users)
