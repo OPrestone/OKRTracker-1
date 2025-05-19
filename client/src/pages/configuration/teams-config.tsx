@@ -192,7 +192,8 @@ const TeamsConfig = () => {
       color: teamForm.color,
       icon: teamForm.icon,
       parentId: teamForm.parentId || null,
-      ownerId: teamForm.ownerId || null
+      ownerId: teamForm.ownerId || null,
+      tenantId: currentTenant?.id // Include tenant ID for proper multi-tenancy
     };
     
     updateTeamMutation.mutate(teamData);

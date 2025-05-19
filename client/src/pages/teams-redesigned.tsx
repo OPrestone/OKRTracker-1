@@ -714,6 +714,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
         color: teamColor,
         icon: teamIcon,
         parentId: teamParent === "none" ? null : teamParent,
+        tenantId: currentTenant?.id,  // Include tenant ID to preserve multi-tenancy
       };
 
       await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
