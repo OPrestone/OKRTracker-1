@@ -1058,7 +1058,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is authorized (can only edit own profile unless admin)
-      if (req.user?.id !== id && !(req.user as User).isAdmin) {
+      // First check if the current user is an admin or owner in the current tenant
+      const currentUserTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user!.id),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+        
+      const isAdminOrOwner = currentUserTenant.length > 0 && 
+        (currentUserTenant[0].role === 'admin' || currentUserTenant[0].role === 'owner');
+        
+      // Allow user to edit own profile or if they are admin/owner in the tenant
+      if (req.user?.id !== id && !isAdminOrOwner) {
         return res.status(403).send("Not authorized to update this user");
       }
       
