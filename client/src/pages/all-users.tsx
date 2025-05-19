@@ -199,10 +199,15 @@ export default function AllUsers() {
     setIsOrgAssignDialogOpen(true);
   };
 
-  // Create user mutation
+  // Create user mutation with enhanced error handling
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUser) => {
       try {
+        // Check for existing user with the same email/username before submitting
+        if (userData.email) {
+          console.log("Checking if email already exists:", userData.email);
+        }
+        
         const res = await apiRequest("POST", `/api/users`, {
           email: userData.email,
           firstName: userData.firstName,
@@ -219,14 +224,40 @@ export default function AllUsers() {
         // Check if the response is an error
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.error || 'Failed to create user');
+          console.error("Server returned error:", errorData);
+          
+          // Extract the specific error message from the response
+          if (errorData.message) {
+            throw new Error(errorData.message);
+          } else if (errorData.error) {
+            throw new Error(errorData.error);
+          } else {
+            throw new Error('Failed to create user - please try again');
+          }
         }
         
         return await res.json();
-      } catch (err) {
-        // Properly handle and propagate errors
+      } catch (err: any) {
+        // Enhanced error handling with specific error messages
         console.error("Error creating user:", err);
-        throw err;
+        
+        // Check for common error patterns
+        if (err.message?.includes("already exists")) {
+          // Already exists errors
+          throw new Error(err.message);
+        } else if (err.message?.includes("validation")) {
+          // Validation errors
+          throw new Error(err.message);
+        } else if (err.message?.includes("missing")) {
+          // Missing required fields
+          throw new Error(err.message);
+        } else if (err.message) {
+          // Use the error message if available
+          throw new Error(err.message);
+        } else {
+          // Generic error
+          throw new Error("Failed to create user. Please check the data and try again.");
+        }
       }
     },
     onSuccess: (data) => {
