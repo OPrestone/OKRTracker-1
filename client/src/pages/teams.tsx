@@ -246,9 +246,9 @@ const Teams = () => {
   const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch all teams - fixed query without tenant ID in URL path
+  // Fetch all teams with a flat queryKey to prevent path concatenation
   const { data: teams, isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
+    queryKey: ["/api/teams"], // Don't include tenant ID in the path, will be added automatically as query param
     staleTime: 0 // Don't cache for this test
   });
 
