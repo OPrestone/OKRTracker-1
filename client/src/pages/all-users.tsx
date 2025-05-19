@@ -435,14 +435,16 @@ export default function AllUsers() {
   };
 
   const openUpdateUserDialog = (user: UserSchema) => {
+    console.log("Opening update dialog for user:", user);
     setSelectedUser(user);
     
     // Get user's role in the current tenant
     const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
     const tenantRole = userTenantRelation?.userRole || 'member';
+    console.log("User tenant relation:", userTenantRelation, "Current tenant:", tenantId);
     
     // Populate the update form with the user's current data
-    setUpdateUserData({
+    const userData = {
       id: user.id,
       username: user.username,
       firstName: user.firstName || '',
@@ -452,8 +454,10 @@ export default function AllUsers() {
       title: user.title || '',
       teamId: user.teamId?.toString() || '',
       tenantRole: tenantRole as 'member' | 'admin' | 'owner',
-    });
+    };
+    console.log("Setting update user data:", userData);
     
+    setUpdateUserData(userData);
     setIsUpdateUserDialogOpen(true);
   };
 
