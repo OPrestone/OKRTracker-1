@@ -336,7 +336,7 @@ export default function AllUsers() {
   const updateUserMutation = useMutation({
     mutationFn: async (userData: typeof updateUserData) => {
       try {
-        const res = await apiRequest("PATCH", `/api/users/${userData.id}`, {
+        const res = await apiRequest("PUT", `/api/users/${userData.id}`, {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
