@@ -839,6 +839,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingUser.length > 0) {
         // User exists, check if already in this tenant
         userId = existingUser[0].id;
+        console.log(`Found existing user with ID ${userId} for email ${email}`);
+        
+        // Make sure we have a valid tenantId before checking
+        if (!req.tenantId) {
+          console.error("Missing tenant ID in request when creating user");
+          return res.status(400).json({ error: "Missing tenant ID in request" });
+        }
         
         const userInTenant = await db
           .select()
@@ -848,6 +855,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             eq(usersToTenants.tenantId, req.tenantId)
           ))
           .limit(1);
+        
+        console.log(`Checking if user ${userId} exists in tenant ${req.tenantId}: ${userInTenant.length > 0}`);
         
         if (userInTenant.length > 0) {
           return res.status(409).json({ 

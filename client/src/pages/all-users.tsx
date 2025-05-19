@@ -202,19 +202,32 @@ export default function AllUsers() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUser) => {
-      const res = await apiRequest("POST", `/api/users`, {
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        username: userData.username,
-        password: userData.password, // Optional, will be generated if not provided
-        department: userData.department,
-        title: userData.title,
-        role: userData.tenantRole, // Tenant-specific role (member, admin, owner)
-        teamId: userData.teamId ? userData.teamId : null,
-        tenantId: tenantId, // Assign user to current tenant
-      });
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", `/api/users`, {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          username: userData.username,
+          password: userData.password, // Optional, will be generated if not provided
+          department: userData.department,
+          title: userData.title,
+          role: userData.tenantRole, // Tenant-specific role (member, admin, owner)
+          teamId: userData.teamId ? userData.teamId : null,
+          tenantId: tenantId, // Assign user to current tenant
+        });
+        
+        // Check if the response is an error
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to create user');
+        }
+        
+        return await res.json();
+      } catch (err) {
+        // Properly handle and propagate errors
+        console.error("Error creating user:", err);
+        throw err;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -246,10 +259,12 @@ export default function AllUsers() {
           : "Existing user has been added to your organization",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      const errorMessage = error.message || "An unknown error occurred";
+      
       toast({
         title: "Error creating user",
-        description: `There was a problem: ${error.message}`,
+        description: errorMessage,
         variant: "destructive",
       });
     }
