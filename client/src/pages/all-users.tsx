@@ -313,6 +313,81 @@ export default function AllUsers() {
     }
   });
 
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: typeof updateUserData) => {
+      try {
+        const res = await apiRequest("PATCH", `/api/users/${userData.id}`, {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          username: userData.username,
+          department: userData.department,
+          title: userData.title,
+          teamId: userData.teamId || null,
+          tenantRole: userData.tenantRole,
+          tenantId: tenantId, // Current tenant context
+        });
+        
+        // Check if the response is an error
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("Server returned error:", errorData);
+          
+          // Extract the specific error message from the response
+          if (errorData.message) {
+            throw new Error(errorData.message);
+          } else if (errorData.error) {
+            throw new Error(errorData.error);
+          } else {
+            throw new Error('Failed to update user - please try again');
+          }
+        }
+        
+        return await res.json();
+      } catch (err: any) {
+        // Enhanced error handling with specific error messages
+        console.error("Error updating user:", err);
+        
+        // Check for common error patterns
+        if (err.message?.includes("already exists")) {
+          throw new Error(err.message);
+        } else if (err.message?.includes("validation")) {
+          throw new Error(err.message);
+        } else if (err.message) {
+          throw new Error(err.message);
+        } else {
+          throw new Error("Failed to update user. Please check the data and try again.");
+        }
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      // If team was updated, invalidate team members
+      if (data.teamId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/teams", data.teamId, "users"] });
+      }
+      
+      setIsUpdateUserDialogOpen(false);
+      setSelectedUser(null);
+      
+      toast({
+        title: "User updated successfully",
+        description: "The user's information has been updated",
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || "An unknown error occurred";
+      
+      toast({
+        title: "Error updating user",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -357,6 +432,41 @@ export default function AllUsers() {
   const handleDeleteUser = () => {
     if (!selectedUser) return;
     deleteUserMutation.mutate(selectedUser.id);
+  };
+
+  const openUpdateUserDialog = (user: UserSchema) => {
+    setSelectedUser(user);
+    
+    // Get user's role in the current tenant
+    const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
+    const tenantRole = userTenantRelation?.userRole || 'member';
+    
+    // Populate the update form with the user's current data
+    setUpdateUserData({
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      department: user.department || '',
+      title: user.title || '',
+      teamId: user.teamId?.toString() || '',
+      tenantRole: tenantRole as 'member' | 'admin' | 'owner',
+    });
+    
+    setIsUpdateUserDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    updateUserMutation.mutate(updateUserData);
+  };
+
+  const handleUpdateUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUpdateUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const openAddUserDialog = () => {
@@ -595,7 +705,7 @@ export default function AllUsers() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
                 <DropdownMenuLabel>User Actions</DropdownMenuLabel>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openUpdateUserDialog(user)}>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit Profile
                 </DropdownMenuItem>
@@ -1260,6 +1370,147 @@ export default function AllUsers() {
               disabled={createUserMutation.isPending || !newUser.email}
             >
               {createUserMutation.isPending ? "Adding..." : "Add User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update User Dialog */}
+      <Dialog open={isUpdateUserDialogOpen} onOpenChange={setIsUpdateUserDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Update User</DialogTitle>
+            <DialogDescription>
+              Edit user profile details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="updateFirstName" className="text-sm font-medium">First Name *</label>
+                <Input 
+                  id="updateFirstName" 
+                  name="firstName" 
+                  value={updateUserData.firstName}
+                  onChange={handleUpdateUserInputChange}
+                  placeholder="John" 
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="updateLastName" className="text-sm font-medium">Last Name *</label>
+                <Input 
+                  id="updateLastName" 
+                  name="lastName" 
+                  value={updateUserData.lastName}
+                  onChange={handleUpdateUserInputChange}
+                  placeholder="Doe" 
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="updateEmail" className="text-sm font-medium">Email Address *</label>
+              <Input 
+                id="updateEmail" 
+                name="email" 
+                type="email" 
+                value={updateUserData.email}
+                onChange={handleUpdateUserInputChange}
+                placeholder="john.doe@example.com" 
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="updateUsername" className="text-sm font-medium">Username *</label>
+              <Input 
+                id="updateUsername" 
+                name="username" 
+                value={updateUserData.username}
+                onChange={handleUpdateUserInputChange}
+                placeholder="johndoe" 
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="updateDepartment" className="text-sm font-medium">Department</label>
+                <Input 
+                  id="updateDepartment" 
+                  name="department" 
+                  value={updateUserData.department}
+                  onChange={handleUpdateUserInputChange}
+                  placeholder="Engineering" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="updateTitle" className="text-sm font-medium">Job Title</label>
+                <Input 
+                  id="updateTitle" 
+                  name="title" 
+                  value={updateUserData.title}
+                  onChange={handleUpdateUserInputChange}
+                  placeholder="Software Engineer" 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="updateTeam" className="text-sm font-medium">Team</label>
+                <Select
+                  name="teamId"
+                  value={updateUserData.teamId?.toString() || ""}
+                  onValueChange={(value) => {
+                    setUpdateUserData(prev => ({ ...prev, teamId: value }));
+                  }}
+                >
+                  <SelectTrigger id="updateTeam">
+                    <SelectValue placeholder="Select a team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Team</SelectItem>
+                    {teams.map(team => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="updateRole" className="text-sm font-medium">Role</label>
+                <Select
+                  name="tenantRole"
+                  value={updateUserData.tenantRole}
+                  onValueChange={(value) => {
+                    setUpdateUserData(prev => ({ ...prev, tenantRole: value as "owner" | "admin" | "member" }));
+                  }}
+                >
+                  <SelectTrigger id="updateRole">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUpdateUserDialogOpen(false)}>Cancel</Button>
+            <Button 
+              type="submit" 
+              onClick={handleUpdateUser}
+              disabled={updateUserMutation.isPending}
+            >
+              {updateUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
