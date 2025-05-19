@@ -425,6 +425,8 @@ export class DatabaseStorage implements IStorage {
       icon: teams.icon,
       parentId: teams.parentId,
       ownerId: teams.ownerId,
+      tenantId: teams.tenantId, // Add tenantId field to the selection
+      memberIds: teams.memberIds, // Add memberIds for completeness
       createdAt: teams.createdAt
     }).from(teams).where(eq(teams.id, id));
     return team;

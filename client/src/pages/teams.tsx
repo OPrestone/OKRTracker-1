@@ -246,9 +246,9 @@ const Teams = () => {
   const [currentObjectivesPage, setCurrentObjectivesPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch all teams - using a flat single string queryKey for simplicity
+  // Fetch all teams - using an array format for consistent approach with other queries
   const { data: teams, isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: "/api/teams", // Use string format to completely avoid path concatenation issues
+    queryKey: ["/api/teams"], // Use array format with single element for consistent handling
     staleTime: 0 // Don't cache for this test
   });
 
