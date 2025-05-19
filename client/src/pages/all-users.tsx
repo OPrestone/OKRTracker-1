@@ -1463,16 +1463,19 @@ export default function AllUsers() {
                 <label htmlFor="updateTeam" className="text-sm font-medium">Team</label>
                 <Select
                   name="teamId"
-                  value={updateUserData.teamId?.toString() || ""}
+                  value={updateUserData.teamId?.toString() || "no-team"}
                   onValueChange={(value) => {
-                    setUpdateUserData(prev => ({ ...prev, teamId: value }));
+                    setUpdateUserData(prev => ({ 
+                      ...prev, 
+                      teamId: value === "no-team" ? "" : value
+                    }));
                   }}
                 >
                   <SelectTrigger id="updateTeam">
                     <SelectValue placeholder="Select a team" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Team</SelectItem>
+                    <SelectItem value="no-team">No Team</SelectItem>
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
@@ -1485,7 +1488,7 @@ export default function AllUsers() {
                 <label htmlFor="updateRole" className="text-sm font-medium">Role</label>
                 <Select
                   name="tenantRole"
-                  value={updateUserData.tenantRole}
+                  value={updateUserData.tenantRole || "member"}
                   onValueChange={(value) => {
                     setUpdateUserData(prev => ({ ...prev, tenantRole: value as "owner" | "admin" | "member" }));
                   }}
