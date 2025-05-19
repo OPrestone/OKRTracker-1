@@ -713,6 +713,14 @@ const Teams = () => {
           </AlertDescription>
         </Alert>
       )}
+      
+      {/* JSON data display for testing */}
+      <div className="mt-12 p-6 bg-slate-50 rounded-lg border border-slate-200">
+        <h3 className="text-lg font-medium mb-4">All Teams (JSON Format)</h3>
+        <div className="bg-slate-100 p-4 rounded overflow-auto max-h-96">
+          <pre className="text-xs">{JSON.stringify(teams, null, 2)}</pre>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };
