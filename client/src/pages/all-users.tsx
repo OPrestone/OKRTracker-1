@@ -236,20 +236,38 @@ export default function AllUsers() {
         
         // Check if the response is an error
         if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Server returned error:", errorData);
-          
-          // Extract the specific error message from the response
-          if (errorData.message) {
-            throw new Error(errorData.message);
-          } else if (errorData.error) {
-            throw new Error(errorData.error);
-          } else {
-            throw new Error('Failed to create user - please try again');
+          try {
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await res.json();
+              console.error("Server returned error:", errorData);
+              
+              // Extract the specific error message from the response
+              if (errorData.message) {
+                throw new Error(errorData.message);
+              } else if (errorData.error) {
+                throw new Error(errorData.error);
+              } else {
+                throw new Error('Failed to create user - please try again');
+              }
+            } else {
+              // Handle non-JSON responses (like HTML error pages)
+              const errorText = await res.text();
+              console.error("Server returned non-JSON error:", errorText);
+              throw new Error(`Server error: ${res.status} ${res.statusText}`);
+            }
+          } catch (parseError) {
+            console.error("Error parsing server response:", parseError);
+            throw new Error(`Server error: ${res.status} ${res.statusText}`);
           }
         }
         
-        return await res.json();
+        try {
+          return await res.json();
+        } catch (jsonError) {
+          console.error("Error parsing response JSON:", jsonError);
+          throw new Error("Invalid response format from server");
+        }
       } catch (err: any) {
         // Enhanced error handling with specific error messages
         console.error("Error creating user:", err);
@@ -332,20 +350,38 @@ export default function AllUsers() {
         
         // Check if the response is an error
         if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Server returned error:", errorData);
-          
-          // Extract the specific error message from the response
-          if (errorData.message) {
-            throw new Error(errorData.message);
-          } else if (errorData.error) {
-            throw new Error(errorData.error);
-          } else {
-            throw new Error('Failed to update user - please try again');
+          try {
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await res.json();
+              console.error("Server returned error:", errorData);
+              
+              // Extract the specific error message from the response
+              if (errorData.message) {
+                throw new Error(errorData.message);
+              } else if (errorData.error) {
+                throw new Error(errorData.error);
+              } else {
+                throw new Error('Failed to update user - please try again');
+              }
+            } else {
+              // Handle non-JSON responses (like HTML error pages)
+              const errorText = await res.text();
+              console.error("Server returned non-JSON error:", errorText);
+              throw new Error(`Server error: ${res.status} ${res.statusText}`);
+            }
+          } catch (parseError) {
+            console.error("Error parsing server response:", parseError);
+            throw new Error(`Server error: ${res.status} ${res.statusText}`);
           }
         }
         
-        return await res.json();
+        try {
+          return await res.json();
+        } catch (jsonError) {
+          console.error("Error parsing response JSON:", jsonError);
+          throw new Error("Invalid response format from server");
+        }
       } catch (err: any) {
         // Enhanced error handling with specific error messages
         console.error("Error updating user:", err);
