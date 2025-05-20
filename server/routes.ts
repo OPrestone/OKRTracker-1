@@ -2110,7 +2110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Objectives API
-  app.get("/api/objectives", withTenant, async (req, res, next) => {
+  app.get("/api/objectives", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       // Filter objectives by current tenant ID
       const tenantId = req.tenantId;
