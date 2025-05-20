@@ -138,9 +138,19 @@ export default function DraftOKRs() {
         throw new Error("No tenant selected. Please select an organization first.");
       }
       
-      const response = await fetch(`/api/objectives?status=draft&tenantId=${effectiveTenantId}`);
+      // Use a request with credentials to ensure auth cookies are sent
+      // And set the X-Tenant-ID header as an alternative method
+      const response = await fetch(`/api/objectives?status=draft&tenantId=${effectiveTenantId}`, {
+        credentials: 'include',
+        headers: {
+          'X-Tenant-ID': effectiveTenantId
+        }
+      });
       
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error("Access denied. You don't have permission to view these objectives.");
+        }
         throw new Error("Failed to fetch draft objectives");
       }
       
