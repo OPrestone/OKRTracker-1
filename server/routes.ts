@@ -3300,6 +3300,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate that all members belong to the current tenant
+      // This section handles processing chat room members
+      // Note: In this case, memberIds is a valid field in the request body for chat rooms
+      // It's different from the team schema where it's not present
       if (req.body.memberIds && Array.isArray(req.body.memberIds)) {
         const memberIds = req.body.memberIds.filter((id: string) => id !== req.user.id);
         
