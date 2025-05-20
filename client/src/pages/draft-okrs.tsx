@@ -118,40 +118,39 @@ export default function DraftOKRs() {
   const { data: draftObjectives, isLoading, error } = useQuery<DraftObjective[]>({
     queryKey: ["/api/objectives", "draft"],
     queryFn: async () => {
-      // Get the tenant ID from context, localStorage, or the default tenant
-      const tenantId = sessionStorage.getItem('selectedTenantId') || localStorage.getItem('defaultTenantId') || '';
-      
-      if (!tenantId) {
-        // If no tenant ID is available, fetch the user's tenants first
-        const userResponse = await fetch('/api/user');
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          if (userData.defaultTenant) {
-            localStorage.setItem('defaultTenantId', userData.defaultTenant);
-          }
-        }
+      // First, ensure we have the current user information
+      const userResponse = await apiRequest("GET", "/api/user");
+      if (!userResponse.ok) {
+        throw new Error("Unable to verify authentication. Please log in again.");
       }
       
-      // Try again with the tenant ID (might have been set in the previous step)
-      const effectiveTenantId = tenantId || localStorage.getItem('defaultTenantId') || '';
-      if (!effectiveTenantId) {
+      const userData = await userResponse.json();
+      
+      // Get tenant ID from user data or stored preferences
+      let tenantId = sessionStorage.getItem('selectedTenantId') || '';
+      
+      // If no tenant ID is explicitly selected, use the default tenant
+      if (!tenantId && userData.defaultTenant) {
+        tenantId = userData.defaultTenant;
+        localStorage.setItem('defaultTenantId', tenantId);
+      } else if (!tenantId && userData.tenants && userData.tenants.length > 0) {
+        // If still no tenant ID but user has tenants, use the first one
+        tenantId = userData.tenants[0].id;
+        localStorage.setItem('defaultTenantId', tenantId);
+      }
+      
+      if (!tenantId) {
         throw new Error("No tenant selected. Please select an organization first.");
       }
       
-      // Use a request with credentials to ensure auth cookies are sent
-      // And set the X-Tenant-ID header as an alternative method
-      const response = await fetch(`/api/objectives?status=draft&tenantId=${effectiveTenantId}`, {
-        credentials: 'include',
-        headers: {
-          'X-Tenant-ID': effectiveTenantId
-        }
-      });
+      // Use the apiRequest helper which handles auth properly
+      const response = await apiRequest("GET", `/api/objectives?status=draft&tenantId=${tenantId}`);
       
       if (!response.ok) {
         if (response.status === 403) {
           throw new Error("Access denied. You don't have permission to view these objectives.");
         }
-        throw new Error("Failed to fetch draft objectives");
+        throw new Error(`Failed to fetch draft objectives: ${response.statusText}`);
       }
       
       const objectives = await response.json();
