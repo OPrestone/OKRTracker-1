@@ -146,18 +146,11 @@ export default function DraftOKRs() {
       // Store the tenant ID for future use
       localStorage.setItem('defaultTenantId', tenantId);
       
-      // Generate URL with query parameters
-      const queryParams = new URLSearchParams();
-      queryParams.append('status', 'draft');
+      // Instead of using general objectives endpoint, use the my-objectives endpoint which 
+      // has better tenant context handling and automatically filters by the current user
+      const response = await apiRequest("GET", `/api/my-objectives`);
       
-      // Make the request including the tenant ID in the headers
-      const response = await apiRequest("GET", `/api/objectives?${queryParams.toString()}`, undefined, {
-        headers: {
-          'X-Tenant-ID': tenantId
-        }
-      });
-      
-      console.log(`Fetching objectives with tenant: ${tenantId}`);
+      console.log(`Fetching my objectives for tenant: ${tenantId}`);
       
       if (!response.ok) {
         if (response.status === 403) {
