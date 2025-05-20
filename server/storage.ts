@@ -444,8 +444,52 @@ export class DatabaseStorage implements IStorage {
 
   // Team Management
   async createTeam(team: InsertTeam): Promise<Team> {
-    const [newTeam] = await db.insert(teams).values(team).returning();
-    return newTeam;
+    try {
+      console.log("Creating team with data:", { 
+        ...team, 
+        name: team.name,
+        description: team.description || '',
+        ownerId: team.ownerId,
+        tenantId: team.tenantId
+      });
+      
+      // Ensure we have the required fields
+      if (!team.name) {
+        throw new Error("Team name is required");
+      }
+      
+      if (!team.tenantId) {
+        throw new Error("Tenant ID is required");
+      }
+      
+      if (!team.ownerId) {
+        throw new Error("Owner ID is required");
+      }
+      
+      // Provide defaults for optional fields
+      const teamData = {
+        ...team,
+        description: team.description || '',
+        icon: team.icon || 'users',
+        color: team.color || '#4F46E5' // Default to indigo
+      };
+      
+      // Insert the team
+      const [newTeam] = await db.insert(teams).values(teamData).returning();
+      console.log("Successfully created team:", newTeam);
+      
+      return newTeam;
+    } catch (error) {
+      console.error("Error creating team in database:", error);
+      // Throw a more descriptive error
+      if (error.message.includes('duplicate key')) {
+        throw new Error(`A team with this name already exists in this organization`);
+      } else if (error.message.includes('foreign key constraint')) {
+        throw new Error(`Invalid tenant ID or owner ID reference`);
+      } else {
+        throw error; // Re-throw original error for other cases
+      }
+    }
   }
 
   async getTeam(id: string): Promise<Team | undefined> {
