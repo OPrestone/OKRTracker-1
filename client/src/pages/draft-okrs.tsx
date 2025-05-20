@@ -542,548 +542,423 @@ export default function DraftOKRs() {
   };
 
   return (
-    <DashboardLayout title="Draft OKRs">
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-blue-800">Draft OKRs</h1>
-            <p className="text-muted-foreground mt-1">
-              Create and refine your objectives before finalizing them
-            </p>
-          </div>
-          <Button 
-            onClick={handleNewDraft} 
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span>New Draft</span>
-          </Button>
+    <DashboardLayout>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Draft OKRs</h1>
+          <p className="text-muted-foreground mt-1">
+            Create and manage objective drafts before finalizing them.
+          </p>
         </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="flex flex-col items-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Loading your draft OKRs...</p>
-            </div>
-          </div>
-        ) : error ? (
-          <Card className="border-destructive/20 bg-destructive/5">
-            <CardContent className="py-10 text-center">
-              <p className="text-destructive font-medium">Failed to load draft OKRs.</p>
-              <p className="text-sm text-muted-foreground mt-2">Please try refreshing the page or contact support.</p>
-            </CardContent>
-          </Card>
-        ) : (draftObjectives && Array.isArray(draftObjectives) && draftObjectives.length > 0) ? (
-          <div className="grid gap-8">
-            {draftObjectives.map((objective) => (
-              <Card 
-                key={objective.id} 
-                className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200"
-              >
-                <CardHeader className="bg-muted/30 pb-4">
-                  <div className="flex justify-between items-start flex-wrap gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">Draft</Badge>
-                        {objective.created_at && (
-                          <span className="text-xs text-muted-foreground">
-                            Created: {new Date(objective.created_at).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                      <CardTitle className="text-xl font-bold text-blue-800">{objective.title}</CardTitle>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleEdit(objective)}
-                        className="border-blue-200 hover:border-blue-300 hover:bg-blue-50"
-                      >
-                        <Edit className="h-4 w-4 mr-2 text-blue-600" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleAIReview(objective)}
-                        className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                      >
-                        <Sparkles className="h-4 w-4 mr-2 text-purple-600" />
-                        AI Review
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleSubmit(objective)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <ArrowRight className="h-4 w-4 mr-2" />
-                        Submit
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="prose prose-sm max-w-none mb-6">
-                    <p className="text-muted-foreground">{objective.description}</p>
-                  </div>
-                  <div>
-                    <div className="flex items-center mb-4">
-                      <h3 className="font-semibold text-lg text-blue-800">Key Results</h3>
-                      <div className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                        {objective.keyResults?.length || 0}
-                      </div>
-                    </div>
-                    
-                    <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                      {objective.keyResults && objective.keyResults.length > 0 ? (
-                        objective.keyResults.map((keyResult, index) => (
-                          <div 
-                            key={keyResult.id || index} 
-                            className="border rounded-lg p-5 bg-white hover:shadow-sm transition-shadow duration-200 relative overflow-hidden"
-                          >
-                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                            <h4 className="font-medium text-blue-800 mb-2">{keyResult.title}</h4>
-                            {keyResult.description && (
-                              <p className="text-sm text-muted-foreground mb-3">
-                                {keyResult.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex flex-wrap items-center gap-4 mt-3">
-                              {keyResult.target_value && (
-                                <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded-md">
-                                  <span className="text-xs font-medium">Target: {keyResult.target_value}</span>
-                                </div>
-                              )}
-                              
-                              {keyResult.assigned_to_id && (
-                                <div className="flex items-center gap-2 ml-auto">
-                                  <Avatar className="h-6 w-6 border-2 border-white">
-                                    <AvatarFallback className="bg-blue-100 text-blue-800">
-                                      {keyResult.assigned_to_id.substring(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs text-muted-foreground">
-                                    Assigned to: {keyResult.assigned_to_id}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="col-span-full text-sm bg-muted/30 p-4 rounded-lg border text-muted-foreground flex items-center justify-center">
-                          <span>No key results defined yet. Key results help make your objective measurable.</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="border-dashed border-2 border-muted-foreground/20">
-            <CardContent className="py-12 text-center">
-              <div className="flex flex-col items-center max-w-md mx-auto">
-                <div className="w-16 h-16 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center mb-4">
-                  <Plus className="h-8 w-8" />
+        <Button onClick={handleNewDraft}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Draft
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <Card className="border-destructive shadow-md">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error Loading Drafts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{(error as Error).message || "Failed to load draft objectives. Please try again later."}</p>
+            <Button variant="outline" className="mt-4" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft"] })}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : draftObjectives && draftObjectives.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {draftObjectives.map((objective) => (
+            <Card key={objective.id} className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg font-semibold">{objective.title}</CardTitle>
+                  <Badge variant="secondary" className="ml-2">Draft</Badge>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No draft OKRs yet</h3>
-                <p className="text-muted-foreground mb-6">Create your first draft objective to start planning and tracking your team's goals</p>
-                <Button 
-                  onClick={handleNewDraft}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
+                {objective.description && (
+                  <CardDescription className="mt-2 line-clamp-2">
+                    {objective.description}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="pb-2">
+                <h4 className="text-sm font-medium mb-2">Key Results</h4>
+                {objective.keyResults && objective.keyResults.length > 0 ? (
+                  <ul className="space-y-2 list-disc pl-5">
+                    {objective.keyResults.slice(0, 3).map((keyResult) => (
+                      <li key={keyResult.id} className="text-sm text-muted-foreground">
+                        {keyResult.title}
+                      </li>
+                    ))}
+                    {objective.keyResults.length > 3 && (
+                      <li className="text-sm text-muted-foreground">
+                        +{objective.keyResults.length - 3} more key results
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No key results defined</p>
+                )}
+              </CardContent>
+              <CardFooter className="pt-2 flex justify-between">
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(objective)}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleAIReview(objective)}>
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    AI Review
+                  </Button>
+                </div>
+                <Button variant="default" size="sm" onClick={() => handleSubmit(objective)}>
+                  Submit
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="shadow-sm bg-muted/40">
+          <CardHeader>
+            <CardTitle>No Draft OKRs</CardTitle>
+            <CardDescription>
+              You haven't created any draft objectives yet. Create a new draft to get started.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleNewDraft}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Draft
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Create Draft Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Draft OKR</DialogTitle>
+            <DialogDescription>
+              Draft your objective and key results before submitting them for approval.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            <div className="grid gap-3">
+              <Label htmlFor="title">Objective Title</Label>
+              <Input
+                id="title"
+                placeholder="Enter a clear, motivating objective..."
+                value={newDraftData.title}
+                onChange={(e) => setNewDraftData(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+            
+            <div className="grid gap-3">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Provide context and details about this objective..."
+                value={newDraftData.description}
+                onChange={(e) => setNewDraftData(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <Label>Key Results</Label>
+                <Button variant="outline" size="sm" onClick={handleAddNewKeyResult}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create your first draft OKR
+                  Add Key Result
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Create Draft Dialog */}
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Draft OKR</DialogTitle>
-              <DialogDescription>
-                Draft your objective and key results before submitting them for approval.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-6 py-4">
-              <div className="grid gap-3">
-                <Label htmlFor="title">Objective Title</Label>
-                <Input
-                  id="title"
-                  placeholder="Enter a clear, motivating objective..."
-                  value={newDraftData.title}
-                  onChange={(e) => setNewDraftData(prev => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-
-              <div className="grid gap-3">
-                <Label htmlFor="description">Objective Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe what you want to achieve and why it matters..."
-                  value={newDraftData.description}
-                  onChange={(e) => setNewDraftData(prev => ({ ...prev, description: e.target.value }))}
-                  className="min-h-[120px]"
-                />
-              </div>
-
-              <Separator />
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <Label>Key Results</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddNewKeyResult}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Key Result
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {newDraftData.keyResults.map((kr, index) => (
-                    <div key={index} className="grid gap-3 p-4 border rounded-lg relative">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="grid gap-3 flex-1">
-                          <div>
-                            <Label htmlFor={`kr-title-${index}`}>Key Result Title</Label>
-                            <Input
-                              id={`kr-title-${index}`}
-                              placeholder="Measurable outcome with a clear success metric..."
-                              value={kr.title}
-                              onChange={(e) => handleNewDraftKeyResultChange(String(index), "title", e.target.value)}
-                            />
-                          </div>
-                        </div>
-
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveNewKeyResult(index)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </div>
+              
+              <div className="space-y-4">
+                {newDraftData.keyResults.map((keyResult, index) => (
+                  <div key={index} className="grid gap-3 border rounded-md p-4 relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={() => handleRemoveNewKeyResult(index)}
+                    >
+                      <span className="sr-only">Remove</span>
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
+                        <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                      </svg>
+                    </Button>
+                    
+                    <div className="grid gap-2">
+                      <Label htmlFor={`kr-title-${index}`}>Key Result {index + 1}</Label>
+                      <Input
+                        id={`kr-title-${index}`}
+                        placeholder="Enter a measurable key result..."
+                        value={keyResult.title}
+                        onChange={(e) => handleNewDraftKeyResultChange(String(index), "title", e.target.value)}
+                      />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateDraft} disabled={creating}>
-                {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {creating ? "Creating..." : "Create Draft"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateDraft} disabled={creating}>
+              {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {creating ? "Creating..." : "Create Draft"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Edit Draft Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Draft OKR</DialogTitle>
-              <DialogDescription>
-                Make changes to your draft objective.
-              </DialogDescription>
-            </DialogHeader>
+      {/* Edit Draft Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Draft OKR</DialogTitle>
+            <DialogDescription>
+              Update your objective and key results before finalizing.
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="grid gap-6 py-4">
-              <div className="grid gap-3">
-                <Label htmlFor="edit-title">Objective Title</Label>
-                <Input
-                  id="edit-title"
-                  placeholder="Enter a clear, motivating objective..."
-                  value={editDraftData.title}
-                  onChange={(e) => setEditDraftData(prev => ({ ...prev, title: e.target.value }))}
-                />
+          <div className="grid gap-6 py-4">
+            <div className="grid gap-3">
+              <Label htmlFor="edit-title">Objective Title</Label>
+              <Input
+                id="edit-title"
+                placeholder="Enter a clear, motivating objective..."
+                value={editDraftData.title}
+                onChange={(e) => setEditDraftData(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+            
+            <div className="grid gap-3">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Provide context and details about this objective..."
+                value={editDraftData.description}
+                onChange={(e) => setEditDraftData(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <Label>Key Results</Label>
+                <Button variant="outline" size="sm" onClick={handleAddEditKeyResult}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Key Result
+                </Button>
               </div>
-
-              <div className="grid gap-3">
-                <Label htmlFor="edit-description">Objective Description</Label>
-                <Textarea
-                  id="edit-description"
-                  placeholder="Describe what you want to achieve and why it matters..."
-                  value={editDraftData.description}
-                  onChange={(e) => setEditDraftData(prev => ({ ...prev, description: e.target.value }))}
-                  className="min-h-[120px]"
-                />
-              </div>
-
-              <Separator />
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <Label>Key Results</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAddEditKeyResult}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Key Result
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {editDraftData.keyResults.map((kr, index) => (
-                    <div key={index} className="grid gap-3 p-4 border rounded-lg relative">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="grid gap-3 flex-1">
-                          <div>
-                            <Label htmlFor={`edit-kr-title-${index}`}>Key Result Title</Label>
-                            <Input
-                              id={`edit-kr-title-${index}`}
-                              placeholder="Measurable outcome with a clear success metric..."
-                              value={kr.title}
-                              onChange={(e) => handleEditDraftKeyResultChange(kr.id || String(index), "title", e.target.value)}
-                            />
-                          </div>
-                        </div>
-
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() => handleRemoveEditKeyResult(index)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </div>
+              
+              <div className="space-y-4">
+                {editDraftData.keyResults.map((keyResult, index) => (
+                  <div key={keyResult.id || index} className="grid gap-3 border rounded-md p-4 relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={() => handleRemoveEditKeyResult(index)}
+                    >
+                      <span className="sr-only">Remove</span>
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
+                        <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                      </svg>
+                    </Button>
+                    
+                    <div className="grid gap-2">
+                      <Label htmlFor={`edit-kr-title-${index}`}>Key Result {index + 1}</Label>
+                      <Input
+                        id={`edit-kr-title-${index}`}
+                        placeholder="Enter a measurable key result..."
+                        value={keyResult.title}
+                        onChange={(e) => handleEditDraftKeyResultChange(keyResult.id || String(index), "title", e.target.value)}
+                      />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateDraft} disabled={creating}>
-                {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {creating ? "Updating..." : "Update Draft"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateDraft} disabled={creating}>
+              {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {creating ? "Updating..." : "Update Draft"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* AI Analysis Dialog */}
-        <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>AI Review of Your Objective</DialogTitle>
-              <DialogDescription>
-                Get AI-powered suggestions to improve your OKR.
-              </DialogDescription>
-            </DialogHeader>
-
+      {/* AI Review Dialog */}
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>AI Review of Your Objective</DialogTitle>
+            <DialogDescription>
+              Get AI-powered feedback to improve your OKR quality and effectiveness.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-auto max-h-[calc(80vh-200px)]">
             {analyzing ? (
-              <div className="py-12 flex flex-col items-center justify-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-center">Analyzing your OKR...</p>
+              <div className="flex flex-col items-center justify-center py-10">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Analyzing your objective with AI...</p>
               </div>
             ) : aiAnalysis ? (
-              <div className="grid gap-6 py-4">
+              <div className="space-y-6">
                 <div>
-                  <h3 className="font-medium mb-2">Overall Assessment</h3>
-                  <p className="text-muted-foreground">
-                    {aiAnalysis.overall ? aiAnalysis.overall : "Overall assessment not available"}
-                  </p>
+                  <h3 className="font-semibold text-lg mb-2">Overall Assessment</h3>
+                  <p className="text-muted-foreground">{aiAnalysis.overall}</p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <h3 className="font-medium mb-2 text-green-600">Strengths</h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {aiAnalysis.strengths && Array.isArray(aiAnalysis.strengths) ? (
-                        aiAnalysis.strengths.map((strength, i) => (
-                          <li key={i} className="text-muted-foreground">{strength}</li>
-                        ))
-                      ) : (
-                        <li className="text-muted-foreground">No strengths identified</li>
-                      )}
+                    <h3 className="font-semibold text-lg mb-2 flex items-center">
+                      <span className="text-green-500 mr-2">✓</span> Strengths
+                    </h3>
+                    <ul className="space-y-2 list-disc pl-5">
+                      {aiAnalysis.strengths.map((item, index) => (
+                        <li key={index} className="text-muted-foreground">{item}</li>
+                      ))}
                     </ul>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium mb-2 text-amber-600">Areas for Improvement</h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {aiAnalysis.weaknesses && Array.isArray(aiAnalysis.weaknesses) ? (
-                        aiAnalysis.weaknesses.map((weakness, i) => (
-                          <li key={i} className="text-muted-foreground">{weakness}</li>
-                        ))
-                      ) : (
-                        <li className="text-muted-foreground">No improvement areas identified</li>
-                      )}
+                    <h3 className="font-semibold text-lg mb-2 flex items-center">
+                      <span className="text-red-500 mr-2">!</span> Areas to Improve
+                    </h3>
+                    <ul className="space-y-2 list-disc pl-5">
+                      {aiAnalysis.weaknesses.map((item, index) => (
+                        <li key={index} className="text-muted-foreground">{item}</li>
+                      ))}
                     </ul>
                   </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-2">Suggestions</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {aiAnalysis.suggestions && Array.isArray(aiAnalysis.suggestions) ? (
-                      aiAnalysis.suggestions.map((suggestion, i) => (
-                        <li key={i} className="text-muted-foreground">{suggestion}</li>
-                      ))
-                    ) : (
-                      <li className="text-muted-foreground">No suggestions available</li>
-                    )}
-                  </ul>
                 </div>
                 
                 <Separator />
                 
                 <div>
-                  <h3 className="font-medium mb-3">Improved Version Suggestion</h3>
+                  <h3 className="font-semibold text-lg mb-4">Suggested Improvements</h3>
                   
-                  <Card>
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium uppercase text-muted-foreground mb-2">Suggestions</h4>
+                    <ul className="space-y-2 list-disc pl-5">
+                      {aiAnalysis.suggestions.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <Card className="border-primary/20 bg-primary/5">
                     <CardHeader>
-                      <CardTitle className="text-base">
-                        {aiAnalysis.improvedObjective && aiAnalysis.improvedObjective.title ? 
-                          aiAnalysis.improvedObjective.title : "Title not available"}
-                      </CardTitle>
+                      <CardTitle className="text-base">Improved OKR Version</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {aiAnalysis.improvedObjective && aiAnalysis.improvedObjective.description ? 
-                          aiAnalysis.improvedObjective.description : "Description not available"}
-                      </p>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Objective</h4>
+                        <p className="text-primary font-medium">{aiAnalysis.improvedObjective.title}</p>
+                      </div>
                       
-                      <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                      <ul className="list-disc pl-5 space-y-2">
-                        {aiAnalysis.improvedObjective && 
-                         aiAnalysis.improvedObjective.keyResults && 
-                         Array.isArray(aiAnalysis.improvedObjective.keyResults) ? (
-                          aiAnalysis.improvedObjective.keyResults.map((kr, i) => (
-                            <li key={i} className="text-sm">{kr}</li>
-                          ))
-                        ) : (
-                          <li className="text-sm">No key results available</li>
-                        )}
-                      </ul>
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Description</h4>
+                        <p className="text-muted-foreground text-sm">{aiAnalysis.improvedObjective.description}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Key Results</h4>
+                        <ul className="space-y-2 list-disc pl-5">
+                          {aiAnalysis.improvedObjective.keyResults.map((item, index) => (
+                            <li key={index} className="text-sm">{item}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center">
-                <p className="text-muted-foreground">No analysis available.</p>
+              <div className="bg-muted/30 p-8 rounded-lg text-center">
+                <p className="text-muted-foreground">No analysis available</p>
               </div>
             )}
+          </div>
 
-            <DialogFooter>
-              {aiAnalysis && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (selectedObjective && aiAnalysis) {
-                      setEditDraftData({
-                        id: selectedObjective.id,
-                        title: aiAnalysis.improvedObjective.title,
-                        description: aiAnalysis.improvedObjective.description,
-                        keyResults: aiAnalysis.improvedObjective.keyResults.map((krTitle, index) => ({
-                          id: selectedObjective.keyResults[index]?.id || "",
-                          title: krTitle,
-                          objective_id: selectedObjective.id
-                        }))
-                      });
-                      setAiDialogOpen(false);
-                      setEditDialogOpen(true);
-                    }
-                  }}
-                >
-                  Apply Suggestions
-                </Button>
-              )}
-              <Button onClick={() => setAiDialogOpen(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <DialogFooter>
+            <Button onClick={() => setAiDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* Submit Confirmation Dialog */}
-        <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Submit OKR</DialogTitle>
-              <DialogDescription>
-                This will move your draft to active status and make it visible to the entire organization.
-              </DialogDescription>
-            </DialogHeader>
+      {/* Submit OKR Dialog */}
+      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Submit OKR</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to submit this OKR? Once submitted, it will become active and visible to your organization.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-muted-foreground mb-4">
+              This will change the status from "draft" to "active".
+            </p>
+            
+            {selectedObjective && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {selectedObjective.title || "Untitled Objective"}
+                  </CardTitle>
+                </CardHeader>
+                {selectedObjective.keyResults && Array.isArray(selectedObjective.keyResults) && selectedObjective.keyResults.length > 0 && (
+                  <CardContent>
+                    <h4 className="text-sm font-medium mb-2">Key Results</h4>
+                    <ul className="list-disc pl-5 space-y-2">
+                      {selectedObjective.keyResults.map((kr, i) => (
+                        <li key={kr.id || i} className="text-sm">{kr.title || "Untitled Key Result"}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                )}
+              </Card>
+            )}
+          </div>
 
-            <div className="py-4">
-              <p className="text-muted-foreground mb-4">
-                Are you sure you want to submit this OKR?
-              </p>
-              
-              {selectedObjective && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      {selectedObjective.title || "Untitled Objective"}
-                    </CardTitle>
-                  </CardHeader>
-                  {selectedObjective.keyResults && Array.isArray(selectedObjective.keyResults) && selectedObjective.keyResults.length > 0 && (
-                    <CardContent>
-                      <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                      <ul className="list-disc pl-5 space-y-2">
-                        {selectedObjective.keyResults.map((kr, i) => (
-                          <li key={kr.id || i} className="text-sm">{kr.title || "Untitled Key Result"}</li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  )}
-                </Card>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSubmitDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmitConfirm} 
-                disabled={submitting}
-              >
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {submitting ? "Submitting..." : "Submit OKR"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubmitDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitConfirm} 
+              disabled={submitting}
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting ? "Submitting..." : "Submit OKR"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
