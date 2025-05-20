@@ -1508,7 +1508,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (userTeams.length > 0) {
           for (const team of userTeams) {
             // Only attempt to remove if the user is in the team
-            if (team.memberIds && team.memberIds.includes(userId)) {
+            // Teams don't have direct memberIds, users have teamId
+            // Get users for this team
+            const teamMembers = await storage.getUsersByTeam(team.id);
+            if (teamMembers.some(member => member.id === userId)) {
               await storage.removeUserFromTeam(userId, team.id);
             }
           }

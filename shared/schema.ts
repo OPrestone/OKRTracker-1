@@ -84,7 +84,6 @@ export const teams = pgTableWithUlid("teams", {
   parentId: text("parent_id").references(() => teams.id),
   ownerId: text("owner_id").references(() => users.id),
   tenantId: text("tenant_id").references(() => tenants.id),
-  memberIds: text("member_ids").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

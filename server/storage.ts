@@ -493,19 +493,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeam(id: string): Promise<Team | undefined> {
-    const [team] = await db.select({
-      id: teams.id,
-      name: teams.name,
-      description: teams.description,
-      color: teams.color, 
-      icon: teams.icon,
-      parentId: teams.parentId,
-      ownerId: teams.ownerId,
-      tenantId: teams.tenantId, // Add tenantId field to the selection
-      memberIds: teams.memberIds, // Add memberIds for completeness
-      createdAt: teams.createdAt
-    }).from(teams).where(eq(teams.id, id));
-    return team;
+    try {
+      const [team] = await db.select({
+        id: teams.id,
+        name: teams.name,
+        description: teams.description,
+        color: teams.color, 
+        icon: teams.icon,
+        parentId: teams.parentId,
+        ownerId: teams.ownerId,
+        tenantId: teams.tenantId,
+        createdAt: teams.createdAt
+      }).from(teams).where(eq(teams.id, id));
+      
+      return team;
+    } catch (error) {
+      console.error(`Error getting team ${id}:`, error);
+      return undefined;
+    }
   }
 
   async updateTeam(id: string, team: Partial<InsertTeam>): Promise<Team> {
@@ -522,42 +527,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTeams(): Promise<Team[]> {
-    return db.select({
-      id: teams.id,
-      name: teams.name,
-      description: teams.description,
-      color: teams.color,
-      icon: teams.icon,
-      parentId: teams.parentId,
-      ownerId: teams.ownerId,
-      createdAt: teams.createdAt
-    }).from(teams);
-  }
-  
-  async getTeamsByTenant(tenantId: string): Promise<Team[]> {
     try {
-      // Since the teams table doesn't have a tenant_id column,
-      // we need to get teams based on the owner_id of users in the tenant
-      
-      // First, get all users who belong to this tenant
-      const tenantUsers = await db.select({
-        id: users.id
-      })
-      .from(users)
-      .innerJoin(usersToTenants, eq(usersToTenants.userId, users.id))
-      .where(eq(usersToTenants.tenantId, tenantId));
-      
-      // Extract user IDs
-      const userIds = tenantUsers.map(user => user.id);
-      
-      if (userIds.length === 0) {
-        console.log(`No users found for tenant ${tenantId}`);
-        return []; // No users in this tenant, so no teams
-      }
-      
-      console.log(`Found ${userIds.length} users for tenant ${tenantId}`, userIds);
-      
-      // Get teams where the owner_id is in the list of user IDs from this tenant
       return db.select({
         id: teams.id,
         name: teams.name,
@@ -566,12 +536,35 @@ export class DatabaseStorage implements IStorage {
         icon: teams.icon,
         parentId: teams.parentId,
         ownerId: teams.ownerId,
+        tenantId: teams.tenantId,
+        createdAt: teams.createdAt
+      }).from(teams);
+    } catch (error) {
+      console.error('Error getting all teams:', error);
+      return [];
+    }
+  }
+  
+  async getTeamsByTenant(tenantId: string): Promise<Team[]> {
+    try {
+      console.log(`Getting teams for tenant: ${tenantId}`);
+      
+      // Query teams directly using the tenant_id column
+      return await db.select({
+        id: teams.id,
+        name: teams.name,
+        description: teams.description,
+        color: teams.color,
+        icon: teams.icon,
+        parentId: teams.parentId,
+        ownerId: teams.ownerId,
+        tenantId: teams.tenantId,
         createdAt: teams.createdAt
       })
       .from(teams)
-      .where(inArray(teams.ownerId, userIds));
+      .where(eq(teams.tenantId, tenantId));
     } catch (error) {
-      console.error('Error in getTeamsByTenant:', error);
+      console.error(`Error getting teams for tenant ${tenantId}:`, error);
       return [];
     }
   }
