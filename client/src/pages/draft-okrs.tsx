@@ -126,30 +126,36 @@ export default function DraftOKRs() {
       
       const userData = await userResponse.json();
       
-      // Get tenant ID from user data or stored preferences
-      let tenantId = sessionStorage.getItem('selectedTenantId') || '';
+      // Make sure we have the user's tenant information
+      if (!userData.tenants || userData.tenants.length === 0) {
+        throw new Error("No organizations found. Please contact your administrator.");
+      }
+
+      // Always use the default tenant from the user data if available
+      let tenantId = '';
       
-      // If no tenant ID is explicitly selected, use the default tenant
-      if (!tenantId && userData.defaultTenant) {
+      if (userData.defaultTenant) {
         tenantId = userData.defaultTenant;
-        localStorage.setItem('defaultTenantId', tenantId);
-      } else if (!tenantId && userData.tenants && userData.tenants.length > 0) {
-        // If still no tenant ID but user has tenants, use the first one
+        console.log("Using default tenant:", tenantId);
+      } else {
+        // If no default, use the first tenant the user has access to
         tenantId = userData.tenants[0].id;
-        localStorage.setItem('defaultTenantId', tenantId);
+        console.log("Using first available tenant:", tenantId);
       }
       
-      if (!tenantId) {
-        throw new Error("No tenant selected. Please select an organization first.");
-      }
+      // Store the tenant ID for future use
+      localStorage.setItem('defaultTenantId', tenantId);
       
-      // Use the apiRequest helper which handles auth properly with proper tenant context
-      // Generate URL with query parameters without duplicating tenantId
+      // Generate URL with query parameters
       const queryParams = new URLSearchParams();
       queryParams.append('status', 'draft');
-      queryParams.append('tenantId', tenantId);
       
-      const response = await apiRequest("GET", `/api/objectives?${queryParams.toString()}`);
+      // Make the request including the tenant ID in the headers
+      const response = await apiRequest("GET", `/api/objectives?${queryParams.toString()}`, undefined, {
+        headers: {
+          'X-Tenant-ID': tenantId
+        }
+      });
       
       console.log(`Fetching objectives with tenant: ${tenantId}`);
       
