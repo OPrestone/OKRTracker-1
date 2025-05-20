@@ -674,20 +674,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       console.log(`Creating team for tenant: ${req.tenantId}, owner: ${req.user.id}`);
+      console.log(`Request body:`, JSON.stringify(req.body));
+      
+      // Make sure we have the required fields
+      if (!req.body.name) {
+        console.log('Team name is required');
+        return res.status(400).json({ error: "Team name is required" });
+      }
+      
+      // Additional validation for required fields
+      if (!req.tenantId) {
+        console.log('Tenant ID is missing');
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
       
       // Use the owner ID from the authenticated user and add the tenant ID
-      const validatedData = insertTeamSchema.parse({
-        ...req.body,
-        ownerId: req.user.id, // This links the team to a user in this tenant
-        tenantId: req.tenantId // Critical: Associate team with current tenant
-      });
-      
-      const team = await storage.createTeam(validatedData);
-      console.log(`Created team: ${team.id} with name: ${team.name} for tenant: ${team.tenantId}`);
-      res.status(201).json(team);
+      try {
+        const validatedData = insertTeamSchema.parse({
+          ...req.body,
+          ownerId: req.user.id, // This links the team to a user in this tenant
+          tenantId: req.tenantId // Critical: Associate team with current tenant
+        });
+        
+        console.log(`Validated data:`, JSON.stringify(validatedData));
+        
+        const team = await storage.createTeam(validatedData);
+        console.log(`Created team: ${team.id} with name: ${team.name} for tenant: ${team.tenantId}`);
+        res.status(201).json(team);
+      } catch (validationError) {
+        console.error('Validation error creating team:', validationError);
+        return res.status(400).json({ 
+          error: "Validation error", 
+          details: validationError.errors || validationError.message 
+        });
+      }
     } catch (error) {
       console.error('Error creating team:', error);
-      next(error);
+      // Send a more descriptive error response instead of using next(error)
+      res.status(500).json({ 
+        error: "Failed to create team", 
+        message: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
