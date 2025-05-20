@@ -143,8 +143,15 @@ export default function DraftOKRs() {
         throw new Error("No tenant selected. Please select an organization first.");
       }
       
-      // Use the apiRequest helper which handles auth properly
-      const response = await apiRequest("GET", `/api/objectives?status=draft&tenantId=${tenantId}`);
+      // Use the apiRequest helper which handles auth properly with proper tenant context
+      // Generate URL with query parameters without duplicating tenantId
+      const queryParams = new URLSearchParams();
+      queryParams.append('status', 'draft');
+      queryParams.append('tenantId', tenantId);
+      
+      const response = await apiRequest("GET", `/api/objectives?${queryParams.toString()}`);
+      
+      console.log(`Fetching objectives with tenant: ${tenantId}`);
       
       if (!response.ok) {
         if (response.status === 403) {
