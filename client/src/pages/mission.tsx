@@ -43,8 +43,11 @@ export default function Mission() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Extract tenantId from URL path - format: /:tenantId/mission
-  const tenantId = location.split('/')[1];
+  // Extract tenantId from URL path - format could be either:
+  // 1. /:id([A-Z0-9]{26})/mission (new ULID format)
+  // 2. /organization/:organisation/mission (legacy format)
+  const pathParts = location.split('/');
+  const tenantId = pathParts[1] === 'organization' ? pathParts[2] : pathParts[1];
 
   // State for full page edit mode
   const [fullPageEditMode, setFullPageEditMode] = useState(false);
@@ -123,9 +126,9 @@ export default function Mission() {
 
   // Query to fetch organization mission data
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
-    queryKey: ['/api/organization-mission'],
+    queryKey: ['/api/organization-mission', tenantId],
     queryFn: async () => {
-      const response = await fetch('/api/organization-mission', { 
+      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, { 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -136,7 +139,7 @@ export default function Mission() {
       }
       return response.json();
     },
-    enabled: true
+    enabled: !!tenantId // Only run query when tenantId is available
   });
 
   // Mutation to save organization mission data
@@ -174,7 +177,7 @@ export default function Mission() {
         description: "Mission and vision data saved successfully",
         variant: "default"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission', tenantId] });
     },
     onError: (error) => {
       toast({
