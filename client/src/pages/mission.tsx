@@ -157,10 +157,13 @@ export default function Mission() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to save mission data');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Failed to save mission data: ' + errorText);
       }
       
-      return response.json();
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
     },
     onSuccess: () => {
       toast({
@@ -168,7 +171,7 @@ export default function Mission() {
         description: "Mission and vision data saved successfully",
         variant: "default"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/organisation-mission'] });
     },
     onError: (error) => {
       toast({

@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // The rest of the routes will use the existing middleware
   
   // Organization Mission API Endpoints
-  app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
+  app.get('/api/organisation-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const tenantId = req.tenantId;
       
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
+  app.post('/api/organisation-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const tenantId = req.tenantId;
       const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
@@ -268,7 +268,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .returning();
       }
       
-      res.json(result[0]);
+      // Make sure we have a result to return
+      if (result && result.length > 0) {
+        return res.json({
+          success: true,
+          data: result[0]
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: "Mission data saved successfully"
+        });
+      }
     } catch (error) {
       console.error("Error updating organization mission:", error);
       res.status(500).json({ error: "Failed to update organization mission" });
