@@ -243,7 +243,6 @@ export default function Mission() {
     
     try {
       await saveMissionMutation.mutateAsync({
-        tenantId,
         mission: missionDraft,
         vision: visionDraft, 
         strategicDirection: strategicDirectionDraft,
@@ -294,7 +293,6 @@ export default function Mission() {
     
     try {
       await saveMissionMutation.mutateAsync({
-        tenantId,
         mission: missionDraft,
         vision: vision,
         strategicDirection: strategicDirection,
@@ -327,7 +325,6 @@ export default function Mission() {
     
     try {
       await saveMissionMutation.mutateAsync({
-        tenantId,
         mission: missionStatement,
         vision: vision,
         strategicDirection: strategicDirection,
@@ -361,7 +358,6 @@ export default function Mission() {
     
     try {
       await saveMissionMutation.mutateAsync({
-        tenantId,
         mission: missionStatement,
         vision: vision,
         strategicDirection: strategicDirection,
