@@ -77,9 +77,10 @@ interface CreateObjectiveFormData {
   title: string;
   description: string;
   level: string;
-  timeframeId: number | string;
+  timeframeId: string;
   tenantId: string;
   status: string;
+  ownerId: string;
 }
 
 // Add the CreateObjectiveDialog component
@@ -95,13 +96,21 @@ function CreateObjectiveDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  
+  // Get current user data
+  const { data: userData } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+  
   const [formData, setFormData] = useState<CreateObjectiveFormData>({
     title: '',
     description: '',
     level: 'company',
-    timeframeId: timeframe.id,
+    timeframeId: String(timeframe.id), // Ensure timeframeId is a string
     tenantId,
-    status: 'draft'
+    status: 'draft', // Use a valid status
+    ownerId: userData?.id || '' // Use current user ID as owner
   });
 
   // Create objective mutation
@@ -124,9 +133,10 @@ function CreateObjectiveDialog({
         title: '',
         description: '',
         level: 'company',
-        timeframeId: timeframe.id,
+        timeframeId: String(timeframe.id),
         tenantId,
-        status: 'draft'
+        status: 'draft',
+        ownerId: userData?.id || ''
       });
       setOpen(false);
       if (onSuccess) onSuccess();
@@ -219,8 +229,9 @@ function CreateObjectiveDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="not_started">Not Started</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>
