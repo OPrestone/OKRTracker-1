@@ -277,6 +277,7 @@ export default function DraftOKRs() {
   const handleNewDraft = () => {
     // Reset the form data
     setNewDraftData({
+      id: "", // Include id property to prevent type error
       title: "",
       description: "",
       keyResults: [{ id: "", title: "", objective_id: "" }]
@@ -548,6 +549,7 @@ export default function DraftOKRs() {
         
         // Reset the form data
         setNewDraftData({
+          id: "", // Include id property to fix LSP error
           title: "",
           description: "",
           keyResults: [{ id: "", title: "", objective_id: "" }]
