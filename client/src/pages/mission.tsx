@@ -43,11 +43,40 @@ export default function Mission() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Extract tenantId from URL path - format could be either:
-  // 1. /:id([A-Z0-9]{26})/mission (new ULID format)
-  // 2. /organization/:organisation/mission (legacy format)
+  // Get tenant ID from multiple sources to ensure it's available
+  let extractedTenantId = '';
+  
+  // 1. Try to extract from URL path - format could be either:
+  //    - /:id([A-Z0-9]{26})/mission (new ULID format)
+  //    - /organization/:organisation/mission (legacy format)
   const pathParts = location.split('/');
-  const tenantId = pathParts[1] === 'organization' ? pathParts[2] : pathParts[1];
+  extractedTenantId = pathParts[1] === 'organization' ? pathParts[2] : pathParts[1];
+  
+  // 2. If not valid ID format or missing, try from localStorage
+  if (!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) {
+    const localTenant = localStorage.getItem('currentTenant');
+    if (localTenant) extractedTenantId = localTenant;
+  }
+  
+  // 3. If still not found, try from sessionStorage
+  if (!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) {
+    const sessionTenant = sessionStorage.getItem('currentTenantId');
+    if (sessionTenant) extractedTenantId = sessionTenant;
+  }
+  
+  // 4. If still not found, try from user object
+  if ((!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) && window.__USER__?.defaultTenant) {
+    extractedTenantId = window.__USER__.defaultTenant;
+  }
+  
+  // 5. If still no tenant ID, get it from the user's first tenant
+  if ((!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) && 
+      window.__USER__?.tenants && window.__USER__.tenants.length > 0) {
+    extractedTenantId = window.__USER__.tenants[0].id;
+  }
+  
+  const tenantId = extractedTenantId;
+  console.log("Using tenant ID:", tenantId);
 
   // State for full page edit mode
   const [fullPageEditMode, setFullPageEditMode] = useState(false);
@@ -128,16 +157,25 @@ export default function Mission() {
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
     queryKey: ['/api/organization-mission', tenantId],
     queryFn: async () => {
-      const response = await fetch('/api/organization-mission', { 
+      console.log("Fetching mission data with tenant ID:", tenantId);
+      
+      // Add tenant ID in query parameters to ensure it's available on the server
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      const response = await fetch(url, { 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         }
       });
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch mission data');
+        const errorText = await response.text();
+        console.error('Error fetching mission data:', errorText);
+        throw new Error('Failed to fetch mission data: ' + errorText);
       }
+      
       return response.json();
     },
     enabled: !!tenantId // Only run query when tenantId is available
@@ -152,15 +190,28 @@ export default function Mission() {
       boundaries: string;
       strategicDirection: string;
     }) => {
-      // The tenantId will be included in the header instead of the body
-      console.log("Saving mission data:", JSON.stringify(data));
-      const response = await fetch('/api/organization-mission', {
+      console.log("Saving mission data with tenant ID:", tenantId);
+      
+      // Add tenant ID in all possible locations to ensure it's available
+      // 1. In the URL query parameters
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      // 2. In the request headers
+      // 3. In the request body
+      const requestData = {
+        ...data,
+        tenantId: tenantId // Include tenant ID in the body too
+      };
+      
+      console.log("Complete request data:", JSON.stringify(requestData));
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(requestData)
       });
       
       if (!response.ok) {

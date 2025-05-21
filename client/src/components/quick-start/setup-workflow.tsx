@@ -100,25 +100,30 @@ export function SetupWorkflow() {
       
       console.log("Setting up mission with tenant ID:", tenantId);
       
-      // Add tenant ID to URL query for POST request to ensure the server receives it
+      // 1. Add tenant ID to URL query parameters
       const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
       
-      // Using direct fetch with X-Tenant-ID header AND query param to be absolutely sure
+      // 2. Create complete request data with tenant ID included in body
+      const requestData = {
+        mission: data.mission,
+        vision: data.vision,
+        tenantId: tenantId, // Include in body as well to be safe
+        // Create empty placeholders for the other required fields
+        strategicDirection: "",
+        behaviors: JSON.stringify([]),
+        boundaries: JSON.stringify({ freedoms: [], constraints: [] })
+      };
+      
+      console.log("Complete request data:", JSON.stringify(requestData));
+      
+      // 3. Using direct fetch with X-Tenant-ID header AND query param AND body inclusion
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         },
-        body: JSON.stringify({
-          mission: data.mission,
-          vision: data.vision,
-          tenantId: tenantId, // Include in body as well to be safe
-          // Create empty placeholders for the other required fields
-          strategicDirection: "",
-          behaviors: JSON.stringify([]),
-          boundaries: JSON.stringify({ freedoms: [], constraints: [] })
-        })
+        body: JSON.stringify(requestData)
       });
       
       if (!response.ok) {
