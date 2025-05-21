@@ -9,7 +9,6 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
          actionItems, ActionItem, InsertActionItem,
-         organizationMission, OrganizationMission, InsertOrganizationMission,
          projects, Project, InsertProject } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -29,11 +28,6 @@ export interface IStorage {
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
-  
-  // Organization Mission Management
-  getOrganizationMission(tenantId: string): Promise<OrganizationMission | undefined>;
-  createOrganizationMission(mission: InsertOrganizationMission): Promise<OrganizationMission>;
-  updateOrganizationMission(id: string, mission: Partial<InsertOrganizationMission>): Promise<OrganizationMission>;
   getUsersByTeam(teamId: string): Promise<User[]>;
   getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>>;
   updateLastLogin(userId: string): Promise<void>;
@@ -2978,38 +2972,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: string): Promise<void> {
     await db.delete(projects).where(eq(projects.id, id));
-  }
-  
-  // Organization Mission methods
-  async getOrganizationMission(tenantId: string): Promise<OrganizationMission | undefined> {
-    const mission = await db.query.organizationMission.findFirst({
-      where: eq(organizationMission.tenantId, tenantId),
-    });
-    return mission;
-  }
-
-  async createOrganizationMission(mission: InsertOrganizationMission): Promise<OrganizationMission> {
-    const [newMission] = await db.insert(organizationMission)
-      .values(mission)
-      .returning();
-      
-    return newMission;
-  }
-
-  async updateOrganizationMission(id: string, mission: Partial<InsertOrganizationMission>): Promise<OrganizationMission> {
-    const [updatedMission] = await db.update(organizationMission)
-      .set({
-        ...mission,
-        updatedAt: new Date()
-      })
-      .where(eq(organizationMission.id, id))
-      .returning();
-      
-    if (!updatedMission) {
-      throw new Error(`Organization mission record not found with id ${id}`);
-    }
-    
-    return updatedMission;
   }
 }
 

@@ -34,7 +34,7 @@ import ExportReports from "@/pages/export-reports";
 import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
-import MissionPage from "@/pages/[id]/mission";
+import MissionPage from "@/pages/mission";
 import MissionCompanyPage from "@/pages/mission-company";
 import CompanyMission from "@/pages/company-mission";
 import OneOnOneMeetings from "@/pages/one-on-one-meetings";
@@ -161,7 +161,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} /> */}
       <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
-      <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={MissionPage} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
       
