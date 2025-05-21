@@ -96,7 +96,9 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+  async ({ queryKey, meta }) => {
+    // Check if this query explicitly requires tenant ID
+    const requiresTenant = meta?.requiresTenant === true;
     try {
       // Enhanced debugging: log the request attempt
       console.log(`Making API request with queryKey:`, queryKey);
@@ -152,11 +154,10 @@ export const getQueryFn: <T>(options: {
       const urlObj = new URL(url, window.location.origin);
       
       // Add tenant ID as a query parameter to ensure it's available to the server
-      if (tenantId) {
-        // Only add the parameter if it's not already present
-        if (!urlObj.searchParams.has('tenantId')) {
-          urlObj.searchParams.append('tenantId', tenantId);
-        }
+      if (tenantId && (requiresTenant || !urlObj.searchParams.has('tenantId'))) {
+        // Always add for requiresTenant queries or if not already present
+        urlObj.searchParams.set('tenantId', tenantId);
+        console.log(`Adding tenant ID to request: ${tenantId} for ${url}`);
       }
       
       // Show request context for debugging

@@ -88,7 +88,10 @@ export default function Cadences() {
 
   // Fetch cadences
   const { data: cadences, isLoading } = useQuery<Cadence[]>({
-    queryKey: ["/api/cadences"]
+    queryKey: ["/api/cadences"],
+    meta: { 
+      requiresTenant: true
+    },
   });
 
   // Create cadence mutation
