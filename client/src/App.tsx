@@ -34,7 +34,7 @@ import ExportReports from "@/pages/export-reports";
 import TeamPerformance from "@/pages/team-performance";
 import AIRecommendations from "@/pages/ai-recommendations";
 import QuickStartGuide from "@/pages/quick-start-guide";
-import MissionPage from "@/pages/mission";
+import MissionPage from "@/pages/[id]/mission";
 import MissionCompanyPage from "@/pages/mission-company";
 import CompanyMission from "@/pages/company-mission";
 import OneOnOneMeetings from "@/pages/one-on-one-meetings";

@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUserContext } from "@/lib/user-context";
+import { useAuth } from "@/hooks/use-auth";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@/components/ui/breadcrumb";
 import { Loader2, BookOpen, Lightbulb, ShieldCheck, Compass, UserSquare } from "lucide-react";
 
@@ -32,7 +32,7 @@ type MissionFormValues = z.infer<typeof missionSchema>;
 
 export default function MissionPage() {
   const { id } = useParams<{ id: string }>();
-  const { userInfo } = useUserContext();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("mission");
@@ -40,11 +40,11 @@ export default function MissionPage() {
   
   useEffect(() => {
     // Check if user has admin rights for this tenant
-    if (userInfo?.tenants) {
-      const tenant = userInfo.tenants.find(t => t.id === id);
+    if (user?.tenants) {
+      const tenant = user.tenants.find(t => t.id === id);
       setIsAdmin(tenant?.userRole === 'admin' || tenant?.userRole === 'owner');
     }
-  }, [userInfo, id]);
+  }, [user, id]);
   
   // Fetch mission data
   const { data: missionData, isLoading } = useQuery({
