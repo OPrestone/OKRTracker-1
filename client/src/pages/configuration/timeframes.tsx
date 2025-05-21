@@ -73,7 +73,7 @@ export default function Timeframes() {
   
   // State for filter and dialogs
   const [filter, setFilter] = useState("");
-  const [filterCadenceId, setFilterCadenceId] = useState<string | null>(null);
+  const [filterCadenceId, setFilterCadenceId] = useState<string | null>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe | null>(null);
@@ -112,9 +112,9 @@ export default function Timeframes() {
 
   // Fetch timeframes query
   const timeframesQuery = useQuery({ 
-    queryKey: ["/api/timeframes", filterCadenceId], 
+    queryKey: ["/api/timeframes"], 
     queryFn: async ({ queryKey }) => {
-      const [endpoint, cadenceId] = queryKey;
+      const [endpoint] = queryKey;
       let url = endpoint as string;
       
       // Get tenant ID from URL or session storage
@@ -122,10 +122,6 @@ export default function Timeframes() {
       
       // Add tenant ID as query parameter
       url = `${url}?tenantId=${tenantId}`;
-      
-      if (cadenceId) {
-        url = `/api/cadences/${cadenceId}/timeframes?tenantId=${tenantId}`;
-      }
       
       const res = await apiRequest("GET", url);
       return await res.json();
@@ -298,9 +294,17 @@ export default function Timeframes() {
 
   // Filter timeframes based on search input
   const filteredTimeframes = timeframesQuery.data?.filter(
-    (timeframe: Timeframe) => 
-      timeframe.name.toLowerCase().includes(filter.toLowerCase()) ||
-      (timeframe.description && timeframe.description.toLowerCase().includes(filter.toLowerCase()))
+    (timeframe: Timeframe) => {
+      // Apply text filter
+      const matchesText = 
+        timeframe.name.toLowerCase().includes(filter.toLowerCase()) ||
+        (timeframe.description && timeframe.description.toLowerCase().includes(filter.toLowerCase()));
+      
+      // Apply cadence filter if not "all"
+      const matchesCadence = filterCadenceId === "all" || timeframe.cadence_id === filterCadenceId;
+      
+      return matchesText && matchesCadence;
+    }
   );
 
   return (
@@ -327,7 +331,7 @@ export default function Timeframes() {
         <div>
           <Select 
             value={filterCadenceId || "all"} 
-            onValueChange={value => setFilterCadenceId(value === "all" ? null : value)}>
+            onValueChange={value => setFilterCadenceId(value)}>
             <SelectTrigger className="w-[250px]">
               <SelectValue placeholder="Filter by cadence" />
             </SelectTrigger>
