@@ -89,7 +89,6 @@ export default function Timeframes() {
   const [editTimeframe, setEditTimeframe] = useState({
     name: "",
     startDate: new Date(),
-    endDate: new Date(),
     cadenceId: ""
   });
   
@@ -433,33 +432,7 @@ export default function Timeframes() {
                   </Popover>
                 </div>
                 
-                <div className="grid gap-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newTimeframe.endDate ? (
-                          format(newTimeframe.endDate, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newTimeframe.endDate}
-                        onSelect={(date) => date && setNewTimeframe(prev => ({ ...prev, endDate: date }))}
-                        initialFocus
-                        fromDate={newTimeframe.startDate}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                {/* End Date field removed - now automatically calculated based on cadence period and start date */}
               </div>
               
               <DialogFooter>
@@ -556,33 +529,7 @@ export default function Timeframes() {
               </Popover>
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="editEndDate">End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editTimeframe.endDate ? (
-                      format(editTimeframe.endDate, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={editTimeframe.endDate}
-                    onSelect={(date) => date && setEditTimeframe(prev => ({ ...prev, endDate: date }))}
-                    initialFocus
-                    fromDate={editTimeframe.startDate}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            {/* End Date field removed - now automatically calculated based on cadence period and start date */}
           </div>
           
           <DialogFooter>
