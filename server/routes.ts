@@ -10,7 +10,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
-         projects, projectStatusEnum, insertProjectSchema } from "@shared/schema";
+         projects, projectStatusEnum, insertProjectSchema, insertOrganizationMissionSchema } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -214,6 +214,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Organization Mission endpoints
+  app.get("/api/mission/:tenantId", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const { tenantId } = req.params;
+      const userId = (req.user as User).id;
+      
+      // Verify user has access to this tenant
+      const userTenants = await storage.getUserTenants(userId);
+      const hasTenantAccess = userTenants.some(t => t.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "You don't have access to this organization" });
+      }
+      
+      const mission = await storage.getOrganizationMission(tenantId);
+      return res.json(mission || {});
+    } catch (error) {
+      console.error("Error fetching mission:", error);
+      next(error);
+    }
+  });
+  
+  app.post("/api/mission", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const userId = (req.user as User).id;
+      const { tenantId } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenant ID" });
+      }
+      
+      // Verify user has admin rights for this tenant
+      const userTenants = await storage.getUserTenants(userId);
+      const userTenant = userTenants.find(t => t.id === tenantId);
+      
+      if (!userTenant || userTenant.userRole !== 'admin') {
+        return res.status(403).json({ error: "Forbidden: Admin rights required" });
+      }
+      
+      const missionData = insertOrganizationMissionSchema.parse({
+        ...req.body,
+        tenantId
+      });
+      
+      // Check if mission already exists for this tenant
+      const existingMission = await storage.getOrganizationMission(tenantId);
+      
+      if (existingMission) {
+        // Update existing mission
+        const updatedMission = await storage.updateOrganizationMission(existingMission.id, missionData);
+        return res.json(updatedMission);
+      } else {
+        // Create new mission
+        const newMission = await storage.createOrganizationMission(missionData);
+        return res.json(newMission);
+      }
+    } catch (error) {
+      console.error("Error saving mission:", error);
+      next(error);
+    }
+  });
+
   // Get tenant by slug - IMPORTANT: This must come before /:id route
   app.get("/api/tenants/slug/:slug", ensureAuthenticated, async (req, res, next) => {
     try {

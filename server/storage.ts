@@ -2979,6 +2979,38 @@ export class DatabaseStorage implements IStorage {
   async deleteProject(id: string): Promise<void> {
     await db.delete(projects).where(eq(projects.id, id));
   }
+  
+  // Organization Mission methods
+  async getOrganizationMission(tenantId: string): Promise<OrganizationMission | undefined> {
+    const mission = await db.query.organizationMission.findFirst({
+      where: eq(organizationMission.tenantId, tenantId),
+    });
+    return mission;
+  }
+
+  async createOrganizationMission(mission: InsertOrganizationMission): Promise<OrganizationMission> {
+    const [newMission] = await db.insert(organizationMission)
+      .values(mission)
+      .returning();
+      
+    return newMission;
+  }
+
+  async updateOrganizationMission(id: string, mission: Partial<InsertOrganizationMission>): Promise<OrganizationMission> {
+    const [updatedMission] = await db.update(organizationMission)
+      .set({
+        ...mission,
+        updatedAt: new Date()
+      })
+      .where(eq(organizationMission.id, id))
+      .returning();
+      
+    if (!updatedMission) {
+      throw new Error(`Organization mission record not found with id ${id}`);
+    }
+    
+    return updatedMission;
+  }
 }
 
 // Use the database storage implementation
