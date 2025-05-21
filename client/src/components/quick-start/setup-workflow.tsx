@@ -119,6 +119,7 @@ export function SetupWorkflow() {
       // 3. Using direct fetch with X-Tenant-ID header AND query param AND body inclusion
       const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include', // Important: Include cookies for authentication
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Use the custom header for tenant ID

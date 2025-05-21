@@ -154,31 +154,48 @@ export default function Mission() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Query to fetch organization mission data
-  const { data: missionData, isLoading: isMissionLoading } = useQuery({
+  const { data: missionData, isLoading: isMissionLoading, error: missionError } = useQuery({
     queryKey: ['/api/organization-mission', tenantId],
     queryFn: async () => {
       console.log("Fetching mission data with tenant ID:", tenantId);
       
+      // Make sure we have a valid tenant ID
+      if (!tenantId) {
+        console.error("No tenant ID available");
+        throw new Error("No tenant ID available");
+      }
+      
       // Add tenant ID in query parameters to ensure it's available on the server
       const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
       
-      const response = await fetch(url, { 
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
+      try {
+        // Include credentials to ensure cookies for authentication are sent
+        const response = await fetch(url, { 
+          method: 'GET',
+          credentials: 'include', // Important: Include credentials for authentication
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': tenantId // Use the custom header for tenant ID
+          }
+        });
+        
+        // Log the response to help debug
+        console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error fetching mission data:', errorText);
+          throw new Error('Failed to fetch mission data: ' + errorText);
         }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error fetching mission data:', errorText);
-        throw new Error('Failed to fetch mission data: ' + errorText);
+        
+        return response.json();
+      } catch (err) {
+        console.error("Error in mission data fetch:", err);
+        throw err;
       }
-      
-      return response.json();
     },
-    enabled: !!tenantId // Only run query when tenantId is available
+    enabled: !!tenantId, // Only run query when tenantId is available
+    retry: 3 // Retry failed queries up to 3 times
   });
 
   // Mutation to save organization mission data
@@ -207,6 +224,7 @@ export default function Mission() {
       
       const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include', // Important: Include cookies for authentication
         headers: {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Use the custom header for tenant ID
