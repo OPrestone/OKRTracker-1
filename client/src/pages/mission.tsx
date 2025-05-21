@@ -123,9 +123,9 @@ export default function Mission() {
 
   // Query to fetch organization mission data
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
-    queryKey: ['/api/organization-mission'],
+    queryKey: ['/api/organisation-mission'],
     queryFn: async () => {
-      const response = await fetch('/api/organization-mission', { 
+      const response = await fetch('/api/organisation-mission', { 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -148,7 +148,7 @@ export default function Mission() {
       boundaries: string;
       strategicDirection: string;
     }) => {
-      const response = await fetch('/api/organization-mission', {
+      const response = await fetch('/api/organisation-mission', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
