@@ -50,6 +50,7 @@ import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";
 import FeedbackWall from "@/pages/feedback-wall";
 import WellnessPulse from "@/pages/wellness-pulse";
+import ProgressDashboard from "@/pages/progress-dashboard";
 import Configure from "@/pages/configure";
 import TestLoginPage from "@/pages/test-login-page";
 import LoginTest from "@/pages/login-test";
@@ -145,6 +146,7 @@ function AppRoutes() {
       <ProtectedRoute path="/team-performance" component={TeamPerformance} />
       <ProtectedRoute path="/team-performance/:teamId" component={TeamPerformance} />
       <ProtectedRoute path="/ai-recommendations" component={AIRecommendations} />
+      <ProtectedRoute path="/progress-dashboard" component={ProgressDashboard} />
       
       {/* Communication */}
       <ProtectedRoute path="/chat" component={ChatPage} />
