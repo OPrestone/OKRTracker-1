@@ -78,15 +78,31 @@ export function SetupWorkflow() {
       // Get the tenant ID from sessionStorage (same source as used by queryClient)
       const tenantId = sessionStorage.getItem('currentTenantId');
       
-      return apiRequest('POST', '/api/organization-mission', {
-        mission: data.mission,
-        vision: data.vision,
-        tenantId: tenantId, // Include the tenant ID in the request body
-        // Create empty placeholders for the other required fields
-        strategicDirection: "",
-        behaviors: JSON.stringify([]),
-        boundaries: JSON.stringify({ freedoms: [], constraints: [] })
+      // Using direct fetch with X-Tenant-ID header instead of apiRequest
+      const response = await fetch('/api/organization-mission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId || '' // Use the custom header for tenant ID
+        },
+        body: JSON.stringify({
+          mission: data.mission,
+          vision: data.vision,
+          // Create empty placeholders for the other required fields
+          strategicDirection: "",
+          behaviors: JSON.stringify([]),
+          boundaries: JSON.stringify({ freedoms: [], constraints: [] })
+        })
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Failed to save mission data: ' + errorText);
+      }
+      
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
     },
     onSuccess: () => {
       toast({
