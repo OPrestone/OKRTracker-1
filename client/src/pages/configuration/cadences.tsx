@@ -188,20 +188,18 @@ export default function Cadences() {
     setNewCadence({
       name: "",
       description: "",
-      period: "quarterly",
-      startMonth: 1 // Using integer now
+      period: "quarterly"
+      // Removed startMonth field as requested
     });
   };
 
   const handleCreateCadence = () => {
-    // startMonth is already an integer, no need to convert
     createCadenceMutation.mutate(newCadence);
   };
 
   const handleUpdateCadence = () => {
     if (!selectedCadence) return;
     
-    // startMonth is already an integer, no need to convert
     updateCadenceMutation.mutate({
       id: selectedCadence.id,
       data: editCadence
@@ -298,24 +296,7 @@ export default function Cadences() {
                 </Select>
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="startMonth">Start Month</Label>
-                <Select 
-                  value={newCadence.startMonth.toString()} 
-                  onValueChange={(value) => handleSelectChange("startMonth", value)}
-                >
-                  <SelectTrigger id="startMonth">
-                    <SelectValue placeholder="Select start month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTH_NAMES.map((month, index) => (
-                      <SelectItem key={index} value={(index + 1).toString()}>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Removed Start Month field as requested */}
             </div>
             
             <DialogFooter>
@@ -390,24 +371,7 @@ export default function Cadences() {
               </Select>
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="editStartMonth">Start Month</Label>
-              <Select 
-                value={editCadence.startMonth.toString()} 
-                onValueChange={(value) => handleEditSelectChange("startMonth", value)}
-              >
-                <SelectTrigger id="editStartMonth">
-                  <SelectValue placeholder="Select start month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTH_NAMES.map((month, index) => (
-                    <SelectItem key={index} value={(index + 1).toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Removed Start Month field as requested */}
           </div>
           
           <DialogFooter>
@@ -478,7 +442,6 @@ export default function Cadences() {
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Period</TableHead>
-                  <TableHead>Start Month</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
