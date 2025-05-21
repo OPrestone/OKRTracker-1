@@ -44,7 +44,7 @@ import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
 import ChatPage from "@/pages/chat";
 import StrategyMap from "@/pages/strategy-map";
-import CreateObjective from "@/pages/create-objective-redesigned";
+import CreateObjective from "@/pages/create-objective";
 import CreateCompanyObjective from "@/pages/create-company-objective";
 import FinancePage from "@/pages/import-financial";
 import ProjectKanban from "@/pages/project-kanban";

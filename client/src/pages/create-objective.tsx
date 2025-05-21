@@ -966,7 +966,7 @@ export default function CreateObjective() {
                                     </SelectTrigger>
                                     <SelectContent>
                                       <div className="max-h-[240px] overflow-y-auto">
-                                        {objectives && objectives.length > 0 ? (
+                                        {Array.isArray(objectives) && objectives.length > 0 ? (
                                           objectives.map((objective: any) => (
                                             <SelectItem key={objective.id} value={objective.id}>
                                               <div className="flex items-center">
