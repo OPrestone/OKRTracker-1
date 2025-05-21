@@ -39,6 +39,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Mission() {
+  const [location] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Extract tenantId from URL path - format: /:tenantId/mission
+  const tenantId = location.split('/')[1];
+
   // State for full page edit mode
   const [fullPageEditMode, setFullPageEditMode] = useState(false);
   const [activeEditTab, setActiveEditTab] = useState<'strategic' | 'boundaries' | 'behaviors'>('strategic');
@@ -59,17 +66,12 @@ export default function Mission() {
   const [title, setTitle] = useState("Head of Information, Communication & Technology");
 
   // Mission state
-  const [missionStatement, setMissionStatement] = useState(
-    "To provide cutting edge technological and digital solutions that ensures RAL is able to generate 1.5B in revenue and a cumulative audience of 37M"
-  );
-  const [missionDraft, setMissionDraft] = useState(missionStatement);
+  const [missionStatement, setMissionStatement] = useState("");
+  const [missionDraft, setMissionDraft] = useState("");
 
-  // Strategic Direction state (read from company)
-  const strategicDirection = `One Level Up
-To become the biggest reach, most influential and trusted company in the communications
-landscape in order to deliver sustainable profits for shareholders and staff - by providing
-indispensable information and entertainment that enhance the lives of 16-35 year old
-Kenyans.`;
+  // Strategic Direction state
+  const [strategicDirection, setStrategicDirection] = useState("");
+  const [strategicDirectionDraft, setStrategicDirectionDraft] = useState("");
 
   // Level mission statements
   const [oneLevelMission, setOneLevelMission] = useState(
@@ -81,8 +83,9 @@ Kenyans.`;
   const [overrideOneLevelMission, setOverrideOneLevelMission] = useState(false);
   const [overrideTwoLevelMission, setOverrideTwoLevelMission] = useState(false);
 
-  // Vision state (read from company)
-  const [vision, setVision] = useState("Enter Vision");
+  // Vision state
+  const [vision, setVision] = useState("");
+  const [visionDraft, setVisionDraft] = useState("");
   
   // Purpose state (read from company)
   const [purpose, setPurpose] = useState("Enter Purpose");
@@ -91,36 +94,149 @@ Kenyans.`;
   const [values, setValues] = useState("Enter Values");
 
   // Behaviors state
-  const [behaviors, setBehaviors] = useState([
-    "I will mentor my team more effectively by acknowledging their achievements and challenges",
-    "I will delegate more task and responsibilities to my team",
-    "I will strive to deliver efficient and cost efficient ICT solutions",
-    "I will keep abreast with emerging technologies and encourage innovation within the team"
-  ]);
-  const [behaviorsDraft, setBehaviorsDraft] = useState([...behaviors]);
+  const [behaviors, setBehaviors] = useState<string[]>([]);
+  const [behaviorsDraft, setBehaviorsDraft] = useState<string[]>([]);
   const [newBehavior, setNewBehavior] = useState("");
-
+  
   // Boundaries state
-  const [boundaries, setBoundaries] = useState({
-    freedoms: [
-      "Supportive GCEO, GCCO and management team",
-      "Motivated and professional team",
-      "Flexibility to experiment and implement ICT solutions"
-    ],
-    constraints: [
-      "Financial resources, affecting their ability to invest in new technologies or upgrades",
-      "Consultant Delivery Timelines",
-      "Resistance to Change challenges"
-    ]
+  const [boundaries, setBoundaries] = useState<{
+    freedoms: string[];
+    constraints: string[];
+  }>({
+    freedoms: [],
+    constraints: []
   });
   
-  const [boundariesDraft, setBoundariesDraft] = useState({
-    freedoms: [...boundaries.freedoms],
-    constraints: [...boundaries.constraints]
+  const [boundariesDraft, setBoundariesDraft] = useState<{
+    freedoms: string[];
+    constraints: string[];
+  }>({
+    freedoms: [],
+    constraints: []
   });
   
   const [newFreedom, setNewFreedom] = useState("");
   const [newConstraint, setNewConstraint] = useState("");
+  
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Query to fetch organization mission data
+  const { data: missionData, isLoading: isMissionLoading } = useQuery({
+    queryKey: ['/api/organization-mission', tenantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch mission data');
+      }
+      return response.json();
+    },
+    enabled: !!tenantId
+  });
+
+  // Mutation to save organization mission data
+  const saveMissionMutation = useMutation({
+    mutationFn: async (data: {
+      tenantId: string;
+      mission: string;
+      vision: string;
+      behaviors: string;
+      boundaries: string;
+      strategicDirection: string;
+    }) => {
+      return apiRequest('/api/organization-mission', {
+        method: 'POST',
+        data
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Mission and vision data saved successfully",
+        variant: "default"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission', tenantId] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save mission and vision data",
+        variant: "destructive"
+      });
+      console.error("Error saving mission data:", error);
+    }
+  });
+
+  // Initialize data when mission data is loaded
+  useEffect(() => {
+    if (missionData?.exists) {
+      setMissionStatement(missionData.mission || "");
+      setMissionDraft(missionData.mission || "");
+      
+      setVision(missionData.vision || "");
+      setVisionDraft(missionData.vision || "");
+      
+      setStrategicDirection(missionData.strategicDirection || "");
+      setStrategicDirectionDraft(missionData.strategicDirection || "");
+      
+      // Parse behaviors from JSON string if available
+      try {
+        const parsedBehaviors = missionData.behaviors ? JSON.parse(missionData.behaviors) : [];
+        setBehaviors(Array.isArray(parsedBehaviors) ? parsedBehaviors : []);
+        setBehaviorsDraft(Array.isArray(parsedBehaviors) ? [...parsedBehaviors] : []);
+      } catch (error) {
+        console.error("Error parsing behaviors:", error);
+        setBehaviors([]);
+        setBehaviorsDraft([]);
+      }
+      
+      // Parse boundaries from JSON string if available
+      try {
+        const parsedBoundaries = missionData.boundaries ? JSON.parse(missionData.boundaries) : { freedoms: [], constraints: [] };
+        setBoundaries({
+          freedoms: Array.isArray(parsedBoundaries.freedoms) ? parsedBoundaries.freedoms : [],
+          constraints: Array.isArray(parsedBoundaries.constraints) ? parsedBoundaries.constraints : []
+        });
+        setBoundariesDraft({
+          freedoms: Array.isArray(parsedBoundaries.freedoms) ? [...parsedBoundaries.freedoms] : [],
+          constraints: Array.isArray(parsedBoundaries.constraints) ? [...parsedBoundaries.constraints] : []
+        });
+      } catch (error) {
+        console.error("Error parsing boundaries:", error);
+        setBoundaries({ freedoms: [], constraints: [] });
+        setBoundariesDraft({ freedoms: [], constraints: [] });
+      }
+    } else {
+      // Set default values if no data exists
+      const defaultBehaviors = [
+        "I will mentor my team more effectively by acknowledging their achievements and challenges",
+        "I will delegate more tasks and responsibilities to my team",
+        "I will strive to deliver efficient and cost-effective solutions",
+        "I will keep abreast with emerging technologies and encourage innovation within the team"
+      ];
+      
+      const defaultBoundaries = {
+        freedoms: [
+          "Supportive management team", 
+          "Motivated and professional team", 
+          "Flexibility to experiment and implement new solutions"
+        ],
+        constraints: [
+          "Financial resources, affecting ability to invest in new technologies",
+          "Delivery timelines",
+          "Resistance to change challenges"
+        ]
+      };
+      
+      setBehaviors(defaultBehaviors);
+      setBehaviorsDraft([...defaultBehaviors]);
+      
+      setBoundaries(defaultBoundaries);
+      setBoundariesDraft({...defaultBoundaries});
+    }
+  }, [missionData]);
+
+  // Boundaries state is already defined above, no need to re-declare
 
   // Handle full page edit save
   const saveFullPageEdit = () => {
