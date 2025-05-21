@@ -141,7 +141,8 @@ export function SetupWorkflow() {
         title: "Success",
         description: "Mission and vision saved successfully",
       });
-      navigate('/mission');
+      // Proceed to the next step in the workflow instead of navigating away
+      setCurrentStep(currentStep + 1);
     },
     onError: (error) => {
       console.error("Error saving mission data:", error);
