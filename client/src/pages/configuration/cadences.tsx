@@ -67,7 +67,7 @@ interface CadenceFormState {
   name: string;
   description: string;
   period: string;
-  startMonth: number; // Using number type for startMonth
+  // Removed startMonth field as requested
 }
 
 export default function Cadences() {
@@ -81,16 +81,16 @@ export default function Cadences() {
   const [newCadence, setNewCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
-    period: "quarterly",
-    startMonth: 1 // Using integer now
+    period: "quarterly"
+    // Removed startMonth field as requested
   });
 
   // Edit cadence form state
   const [editCadence, setEditCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
-    period: "quarterly",
-    startMonth: 1 // Using integer now
+    period: "quarterly"
+    // Removed startMonth field as requested
   });
 
   // Fetch cadences
@@ -175,15 +175,13 @@ export default function Cadences() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    // Convert startMonth to integer if that's the field being updated
-    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
-    setNewCadence(prev => ({ ...prev, [name]: newValue }));
+    // No need to convert values now that startMonth is removed
+    setNewCadence(prev => ({ ...prev, [name]: value }));
   };
 
   const handleEditSelectChange = (name: string, value: string) => {
-    // Convert startMonth to integer if that's the field being updated
-    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
-    setEditCadence(prev => ({ ...prev, [name]: newValue }));
+    // No need to convert values now that startMonth is removed
+    setEditCadence(prev => ({ ...prev, [name]: value }));
   };
 
   const resetNewCadenceForm = () => {

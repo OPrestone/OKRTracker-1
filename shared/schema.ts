@@ -111,7 +111,7 @@ export const cadences = pgTableWithUlid("cadences", {
   description: text("description"),
   // The database has 'period' column instead of 'period_days'
   period: text("period"), // e.g., 'weekly', 'quarterly'
-  startMonth: integer("start_month"), // Integer representing months 1-12
+  // Removed startMonth field as requested
   // Tenant ID to ensure cadences are organization-specific
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
