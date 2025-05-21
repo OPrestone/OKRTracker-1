@@ -75,8 +75,21 @@ export function SetupWorkflow() {
       mission: string;
       vision: string;
     }) => {
-      // Get the tenant ID from sessionStorage (same source as used by queryClient)
-      const tenantId = sessionStorage.getItem('currentTenantId');
+      // Get tenant ID from multiple sources to ensure it's available
+      // First try from localStorage (used by some components)
+      let tenantId = localStorage.getItem('currentTenant');
+      
+      // If not found, try from sessionStorage (used by queryClient)
+      if (!tenantId) {
+        tenantId = sessionStorage.getItem('currentTenantId');
+      }
+      
+      // If still not found, try from user object
+      if (!tenantId && window.__USER__?.defaultTenant) {
+        tenantId = window.__USER__.defaultTenant;
+      }
+      
+      console.log("Setting up mission with tenant ID:", tenantId);
       
       // Using direct fetch with X-Tenant-ID header instead of apiRequest
       const response = await fetch('/api/organization-mission', {
@@ -88,6 +101,7 @@ export function SetupWorkflow() {
         body: JSON.stringify({
           mission: data.mission,
           vision: data.vision,
+          tenantId: tenantId, // Include in body as well to be safe
           // Create empty placeholders for the other required fields
           strategicDirection: "",
           behaviors: JSON.stringify([]),
