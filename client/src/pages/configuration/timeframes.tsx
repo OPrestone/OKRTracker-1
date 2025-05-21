@@ -325,12 +325,14 @@ export default function Timeframes() {
           />
         </div>
         <div>
-          <Select value={filterCadenceId || ""} onValueChange={value => setFilterCadenceId(value || null)}>
+          <Select 
+            value={filterCadenceId || "all"} 
+            onValueChange={value => setFilterCadenceId(value === "all" ? null : value)}>
             <SelectTrigger className="w-[250px]">
               <SelectValue placeholder="Filter by cadence" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All cadences</SelectItem>
+              <SelectItem value="all">All cadences</SelectItem>
               {cadencesQuery.data?.map((cadence: Cadence) => (
                 <SelectItem key={cadence.id} value={cadence.id}>{cadence.name}</SelectItem>
               ))}
