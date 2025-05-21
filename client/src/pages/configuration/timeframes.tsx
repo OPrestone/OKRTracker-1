@@ -81,7 +81,7 @@ export default function Timeframes() {
     name: "",
     start_date: new Date(),
     end_date: new Date(),
-    cadence_id: "",
+    cadence_id: "placeholder", // Default non-empty value
     description: ""
   });
   
@@ -104,7 +104,7 @@ export default function Timeframes() {
       name: "",
       start_date: new Date(),
       end_date: new Date(),
-      cadence_id: "",
+      cadence_id: "placeholder",  // Use non-empty default value
       description: ""
     });
     setSelectedTimeframe(null);
@@ -437,6 +437,7 @@ export default function Timeframes() {
                   <SelectValue placeholder="Select a cadence" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="placeholder">Select a cadence</SelectItem>
                   {cadencesQuery.data?.map((cadence: Cadence) => (
                     <SelectItem key={cadence.id} value={cadence.id}>
                       {cadence.name}
