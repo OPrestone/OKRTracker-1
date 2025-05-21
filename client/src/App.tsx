@@ -157,8 +157,8 @@ function AppRoutes() {
       <ProtectedRoute path="/tenants" component={TenantsPage} />
       
       {/* ULID-based routes for organizations (new format using ULIDs directly) */}
-      <ProtectedRoute path="/:id([A-Z0-9]{26})" component={TenantDashboardRedirect} />
-      <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} />
+      {/* <ProtectedRoute path="/:id([A-Z0-9]{26})" component={TenantDashboardRedirect} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} /> */}
       <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
@@ -166,6 +166,8 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
       
       {/* Main organization section routes with ULID */}
+      <ProtectedRoute path="/:id([A-Z0-9]{26})" component={Dashboard} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={Home} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/my-okrs" component={MyOKRs} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/draft-okrs" component={DraftOKRs} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
