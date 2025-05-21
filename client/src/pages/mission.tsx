@@ -124,13 +124,7 @@ export default function Mission() {
   // Query to fetch organization mission data
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
     queryKey: ['/api/organization-mission'],
-    queryFn: async () => {
-      const response = await fetch(`/api/organization-mission`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch mission data');
-      }
-      return response.json();
-    },
+    queryFn: () => apiRequest('/api/organization-mission', { method: 'get' }),
     enabled: true
   });
 
