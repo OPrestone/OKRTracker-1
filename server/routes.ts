@@ -1794,6 +1794,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get timeframes with objectives for timeline editor
+  app.get("/api/timeframes/with-objectives/:tenantId", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = req.params.tenantId;
+      
+      // Verify the user has access to this tenant
+      const userTenants = await storage.getUserTenants(req.user.id);
+      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "Access to tenant denied" });
+      }
+      
+      // Get all timeframes for this tenant
+      const timeframes = await storage.getTimeframesByTenant(tenantId);
+      
+      if (timeframes.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get all objectives for this tenant
+      const objectives = await storage.getObjectivesByTenant(tenantId);
+      
+      // Group objectives by timeframe
+      const result = timeframes.map(timeframe => {
+        const timeframeObjectives = objectives.filter(obj => obj.timeframeId === timeframe.id);
+        return {
+          ...timeframe,
+          objectives: timeframeObjectives
+        };
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting timeframes with objectives:", error);
+      next(error);
+    }
+  });
+  
   // Get timeframes by cadence
   app.get("/api/cadences/:cadenceId/timeframes", withTenant, async (req, res, next) => {
     try {

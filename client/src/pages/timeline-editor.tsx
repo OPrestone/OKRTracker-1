@@ -264,13 +264,22 @@ export default function TimelineEditor() {
 
   // Fetch timeframes and objectives from API
   const { data: apiTimeframes = [], isLoading, error } = useQuery<TimeframeWithObjectives[]>({
-    queryKey: [`/api/timeframes/with-objectives`, tenantId],
+    queryKey: [`/api/timeframes/with-objectives/${tenantId}`],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!tenantId,
   });
 
   // Use API data if available, otherwise fall back to mock data
   const timeframesData = apiTimeframes.length > 0 ? apiTimeframes : timeframes;
+  
+  // Log data fetching status
+  console.log("Timeline Editor - Data status:", { 
+    tenantId, 
+    isLoading, 
+    hasApiData: apiTimeframes.length > 0,
+    timeframeCount: timeframesData.length,
+    objectivesCount: timeframesData.reduce((acc, tf) => acc + tf.objectives.length, 0)
+  });
 
   // Filter timeframes based on view type
   const filteredTimeframes = timeframesData.filter(timeframe => {
