@@ -9,21 +9,67 @@ import { IndividualProgress } from "@/components/dashboard/individual-progress";
 import { DashboardLayout as DashboardComponentLayout } from "@/components/dashboard/dashboard-layout";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
-import { Target, CheckCircle, AlertCircle, Users, BarChart3, FileBarChart, Calendar } from "lucide-react";
+import { Target, CheckCircle, AlertCircle, Users, BarChart3, FileBarChart, Calendar, Building } from "lucide-react";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboards() {
-  // Fetch dashboard summary data
+  const { currentTenant } = useTenantContext();
+  const tenantId = currentTenant?.id;
+
+  // Fetch dashboard summary data with tenant ID
   const { data: dashboardData = { objectives: {} } } = useQuery({
-    queryKey: ['/api/dashboard'],
+    queryKey: ['/api/dashboard', tenantId],
+    queryFn: async () => {
+      if (!tenantId) {
+        return { objectives: {} };
+      }
+      
+      const response = await fetch(`/api/dashboard?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId
   }) as { data: any };
 
+  // Fetch teams data with tenant ID
   const { data: teamsData = [] } = useQuery({
-    queryKey: ['/api/teams-performance'],
+    queryKey: ['/api/teams-performance', tenantId],
+    queryFn: async () => {
+      if (!tenantId) {
+        return [];
+      }
+      
+      const response = await fetch(`/api/teams-performance?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch teams performance data: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId
   }) as { data: any[] };
 
+  // Fetch objectives data with tenant ID
   const { data: objectivesData = [] } = useQuery({
-    queryKey: ['/api/objectives'],
+    queryKey: ['/api/objectives', tenantId],
+    queryFn: async () => {
+      if (!tenantId) {
+        return [];
+      }
+      
+      const response = await fetch(`/api/objectives?tenantId=${tenantId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch objectives data: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId
   }) as { data: any[] };
 
   // Extract stats from dashboard data
@@ -91,6 +137,32 @@ export default function Dashboards() {
   return (
     <DashboardLayout title="Dashboard" subtitle="Manage your objectives and key results">
       <div className="w-full">
+        {/* Organization Context Banner */}
+        {currentTenant && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between pt-6">
+              <div className="flex items-center mb-4 md:mb-0">
+                <Building className="h-10 w-10 text-primary mr-4 p-2 bg-primary/10 rounded-full" />
+                <div>
+                  <h3 className="text-lg font-semibold">{currentTenant.displayName || currentTenant.name}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center">
+                    <span>Organization Dashboard</span>
+                    <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">
+                      {currentTenant.status || 'Active'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col md:items-end">
+                <div className="mb-1 text-sm font-medium">Organization ID</div>
+                <Badge variant="secondary" className="font-mono text-xs py-1">
+                  {currentTenant.id}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Modern Dashboard Overview Section */}
         <DashboardComponentLayout overviewStats={stats} />
         
