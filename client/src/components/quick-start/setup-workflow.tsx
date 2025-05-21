@@ -75,13 +75,17 @@ export function SetupWorkflow() {
       mission: string;
       vision: string;
     }) => {
-      // Get tenant ID from multiple sources to ensure it's available
-      // First try from localStorage (used by some components)
-      let tenantId = localStorage.getItem('currentTenant');
+      // Get the tenant ID from the user's current tenant
+      let tenantId = '';
+      
+      // Try from localStorage first (used by some components)
+      const localTenant = localStorage.getItem('currentTenant');
+      if (localTenant) tenantId = localTenant;
       
       // If not found, try from sessionStorage (used by queryClient)
       if (!tenantId) {
-        tenantId = sessionStorage.getItem('currentTenantId');
+        const sessionTenant = sessionStorage.getItem('currentTenantId');
+        if (sessionTenant) tenantId = sessionTenant;
       }
       
       // If still not found, try from user object
@@ -89,14 +93,22 @@ export function SetupWorkflow() {
         tenantId = window.__USER__.defaultTenant;
       }
       
+      // If still no tenant ID, get it from the user's first tenant
+      if (!tenantId && window.__USER__?.tenants && window.__USER__.tenants.length > 0) {
+        tenantId = window.__USER__.tenants[0].id;
+      }
+      
       console.log("Setting up mission with tenant ID:", tenantId);
       
-      // Using direct fetch with X-Tenant-ID header instead of apiRequest
-      const response = await fetch('/api/organization-mission', {
+      // Add tenant ID to URL query for POST request to ensure the server receives it
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      // Using direct fetch with X-Tenant-ID header AND query param to be absolutely sure
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId || '' // Use the custom header for tenant ID
+          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         },
         body: JSON.stringify({
           mission: data.mission,
