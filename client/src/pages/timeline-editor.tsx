@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +8,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Plus, Filter, ChevronDown, ChevronUp, Info, MoreVertical, Check } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { Calendar, Plus, Filter, ChevronDown, ChevronUp, Info, MoreVertical, Check, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   DndContext,
   DragOverlay,
@@ -58,6 +71,172 @@ interface Objective {
 
 interface TimeframeWithObjectives extends Timeframe {
   objectives: Objective[];
+}
+
+interface CreateObjectiveFormData {
+  title: string;
+  description: string;
+  level: string;
+  timeframeId: number | string;
+  tenantId: string;
+  status: string;
+}
+
+// Add the CreateObjectiveDialog component
+function CreateObjectiveDialog({ 
+  timeframe, 
+  tenantId, 
+  onSuccess 
+}: { 
+  timeframe: TimeframeWithObjectives; 
+  tenantId: string;
+  onSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<CreateObjectiveFormData>({
+    title: '',
+    description: '',
+    level: 'company',
+    timeframeId: timeframe.id,
+    tenantId,
+    status: 'draft'
+  });
+
+  // Create objective mutation
+  const createObjectiveMutation = useMutation({
+    mutationFn: async (data: CreateObjectiveFormData) => {
+      const response = await apiRequest("POST", "/api/objectives", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || "Failed to create objective");
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/timeframes/with-objectives/${tenantId}`] });
+      toast({
+        title: "Objective created",
+        description: "Your objective has been successfully created",
+      });
+      setFormData({
+        title: '',
+        description: '',
+        level: 'company',
+        timeframeId: timeframe.id,
+        tenantId,
+        status: 'draft'
+      });
+      setOpen(false);
+      if (onSuccess) onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create objective",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) {
+      toast({
+        title: "Validation error",
+        description: "Title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    createObjectiveMutation.mutate(formData);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="w-full border border-dashed border-gray-300 text-gray-500 mt-2">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Objective
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Create New Objective for {timeframe.name}</DialogTitle>
+          <DialogDescription>
+            Add a new objective to track progress toward your goals.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Enter objective title"
+                className="w-full"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Describe what you want to achieve"
+                className="w-full min-h-[100px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="level">Level</Label>
+              <Select name="level" value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="company">Company</SelectItem>
+                  <SelectItem value="team">Team</SelectItem>
+                  <SelectItem value="personal">Personal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select name="status" value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="not_started">Not Started</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createObjectiveMutation.isPending}>
+              {createObjectiveMutation.isPending ? "Creating..." : "Create Objective"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function SortableObjective({ objective }: { objective: Objective }) {
@@ -122,8 +301,18 @@ function TimeframeColumn({ timeframe, objectives }: { timeframe: TimeframeWithOb
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Extract tenant ID from URL
+  const [location] = useLocation();
+  const tenantId = location.split('/')[1]; // Extract tenant ID from URL path
+  
   const startDate = formatDate(timeframe.startDate);
   const endDate = formatDate(timeframe.endDate);
+  
+  // Handle successful objective creation
+  const handleObjectiveCreated = () => {
+    // This function will be called after successful creation
+    console.log("Objective created for timeframe:", timeframe.name);
+  };
 
   return (
     <div className="bg-gray-50 rounded-lg p-3 min-w-[280px] h-full">
@@ -157,10 +346,12 @@ function TimeframeColumn({ timeframe, objectives }: { timeframe: TimeframeWithOb
             ))}
           </SortableContext>
           
-          <Button variant="ghost" size="sm" className="w-full border border-dashed border-gray-300 text-gray-500 mt-2">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Objective
-          </Button>
+          {/* Replace Button with CreateObjectiveDialog */}
+          <CreateObjectiveDialog 
+            timeframe={timeframe} 
+            tenantId={tenantId} 
+            onSuccess={handleObjectiveCreated} 
+          />
         </div>
       </div>
     </div>
