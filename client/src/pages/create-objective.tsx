@@ -141,8 +141,7 @@ export default function CreateObjective() {
           </button>
         </div>
         
-
-      <div className="space-y-6">
+        <div className="space-y-6">
         {/* Name */}
         <div>
           <Label htmlFor="name">Name</Label>
