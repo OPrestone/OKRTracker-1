@@ -100,11 +100,31 @@ export default function Timeframes() {
 
   // Reset form state
   const resetForm = () => {
+    // Get first available cadence id or use placeholder
+    const firstCadenceId = cadencesQuery.data && cadencesQuery.data.length > 0 
+      ? cadencesQuery.data[0].id 
+      : "placeholder";
+    
+    // Start with today's date
+    const startDate = new Date();
+    
+    // Calculate end date based on cadence if available
+    let endDate = new Date();
+    if (cadencesQuery.data && cadencesQuery.data.length > 0) {
+      const selectedCadence = cadencesQuery.data[0];
+      if (selectedCadence.period !== 'custom') {
+        endDate = calculateEndDate(startDate, selectedCadence.period);
+      } else {
+        // Default to 3 months if custom cadence
+        endDate = addMonths(startDate, 3);
+      }
+    }
+    
     setFormState({
       name: "",
-      start_date: new Date(),
-      end_date: new Date(),
-      cadence_id: "placeholder",  // Use non-empty default value
+      start_date: startDate,
+      end_date: endDate,
+      cadence_id: firstCadenceId,
       description: ""
     });
     setSelectedTimeframe(null);
@@ -278,16 +298,25 @@ export default function Timeframes() {
     setIsDeleteDialogOpen(true);
   };
 
-  // Update cadence and calculate end date if it's not a custom cadence
+  // Update cadence and calculate end date based on the selected cadence
   const handleCadenceChange = (cadenceId: string) => {
     setFormState(prev => ({ ...prev, cadence_id: cadenceId }));
     
     // Get selected cadence to determine its type
     const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === cadenceId);
     
-    // If it's not a custom cadence, calculate the end date
-    if (selectedCadence && selectedCadence.period !== 'custom') {
-      const newEndDate = calculateEndDate(formState.start_date, selectedCadence.period);
+    // Always calculate the end date based on cadence
+    if (selectedCadence) {
+      let newEndDate;
+      
+      if (selectedCadence.period === 'custom') {
+        // For custom cadences, default to 3 months
+        newEndDate = addMonths(formState.start_date, 3);
+      } else {
+        // Calculate based on cadence period
+        newEndDate = calculateEndDate(formState.start_date, selectedCadence.period);
+      }
+      
       setFormState(prev => ({ ...prev, end_date: newEndDate }));
     }
   };
@@ -491,30 +520,15 @@ export default function Timeframes() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="end-date">End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    id="end-date"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formState.end_date ? format(formState.end_date, 'PPP') : 'Select date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formState.end_date}
-                    onSelect={date => date && setFormState({...formState, end_date: date})}
-                    disabled={date => {
-                      // Disable dates before start date
-                      return date < formState.start_date;
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="end-date">End Date (calculated)</Label>
+              <div 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {formState.end_date ? format(formState.end_date, 'PPP') : 'Calculated based on cadence'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                End date is automatically calculated based on the selected cadence and start date.
+              </p>
             </div>
 
             <div className="grid gap-2">
