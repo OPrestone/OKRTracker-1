@@ -94,10 +94,18 @@ export default function Cadences() {
     },
   });
 
-  // Create cadence mutation
+  // Get current tenant ID from sessionStorage
+  const getCurrentTenantId = () => {
+    return sessionStorage.getItem('currentTenantId');
+  };
+
+  // Create cadence mutation with tenant ID
   const createCadenceMutation = useMutation({
     mutationFn: async (data: CadenceFormState) => {
-      const res = await apiRequest("POST", "/api/cadences", data);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences?tenantId=${tenantId}` : '/api/cadences';
+      const res = await apiRequest("POST", url, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -121,7 +129,10 @@ export default function Cadences() {
   // Update cadence mutation
   const updateCadenceMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string, data: CadenceFormState }) => {
-      const res = await apiRequest("PATCH", `/api/cadences/${id}`, data);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences/${id}?tenantId=${tenantId}` : `/api/cadences/${id}`;
+      const res = await apiRequest("PATCH", url, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -145,7 +156,10 @@ export default function Cadences() {
   // Delete cadence mutation
   const deleteCadenceMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/cadences/${id}`);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences/${id}?tenantId=${tenantId}` : `/api/cadences/${id}`;
+      await apiRequest("DELETE", url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cadences"] });
