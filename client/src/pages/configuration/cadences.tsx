@@ -5,13 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-// Helper for month names
-const MONTH_NAMES = [
-  "January", "February", "March", "April", 
-  "May", "June", "July", "August", 
-  "September", "October", "November", "December"
-];
 import { 
   Table,
   TableBody,
@@ -447,13 +440,7 @@ export default function Cadences() {
               </TableHeader>
               <TableBody>
                 {cadences.map(cadence => {
-                  // Convert numeric month to name
-                  const monthNames = [
-                    "January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December"
-                  ];
-                  const startMonth = cadence.startMonth || 1; // Default to January if null
-                  const monthName = monthNames[(startMonth - 1) % 12];
+                  // No month name conversion needed anymore
                   
                   return (
                     <TableRow key={cadence.id}>
@@ -464,7 +451,6 @@ export default function Cadences() {
                           {cadence.period.charAt(0).toUpperCase() + cadence.period.slice(1)}
                         </Badge>
                       </TableCell>
-                      <TableCell>{monthName}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -493,8 +479,7 @@ export default function Cadences() {
                                 setEditCadence({
                                   name: cadence.name,
                                   description: cadence.description || "",
-                                  period: cadence.period,
-                                  startMonth: cadence.startMonth || 1 // Keep as integer, don't convert to string
+                                  period: cadence.period
                                 });
                                 
                                 setIsEditCadenceDialogOpen(true);
