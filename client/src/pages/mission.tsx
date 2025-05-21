@@ -144,7 +144,7 @@ export default function Mission() {
       strategicDirection: string;
     }) => {
       return apiRequest('/api/organization-mission', {
-        method: 'POST',
+        method: 'post',
         data
       });
     },
