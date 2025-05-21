@@ -4,6 +4,7 @@ import DashboardLayout from "@/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import TeamMoodVisualization from "@/components/wellness/team-mood-visualization";
 import MoodEntryForm from "@/components/wellness/mood-entry-form";
+import WellnessJourneyProgress from "@/components/wellness/wellness-journey-progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,9 @@ const WellnessPulse = () => {
                 )}
               </CardContent>
             </Card>
+            
+            {/* Gamified Wellness Journey Progress Bar */}
+            <WellnessJourneyProgress />
           </TabsContent>
         </Tabs>
         
