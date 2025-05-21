@@ -60,7 +60,7 @@ import {
   Calendar as CalendarIcon2
 } from "lucide-react";
 import { Timeframe, Cadence } from "@shared/schema";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, getCurrentTenantFromUrl } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ContextualTooltip } from "@/components/help/contextual-tooltip";
 import { timeframesContextualHelp } from "@/components/help/contextual-help-content";
@@ -118,20 +118,31 @@ export default function Timeframes() {
 
   // Fetch cadences
   const { data: cadences } = useQuery<Cadence[]>({
-    queryKey: ["/api/cadences"]
+    queryKey: ["/api/cadences"],
+    meta: { requiresTenant: true }
   });
 
   // Fetch timeframes
   const { data: timeframes, isLoading } = useQuery<Timeframe[]>({
     queryKey: filterCadenceId 
       ? [`/api/cadences/${filterCadenceId}/timeframes`] 
-      : ["/api/timeframes"]
+      : ["/api/timeframes"],
+    meta: { requiresTenant: true }
   });
 
   // Create timeframe mutation
   const createTimeframeMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/timeframes", data);
+      // Get tenant ID from URL or session storage
+      const tenantId = getCurrentTenantFromUrl();
+      
+      // Make sure the tenant ID is included in data
+      const updatedData = {
+        ...data,
+        tenantId
+      };
+      
+      const res = await apiRequest("POST", "/api/timeframes", updatedData);
       return await res.json();
     },
     onSuccess: () => {
@@ -158,7 +169,16 @@ export default function Timeframes() {
   // Update timeframe mutation
   const updateTimeframeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string, data: any }) => {
-      const res = await apiRequest("PATCH", `/api/timeframes/${id}`, data);
+      // Get tenant ID from URL or session storage
+      const tenantId = getCurrentTenantFromUrl();
+      
+      // Make sure the tenant ID is included in data
+      const updatedData = {
+        ...data,
+        tenantId
+      };
+      
+      const res = await apiRequest("PATCH", `/api/timeframes/${id}`, updatedData);
       return await res.json();
     },
     onSuccess: () => {
@@ -185,7 +205,11 @@ export default function Timeframes() {
   // Delete timeframe mutation
   const deleteTimeframeMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/timeframes/${id}`);
+      // Get tenant ID from URL or session storage
+      const tenantId = getCurrentTenantFromUrl();
+      
+      // For DELETE requests, include the tenant ID as a query parameter
+      await apiRequest("DELETE", `/api/timeframes/${id}?tenantId=${tenantId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
@@ -451,7 +475,6 @@ export default function Timeframes() {
                     !newTimeframe.name || 
                     !newTimeframe.cadenceId ||
                     !newTimeframe.startDate ||
-                    !newTimeframe.endDate ||
                     createTimeframeMutation.isPending
                   }
                 >
