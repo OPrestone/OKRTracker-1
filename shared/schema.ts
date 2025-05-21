@@ -1174,3 +1174,29 @@ export const insertActionItemSchema = createInsertSchema(actionItems)
   });
 export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
+
+// Organization Mission and Vision
+export const organizationMission = pgTableWithUlid("organization_mission", {
+  id: text("id").primaryKey().notNull(),
+  mission: text("mission"),
+  vision: text("vision"),
+  boundaries: text("boundaries"),
+  strategicDirection: text("strategic_direction"),
+  behaviors: text("behaviors"),
+  tenantId: text("tenant_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const organizationMissionRelations = relations(organizationMission, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [organizationMission.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export const insertOrganizationMissionSchema = createInsertSchema(organizationMission)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export type OrganizationMission = typeof organizationMission.$inferSelect;
+export type InsertOrganizationMission = z.infer<typeof insertOrganizationMissionSchema>;

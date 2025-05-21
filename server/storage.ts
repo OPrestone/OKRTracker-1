@@ -9,6 +9,7 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
          actionItems, ActionItem, InsertActionItem,
+         organizationMission, OrganizationMission, InsertOrganizationMission,
          projects, Project, InsertProject } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -28,6 +29,11 @@ export interface IStorage {
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  
+  // Organization Mission Management
+  getOrganizationMission(tenantId: string): Promise<OrganizationMission | undefined>;
+  createOrganizationMission(mission: InsertOrganizationMission): Promise<OrganizationMission>;
+  updateOrganizationMission(id: string, mission: Partial<InsertOrganizationMission>): Promise<OrganizationMission>;
   getUsersByTeam(teamId: string): Promise<User[]>;
   getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>>;
   updateLastLogin(userId: string): Promise<void>;
