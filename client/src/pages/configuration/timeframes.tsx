@@ -69,7 +69,7 @@ import { useHelp } from "@/hooks/use-help-context";
 export default function Timeframes() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { contextualHelp } = useHelp();
+  const helpContext = useHelp();
   
   // State for filter and dialogs
   const [filter, setFilter] = useState("");
@@ -300,7 +300,7 @@ export default function Timeframes() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold">Timeframes</h1>
-          <ContextualTooltip content={contextualHelp.timeframes?.title} />
+          <ContextualTooltip content={timeframesContextualHelp.title} />
         </div>
         <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Add Timeframe
