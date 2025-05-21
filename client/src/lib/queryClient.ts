@@ -1,7 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Function to get the current tenant ID from the URL
-function getCurrentTenantFromUrl(): string | null {
+export function getCurrentTenantFromUrl(): string | null {
   // First priority: Check for direct ULID in path /id format
   const directUlidMatch = window.location.pathname.match(/^\/([A-Z0-9]{26})/);
   if (directUlidMatch) {
