@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, addMonths, addYears } from "date-fns";
 import { 
   Table,
   TableBody,
@@ -82,7 +82,6 @@ export default function Timeframes() {
   const [newTimeframe, setNewTimeframe] = useState({
     name: "",
     startDate: new Date(),
-    endDate: new Date(),
     cadenceId: ""
   });
 
@@ -93,6 +92,30 @@ export default function Timeframes() {
     endDate: new Date(),
     cadenceId: ""
   });
+  
+  // Function to calculate end date based on cadence period and start date
+  const calculateEndDate = (startDate: Date, cadenceId: string): Date => {
+    // Find the cadence by ID
+    const cadence = cadences?.find(c => c.id === cadenceId);
+    
+    if (!cadence) {
+      return startDate; // If cadence not found, return same date
+    }
+    
+    // Calculate end date based on cadence period
+    switch (cadence.period) {
+      case "quarterly":
+        return addMonths(startDate, 3);
+      case "biannual":
+        return addMonths(startDate, 6);
+      case "annual":
+        return addYears(startDate, 1);
+      case "custom":
+      default:
+        // For custom periods, default to 3 months
+        return addMonths(startDate, 3);
+    }
+  };
 
   // Fetch cadences
   const { data: cadences } = useQuery<Cadence[]>({
@@ -205,7 +228,6 @@ export default function Timeframes() {
     setNewTimeframe({
       name: "",
       startDate: new Date(),
-      endDate: new Date(),
       cadenceId: filterCadenceId !== "all" && filterCadenceId ? filterCadenceId : ""
     });
   };
@@ -221,11 +243,14 @@ export default function Timeframes() {
       return;
     }
     
+    // Calculate end date based on cadence period and start date
+    const endDate = calculateEndDate(newTimeframe.startDate, newTimeframe.cadenceId);
+    
     const timeframeData = {
       name: newTimeframe.name,
       cadenceId: newTimeframe.cadenceId,
       startDate: newTimeframe.startDate.toISOString(),
-      endDate: newTimeframe.endDate.toISOString()
+      endDate: endDate.toISOString()
     };
     
     createTimeframeMutation.mutate(timeframeData);
@@ -244,11 +269,14 @@ export default function Timeframes() {
       return;
     }
     
+    // Calculate end date based on cadence period and start date
+    const endDate = calculateEndDate(editTimeframe.startDate, editTimeframe.cadenceId);
+    
     const timeframeData = {
       name: editTimeframe.name,
       cadenceId: editTimeframe.cadenceId,
       startDate: editTimeframe.startDate.toISOString(),
-      endDate: editTimeframe.endDate.toISOString()
+      endDate: endDate.toISOString()
     };
     
     updateTimeframeMutation.mutate({
