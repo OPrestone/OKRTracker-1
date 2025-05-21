@@ -52,10 +52,13 @@ export function MissionStatement({ className, tenantId: propTenantId }: MissionS
     queryFn: async () => {
       if (!tenantId) return null;
       
-      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, { 
+      // Note: The server uses withTenant middleware which extracts tenantId from URL params,
+      // but we need to explicitly include it in the header for the API to use it correctly
+      const response = await fetch('/api/organization-mission', { 
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
         }
       });
       
