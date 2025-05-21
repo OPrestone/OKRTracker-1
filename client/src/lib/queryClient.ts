@@ -151,6 +151,14 @@ export const getQueryFn: <T>(options: {
       const tenantId = getCurrentTenantFromUrl();
       const urlObj = new URL(url, window.location.origin);
       
+      // Add tenant ID as a query parameter to ensure it's available to the server
+      if (tenantId) {
+        // Only add the parameter if it's not already present
+        if (!urlObj.searchParams.has('tenantId')) {
+          urlObj.searchParams.append('tenantId', tenantId);
+        }
+      }
+      
       // Show request context for debugging
       const requestUrl = urlObj.toString();
       console.log('Request context:', { 
