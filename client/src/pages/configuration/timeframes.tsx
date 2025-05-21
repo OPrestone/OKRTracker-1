@@ -266,10 +266,15 @@ export default function Timeframes() {
       endDate = calculateEndDate(formState.start_date, selectedCadence.period);
     }
 
+    // Ensure dates are properly formatted for the API
     const data = {
       ...formState,
-      start_date: formState.start_date.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0],
+      start_date: formState.start_date instanceof Date 
+        ? formState.start_date.toISOString().split('T')[0] 
+        : new Date(formState.start_date).toISOString().split('T')[0],
+      end_date: endDate instanceof Date 
+        ? endDate.toISOString().split('T')[0] 
+        : new Date(endDate).toISOString().split('T')[0],
     };
 
     if (selectedTimeframe) {
@@ -282,13 +287,46 @@ export default function Timeframes() {
   // Handle opening edit dialog
   const handleEdit = (timeframe: Timeframe) => {
     setSelectedTimeframe(timeframe);
+    
+    // Safely parse dates
+    let startDate;
+    try {
+      startDate = new Date(timeframe.start_date);
+      // Check if date is valid
+      if (isNaN(startDate.getTime())) {
+        startDate = new Date(); // Fallback to today if invalid
+      }
+    } catch (error) {
+      startDate = new Date(); // Fallback to today if parsing fails
+    }
+    
+    // End date will be calculated based on cadence
+    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadence_id);
+    let endDate;
+    
+    if (selectedCadence && selectedCadence.period !== 'custom') {
+      // Calculate based on cadence period
+      endDate = calculateEndDate(startDate, selectedCadence.period);
+    } else {
+      // For custom cadences, use the existing end date or default to 3 months from start
+      try {
+        endDate = new Date(timeframe.end_date);
+        if (isNaN(endDate.getTime())) {
+          endDate = addMonths(startDate, 3);
+        }
+      } catch (error) {
+        endDate = addMonths(startDate, 3);
+      }
+    }
+    
     setFormState({
       name: timeframe.name,
       description: timeframe.description || "",
       cadence_id: timeframe.cadence_id,
-      start_date: new Date(timeframe.start_date),
-      end_date: new Date(timeframe.end_date)
+      start_date: startDate,
+      end_date: endDate
     });
+    
     setIsDialogOpen(true);
   };
 
