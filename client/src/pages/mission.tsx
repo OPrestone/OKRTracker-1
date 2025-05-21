@@ -793,9 +793,19 @@ export default function Mission() {
                   variant="ghost" 
                   size="sm" 
                   onClick={saveMission}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>
@@ -881,9 +891,19 @@ export default function Mission() {
                   variant="ghost" 
                   size="sm" 
                   onClick={saveBoundaries}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>
@@ -1025,9 +1045,19 @@ export default function Mission() {
                   variant="ghost" 
                   size="sm" 
                   onClick={saveBehaviors}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>
