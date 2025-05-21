@@ -163,13 +163,29 @@ export function SetupWorkflow() {
                 id="vision-statement"
                 placeholder="What does the future look like if you succeed in your mission?"
                 className="min-h-[100px]"
+                value={visionStatement}
+                onChange={(e) => setVisionStatement(e.target.value)}
               />
             </div>
           </div>
           
           <div className="pt-4">
-            <Button onClick={() => navigate('/mission')}>
-              Complete Mission Setup
+            <Button 
+              onClick={() => {
+                setIsSubmitting(true);
+                saveMissionMutation.mutate(
+                  { mission: missionStatement, vision: visionStatement },
+                  {
+                    onSuccess: () => {
+                      setCurrentStep(1);
+                      setIsSubmitting(false);
+                    }
+                  }
+                );
+              }}
+              disabled={isSubmitting || !missionStatement.trim() || !visionStatement.trim()}
+            >
+              {isSubmitting ? "Saving..." : "Complete Mission Setup"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
