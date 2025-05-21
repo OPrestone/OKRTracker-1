@@ -202,6 +202,25 @@ export const checkIns = pgTableWithUlid("check_ins", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const userProgress = pgTableWithUlid("user_progress", {
+  userId: text("user_id").references(() => users.id).notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  progress: integer("progress").default(0).notNull(), // 0-100 percentage
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schema for userProgress
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ 
+  id: true, 
+  createdAt: true,
+  lastUpdated: true 
+});
+
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
+
 export const projects = pgTableWithUlid("projects", {
   title: text("title").notNull(),
   description: text("description"),

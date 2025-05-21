@@ -9,7 +9,8 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
          actionItems, ActionItem, InsertActionItem,
-         projects, Project, InsertProject } from "@shared/schema";
+         projects, Project, InsertProject,
+         userProgress, UserProgress, InsertUserProgress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -31,6 +32,13 @@ export interface IStorage {
   getUsersByTeam(teamId: string): Promise<User[]>;
   getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>>;
   updateLastLogin(userId: string): Promise<void>;
+  
+  // User Progress Tracking
+  createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
+  getUserProgress(id: string): Promise<UserProgress | undefined>;
+  getUserProgressByUserAndObjective(userId: string, objectiveId: string): Promise<UserProgress | undefined>;
+  getUserObjectivesProgress(userId: string, tenantId: string): Promise<UserProgress[]>;
+  updateUserProgress(id: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   
   // Team Management
   createTeam(team: InsertTeam): Promise<Team>;
