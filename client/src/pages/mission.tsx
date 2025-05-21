@@ -239,14 +239,43 @@ export default function Mission() {
   // Boundaries state is already defined above, no need to re-declare
 
   // Handle full page edit save
-  const saveFullPageEdit = () => {
-    setMissionStatement(missionDraft);
-    setBoundaries({
-      freedoms: [...boundariesDraft.freedoms],
-      constraints: [...boundariesDraft.constraints]
-    });
-    setBehaviors([...behaviorsDraft]);
-    setFullPageEditMode(false);
+  const saveFullPageEdit = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        tenantId,
+        mission: missionDraft,
+        vision: visionDraft, 
+        strategicDirection: strategicDirectionDraft,
+        behaviors: JSON.stringify(behaviorsDraft),
+        boundaries: JSON.stringify(boundariesDraft)
+      });
+      
+      setMissionStatement(missionDraft);
+      setVision(visionDraft);
+      setStrategicDirection(strategicDirectionDraft);
+      setBoundaries({
+        freedoms: [...boundariesDraft.freedoms],
+        constraints: [...boundariesDraft.constraints]
+      });
+      setBehaviors([...behaviorsDraft]);
+      setFullPageEditMode(false);
+      
+      toast({
+        title: "Success",
+        description: "Organization mission data saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save organization mission data",
+        variant: "destructive"
+      });
+      console.error("Error saving mission data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Cancel full page edit
@@ -261,27 +290,108 @@ export default function Mission() {
   };
 
   // Handle mission save (for individual card edits)
-  const saveMission = () => {
-    setMissionStatement(missionDraft);
-    setEditMode({...editMode, mission: false});
+  const saveMission = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        tenantId,
+        mission: missionDraft,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviors),
+        boundaries: JSON.stringify(boundaries)
+      });
+      
+      setMissionStatement(missionDraft);
+      setEditMode({...editMode, mission: false});
+      
+      toast({
+        title: "Success",
+        description: "Mission statement updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update mission statement",
+        variant: "destructive"
+      });
+      console.error("Error saving mission:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle behaviors save (for individual card edits)
-  const saveBehaviors = () => {
-    setBehaviors([...behaviorsDraft]);
-    setEditMode({...editMode, behaviors: false});
-    setNewBehavior("");
+  const saveBehaviors = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        tenantId,
+        mission: missionStatement,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviorsDraft),
+        boundaries: JSON.stringify(boundaries)
+      });
+      
+      setBehaviors([...behaviorsDraft]);
+      setEditMode({...editMode, behaviors: false});
+      setNewBehavior("");
+      
+      toast({
+        title: "Success",
+        description: "Behaviors updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update behaviors",
+        variant: "destructive"
+      });
+      console.error("Error saving behaviors:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle boundaries save (for individual card edits)
-  const saveBoundaries = () => {
-    setBoundaries({
-      freedoms: [...boundariesDraft.freedoms],
-      constraints: [...boundariesDraft.constraints]
-    });
-    setEditMode({...editMode, boundaries: false});
-    setNewFreedom("");
-    setNewConstraint("");
+  const saveBoundaries = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        tenantId,
+        mission: missionStatement,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviors),
+        boundaries: JSON.stringify(boundariesDraft)
+      });
+      
+      setBoundaries({
+        freedoms: [...boundariesDraft.freedoms],
+        constraints: [...boundariesDraft.constraints]
+      });
+      setEditMode({...editMode, boundaries: false});
+      setNewFreedom("");
+      setNewConstraint("");
+      
+      toast({
+        title: "Success",
+        description: "Boundaries updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update boundaries",
+        variant: "destructive"
+      });
+      console.error("Error saving boundaries:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Add new behavior
