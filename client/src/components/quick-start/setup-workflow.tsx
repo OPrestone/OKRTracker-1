@@ -75,9 +75,13 @@ export function SetupWorkflow() {
       mission: string;
       vision: string;
     }) => {
+      // Get the tenant ID from sessionStorage (same source as used by queryClient)
+      const tenantId = sessionStorage.getItem('currentTenantId');
+      
       return apiRequest('POST', '/api/organization-mission', {
         mission: data.mission,
         vision: data.vision,
+        tenantId: tenantId, // Include the tenant ID in the request body
         // Create empty placeholders for the other required fields
         strategicDirection: "",
         behaviors: JSON.stringify([]),
