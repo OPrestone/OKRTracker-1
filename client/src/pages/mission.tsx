@@ -124,7 +124,18 @@ export default function Mission() {
   // Query to fetch organization mission data
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
     queryKey: ['/api/organization-mission'],
-    queryFn: () => apiRequest('/api/organization-mission', { method: 'get' }),
+    queryFn: async () => {
+      const response = await fetch('/api/organization-mission', { 
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch mission data');
+      }
+      return response.json();
+    },
     enabled: true
   });
 
@@ -137,10 +148,19 @@ export default function Mission() {
       boundaries: string;
       strategicDirection: string;
     }) => {
-      return apiRequest('/api/organization-mission', {
-        method: 'post',
-        data
+      const response = await fetch('/api/organization-mission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save mission data');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
