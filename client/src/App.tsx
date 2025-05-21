@@ -161,7 +161,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/home" component={OrganizationPage} /> */}
       <ProtectedRoute path="/:id([A-Z0-9]{26})/subscription" component={OrganizationPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/quick-start-guide" component={QuickStartGuide} />
-      <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={CompanyStrategy} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/mission" component={MissionPage} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/team-leader-dashboard" component={TeamLeaderDashboard} />
       
