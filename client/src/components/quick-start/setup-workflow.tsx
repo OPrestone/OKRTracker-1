@@ -99,10 +99,10 @@ export function SetupWorkflow() {
           </Alert>
           
           <div className="space-y-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="company-name">Company Name</Label>
               <Input id="company-name" placeholder="Enter your company name" />
-            </div>
+            </div> */}
             
             <div className="space-y-2">
               <Label htmlFor="mission-statement">Mission Statement</Label>

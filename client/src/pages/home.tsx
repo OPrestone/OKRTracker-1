@@ -16,11 +16,16 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { PlusCircle, Sparkles, FileEdit, Menu } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useParams } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const params = useParams();
+  
+  // Extract the tenant ID from the URL parameters
+  // Format: /:id/home where id is the tenant ID in ULID format
+  const tenantId = params.id;
   
   return (
     <DashboardLayout title="Dashboard" subtitle="Manage your objectives and key results">
@@ -46,19 +51,19 @@ export default function Home() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem className="cursor-pointer" asChild>
-                    <Link href="/create-objective">
+                    <Link href={tenantId ? `/${tenantId}/create-objective` : "/create-objective"}>
                       <PlusCircle className="mr-2 h-4 w-4" />
                       <span>Create OKRs Manually</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" asChild>
-                    <Link href="/create-okr-ai">
+                    <Link href={tenantId ? `/${tenantId}/create-okr-ai` : "/create-okr-ai"}>
                       <Sparkles className="mr-2 h-4 w-4" />
                       <span>Create OKRs with AI</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" asChild>
-                    <Link href="/create-draft-okr">
+                    <Link href={tenantId ? `/${tenantId}/create-draft-okr` : "/create-draft-okr"}>
                       <FileEdit className="mr-2 h-4 w-4" />
                       <span>Create Draft OKRs</span>
                     </Link>
@@ -84,10 +89,9 @@ export default function Home() {
           {/* Mission Statement Section */}
           <div className="mb-8">
             <h2 className="text-xl font-bold text-neutral-900 mb-4">Company Mission</h2>
-            <MissionStatement />
+            <MissionStatement tenantId={tenantId} />
           </div>
  
-
           {/* Resources Section */}
           <ResourcesSection />
 
