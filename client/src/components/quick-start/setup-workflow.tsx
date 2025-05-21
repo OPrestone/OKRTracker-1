@@ -19,6 +19,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Target,
   Users,
@@ -59,6 +62,45 @@ export function SetupWorkflow() {
   const [cycleType, setCycleType] = useState<string>("quarterly");
   const [_, navigate] = useLocation();
   const { canCreateObjectives } = useUserPermissions();
+  const { toast } = useToast();
+  
+  // State for mission and vision inputs
+  const [missionStatement, setMissionStatement] = useState("");
+  const [visionStatement, setVisionStatement] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Create mutation for saving mission data
+  const saveMissionMutation = useMutation({
+    mutationFn: async (data: {
+      mission: string;
+      vision: string;
+    }) => {
+      return apiRequest('POST', '/api/organization-mission', {
+        mission: data.mission,
+        vision: data.vision,
+        // Create empty placeholders for the other required fields
+        strategicDirection: "",
+        behaviors: JSON.stringify([]),
+        boundaries: JSON.stringify({ freedoms: [], constraints: [] })
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Mission and vision saved successfully",
+      });
+      navigate('/mission');
+    },
+    onError: (error) => {
+      console.error("Error saving mission data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save mission and vision data",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+    }
+  });
 
   // Sample OKR cycles
   const okrCycles: OKRCycle[] = [
@@ -110,6 +152,8 @@ export function SetupWorkflow() {
                 id="mission-statement"
                 placeholder="Why does your company exist? What problem are you solving?"
                 className="min-h-[100px]"
+                value={missionStatement}
+                onChange={(e) => setMissionStatement(e.target.value)}
               />
             </div>
             
