@@ -171,7 +171,7 @@ export default function Mission() {
         description: "Mission and vision data saved successfully",
         variant: "default"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/organisation-mission'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission'] });
     },
     onError: (error) => {
       toast({

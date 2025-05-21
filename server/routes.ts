@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // The rest of the routes will use the existing middleware
   
   // Organization Mission API Endpoints
-  app.get('/api/organisation-mission', ensureAuthenticated, withTenant, async (req, res) => {
+  app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const tenantId = req.tenantId;
       
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/organisation-mission', ensureAuthenticated, withTenant, async (req, res) => {
+  app.post('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const tenantId = req.tenantId;
       const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
