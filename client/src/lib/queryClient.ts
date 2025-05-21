@@ -68,18 +68,21 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Add tenant query parameter if available
+  // Get tenant ID from URL
   const tenantId = getCurrentTenantFromUrl();
   const urlObj = new URL(url, window.location.origin);
   
-  // Only add tenantId if it exists
+  // Prepare headers
+  const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
+  
+  // Add X-Tenant-ID header if tenant ID is available
   if (tenantId) {
-    urlObj.searchParams.append('tenantId', tenantId);
+    headers['X-Tenant-ID'] = tenantId;
   }
   
   const res = await fetch(urlObj.toString(), {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include", // Important for session cookies
   });
@@ -144,14 +147,9 @@ export const getQueryFn: <T>(options: {
         url = queryKey as string;
       }
       
-      // Add tenant query parameter if available
+      // Get tenant ID from URL
       const tenantId = getCurrentTenantFromUrl();
       const urlObj = new URL(url, window.location.origin);
-      
-      // Only add tenantId if it exists and not already in the URL
-      if (tenantId && !urlObj.searchParams.has('tenantId')) {
-        urlObj.searchParams.append('tenantId', tenantId);
-      }
       
       // Show request context for debugging
       const requestUrl = urlObj.toString();
@@ -161,12 +159,20 @@ export const getQueryFn: <T>(options: {
         hasTenant: !!tenantId
       });
       
+      // Prepare headers with tenant ID
+      const headers: HeadersInit = {
+        // Adding a client timestamp for debugging
+        'X-Client-Timestamp': new Date().toISOString()
+      };
+      
+      // Add X-Tenant-ID header if tenant ID is available
+      if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId;
+      }
+      
       const res = await fetch(requestUrl, {
         credentials: "include", // Important for session cookies
-        headers: {
-          // Adding a client timestamp for debugging
-          'X-Client-Timestamp': new Date().toISOString()
-        }
+        headers
       });
 
       // Capture response status for better debugging

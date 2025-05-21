@@ -128,10 +128,11 @@ export default function Mission() {
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
     queryKey: ['/api/organization-mission', tenantId],
     queryFn: async () => {
-      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, { 
+      const response = await fetch('/api/organization-mission', { 
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         }
       });
       if (!response.ok) {
@@ -151,15 +152,15 @@ export default function Mission() {
       boundaries: string;
       strategicDirection: string;
     }) => {
-      // Add tenantId to the request data
-      const dataWithTenant = { ...data, tenantId };
-      console.log(JSON.stringify(dataWithTenant));
+      // The tenantId will be included in the header instead of the body
+      console.log("Saving mission data:", JSON.stringify(data));
       const response = await fetch('/api/organization-mission', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
         },
-        body: JSON.stringify(dataWithTenant)
+        body: JSON.stringify(data)
       });
       
       if (!response.ok) {
