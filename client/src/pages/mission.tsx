@@ -148,12 +148,15 @@ export default function Mission() {
       boundaries: string;
       strategicDirection: string;
     }) => {
+      // Add tenantId to the request data
+      const dataWithTenant = { ...data, tenantId };
+      console.log(JSON.stringify(dataWithTenant));
       const response = await fetch('/api/organization-mission', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(dataWithTenant)
       });
       
       if (!response.ok) {
