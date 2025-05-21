@@ -116,10 +116,18 @@ export default function Timeframes() {
     queryFn: async ({ queryKey }) => {
       const [endpoint, cadenceId] = queryKey;
       let url = endpoint as string;
+      
+      // Get tenant ID from URL or session storage
+      const tenantId = getCurrentTenantFromUrl();
+      
+      // Add tenant ID as query parameter
+      url = `${url}?tenantId=${tenantId}`;
+      
       if (cadenceId) {
-        url = `/api/cadences/${cadenceId}/timeframes`;
+        url = `/api/cadences/${cadenceId}/timeframes?tenantId=${tenantId}`;
       }
-      const res = await fetch(url);
+      
+      const res = await apiRequest("GET", url);
       return await res.json();
     },
     meta: { requiresTenant: true }
