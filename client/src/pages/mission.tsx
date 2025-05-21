@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Accordion,
   AccordionContent,
@@ -28,10 +28,15 @@ import {
   CheckCircle2,
   XCircle,
   Check,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Mission() {
   // State for full page edit mode

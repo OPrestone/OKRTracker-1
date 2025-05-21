@@ -10,7 +10,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
-         projects, projectStatusEnum, insertProjectSchema } from "@shared/schema";
+         projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -56,6 +56,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics
+  // Organization Mission & Vision
+  app.get('/api/organization-mission', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const tenantId = req.query.tenantId as string;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Query the database to find mission data for this tenant
+      const missionData = await db.select().from(organizationMission)
+        .where(eq(organizationMission.tenantId, tenantId))
+        .limit(1);
+      
+      // If no data found, return empty object
+      if (missionData.length === 0) {
+        return res.json({ exists: false });
+      }
+      
+      res.json({ ...missionData[0], exists: true });
+    } catch (error) {
+      console.error("Error getting organization mission:", error);
+      res.status(500).json({ error: "Failed to get organization mission" });
+    }
+  });
+
+  app.post('/api/organization-mission', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { tenantId, mission, vision, boundaries, strategicDirection, behaviors } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Check if the user has permission to update the tenant
+      const userTenant = await db.select().from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+
+      if (userTenant.length === 0 || !['owner', 'admin'].includes(userTenant[0].role)) {
+        return res.status(403).json({ error: "You do not have permission to update organization mission" });
+      }
+
+      // Check if mission already exists for this tenant
+      const existingMission = await db.select().from(organizationMission)
+        .where(eq(organizationMission.tenantId, tenantId))
+        .limit(1);
+
+      let result;
+
+      if (existingMission.length > 0) {
+        // Update existing record
+        result = await db.update(organizationMission)
+          .set({
+            mission,
+            vision,
+            boundaries,
+            strategicDirection,
+            behaviors,
+            updatedAt: new Date()
+          })
+          .where(eq(organizationMission.id, existingMission[0].id))
+          .returning();
+      } else {
+        // Create new record
+        result = await db.insert(organizationMission)
+          .values({
+            id: ulid(),
+            tenantId,
+            mission,
+            vision,
+            boundaries,
+            strategicDirection,
+            behaviors
+          })
+          .returning();
+      }
+      
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error updating organization mission:", error);
+      res.status(500).json({ error: "Failed to update organization mission" });
+    }
+  });
+
   app.get("/api/project-diagnostics", async (req, res) => {
     try {
       // Check authentication status
