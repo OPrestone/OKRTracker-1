@@ -258,14 +258,22 @@ export default function TimelineEditor() {
     }
   ];
 
-  // Fetch timeframes and objectives from API (commented out for now)
-  // const { data: timeframes = [], isLoading } = useQuery<TimeframeWithObjectives[]>({
-  //   queryKey: ['/api/timeframes/with-objectives'],
-  //   queryFn: getQueryFn({ on401: "throw" }),
-  // });
+  // Get tenant ID from URL
+  const [location] = useLocation();
+  const tenantId = location.split('/')[1]; // Extract tenant ID from URL path
+
+  // Fetch timeframes and objectives from API
+  const { data: apiTimeframes = [], isLoading, error } = useQuery<TimeframeWithObjectives[]>({
+    queryKey: [`/api/timeframes/with-objectives`, tenantId],
+    queryFn: getQueryFn({ on401: "throw" }),
+    enabled: !!tenantId,
+  });
+
+  // Use API data if available, otherwise fall back to mock data
+  const timeframesData = apiTimeframes.length > 0 ? apiTimeframes : timeframes;
 
   // Filter timeframes based on view type
-  const filteredTimeframes = timeframes.filter(timeframe => {
+  const filteredTimeframes = timeframesData.filter(timeframe => {
     const now = new Date();
     const startDate = new Date(timeframe.startDate);
     const endDate = new Date(timeframe.endDate);

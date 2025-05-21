@@ -113,6 +113,7 @@ export interface IStorage {
   getAllTimeframes(): Promise<Timeframe[]>;
   getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]>;
   getTimeframesByTenant(tenantId: string): Promise<Timeframe[]>;
+  getTimeframesWithObjectives(tenantId: string): Promise<Array<Timeframe & { objectives: Objective[] }>>;
   
   // Objectives
   createObjective(objective: InsertObjective): Promise<Objective>;
