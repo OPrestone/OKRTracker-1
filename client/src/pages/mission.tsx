@@ -123,21 +123,20 @@ export default function Mission() {
 
   // Query to fetch organization mission data
   const { data: missionData, isLoading: isMissionLoading } = useQuery({
-    queryKey: ['/api/organization-mission', tenantId],
+    queryKey: ['/api/organization-mission'],
     queryFn: async () => {
-      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`);
+      const response = await fetch(`/api/organization-mission`);
       if (!response.ok) {
         throw new Error('Failed to fetch mission data');
       }
       return response.json();
     },
-    enabled: !!tenantId
+    enabled: true
   });
 
   // Mutation to save organization mission data
   const saveMissionMutation = useMutation({
     mutationFn: async (data: {
-      tenantId: string;
       mission: string;
       vision: string;
       behaviors: string;
@@ -155,7 +154,7 @@ export default function Mission() {
         description: "Mission and vision data saved successfully",
         variant: "default"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission'] });
     },
     onError: (error) => {
       toast({
