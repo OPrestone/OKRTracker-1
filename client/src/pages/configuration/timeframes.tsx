@@ -68,65 +68,60 @@ import { useHelp } from "@/hooks/use-help-context";
 
 export default function Timeframes() {
   const { toast } = useToast();
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split("?")[1]);
-  const cadenceIdParam = searchParams.get("cadence");
-
-  const [filterCadenceId, setFilterCadenceId] = useState<string | null>(cadenceIdParam);
-  const [isNewTimeframeDialogOpen, setIsNewTimeframeDialogOpen] = useState(false);
-  const [isEditTimeframeDialogOpen, setIsEditTimeframeDialogOpen] = useState(false);
+  const [, navigate] = useLocation();
+  const { contextualHelp } = useHelp();
+  
+  // State for filter and dialogs
+  const [filter, setFilter] = useState("");
+  const [filterCadenceId, setFilterCadenceId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe | null>(null);
-
-  // New timeframe form state
-  const [newTimeframe, setNewTimeframe] = useState({
+  const [formState, setFormState] = useState({
     name: "",
-    startDate: new Date(),
-    cadenceId: ""
-  });
-
-  // Edit timeframe form state
-  const [editTimeframe, setEditTimeframe] = useState({
-    name: "",
-    startDate: new Date(),
-    cadenceId: ""
+    start_date: new Date(),
+    end_date: new Date(),
+    cadence_id: "",
+    description: ""
   });
   
-  // Function to calculate end date based on cadence period and start date
-  const calculateEndDate = (startDate: Date, cadenceId: string): Date => {
-    // Find the cadence by ID
-    const cadence = cadences?.find(c => c.id === cadenceId);
-    
-    if (!cadence) {
-      return startDate; // If cadence not found, return same date
+  // Calculate end date based on cadence and start date
+  const calculateEndDate = (startDate: Date, cadenceType: string) => {
+    if (cadenceType === 'quarterly') {
+      return addMonths(startDate, 3);
+    } else if (cadenceType === 'biannual') {
+      return addMonths(startDate, 6);
+    } else if (cadenceType === 'annual') {
+      return addYears(startDate, 1);
     }
-    
-    // Calculate end date based on cadence period
-    switch (cadence.period) {
-      case "quarterly":
-        return addMonths(startDate, 3);
-      case "biannual":
-        return addMonths(startDate, 6);
-      case "annual":
-        return addYears(startDate, 1);
-      case "custom":
-      default:
-        // For custom periods, default to 3 months
-        return addMonths(startDate, 3);
-    }
+    // For custom cadences, use the user-selected end date
+    return formState.end_date;
   };
 
-  // Fetch cadences
-  const { data: cadences } = useQuery<Cadence[]>({
-    queryKey: ["/api/cadences"],
-    meta: { requiresTenant: true }
-  });
+  // Reset form state
+  const resetForm = () => {
+    setFormState({
+      name: "",
+      start_date: new Date(),
+      end_date: new Date(),
+      cadence_id: "",
+      description: ""
+    });
+    setSelectedTimeframe(null);
+  };
 
-  // Fetch timeframes
-  const { data: timeframes, isLoading } = useQuery<Timeframe[]>({
-    queryKey: filterCadenceId 
-      ? [`/api/cadences/${filterCadenceId}/timeframes`] 
-      : ["/api/timeframes"],
+  // Fetch timeframes query
+  const timeframesQuery = useQuery({ 
+    queryKey: ["/api/timeframes", filterCadenceId], 
+    queryFn: async ({ queryKey }) => {
+      const [endpoint, cadenceId] = queryKey;
+      let url = endpoint as string;
+      if (cadenceId) {
+        url = `/api/cadences/${cadenceId}/timeframes`;
+      }
+      const res = await fetch(url);
+      return await res.json();
+    },
     meta: { requiresTenant: true }
   });
 
@@ -150,18 +145,11 @@ export default function Timeframes() {
       if (filterCadenceId) {
         queryClient.invalidateQueries({ queryKey: [`/api/cadences/${filterCadenceId}/timeframes`] });
       }
-      setIsNewTimeframeDialogOpen(false);
-      resetNewTimeframeForm();
+      setIsDialogOpen(false);
+      resetForm();
       toast({
-        title: "Timeframe created",
-        description: "The timeframe has been created successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error creating timeframe",
-        description: error.message,
-        variant: "destructive",
+        title: "Success!",
+        description: "Timeframe has been created."
       });
     }
   });
@@ -186,18 +174,11 @@ export default function Timeframes() {
       if (filterCadenceId) {
         queryClient.invalidateQueries({ queryKey: [`/api/cadences/${filterCadenceId}/timeframes`] });
       }
-      setIsEditTimeframeDialogOpen(false);
-      setSelectedTimeframe(null);
+      setIsDialogOpen(false);
+      resetForm();
       toast({
-        title: "Timeframe updated",
-        description: "The timeframe has been updated successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error updating timeframe",
-        description: error.message,
-        variant: "destructive",
+        title: "Success!",
+        description: "Timeframe has been updated."
       });
     }
   });
@@ -219,512 +200,355 @@ export default function Timeframes() {
       setIsDeleteDialogOpen(false);
       setSelectedTimeframe(null);
       toast({
-        title: "Timeframe deleted",
-        description: "The timeframe has been deleted successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error deleting timeframe",
-        description: error.message,
-        variant: "destructive",
+        title: "Success!",
+        description: "Timeframe has been deleted."
       });
     }
   });
 
-  // Initialize form with filter cadence if provided
-  useEffect(() => {
-    if (cadenceIdParam) {
-      setNewTimeframe(prev => ({ ...prev, cadenceId: cadenceIdParam }));
-    }
-  }, [cadenceIdParam]);
+  // Fetch cadences for dropdown
+  const cadencesQuery = useQuery({ 
+    queryKey: ["/api/cadences"],
+    meta: { requiresTenant: true }
+  });
 
-  const handleSelectChange = (name: string, value: string) => {
-    setNewTimeframe(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditSelectChange = (name: string, value: string) => {
-    setEditTimeframe(prev => ({ ...prev, [name]: value }));
-  };
-
-  const resetNewTimeframeForm = () => {
-    setNewTimeframe({
-      name: "",
-      startDate: new Date(),
-      cadenceId: filterCadenceId !== "all" && filterCadenceId ? filterCadenceId : ""
-    });
-  };
-
-  const handleCreateTimeframe = () => {
-    // Check if cadenceId is provided and not empty
-    if (!newTimeframe.cadenceId || newTimeframe.cadenceId.trim() === "") {
+  // Handle form submission
+  const handleCreateOrUpdate = () => {
+    // Validate form
+    if (!formState.name) {
       toast({
-        title: "Error creating timeframe",
-        description: "Cadence selection is required",
-        variant: "destructive",
+        title: "Error",
+        description: "Please provide a name for the timeframe.",
+        variant: "destructive"
       });
       return;
     }
-    
-    // Calculate end date based on cadence period and start date
-    const endDate = calculateEndDate(newTimeframe.startDate, newTimeframe.cadenceId);
-    
-    const timeframeData = {
-      name: newTimeframe.name,
-      cadenceId: newTimeframe.cadenceId,
-      startDate: newTimeframe.startDate.toISOString(),
-      endDate: endDate.toISOString()
-    };
-    
-    createTimeframeMutation.mutate(timeframeData);
-  };
 
-  const handleUpdateTimeframe = () => {
-    if (!selectedTimeframe) return;
-    
-    // Check if cadenceId is provided and not empty
-    if (!editTimeframe.cadenceId || editTimeframe.cadenceId.trim() === "") {
+    if (!formState.cadence_id) {
       toast({
-        title: "Error updating timeframe",
-        description: "Cadence selection is required",
-        variant: "destructive",
+        title: "Error",
+        description: "Please select a cadence for the timeframe.",
+        variant: "destructive"
       });
       return;
     }
+
+    // Get selected cadence to determine its type
+    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === formState.cadence_id);
     
-    // Calculate end date based on cadence period and start date
-    const endDate = calculateEndDate(editTimeframe.startDate, editTimeframe.cadenceId);
-    
-    const timeframeData = {
-      name: editTimeframe.name,
-      cadenceId: editTimeframe.cadenceId,
-      startDate: editTimeframe.startDate.toISOString(),
-      endDate: endDate.toISOString()
+    // Calculate end date based on cadence type (unless it's a custom cadence)
+    let endDate = formState.end_date;
+    if (selectedCadence && selectedCadence.period !== 'custom') {
+      endDate = calculateEndDate(formState.start_date, selectedCadence.period);
+    }
+
+    const data = {
+      ...formState,
+      start_date: formState.start_date.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
     };
-    
-    updateTimeframeMutation.mutate({
-      id: selectedTimeframe.id,
-      data: timeframeData
+
+    if (selectedTimeframe) {
+      updateTimeframeMutation.mutate({ id: selectedTimeframe.id, data });
+    } else {
+      createTimeframeMutation.mutate(data);
+    }
+  };
+
+  // Handle opening edit dialog
+  const handleEdit = (timeframe: Timeframe) => {
+    setSelectedTimeframe(timeframe);
+    setFormState({
+      name: timeframe.name,
+      description: timeframe.description || "",
+      cadence_id: timeframe.cadence_id,
+      start_date: new Date(timeframe.start_date),
+      end_date: new Date(timeframe.end_date)
     });
+    setIsDialogOpen(true);
   };
 
-  const handleDeleteTimeframe = () => {
-    if (!selectedTimeframe) return;
-    deleteTimeframeMutation.mutate(selectedTimeframe.id);
+  // Handle opening delete dialog
+  const handleDelete = (timeframe: Timeframe) => {
+    setSelectedTimeframe(timeframe);
+    setIsDeleteDialogOpen(true);
   };
 
-  // Find cadence name by ID
-  const getCadenceName = (cadenceId: string | null | undefined) => {
-    if (!cadenceId || !cadences) return "None";
-    const cadence = cadences.find(c => c.id === cadenceId);
-    return cadence ? cadence.name : "Unknown";
+  // Update cadence and calculate end date if it's not a custom cadence
+  const handleCadenceChange = (cadenceId: string) => {
+    setFormState(prev => ({ ...prev, cadence_id: cadenceId }));
+    
+    // Get selected cadence to determine its type
+    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === cadenceId);
+    
+    // If it's not a custom cadence, calculate the end date
+    if (selectedCadence && selectedCadence.period !== 'custom') {
+      const newEndDate = calculateEndDate(formState.start_date, selectedCadence.period);
+      setFormState(prev => ({ ...prev, end_date: newEndDate }));
+    }
   };
 
-  // Format date for display
-  const formatDate = (date: string | Date) => {
-    return format(new Date(date), "PP");
-  };
+  // Filter timeframes based on search input
+  const filteredTimeframes = timeframesQuery.data?.filter(
+    (timeframe: Timeframe) => 
+      timeframe.name.toLowerCase().includes(filter.toLowerCase()) ||
+      (timeframe.description && timeframe.description.toLowerCase().includes(filter.toLowerCase()))
+  );
 
   return (
-    <DashboardLayout title="Configuration - Timeframes">
-      <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Timeframes</h1>
-          <div className="ml-2">
-            <ContextualTooltip
-              id={timeframesContextualHelp["timeframes-overview"].id}
-              title={timeframesContextualHelp["timeframes-overview"].title}
-              description={timeframesContextualHelp["timeframes-overview"].description}
-              helpfulTips={timeframesContextualHelp["timeframes-overview"].helpfulTips}
-              priority={timeframesContextualHelp["timeframes-overview"].priority}
-              placement={timeframesContextualHelp["timeframes-overview"].placement}
-            />
-          </div>
-          <p className="text-gray-600">Manage timeframes for your OKR cycles</p>
+    <DashboardLayout>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Timeframes</h1>
+          <ContextualTooltip content={contextualHelp.timeframes?.title} />
         </div>
-        
-        <div className="flex gap-3">
-          <div className="w-48 flex items-center">
-            <Select 
-              value={filterCadenceId || "all"} 
-              onValueChange={(value) => setFilterCadenceId(value !== "all" ? value : null)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by cadence" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All cadences</SelectItem>
-                {cadences?.map(cadence => (
-                  <SelectItem key={cadence.id} value={cadence.id.toString()}>
-                    {cadence.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="ml-1">
-              <ContextualTooltip
-                id={timeframesContextualHelp["timeframe-filter"].id}
-                title={timeframesContextualHelp["timeframe-filter"].title}
-                description={timeframesContextualHelp["timeframe-filter"].description}
-                helpfulTips={timeframesContextualHelp["timeframe-filter"].helpfulTips}
-                priority={timeframesContextualHelp["timeframe-filter"].priority}
-                placement={timeframesContextualHelp["timeframe-filter"].placement}
-              />
-            </div>
-          </div>
-          
-          <Dialog open={isNewTimeframeDialogOpen} onOpenChange={setIsNewTimeframeDialogOpen}>
-            <DialogTrigger asChild>
-              <div className="flex items-center">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Timeframe
-                </Button>
-                <div className="ml-1">
-                  <ContextualTooltip
-                    id={timeframesContextualHelp["new-timeframe"].id}
-                    title={timeframesContextualHelp["new-timeframe"].title}
-                    description={timeframesContextualHelp["new-timeframe"].description}
-                    helpfulTips={timeframesContextualHelp["new-timeframe"].helpfulTips}
-                    priority={timeframesContextualHelp["new-timeframe"].priority}
-                  />
-                </div>
-              </div>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Timeframe</DialogTitle>
-                <DialogDescription>
-                  Add a new timeframe to structure your organization's OKR cycles.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input 
-                    id="name" 
-                    value={newTimeframe.name}
-                    onChange={(e) => setNewTimeframe(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Q1 2025, Annual 2025" 
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="cadence">Cadence</Label>
-                  <Select 
-                    value={newTimeframe.cadenceId} 
-                    onValueChange={(value) => handleSelectChange("cadenceId", value)}
-                  >
-                    <SelectTrigger id="cadence">
-                      <SelectValue placeholder="Select cadence" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cadences?.map(cadence => (
-                        <SelectItem key={cadence.id} value={cadence.id.toString()}>
-                          {cadence.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newTimeframe.startDate ? (
-                          format(newTimeframe.startDate, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newTimeframe.startDate}
-                        onSelect={(date) => date && setNewTimeframe(prev => ({ ...prev, startDate: date }))}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                {/* End Date field removed - now automatically calculated based on cadence period and start date */}
-              </div>
-              
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    resetNewTimeframeForm();
-                    setIsNewTimeframeDialogOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateTimeframe}
-                  disabled={
-                    !newTimeframe.name || 
-                    !newTimeframe.cadenceId ||
-                    !newTimeframe.startDate ||
-                    createTimeframeMutation.isPending
-                  }
-                >
-                  {createTimeframeMutation.isPending ? "Creating..." : "Create Timeframe"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+          <Plus className="mr-2 h-4 w-4" /> Add Timeframe
+        </Button>
+      </div>
+
+      <div className="flex items-center mb-6 gap-4">
+        <div className="grow">
+          <Input 
+            placeholder="Search timeframes..." 
+            value={filter} 
+            onChange={e => setFilter(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        <div>
+          <Select value={filterCadenceId || ""} onValueChange={value => setFilterCadenceId(value || null)}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Filter by cadence" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All cadences</SelectItem>
+              {cadencesQuery.data?.map((cadence: Cadence) => (
+                <SelectItem key={cadence.id} value={cadence.id}>{cadence.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Edit Timeframe Dialog */}
-      <Dialog open={isEditTimeframeDialogOpen} onOpenChange={setIsEditTimeframeDialogOpen}>
-        <DialogContent>
+      {timeframesQuery.isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading timeframes...</p>
+        </div>
+      ) : timeframesQuery.isError ? (
+        <div className="flex justify-center items-center h-64 text-red-500">
+          <p>Error loading timeframes. Please try again.</p>
+        </div>
+      ) : filteredTimeframes?.length === 0 ? (
+        <div className="flex justify-center items-center h-64 text-gray-500">
+          <p>No timeframes found. Please create one or adjust your filter.</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Cadence</TableHead>
+              <TableHead>Start Date</TableHead>
+              <TableHead>End Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredTimeframes?.map((timeframe: Timeframe) => (
+              <TableRow key={timeframe.id}>
+                <TableCell>
+                  <div className="font-medium">{timeframe.name}</div>
+                </TableCell>
+                <TableCell>
+                  {cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadence_id)?.name || '-'}
+                </TableCell>
+                <TableCell>{new Date(timeframe.start_date).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(timeframe.end_date).toLocaleDateString()}</TableCell>
+                <TableCell>{timeframe.description || '-'}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleEdit(timeframe)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleDelete(timeframe)} className="text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Timeframe</DialogTitle>
+            <DialogTitle>{selectedTimeframe ? 'Edit Timeframe' : 'Create Timeframe'}</DialogTitle>
             <DialogDescription>
-              Update timeframe information.
+              {selectedTimeframe 
+                ? 'Update the details of this timeframe.' 
+                : 'Set up a new timeframe for your OKR cycle.'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="editName">Name</Label>
+              <Label htmlFor="name">Name</Label>
               <Input 
-                id="editName" 
-                value={editTimeframe.name}
-                onChange={(e) => setEditTimeframe(prev => ({ ...prev, name: e.target.value }))}
+                id="name" 
+                value={formState.name} 
+                onChange={e => setFormState({...formState, name: e.target.value})}
+                placeholder="Q1 2023"
               />
             </div>
-            
+
             <div className="grid gap-2">
-              <Label htmlFor="editCadence">Cadence</Label>
+              <Label htmlFor="cadence">Cadence</Label>
               <Select 
-                value={editTimeframe.cadenceId} 
-                onValueChange={(value) => handleEditSelectChange("cadenceId", value)}
+                value={formState.cadence_id} 
+                onValueChange={handleCadenceChange}
               >
-                <SelectTrigger id="editCadence">
-                  <SelectValue placeholder="Select cadence" />
+                <SelectTrigger id="cadence">
+                  <SelectValue placeholder="Select a cadence" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cadences?.map(cadence => (
-                    <SelectItem key={cadence.id} value={cadence.id.toString()}>
+                  {cadencesQuery.data?.map((cadence: Cadence) => (
+                    <SelectItem key={cadence.id} value={cadence.id}>
                       {cadence.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="grid gap-2">
-              <Label htmlFor="editStartDate">Start Date</Label>
+              <Label htmlFor="start-date">Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={"outline"}
+                    variant="outline"
+                    id="start-date"
                     className="w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editTimeframe.startDate ? (
-                      format(editTimeframe.startDate, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
+                    {formState.start_date ? format(formState.start_date, 'PPP') : 'Select date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={editTimeframe.startDate}
-                    onSelect={(date) => date && setEditTimeframe(prev => ({ ...prev, startDate: date }))}
-                    initialFocus
+                    selected={formState.start_date}
+                    onSelect={date => {
+                      if (date) {
+                        // Update start date
+                        setFormState({...formState, start_date: date});
+                        
+                        // Get selected cadence
+                        const selectedCadence = cadencesQuery.data?.find(
+                          (c: Cadence) => c.id === formState.cadence_id
+                        );
+                        
+                        // If not a custom cadence, automatically update end date
+                        if (selectedCadence && selectedCadence.period !== 'custom') {
+                          const newEndDate = calculateEndDate(date, selectedCadence.period);
+                          setFormState(prev => ({ ...prev, end_date: newEndDate }));
+                        }
+                      }
+                    }}
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            
-            {/* End Date field removed - now automatically calculated based on cadence period and start date */}
+
+            <div className="grid gap-2">
+              <Label htmlFor="end-date">End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    id="end-date"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formState.end_date ? format(formState.end_date, 'PPP') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formState.end_date}
+                    onSelect={date => date && setFormState({...formState, end_date: date})}
+                    disabled={date => {
+                      // Disable dates before start date
+                      return date < formState.start_date;
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input 
+                id="description" 
+                value={formState.description} 
+                onChange={e => setFormState({...formState, description: e.target.value})}
+                placeholder="Description of this timeframe"
+              />
+            </div>
           </div>
-          
+
           <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
             <Button 
-              variant="outline" 
-              onClick={() => setIsEditTimeframeDialogOpen(false)}
+              onClick={handleCreateOrUpdate} 
+              disabled={createTimeframeMutation.isPending || updateTimeframeMutation.isPending}
             >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleUpdateTimeframe}
-              disabled={
-                !editTimeframe.name || 
-                !editTimeframe.cadenceId ||
-                !editTimeframe.startDate ||
-                !editTimeframe.endDate ||
-                updateTimeframeMutation.isPending
-              }
-            >
-              {updateTimeframeMutation.isPending ? "Updating..." : "Update Timeframe"}
+              {createTimeframeMutation.isPending || updateTimeframeMutation.isPending 
+                ? 'Saving...' 
+                : selectedTimeframe ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Delete Timeframe Dialog */}
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Timeframe</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this timeframe? 
-              This action cannot be undone and will affect any objectives linked to this timeframe.
+              This will permanently delete the timeframe "{selectedTimeframe?.name}". 
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteTimeframe}
+              onClick={() => selectedTimeframe && deleteTimeframeMutation.mutate(selectedTimeframe.id)}
               className="bg-red-600 hover:bg-red-700"
               disabled={deleteTimeframeMutation.isPending}
             >
-              {deleteTimeframeMutation.isPending ? "Deleting..." : "Delete Timeframe"}
+              {deleteTimeframeMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-        {isLoading ? (
-          <div className="p-6 flex justify-center">
-            <div className="animate-pulse flex space-x-4">
-              <div className="flex-1 space-y-6 py-1">
-                <div className="h-2 bg-slate-200 rounded"></div>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="h-2 bg-slate-200 rounded col-span-2"></div>
-                    <div className="h-2 bg-slate-200 rounded col-span-1"></div>
-                  </div>
-                  <div className="h-2 bg-slate-200 rounded"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : timeframes && timeframes.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Cadence</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {timeframes.map(timeframe => (
-                  <TableRow key={timeframe.id}>
-                    <TableCell className="font-medium">{timeframe.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {getCadenceName(timeframe.cadenceId)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(timeframe.startDate)}</TableCell>
-                    <TableCell>{formatDate(timeframe.endDate)}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <div className="flex items-center px-2 pt-1 pb-2">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <ContextualTooltip
-                              id={timeframesContextualHelp["timeframe-actions"].id}
-                              title={timeframesContextualHelp["timeframe-actions"].title}
-                              description={timeframesContextualHelp["timeframe-actions"].description}
-                              helpfulTips={timeframesContextualHelp["timeframe-actions"].helpfulTips}
-                              priority={timeframesContextualHelp["timeframe-actions"].priority}
-                              placement={timeframesContextualHelp["timeframe-actions"].placement}
-                            />
-                          </div>
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedTimeframe(timeframe);
-                              
-                              // Initialize edit form with current values
-                              setEditTimeframe({
-                                name: timeframe.name,
-                                cadenceId: timeframe.cadenceId.toString(),
-                                startDate: new Date(timeframe.startDate),
-                                endDate: new Date(timeframe.endDate)
-                              });
-                              
-                              setIsEditTimeframeDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit Timeframe
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              // Navigate to objectives page filtered by this timeframe
-                              window.location.href = `/company-strategy?timeframe=${timeframe.id}`;
-                            }}
-                          >
-                            <CalendarIcon2 className="h-4 w-4 mr-2" />
-                            View Objectives
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => {
-                              setSelectedTimeframe(timeframe);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Timeframe
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="p-6 text-center">
-            <h3 className="text-lg font-medium text-gray-900">No timeframes found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {filterCadenceId 
-                ? "No timeframes are associated with this cadence."
-                : "Create a timeframe to begin structuring your OKR cycles."}
-            </p>
-            <Button 
-              onClick={() => setIsNewTimeframeDialogOpen(true)}
-              className="mt-4"
-              variant="outline"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create First Timeframe
-            </Button>
-          </div>
-        )}
-      </div>
     </DashboardLayout>
   );
 }
