@@ -23,6 +23,17 @@ export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "z
 
 // TABLE SCHEMAS
 
+export const organizationMission = pgTableWithUlid("organization_mission", {
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  mission: text("mission"),
+  vision: text("vision"),
+  boundaries: text("boundaries"),
+  strategicDirection: text("strategic_direction"),
+  behaviors: text("behaviors"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const cycles = pgTableWithUlid("cycles", {
   name: text("name").notNull(),
   description: text("description"),
@@ -928,6 +939,7 @@ export const insertFinancialAccountSchema = createInsertSchema(financialAccounts
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
+export const insertOrganizationMissionSchema = createInsertSchema(organizationMission).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCycleSchema = createInsertSchema(cycles)
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
@@ -1029,6 +1041,9 @@ export type InsertFinancialTransaction = z.infer<typeof insertFinancialTransacti
 
 export type FinancialBudget = typeof financialBudgets.$inferSelect;
 export type InsertFinancialBudget = z.infer<typeof insertFinancialBudgetSchema>;
+
+export type OrganizationMission = typeof organizationMission.$inferSelect;
+export type InsertOrganizationMission = z.infer<typeof insertOrganizationMissionSchema>;
 
 // 1:1 Meetings
 export const meetings = pgTableWithUlid("meetings", {
