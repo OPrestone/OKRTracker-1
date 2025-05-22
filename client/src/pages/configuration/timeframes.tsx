@@ -445,8 +445,16 @@ export default function Timeframes() {
                 <TableCell>
                   {cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadence_id)?.name || '-'}
                 </TableCell>
-                <TableCell>{new Date(timeframe.start_date).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(timeframe.end_date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {timeframe.start_date ? 
+                    timeframe.start_date.toString().substring(0, 10) 
+                    : '-'}
+                </TableCell>
+                <TableCell>
+                  {timeframe.end_date ? 
+                    timeframe.end_date.toString().substring(0, 10)
+                    : '-'}
+                </TableCell>
                 <TableCell>{timeframe.description || '-'}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
