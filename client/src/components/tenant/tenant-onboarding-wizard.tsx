@@ -1199,7 +1199,7 @@ export default function TenantOnboardingWizard() {
                     </div>
                     
                     {/* Team Card Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       {/* Marketing Team Card */}
                       {visibleTeams.marketing && (
                         <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm overflow-hidden">
@@ -1222,7 +1222,7 @@ export default function TenantOnboardingWizard() {
                               </Button>
                             </div>
                           </div>
-                        <div className="px-6 py-5">
+                          <div className="px-6 py-5">
                           {/* Editable Name and Description */}
                           <div className="mb-5 space-y-4">
                             <div>
@@ -1383,7 +1383,9 @@ export default function TenantOnboardingWizard() {
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
-                          </div>)}
+                          </div>
+                        </div>
+                      )}
                         <div className="px-6 py-5">
                           {/* Editable Name and Description */}
                           <div className="mb-5 space-y-4">
