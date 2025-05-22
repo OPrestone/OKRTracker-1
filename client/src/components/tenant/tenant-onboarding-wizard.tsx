@@ -827,8 +827,35 @@ export default function TenantOnboardingWizard() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="max-h-[300px] overflow-y-auto">
+                              <div className="p-2 sticky top-0 bg-background z-10">
+                                <Input 
+                                  placeholder="Search industry..." 
+                                  className="border-input mb-1" 
+                                  onChange={(e) => {
+                                    const searchBox = e.target;
+                                    const value = searchBox.value.toLowerCase();
+                                    
+                                    // Find all SelectItems and hide/show based on search
+                                    const selectItems = searchBox.closest('.SelectContent')?.querySelectorAll('.SelectItem');
+                                    if (selectItems) {
+                                      selectItems.forEach((item) => {
+                                        const text = item.textContent?.toLowerCase() || '';
+                                        if (text.includes(value)) {
+                                          item.classList.remove('hidden');
+                                        } else {
+                                          item.classList.add('hidden');
+                                        }
+                                      });
+                                    }
+                                  }}
+                                />
+                              </div>
                               {industryOptions.map((industry) => (
-                                <SelectItem key={industry} value={industry.toLowerCase()}>
+                                <SelectItem 
+                                  key={industry} 
+                                  value={industry.toLowerCase()}
+                                  className="SelectItem"
+                                >
                                   {industry}
                                 </SelectItem>
                               ))}
