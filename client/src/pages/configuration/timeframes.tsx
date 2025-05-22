@@ -258,7 +258,7 @@ export default function Timeframes() {
     }
 
     // Get selected cadence to determine its type
-    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === formState.cadence_id);
+    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === formState.cadenceId);
     
     // Calculate end date based on cadence type (unless it's a custom cadence)
     let endDate = formState.end_date;
@@ -368,7 +368,7 @@ export default function Timeframes() {
         (timeframe.description && timeframe.description.toLowerCase().includes(filter.toLowerCase()));
       
       // Apply cadence filter if not "all"
-      const matchesCadence = filterCadenceId === "all" || timeframe.cadence_id === filterCadenceId;
+      const matchesCadence = filterCadenceId === "all" || timeframe.cadenceId === filterCadenceId;
       
       return matchesText && matchesCadence;
     }
@@ -443,16 +443,16 @@ export default function Timeframes() {
                   <div className="font-medium">{timeframe.name}</div>
                 </TableCell>
                 <TableCell>
-                  {cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadence_id)?.name || '-'}
+                  {cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadenceId)?.name || '-'}
                 </TableCell>
                 <TableCell>
-                  {timeframe.start_date ? 
-                    timeframe.start_date.toString().substring(0, 10) 
+                  {timeframe.startDate ? 
+                    new Date(timeframe.startDate).toLocaleDateString() 
                     : '-'}
                 </TableCell>
                 <TableCell>
-                  {timeframe.end_date ? 
-                    timeframe.end_date.toString().substring(0, 10)
+                  {timeframe.endDate ? 
+                    new Date(timeframe.endDate).toLocaleDateString()
                     : '-'}
                 </TableCell>
                 <TableCell>{timeframe.description || '-'}</TableCell>
