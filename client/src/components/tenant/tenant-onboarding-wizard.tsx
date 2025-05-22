@@ -1170,7 +1170,55 @@ export default function TenantOnboardingWizard() {
                       </div>
                       
                       {teamMembers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 px-4 bg-gray-50/50">
+                        <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50/50">
+                          {/* Example Team Card */}
+                          <div className="w-full max-w-lg bg-white border border-blue-100 rounded-xl shadow-sm mb-8 overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="bg-white/20 rounded-full p-2 mr-3">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-white">
+                                    <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-white font-medium text-lg">Example Team: Marketing</h3>
+                              </div>
+                            </div>
+                            <div className="px-6 py-5">
+                              <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                  onClick={() => {
+                                    // Add the Marketing Team
+                                    const marketingTeam = {
+                                      name: "Marketing Team",
+                                      description: "Team responsible for all marketing activities",
+                                      color: "#3B82F6",
+                                      icon: "building",
+                                      members: []
+                                    };
+                                    
+                                    // Show success message
+                                    toast({
+                                      title: "Team added",
+                                      description: "Marketing Team has been added to your organization",
+                                    });
+                                    
+                                    // Show the manual team member form
+                                    addTeamMember(new Event('click'));
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                  Add Team
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          
                           <div className="bg-gray-100 rounded-full p-4 mb-4">
                             <Users className="h-8 w-8 text-gray-400" />
                           </div>
