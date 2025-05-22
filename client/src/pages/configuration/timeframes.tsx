@@ -79,9 +79,9 @@ export default function Timeframes() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe | null>(null);
   const [formState, setFormState] = useState({
     name: "",
-    start_date: new Date(),
-    end_date: new Date(),
-    cadence_id: "placeholder", // Default non-empty value
+    startDate: new Date(),
+    endDate: new Date(),
+    cadenceId: "placeholder", // Default non-empty value
     description: ""
   });
   
@@ -122,9 +122,9 @@ export default function Timeframes() {
     
     setFormState({
       name: "",
-      start_date: startDate,
-      end_date: endDate,
-      cadence_id: firstCadenceId,
+      startDate: startDate,
+      endDate: endDate,
+      cadenceId: firstCadenceId,
       description: ""
     });
     setSelectedTimeframe(null);
@@ -261,18 +261,18 @@ export default function Timeframes() {
     const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === formState.cadenceId);
     
     // Calculate end date based on cadence type (unless it's a custom cadence)
-    let endDate = formState.end_date;
+    let endDate = formState.endDate;
     if (selectedCadence && selectedCadence.period !== 'custom') {
-      endDate = calculateEndDate(formState.start_date, selectedCadence.period);
+      endDate = calculateEndDate(formState.startDate, selectedCadence.period);
     }
 
     // Ensure dates are properly formatted for the API
     const data = {
       ...formState,
-      start_date: formState.start_date instanceof Date 
-        ? formState.start_date.toISOString().split('T')[0] 
-        : new Date(formState.start_date).toISOString().split('T')[0],
-      end_date: endDate instanceof Date 
+      startDate: formState.startDate instanceof Date 
+        ? formState.startDate.toISOString().split('T')[0] 
+        : new Date(formState.startDate).toISOString().split('T')[0],
+      endDate: endDate instanceof Date 
         ? endDate.toISOString().split('T')[0] 
         : new Date(endDate).toISOString().split('T')[0],
     };
@@ -301,7 +301,7 @@ export default function Timeframes() {
     }
     
     // End date will be calculated based on cadence
-    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadence_id);
+    const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === timeframe.cadenceId);
     let endDate;
     
     if (selectedCadence && selectedCadence.period !== 'custom') {
@@ -310,7 +310,7 @@ export default function Timeframes() {
     } else {
       // For custom cadences, use the existing end date or default to 3 months from start
       try {
-        endDate = new Date(timeframe.end_date);
+        endDate = new Date(timeframe.endDate);
         if (isNaN(endDate.getTime())) {
           endDate = addMonths(startDate, 3);
         }
@@ -322,9 +322,9 @@ export default function Timeframes() {
     setFormState({
       name: timeframe.name,
       description: timeframe.description || "",
-      cadence_id: timeframe.cadence_id,
-      start_date: startDate,
-      end_date: endDate
+      cadenceId: timeframe.cadenceId,
+      startDate: startDate,
+      endDate: endDate
     });
     
     setIsDialogOpen(true);
