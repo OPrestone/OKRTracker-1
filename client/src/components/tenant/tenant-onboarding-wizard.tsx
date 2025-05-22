@@ -831,22 +831,28 @@ export default function TenantOnboardingWizard() {
                                 <Input 
                                   placeholder="Search industry..." 
                                   className="border-input mb-1" 
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                  onFocus={(e) => e.stopPropagation()}
                                   onChange={(e) => {
-                                    const searchBox = e.target;
-                                    const value = searchBox.value.toLowerCase();
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    const value = e.target.value.toLowerCase();
                                     
                                     // Find all SelectItems and hide/show based on search
-                                    const selectItems = searchBox.closest('.SelectContent')?.querySelectorAll('.SelectItem');
-                                    if (selectItems) {
-                                      selectItems.forEach((item) => {
-                                        const text = item.textContent?.toLowerCase() || '';
-                                        if (text.includes(value)) {
-                                          item.classList.remove('hidden');
-                                        } else {
-                                          item.classList.add('hidden');
-                                        }
-                                      });
-                                    }
+                                    const selectItems = document.querySelectorAll('.industry-item');
+                                    let visibleCount = 0;
+                                    
+                                    selectItems.forEach((item) => {
+                                      const text = item.textContent?.toLowerCase() || '';
+                                      if (text.includes(value)) {
+                                        (item as HTMLElement).style.display = 'flex';
+                                        visibleCount++;
+                                      } else {
+                                        (item as HTMLElement).style.display = 'none';
+                                      }
+                                    });
                                   }}
                                 />
                               </div>
@@ -854,7 +860,7 @@ export default function TenantOnboardingWizard() {
                                 <SelectItem 
                                   key={industry} 
                                   value={industry.toLowerCase()}
-                                  className="SelectItem"
+                                  className="industry-item"
                                 >
                                   {industry}
                                 </SelectItem>
