@@ -164,10 +164,13 @@ import {
   ArrowRight,
   Building2,
   Building,
+  Briefcase,
   Check,
   CheckCircle, 
+  Code2,
   CreditCard,
   FileUp,
+  LineChart,
   Loader2,
   Mail,
   Megaphone,
@@ -1157,173 +1160,557 @@ export default function TenantOnboardingWizard() {
                       </div>
                     </div>
 
-                    {/* Example Team Card */}
-                    <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm mb-8 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="bg-white/20 rounded-full p-2 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-white">
-                              <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
-                            </svg>
-                          </div>
-                          <h3 className="text-white font-medium text-lg">Recommended Team</h3>
-                        </div>
-                      </div>
-                      <div className="px-6 py-5">
-                        {/* Editable Name and Description */}
-                        <div className="mb-5 space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
-                            <Input 
-                              className="border-gray-200 focus-visible:ring-blue-500" 
-                              defaultValue="Marketing Team"
-                              placeholder="Enter team name"
-                              id="recommendedTeamName"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
-                            <Textarea 
-                              className="border-gray-200 focus-visible:ring-blue-500 min-h-[80px] resize-none" 
-                              defaultValue="Team responsible for all marketing activities"
-                              placeholder="Enter team description"
-                              id="recommendedTeamDescription"
-                            />
+                    {/* Team Card Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                      {/* Marketing Team Card */}
+                      <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <Megaphone className="h-5 w-5 text-white" />
+                            </div>
+                            <h3 className="text-white font-medium text-lg">Marketing Team</h3>
                           </div>
                         </div>
-                        
-                        {/* Team Configuration */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
-                            <Select defaultValue="#3B82F6">
-                              <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
-                                <SelectValue placeholder="Select color" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="#3B82F6">
-                                  <div className="flex items-center">
-                                    <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
-                                    Blue (#3B82F6)
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="#10B981">
-                                  <div className="flex items-center">
-                                    <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
-                                    Green (#10B981)
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="#F59E0B">
-                                  <div className="flex items-center">
-                                    <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
-                                    Amber (#F59E0B)
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="#EF4444">
-                                  <div className="flex items-center">
-                                    <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
-                                    Red (#EF4444)
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="#8B5CF6">
-                                  <div className="flex items-center">
-                                    <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
-                                    Purple (#8B5CF6)
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                        <div className="px-6 py-5">
+                          {/* Editable Name and Description */}
+                          <div className="mb-5 space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
+                              <Input 
+                                className="border-gray-200 focus-visible:ring-blue-500" 
+                                defaultValue="Marketing Team"
+                                placeholder="Enter team name"
+                                id="marketingTeamName"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
+                              <Textarea 
+                                className="border-gray-200 focus-visible:ring-blue-500 min-h-[80px] resize-none" 
+                                defaultValue="Team responsible for all marketing activities"
+                                placeholder="Enter team description"
+                                id="marketingTeamDescription"
+                              />
+                            </div>
                           </div>
                           
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
-                            <Select defaultValue="building">
-                              <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
-                                <SelectValue placeholder="Select icon" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="building">
-                                  <div className="flex items-center">
-                                    <Building className="h-4 w-4 mr-2" />
-                                    Building
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="megaphone">
-                                  <div className="flex items-center">
-                                    <Megaphone className="h-4 w-4 mr-2" />
-                                    Megaphone
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="presentation">
-                                  <div className="flex items-center">
-                                    <Presentation className="h-4 w-4 mr-2" />
-                                    Presentation
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="target">
-                                  <div className="flex items-center">
-                                    <Target className="h-4 w-4 mr-2" />
-                                    Target
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="users">
-                                  <div className="flex items-center">
-                                    <Users className="h-4 w-4 mr-2" />
-                                    Users
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                          {/* Team Configuration */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
+                              <Select defaultValue="#3B82F6" id="marketingTeamColor">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
+                                  <SelectValue placeholder="Select color" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="#3B82F6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                                      Blue (#3B82F6)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#10B981">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                                      Green (#10B981)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#F59E0B">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
+                                      Amber (#F59E0B)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#EF4444">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
+                                      Red (#EF4444)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#8B5CF6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                                      Purple (#8B5CF6)
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
+                              <Select defaultValue="megaphone" id="marketingTeamIcon">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
+                                  <SelectValue placeholder="Select icon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="building">
+                                    <div className="flex items-center">
+                                      <Building className="h-4 w-4 mr-2" />
+                                      Building
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="megaphone">
+                                    <div className="flex items-center">
+                                      <Megaphone className="h-4 w-4 mr-2" />
+                                      Megaphone
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="presentation">
+                                    <div className="flex items-center">
+                                      <Presentation className="h-4 w-4 mr-2" />
+                                      Presentation
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="target">
+                                    <div className="flex items-center">
+                                      <Target className="h-4 w-4 mr-2" />
+                                      Target
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="users">
+                                    <div className="flex items-center">
+                                      <Users className="h-4 w-4 mr-2" />
+                                      Users
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                              onClick={() => {
+                                // Get values from the form inputs
+                                const teamName = (document.getElementById('marketingTeamName') as HTMLInputElement)?.value || "Marketing Team";
+                                const teamDescription = (document.getElementById('marketingTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
+                                
+                                // Get selected values from dropdowns
+                                let teamColor = "#3B82F6"; 
+                                let teamIcon = "megaphone"; 
+                                
+                                // Show success message
+                                toast({
+                                  title: "Team added",
+                                  description: `${teamName} has been added to your organization`,
+                                });
+                                
+                                // Show the manual team member form
+                                addTeamMember(new Event('click'));
+                              }}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" />
+                              Add This Team
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => {
-                              // Get values from the form inputs
-                              const teamName = (document.getElementById('recommendedTeamName') as HTMLInputElement)?.value || "Marketing Team";
-                              const teamDescription = (document.getElementById('recommendedTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
-                              
-                              // Get selected values from dropdowns (use data attributes or state depending on what's available)
-                              let teamColor = "#3B82F6"; // Default blue
-                              let teamIcon = "building"; // Default building
-                              
-                              const colorSelect = document.querySelector('[data-value="#3B82F6"]');
-                              if (colorSelect) {
-                                teamColor = colorSelect.getAttribute('data-value') || teamColor;
-                              }
-                              
-                              const iconSelect = document.querySelector('[data-value="building"]');
-                              if (iconSelect) {
-                                teamIcon = iconSelect.getAttribute('data-value') || teamIcon;
-                              }
-                              
-                              // Add the customized team
-                              const customTeam = {
-                                name: teamName,
-                                description: teamDescription,
-                                color: teamColor,
-                                icon: teamIcon,
-                                members: []
-                              };
-                              
-                              // Show success message
-                              toast({
-                                title: "Team added",
-                                description: `${teamName} has been added to your organization`,
-                              });
-                              
-                              // Show the manual team member form
-                              addTeamMember(new Event('click'));
-                            }}
-                          >
-                            <Plus className="h-3.5 w-3.5 mr-1.5" />
-                            Add This Team
-                          </Button>
+                      </div>
+
+                      {/* Product Team Card */}
+                      <div className="w-full bg-white border border-purple-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <Code2 className="h-5 w-5 text-white" />
+                            </div>
+                            <h3 className="text-white font-medium text-lg">Product Team</h3>
+                          </div>
+                        </div>
+                        <div className="px-6 py-5">
+                          {/* Editable Name and Description */}
+                          <div className="mb-5 space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
+                              <Input 
+                                className="border-gray-200 focus-visible:ring-purple-500" 
+                                defaultValue="Product Team"
+                                placeholder="Enter team name"
+                                id="productTeamName"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
+                              <Textarea 
+                                className="border-gray-200 focus-visible:ring-purple-500 min-h-[80px] resize-none" 
+                                defaultValue="Team responsible for product development"
+                                placeholder="Enter team description"
+                                id="productTeamDescription"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Team Configuration */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
+                              <Select defaultValue="#8B5CF6" id="productTeamColor">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-purple-500">
+                                  <SelectValue placeholder="Select color" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="#3B82F6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                                      Blue (#3B82F6)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#10B981">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                                      Green (#10B981)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#F59E0B">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
+                                      Amber (#F59E0B)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#EF4444">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
+                                      Red (#EF4444)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#8B5CF6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                                      Purple (#8B5CF6)
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
+                              <Select defaultValue="code2" id="productTeamIcon">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-purple-500">
+                                  <SelectValue placeholder="Select icon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="code2">
+                                    <div className="flex items-center">
+                                      <Code2 className="h-4 w-4 mr-2" />
+                                      Code
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="target">
+                                    <div className="flex items-center">
+                                      <Target className="h-4 w-4 mr-2" />
+                                      Target
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="users">
+                                    <div className="flex items-center">
+                                      <Users className="h-4 w-4 mr-2" />
+                                      Users
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                              onClick={() => {
+                                // Get values from the form inputs
+                                const teamName = (document.getElementById('productTeamName') as HTMLInputElement)?.value || "Product Team";
+                                const teamDescription = (document.getElementById('productTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for product development";
+                                
+                                // Show success message
+                                toast({
+                                  title: "Team added",
+                                  description: `${teamName} has been added to your organization`,
+                                });
+                                
+                                // Show the manual team member form
+                                addTeamMember(new Event('click'));
+                              }}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" />
+                              Add This Team
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sales Team Card */}
+                      <div className="w-full bg-white border border-green-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <LineChart className="h-5 w-5 text-white" />
+                            </div>
+                            <h3 className="text-white font-medium text-lg">Sales Team</h3>
+                          </div>
+                        </div>
+                        <div className="px-6 py-5">
+                          {/* Editable Name and Description */}
+                          <div className="mb-5 space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
+                              <Input 
+                                className="border-gray-200 focus-visible:ring-green-500" 
+                                defaultValue="Sales Team"
+                                placeholder="Enter team name"
+                                id="salesTeamName"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
+                              <Textarea 
+                                className="border-gray-200 focus-visible:ring-green-500 min-h-[80px] resize-none" 
+                                defaultValue="Team responsible for sales and revenue generation"
+                                placeholder="Enter team description"
+                                id="salesTeamDescription"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Team Configuration */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
+                              <Select defaultValue="#10B981" id="salesTeamColor">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-green-500">
+                                  <SelectValue placeholder="Select color" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="#3B82F6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                                      Blue (#3B82F6)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#10B981">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                                      Green (#10B981)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#F59E0B">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
+                                      Amber (#F59E0B)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#EF4444">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
+                                      Red (#EF4444)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#8B5CF6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                                      Purple (#8B5CF6)
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
+                              <Select defaultValue="lineChart" id="salesTeamIcon">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-green-500">
+                                  <SelectValue placeholder="Select icon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="lineChart">
+                                    <div className="flex items-center">
+                                      <LineChart className="h-4 w-4 mr-2" />
+                                      Line Chart
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="barChart3">
+                                    <div className="flex items-center">
+                                      <BarChart3 className="h-4 w-4 mr-2" />
+                                      Bar Chart
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="target">
+                                    <div className="flex items-center">
+                                      <Target className="h-4 w-4 mr-2" />
+                                      Target
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="border-green-200 text-green-600 hover:bg-green-50"
+                              onClick={() => {
+                                // Get values from the form inputs
+                                const teamName = (document.getElementById('salesTeamName') as HTMLInputElement)?.value || "Sales Team";
+                                const teamDescription = (document.getElementById('salesTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for sales and revenue generation";
+                                
+                                // Show success message
+                                toast({
+                                  title: "Team added",
+                                  description: `${teamName} has been added to your organization`,
+                                });
+                                
+                                // Show the manual team member form
+                                addTeamMember(new Event('click'));
+                              }}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" />
+                              Add This Team
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Engineering Team Card */}
+                      <div className="w-full bg-white border border-red-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <Briefcase className="h-5 w-5 text-white" />
+                            </div>
+                            <h3 className="text-white font-medium text-lg">Engineering Team</h3>
+                          </div>
+                        </div>
+                        <div className="px-6 py-5">
+                          {/* Editable Name and Description */}
+                          <div className="mb-5 space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
+                              <Input 
+                                className="border-gray-200 focus-visible:ring-red-500" 
+                                defaultValue="Engineering Team"
+                                placeholder="Enter team name"
+                                id="engineeringTeamName"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
+                              <Textarea 
+                                className="border-gray-200 focus-visible:ring-red-500 min-h-[80px] resize-none" 
+                                defaultValue="The engineering team is responsible for building and maintaining the company's technical infrastructure."
+                                placeholder="Enter team description"
+                                id="engineeringTeamDescription"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Team Configuration */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
+                              <Select defaultValue="#EF4444" id="engineeringTeamColor">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-red-500">
+                                  <SelectValue placeholder="Select color" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="#3B82F6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                                      Blue (#3B82F6)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#10B981">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                                      Green (#10B981)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#F59E0B">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
+                                      Amber (#F59E0B)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#EF4444">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
+                                      Red (#EF4444)
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="#8B5CF6">
+                                    <div className="flex items-center">
+                                      <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                                      Purple (#8B5CF6)
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
+                              <Select defaultValue="briefcase" id="engineeringTeamIcon">
+                                <SelectTrigger className="border-gray-200 focus-visible:ring-red-500">
+                                  <SelectValue placeholder="Select icon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="briefcase">
+                                    <div className="flex items-center">
+                                      <Briefcase className="h-4 w-4 mr-2" />
+                                      Briefcase
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="code2">
+                                    <div className="flex items-center">
+                                      <Code2 className="h-4 w-4 mr-2" />
+                                      Code
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="rocket">
+                                    <div className="flex items-center">
+                                      <Rocket className="h-4 w-4 mr-2" />
+                                      Rocket
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={() => {
+                                // Get values from the form inputs
+                                const teamName = (document.getElementById('engineeringTeamName') as HTMLInputElement)?.value || "Engineering Team";
+                                const teamDescription = (document.getElementById('engineeringTeamDescription') as HTMLTextAreaElement)?.value || "The engineering team is responsible for building and maintaining the company's technical infrastructure.";
+                                
+                                // Show success message
+                                toast({
+                                  title: "Team added",
+                                  description: `${teamName} has been added to your organization`,
+                                });
+                                
+                                // Show the manual team member form
+                                addTeamMember(new Event('click'));
+                              }}
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1.5" />
+                              Add This Team
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
