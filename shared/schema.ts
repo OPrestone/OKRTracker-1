@@ -317,6 +317,9 @@ export const userBadges = pgTable("user_badges", {
 
 export const tenants = pgTableWithUlid("tenants", {
   name: text("name").notNull(),
+  displayName: text("display_name"),
+  description: text("description"),
+  industry: text("industry"),
   slug: text("slug").notNull().unique(),
   logoUrl: text("logo_url"),
   settings: jsonb("settings").default({}).notNull(),
