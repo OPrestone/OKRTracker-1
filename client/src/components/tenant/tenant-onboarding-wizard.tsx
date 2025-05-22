@@ -397,6 +397,37 @@ export default function TenantOnboardingWizard() {
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
   
+  // State to track which team cards are visible
+  const [visibleTeams, setVisibleTeams] = useState({
+    marketing: true,
+    product: true,
+    sales: true,
+    engineering: true
+  });
+  
+  // Function to calculate number of visible teams
+  const getVisibleTeamCount = () => {
+    return Object.values(visibleTeams).filter(visible => visible).length;
+  };
+  
+  // Function to remove a team card with limit check
+  const removeTeam = (teamKey: keyof typeof visibleTeams) => {
+    // Check if removing would result in less than 2 teams
+    if (getVisibleTeamCount() <= 2) {
+      return; // Don't allow removal if only 2 teams are visible
+    }
+    
+    setVisibleTeams(prev => ({
+      ...prev,
+      [teamKey]: false
+    }));
+    
+    toast({
+      title: "Team removed",
+      description: "The team has been removed from your organization."
+    });
+  };
+  
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -1160,19 +1191,38 @@ export default function TenantOnboardingWizard() {
                       </div>
                     </div>
 
+                    {/* Your Teams Section Header */}
+                    <div className="mb-5">
+                      <h3 className="text-xl font-semibold text-gray-800">Your Teams</h3>
+                      <p className="text-gray-600">Customize and manage your organization's teams</p>
+                      <p className="text-sm text-gray-500 mt-1">You must have at least 2 teams in your organization</p>
+                    </div>
+                    
                     {/* Team Card Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       {/* Marketing Team Card */}
-                      <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="bg-white/20 rounded-full p-2 mr-3">
-                              <Megaphone className="h-5 w-5 text-white" />
+                      {visibleTeams.marketing && (
+                        <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm overflow-hidden">
+                          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="bg-white/20 rounded-full p-2 mr-3">
+                                  <Megaphone className="h-5 w-5 text-white" />
+                                </div>
+                                <h3 className="text-white font-medium text-lg">Marketing Team</h3>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-8 w-8 p-0 text-white/80 hover:text-white hover:bg-white/10"
+                                onClick={() => removeTeam('marketing')}
+                                disabled={getVisibleTeamCount() <= 2}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <h3 className="text-white font-medium text-lg">Marketing Team</h3>
                           </div>
-                        </div>
-                        <div className="px-6 py-5">
+                          <div className="px-6 py-5">
                           {/* Editable Name and Description */}
                           <div className="mb-5 space-y-4">
                             <div>
@@ -1313,15 +1363,29 @@ export default function TenantOnboardingWizard() {
                       </div>
 
                       {/* Product Team Card */}
-                      <div className="w-full bg-white border border-purple-100 rounded-xl shadow-sm overflow-hidden">
-                        <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="bg-white/20 rounded-full p-2 mr-3">
-                              <Code2 className="h-5 w-5 text-white" />
+                      {visibleTeams.product && (
+                        <div className="w-full bg-white border border-purple-100 rounded-xl shadow-sm overflow-hidden">
+                          <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="bg-white/20 rounded-full p-2 mr-3">
+                                  <Code2 className="h-5 w-5 text-white" />
+                                </div>
+                                <h3 className="text-white font-medium text-lg">Product Team</h3>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-8 w-8 p-0 text-white/80 hover:text-white hover:bg-white/10"
+                                onClick={() => removeTeam('product')}
+                                disabled={getVisibleTeamCount() <= 2}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <h3 className="text-white font-medium text-lg">Product Team</h3>
                           </div>
                         </div>
+                      )}
                         <div className="px-6 py-5">
                           {/* Editable Name and Description */}
                           <div className="mb-5 space-y-4">
