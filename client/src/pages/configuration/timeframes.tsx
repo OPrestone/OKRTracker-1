@@ -338,7 +338,7 @@ export default function Timeframes() {
 
   // Update cadence and calculate end date based on the selected cadence
   const handleCadenceChange = (cadenceId: string) => {
-    setFormState(prev => ({ ...prev, cadence_id: cadenceId }));
+    setFormState(prev => ({ ...prev, cadenceId: cadenceId }));
     
     // Get selected cadence to determine its type
     const selectedCadence = cadencesQuery.data?.find((c: Cadence) => c.id === cadenceId);
@@ -349,13 +349,13 @@ export default function Timeframes() {
       
       if (selectedCadence.period === 'custom') {
         // For custom cadences, default to 3 months
-        newEndDate = addMonths(formState.start_date, 3);
+        newEndDate = addMonths(formState.startDate, 3);
       } else {
         // Calculate based on cadence period
-        newEndDate = calculateEndDate(formState.start_date, selectedCadence.period);
+        newEndDate = calculateEndDate(formState.startDate, selectedCadence.period);
       }
       
-      setFormState(prev => ({ ...prev, end_date: newEndDate }));
+      setFormState(prev => ({ ...prev, endDate: newEndDate }));
     }
   };
 
@@ -509,7 +509,7 @@ export default function Timeframes() {
             <div className="grid gap-2">
               <Label htmlFor="cadence">Cadence</Label>
               <Select 
-                value={formState.cadence_id} 
+                value={formState.cadenceId} 
                 onValueChange={handleCadenceChange}
               >
                 <SelectTrigger id="cadence">
@@ -536,27 +536,27 @@ export default function Timeframes() {
                     className="w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formState.start_date ? format(formState.start_date, 'PPP') : 'Select date'}
+                    {formState.startDate ? format(formState.startDate, 'PPP') : 'Select date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={formState.start_date}
+                    selected={formState.startDate}
                     onSelect={date => {
                       if (date) {
                         // Update start date
-                        setFormState({...formState, start_date: date});
+                        setFormState({...formState, startDate: date});
                         
                         // Get selected cadence
                         const selectedCadence = cadencesQuery.data?.find(
-                          (c: Cadence) => c.id === formState.cadence_id
+                          (c: Cadence) => c.id === formState.cadenceId
                         );
                         
                         // If not a custom cadence, automatically update end date
                         if (selectedCadence && selectedCadence.period !== 'custom') {
                           const newEndDate = calculateEndDate(date, selectedCadence.period);
-                          setFormState(prev => ({ ...prev, end_date: newEndDate }));
+                          setFormState(prev => ({ ...prev, endDate: newEndDate }));
                         }
                       }
                     }}
