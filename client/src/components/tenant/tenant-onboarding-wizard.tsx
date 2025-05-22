@@ -1165,13 +1165,98 @@ export default function TenantOnboardingWizard() {
                       </div>
                       <div className="px-6 py-5">
                         <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+                        
+                        {/* Team Configuration */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                           <div>
-                            <span className="text-sm font-medium text-gray-700 block mb-1">Team Details:</span>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Color</label>
+                            <Select defaultValue="#3B82F6">
+                              <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
+                                <SelectValue placeholder="Select color" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="#3B82F6">
+                                  <div className="flex items-center">
+                                    <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                                    Blue (#3B82F6)
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="#10B981">
+                                  <div className="flex items-center">
+                                    <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                                    Green (#10B981)
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="#F59E0B">
+                                  <div className="flex items-center">
+                                    <div className="h-4 w-4 rounded-full bg-amber-500 mr-2"></div>
+                                    Amber (#F59E0B)
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="#EF4444">
+                                  <div className="flex items-center">
+                                    <div className="h-4 w-4 rounded-full bg-red-500 mr-2"></div>
+                                    Red (#EF4444)
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="#8B5CF6">
+                                  <div className="flex items-center">
+                                    <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                                    Purple (#8B5CF6)
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Icon</label>
+                            <Select defaultValue="building">
+                              <SelectTrigger className="border-gray-200 focus-visible:ring-blue-500">
+                                <SelectValue placeholder="Select icon" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="building">
+                                  <div className="flex items-center">
+                                    <Building className="h-4 w-4 mr-2" />
+                                    Building
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="megaphone">
+                                  <div className="flex items-center">
+                                    <Megaphone className="h-4 w-4 mr-2" />
+                                    Megaphone
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="presentation">
+                                  <div className="flex items-center">
+                                    <PresentationScreen className="h-4 w-4 mr-2" />
+                                    Presentation
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="target">
+                                  <div className="flex items-center">
+                                    <Target className="h-4 w-4 mr-2" />
+                                    Target
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="users">
+                                  <div className="flex items-center">
+                                    <Users className="h-4 w-4 mr-2" />
+                                    Users
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                          <div>
+                            <span className="text-sm font-medium text-gray-700 block mb-1">Team Information:</span>
                             <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
                               <li>Name: Marketing Team</li>
-                              <li>Color: #3B82F6 (Blue)</li>
-                              <li>Icon: Building</li>
+                              <li>Members: Add team members after creating</li>
                             </ul>
                           </div>
                           <Button 
