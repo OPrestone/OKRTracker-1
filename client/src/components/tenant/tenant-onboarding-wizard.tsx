@@ -172,7 +172,7 @@ import {
   Mail,
   Megaphone,
   Plus,
-  PresentationScreen,
+  Presentation,
   UserPlus,
   Users,
   X,
@@ -1166,11 +1166,31 @@ export default function TenantOnboardingWizard() {
                               <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
                             </svg>
                           </div>
-                          <h3 className="text-white font-medium text-lg">Recommended Team: Marketing</h3>
+                          <h3 className="text-white font-medium text-lg">Recommended Team</h3>
                         </div>
                       </div>
                       <div className="px-6 py-5">
-                        <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
+                        {/* Editable Name and Description */}
+                        <div className="mb-5 space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Name</label>
+                            <Input 
+                              className="border-gray-200 focus-visible:ring-blue-500" 
+                              defaultValue="Marketing Team"
+                              placeholder="Enter team name"
+                              id="recommendedTeamName"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 block mb-2">Team Description</label>
+                            <Textarea 
+                              className="border-gray-200 focus-visible:ring-blue-500 min-h-[80px] resize-none" 
+                              defaultValue="Team responsible for all marketing activities"
+                              placeholder="Enter team description"
+                              id="recommendedTeamDescription"
+                            />
+                          </div>
+                        </div>
                         
                         {/* Team Configuration */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
@@ -1236,7 +1256,7 @@ export default function TenantOnboardingWizard() {
                                 </SelectItem>
                                 <SelectItem value="presentation">
                                   <div className="flex items-center">
-                                    <PresentationScreen className="h-4 w-4 mr-2" />
+                                    <Presentation className="h-4 w-4 mr-2" />
                                     Presentation
                                   </div>
                                 </SelectItem>
@@ -1257,33 +1277,44 @@ export default function TenantOnboardingWizard() {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-                          <div>
-                            <span className="text-sm font-medium text-gray-700 block mb-1">Team Information:</span>
-                            <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
-                              <li>Name: Marketing Team</li>
-                              <li>Members: Add team members after creating</li>
-                            </ul>
-                          </div>
+                        <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
                           <Button 
                             type="button" 
                             variant="outline" 
                             size="sm"
                             className="border-blue-200 text-blue-600 hover:bg-blue-50"
                             onClick={() => {
-                              // Add the Marketing Team
-                              const marketingTeam = {
-                                name: "Marketing Team",
-                                description: "Team responsible for all marketing activities",
-                                color: "#3B82F6",
-                                icon: "building",
+                              // Get values from the form inputs
+                              const teamName = (document.getElementById('recommendedTeamName') as HTMLInputElement)?.value || "Marketing Team";
+                              const teamDescription = (document.getElementById('recommendedTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
+                              
+                              // Get selected values from dropdowns (use data attributes or state depending on what's available)
+                              let teamColor = "#3B82F6"; // Default blue
+                              let teamIcon = "building"; // Default building
+                              
+                              const colorSelect = document.querySelector('[data-value="#3B82F6"]');
+                              if (colorSelect) {
+                                teamColor = colorSelect.getAttribute('data-value') || teamColor;
+                              }
+                              
+                              const iconSelect = document.querySelector('[data-value="building"]');
+                              if (iconSelect) {
+                                teamIcon = iconSelect.getAttribute('data-value') || teamIcon;
+                              }
+                              
+                              // Add the customized team
+                              const customTeam = {
+                                name: teamName,
+                                description: teamDescription,
+                                color: teamColor,
+                                icon: teamIcon,
                                 members: []
                               };
                               
                               // Show success message
                               toast({
                                 title: "Team added",
-                                description: "Marketing Team has been added to your organization",
+                                description: `${teamName} has been added to your organization`,
                               });
                               
                               // Show the manual team member form
