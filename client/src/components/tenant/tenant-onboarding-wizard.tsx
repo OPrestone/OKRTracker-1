@@ -163,13 +163,16 @@ import {
   ArrowLeft,
   ArrowRight,
   Building2,
+  Building,
   Check,
   CheckCircle, 
   CreditCard,
   FileUp,
   Loader2,
   Mail,
+  Megaphone,
   Plus,
+  PresentationScreen,
   UserPlus,
   Users,
   X,
@@ -180,6 +183,9 @@ import {
   Award,
   Zap,
   Sparkles,
+  Search,
+  Trash,
+  ChevronRight,
 } from "lucide-react";
 
 import { CSVImport } from "@/components/csv/csv-import";
