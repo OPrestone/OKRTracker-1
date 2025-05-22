@@ -387,11 +387,11 @@ export default function TenantOnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
-  
+
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
-  
+
   // Steps configuration
   const steps = [
     { id: "organization", label: "Organization", icon: Building2 },
@@ -399,10 +399,10 @@ export default function TenantOnboardingWizard() {
     { id: "team", label: "Team", icon: Users },
     { id: "setup", label: "Initial Setup", icon: Rocket }
   ];
-  
+
   // Find active step index
   const activeIndex = steps.findIndex(step => step.id === activePage);
-  
+
   // Calculate progress percentage
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -410,7 +410,7 @@ export default function TenantOnboardingWizard() {
     }, 100);
     return () => clearTimeout(timer);
   }, [activeIndex]);
-  
+
   // Form setup with default values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -435,23 +435,23 @@ export default function TenantOnboardingWizard() {
       },
     },
   });
-  
+
   // Watch for values changes for conditional rendering
   const createInitialOKRs = form.watch("setup.createInitialOKRs");
   const selectedTemplate = form.watch("setup.template");
   const teamMembers = form.watch("team.users") || [];
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
-  
+
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       setIsSubmitting(true);
-      
+
       try {
         // Extract users that were selected
         const selectedUsers = values.team.users?.filter(user => user.selected) || [];
-        
+
         const requestData = {
           name: values.orgDetails.name,
           displayName: values.orgDetails.displayName,
@@ -461,16 +461,16 @@ export default function TenantOnboardingWizard() {
           users: selectedUsers,
           setup: values.setup,
         };
-        
+
         // Make the API request with role explicitly set to "owner"
         const requestDataWithRole = {
           ...requestData,
           role: "owner" // Set creator's role to owner (highest privilege level)
         };
-        
+
         const response = await apiRequest('POST', '/api/tenants', requestDataWithRole);
         const orgData = await response.json();
-        
+
         return orgData;
       } finally {
         setIsSubmitting(false);
@@ -481,12 +481,12 @@ export default function TenantOnboardingWizard() {
         title: "Organization created!",
         description: "Your new organization has been set up successfully.",
       });
-      
+
       // Invalidate tenants query to refresh list
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      
+
       setTenantCreated(true);
-      
+
       // Navigate to the new tenant's dashboard
       setTimeout(() => {
         navigate("/");
@@ -500,11 +500,11 @@ export default function TenantOnboardingWizard() {
       });
     }
   });
-  
+
   const handleSubmit = form.handleSubmit((data) => {
     createTenantMutation.mutate(data);
   });
-  
+
   // Navigation handlers
   const goToNextStep = () => {
     const currentIndex = steps.findIndex(step => step.id === activePage);
@@ -512,26 +512,26 @@ export default function TenantOnboardingWizard() {
       setActivePage(steps[currentIndex + 1].id);
     }
   };
-  
+
   const goToPreviousStep = () => {
     const currentIndex = steps.findIndex(step => step.id === activePage);
     if (currentIndex > 0) {
       setActivePage(steps[currentIndex - 1].id);
     }
   };
-  
+
   const goToStep = (stepId: string) => {
     setActivePage(stepId);
   };
-  
+
   const addTeamMember = (e?: React.MouseEvent) => {
     // Prevent form submission if event is provided
     if (e) {
       e.preventDefault();
     }
-    
+
     const currentUsers = form.getValues("team.users") || [];
-    
+
     form.setValue("team.users", [
       ...currentUsers,
       {
@@ -543,18 +543,18 @@ export default function TenantOnboardingWizard() {
       }
     ]);
   };
-  
+
   // Function to invite a user by email
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [isInviting, setIsInviting] = useState(false);
-  
+
   const inviteUser = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Prevent form submission
     e.preventDefault();
-    
+
     if (!inviteEmail) return;
-    
+
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(inviteEmail)) {
@@ -565,9 +565,9 @@ export default function TenantOnboardingWizard() {
       });
       return;
     }
-    
+
     const currentUsers = form.getValues("team.users") || [];
-    
+
     // Check for duplicate email
     if (currentUsers.some(user => user.email === inviteEmail)) {
       toast({
@@ -577,9 +577,9 @@ export default function TenantOnboardingWizard() {
       });
       return;
     }
-    
+
     setIsInviting(true);
-    
+
     // Add to team members
     form.setValue("team.users", [
       ...currentUsers,
@@ -591,19 +591,19 @@ export default function TenantOnboardingWizard() {
         department: "",
       }
     ]);
-    
+
     // Show success toast
     toast({
       title: "Invitation added",
       description: `${inviteEmail} will be invited when you create the organization`,
       variant: "default",
     });
-    
+
     // Reset form
     setInviteEmail("");
     setIsInviting(false);
   };
-  
+
   // Check if current step is valid
   const isCurrentStepValid = () => {
     switch (activePage) {
@@ -633,7 +633,7 @@ export default function TenantOnboardingWizard() {
     }
     return false;
   };
-  
+
   if (tenantCreated) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-50 via-white to-cyan-50">
@@ -659,7 +659,7 @@ export default function TenantOnboardingWizard() {
       {/* Left sidebar/cover area */}
       <div className="w-full lg:w-1/3 bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-8 flex flex-col relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.05] [mask-image:linear-gradient(0deg,transparent,transparent)]" />
-        
+
         <div className="relative">
           <div className="flex items-center mb-10">
             <div className="mr-3 bg-white/10 rounded-lg p-2">
@@ -667,14 +667,14 @@ export default function TenantOnboardingWizard() {
             </div>
             <h1 className="text-2xl font-bold">OKR Platform</h1>
           </div>
-          
+
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-4">Create Your Organization</h2>
             <p className="text-white/80 text-lg">
               Set up your organization and start tracking your objectives and key results in a few simple steps.
             </p>
           </div>
-          
+
           <div className="space-y-8 mb-12">
             <div className="relative">
               <div className="h-1 bg-white/20 rounded-full mb-6 overflow-hidden">
@@ -688,7 +688,7 @@ export default function TenantOnboardingWizard() {
                   const StepIcon = step.icon;
                   const isActive = step.id === activePage;
                   const isPast = steps.findIndex(s => s.id === activePage) > index;
-                  
+
                   return (
                     <div 
                       key={step.id}
@@ -728,7 +728,7 @@ export default function TenantOnboardingWizard() {
             </div>
           </div>
         </div>
-        
+
         <div className="mt-auto relative">
           <div className="p-6 bg-white/5 rounded-xl border border-white/10">
             <h3 className="font-medium mb-2 flex items-center">
@@ -744,7 +744,7 @@ export default function TenantOnboardingWizard() {
           </div>
         </div>
       </div>
-      
+
       {/* Main content area */}
       <div className="w-full lg:w-2/3 overflow-y-auto p-8">
         <Form {...form}>
@@ -756,7 +756,7 @@ export default function TenantOnboardingWizard() {
                   <h2 className="text-2xl font-bold text-gray-900">Organization Details</h2>
                   <p className="text-gray-500">Tell us about your organization</p>
                 </div>
-                
+
                 <Card>
                   <CardContent className="pt-6 space-y-6">
                     <FormField
@@ -775,7 +775,7 @@ export default function TenantOnboardingWizard() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="orgDetails.displayName"
@@ -792,7 +792,7 @@ export default function TenantOnboardingWizard() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="orgDetails.description"
@@ -810,7 +810,7 @@ export default function TenantOnboardingWizard() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="orgDetails.industry"
@@ -837,13 +837,13 @@ export default function TenantOnboardingWizard() {
                                   onChange={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    
+
                                     const value = e.target.value.toLowerCase();
-                                    
+
                                     // Find all SelectItems and hide/show based on search
                                     const selectItems = document.querySelectorAll('.industry-item');
                                     let visibleCount = 0;
-                                    
+
                                     selectItems.forEach((item) => {
                                       const text = item.textContent?.toLowerCase() || '';
                                       if (text.includes(value)) {
@@ -874,14 +874,14 @@ export default function TenantOnboardingWizard() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Subscription Plan */}
               <TabsContent value="plan" className="mt-0 space-y-6">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">Choose a Plan</h2>
                   <p className="text-gray-500">Select the right subscription for your organization</p>
                 </div>
-                
+
                 <Card>
                   <CardContent className="pt-6">
                     <FormField
@@ -916,7 +916,7 @@ export default function TenantOnboardingWizard() {
                                         Most Popular
                                       </div>
                                     )}
-                                    
+
                                     <div className="w-full md:w-1/3 pr-0 md:pr-6 mb-4 md:mb-0 flex flex-col">
                                       <div className="mb-2">
                                         <div className="flex justify-between items-center mb-1">
@@ -936,7 +936,7 @@ export default function TenantOnboardingWizard() {
                                         )}
                                       </div>
                                     </div>
-                                    
+
                                     <div className="w-full md:w-2/3 border-t md:border-t-0 md:border-l border-gray-200 md:pl-6 pt-4 md:pt-0">
                                       <div className="text-sm font-medium text-gray-700 mb-3">
                                         Top features:
@@ -964,7 +964,7 @@ export default function TenantOnboardingWizard() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="plan.agreeToTerms"
@@ -987,14 +987,14 @@ export default function TenantOnboardingWizard() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Team */}
               <TabsContent value="team" className="mt-0 space-y-6">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">Build Your Team</h2>
                   <p className="text-gray-500">Add key people who will collaborate in your organization</p>
                 </div>
-                
+
                 <Card className="overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
                     <div className="flex items-center space-x-4">
@@ -1021,7 +1021,7 @@ export default function TenantOnboardingWizard() {
                           Can manage all aspects of the organization, including users, teams, and OKRs
                         </p>
                       </div>
-                      
+
                       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-center mb-2">
                           <div className="bg-blue-100 p-1.5 rounded-full mr-2">
@@ -1033,7 +1033,7 @@ export default function TenantOnboardingWizard() {
                           Can create and manage their own OKRs and contribute to team objectives
                         </p>
                       </div>
-                      
+
                       <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-center mb-2">
                           <div className="bg-amber-100 p-1.5 rounded-full mr-2">
@@ -1046,7 +1046,7 @@ export default function TenantOnboardingWizard() {
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Quick add methods */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                       {/* Bulk import */}
@@ -1072,10 +1072,10 @@ export default function TenantOnboardingWizard() {
                                   role: (user.role || "member").toLowerCase(),
                                   selected: true
                                 }));
-                                
+
                                 // Set the imported data to the form
                                 form.setValue("team.users", formattedData);
-                                
+
                                 // Show success toast
                                 toast({
                                   title: "Team imported successfully!",
@@ -1087,7 +1087,7 @@ export default function TenantOnboardingWizard() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Quick invite */}
                       <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-md transition-shadow">
                         <div className="flex items-start mb-4">
@@ -1099,7 +1099,7 @@ export default function TenantOnboardingWizard() {
                             <p className="text-blue-700 text-sm mb-4">
                               Send invitations to individual team members to join your organization
                             </p>
-                            
+
                             <div className="flex flex-col space-y-3">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div className="md:col-span-2">
@@ -1126,7 +1126,7 @@ export default function TenantOnboardingWizard() {
                                   </Select>
                                 </div>
                               </div>
-                              
+
                               <Button 
                                 type="button" 
                                 className="bg-blue-600 hover:bg-blue-700 w-full"
@@ -1151,61 +1151,6 @@ export default function TenantOnboardingWizard() {
                       </div>
                     </div>
 
-                    {/* Example Team Card */}
-                    <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm mb-8 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="bg-white/20 rounded-full p-2 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-white">
-                              <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
-                            </svg>
-                          </div>
-                          <h3 className="text-white font-medium text-lg">Recommended Team: Marketing</h3>
-                        </div>
-                      </div>
-                      <div className="px-6 py-5">
-                        <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
-                          <div>
-                            <span className="text-sm font-medium text-gray-700 block mb-1">Team Details:</span>
-                            <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
-                              <li>Name: Marketing Team</li>
-                              <li>Color: #3B82F6 (Blue)</li>
-                              <li>Icon: Building</li>
-                            </ul>
-                          </div>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => {
-                              // Add the Marketing Team
-                              const marketingTeam = {
-                                name: "Marketing Team",
-                                description: "Team responsible for all marketing activities",
-                                color: "#3B82F6",
-                                icon: "building",
-                                members: []
-                              };
-                              
-                              // Show success message
-                              toast({
-                                title: "Team added",
-                                description: "Marketing Team has been added to your organization",
-                              });
-                              
-                              // Show the manual team member form
-                              addTeamMember(new Event('click'));
-                            }}
-                          >
-                            <Plus className="h-3.5 w-3.5 mr-1.5" />
-                            Add This Team
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
                     {/* Team Members List */}
                     <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
                       <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
@@ -1223,9 +1168,57 @@ export default function TenantOnboardingWizard() {
                           Add Manually
                         </Button>
                       </div>
-                      
+
                       {teamMembers.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50/50">
+                          {/* Example Team Card */}
+                          <div className="w-full max-w-lg bg-white border border-blue-100 rounded-xl shadow-sm mb-8 overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="bg-white/20 rounded-full p-2 mr-3">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-white">
+                                    <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-white font-medium text-lg">Example Team: Marketing</h3>
+                              </div>
+                            </div>
+                            <div className="px-6 py-5">
+                              <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                  onClick={() => {
+                                    // Add the Marketing Team
+                                    const marketingTeam = {
+                                      name: "Marketing Team",
+                                      description: "Team responsible for all marketing activities",
+                                      color: "#3B82F6",
+                                      icon: "building",
+                                      members: []
+                                    };
+
+                                    // Show success message
+                                    toast({
+                                      title: "Team added",
+                                      description: "Marketing Team has been added to your organization",
+                                    });
+
+                                    // Show the manual team member form
+                                    addTeamMember(new Event('click'));
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                  Add Team
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
                           <div className="bg-gray-100 rounded-full p-4 mb-4">
                             <Users className="h-8 w-8 text-gray-400" />
                           </div>
@@ -1306,7 +1299,7 @@ export default function TenantOnboardingWizard() {
                                     />
                                   </div>
                                 </div>
-                                
+
                                 <div className="md:col-span-4 flex items-center">
                                   <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Department</div>
                                   <FormField
@@ -1321,7 +1314,7 @@ export default function TenantOnboardingWizard() {
                                     )}
                                   />
                                 </div>
-                                
+
                                 <div className="md:col-span-2 flex items-center">
                                   <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Role</div>
                                   <FormField
@@ -1348,7 +1341,7 @@ export default function TenantOnboardingWizard() {
                                     )}
                                   />
                                 </div>
-                                
+
                                 <div className="md:col-span-1 flex md:justify-end">
                                   <Button
                                     type="button"
@@ -1362,7 +1355,7 @@ export default function TenantOnboardingWizard() {
                                         ...currentUsers.slice(index + 1)
                                       ];
                                       form.setValue("team.users", newUsers);
-                                      
+
                                       toast({
                                         title: "Team member removed",
                                         variant: "default",
@@ -1377,14 +1370,14 @@ export default function TenantOnboardingWizard() {
                           </div>
                         </div>
                       )}
-                      
+
                       {teamMembers.length > 0 && (
                         <div className="bg-gray-50 px-6 py-3 text-sm text-gray-500 border-t">
                           {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''} added to your organization
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Helpful tip */}
                     {teamMembers.length > 0 && (
                       <div className="mt-6 text-center text-gray-500 text-sm">
@@ -1393,7 +1386,7 @@ export default function TenantOnboardingWizard() {
                     )}
                   </CardContent>
                 </Card>
-                
+
                 {/* Bottom navigation */}
                 <div className="flex justify-between mt-8">
                   <Button
@@ -1405,7 +1398,7 @@ export default function TenantOnboardingWizard() {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Subscription
                   </Button>
-                  
+
                   <Button
                     type="button"
                     onClick={() => setActivePage("setup")}
@@ -1416,14 +1409,14 @@ export default function TenantOnboardingWizard() {
                   </Button>
                 </div>
               </TabsContent>
-              
+
               {/* Initial Setup */}
               <TabsContent value="setup" className="mt-0 space-y-6">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">Initial Setup</h2>
                   <p className="text-gray-500">Configure initial OKR settings for your organization</p>
                 </div>
-                
+
                 <Card>
                   <CardContent className="pt-6 space-y-6">
                     <div>
@@ -1450,7 +1443,7 @@ export default function TenantOnboardingWizard() {
                         )}
                       />
                     </div>
-                    
+
                     {createInitialOKRs && (
                       <FormField
                         control={form.control}
@@ -1475,7 +1468,7 @@ export default function TenantOnboardingWizard() {
                                     default:
                                       icon = <Target className="h-10 w-10 text-blue-600 mb-2" />;
                                   }
-                                  
+
                                   return (
                                     <div 
                                       key={template.id}
@@ -1512,7 +1505,7 @@ export default function TenantOnboardingWizard() {
                         )}
                       />
                     )}
-                    
+
                     <div className="pt-4">
                       <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
                         <div className="flex gap-3 items-start">
@@ -1524,7 +1517,7 @@ export default function TenantOnboardingWizard() {
                             <p className="text-sm text-amber-700 mb-3">
                               Import your existing objectives and key results from a CSV file
                             </p>
-                            
+
                             <CSVImport 
                               templateFields={[
                                 "objective_title", 
@@ -1542,7 +1535,7 @@ export default function TenantOnboardingWizard() {
                                   description: `Successfully imported ${data.length} OKR entries. These will be processed when you finish creating your organization.`,
                                   variant: "default"
                                 });
-                                
+
                                 // Set createInitialOKRs to true since we're importing OKRs
                                 form.setValue("setup.createInitialOKRs", true);
                                 form.setValue("setup.importedOKRs", data);
@@ -1554,7 +1547,7 @@ export default function TenantOnboardingWizard() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
@@ -1575,7 +1568,7 @@ export default function TenantOnboardingWizard() {
                 </Card>
               </TabsContent>
             </Tabs>
-            
+
             {/* Navigation buttons */}
             <div className="flex justify-between mt-8">
               <Button
@@ -1587,7 +1580,7 @@ export default function TenantOnboardingWizard() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Previous
               </Button>
-              
+
               {activeIndex < steps.length - 1 ? (
                 <Button
                   type="button"
