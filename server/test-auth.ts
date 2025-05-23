@@ -1,22 +1,23 @@
 import { Express, Request, Response } from 'express';
 
 /**
- * Authentication test routes for debugging session/auth issues
+ * Sets up test authentication routes for debugging purposes
  */
 export function setupTestAuthRoutes(app: Express) {
-  // Test session endpoint - check session status
+  // Test session route - returns session information for debugging
   app.get('/api/test-session', (req: Request, res: Response) => {
     console.log('Session test route called');
     console.log('Session ID:', req.sessionID);
     console.log('Session:', req.session);
     
-    // Increment counter to see if session is being saved properly
+    // Update session counter
     if (!req.session.counter) {
       req.session.counter = 1;
     } else {
       req.session.counter++;
     }
     
+    // Save the updated session
     req.session.save((err) => {
       if (err) {
         console.error('Error saving session:', err);
@@ -29,6 +30,8 @@ export function setupTestAuthRoutes(app: Express) {
           sessionId: req.sessionID,
           isAuthenticated: req.isAuthenticated(),
           counter: req.session.counter,
+          timestamp: new Date().toISOString(),
+          cookies: req.headers.cookie ? 'Present' : 'None',
           user: req.isAuthenticated() ? {
             id: req.user.id,
             username: req.user.username,
@@ -56,6 +59,58 @@ export function setupTestAuthRoutes(app: Express) {
       authenticated: true,
       session: req.sessionID,
       tenantId: req.tenantId || 'none'
+    });
+  });
+  
+  // Test authentication status route
+  app.get('/api/auth-status', (req: Request, res: Response) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user ? {
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        tenants: req.user.tenants?.map(t => ({ id: t.id, name: t.name, role: t.userRole }))
+      } : null,
+      sessionID: req.sessionID,
+      session: {
+        ...req.session,
+        // Don't expose cookie for security reasons
+        cookie: {
+          expires: req.session.cookie.expires,
+          maxAge: req.session.cookie.maxAge
+        }
+      }
+    });
+  });
+  
+  // Test login with debug information
+  app.post('/api/test-login', (req: Request, res: Response, next) => {
+    console.log('Test login attempt with:', {
+      username: req.body.username,
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      cookies: req.headers.cookie
+    });
+    
+    // Pass to regular login handler
+    // This expects passport.authenticate middleware to be configured elsewhere
+    next();
+  });
+  
+  // Test auth check endpoint
+  app.get('/api/test-auth-check', (req: Request, res: Response) => {
+    console.log('Auth check route called');
+    console.log('Is authenticated:', req.isAuthenticated());
+    
+    res.json({
+      authenticated: req.isAuthenticated(),
+      user: req.user ? {
+        id: req.user.id,
+        username: req.user.username,
+        tenants: req.user.tenants?.length || 0
+      } : null,
+      sessionID: req.sessionID
     });
   });
   
