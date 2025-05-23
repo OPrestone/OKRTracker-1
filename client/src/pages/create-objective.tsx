@@ -501,34 +501,54 @@ export default function CreateObjective() {
             <div>
               <Label>Lead</Label>
               <div className="mt-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <div className="flex items-center">
-                      <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
-                        BG
-                      </div>
-                      <span>Bonface Gitonga</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bonface">
+                <Select
+                  value={objectiveData.ownerId}
+                  onValueChange={(value) => handleChange('ownerId', value)}
+                >
+                  <SelectTrigger className={`w-full ${errors.ownerId ? 'border-red-500' : ''}`}>
+                    {objectiveData.ownerId ? (
                       <div className="flex items-center">
                         <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
-                          BG
+                          {users?.find(u => u.id.toString() === objectiveData.ownerId)?.fullName
+                            ?.split(' ')
+                            ?.map(name => name?.[0])
+                            ?.join('')
+                            ?.toUpperCase() || 'U'}
                         </div>
-                        Bonface Gitonga
+                        <span>{users?.find(u => u.id.toString() === objectiveData.ownerId)?.fullName || 'Select Lead'}</span>
                       </div>
-                    </SelectItem>
-                    <SelectItem value="jane">
-                      <div className="flex items-center">
-                        <div className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-800 font-medium text-sm mr-2">
-                          JD
-                        </div>
-                        Jane Doe
-                      </div>
-                    </SelectItem>
+                    ) : (
+                      <SelectValue placeholder="Select Lead..." />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users && users.length > 0 ? (
+                      users.map(user => {
+                        const initials = user.fullName
+                          ?.split(' ')
+                          ?.map(name => name?.[0])
+                          ?.join('')
+                          ?.toUpperCase() || 'U';
+                        
+                        return (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            <div className="flex items-center">
+                              <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-800 font-medium text-sm mr-2">
+                                {initials}
+                              </div>
+                              <span>{user.fullName}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <SelectItem value="no-users">No users available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
+                {errors.ownerId && (
+                  <p className="text-sm text-red-500 mt-1">{errors.ownerId}</p>
+                )}
               </div>
             </div>
 
