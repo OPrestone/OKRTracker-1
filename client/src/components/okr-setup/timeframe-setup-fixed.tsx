@@ -25,8 +25,8 @@ interface Timeframe {
   id: string;
   name: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | string;
+  endDate: Date | string;
   cadenceId?: string;
   tenantId: string;
 }
@@ -151,6 +151,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   const handleApplyDefaultTimeframes = () => {
     const defaultFrames = createDefaultTimeframes();
     setTimeframes(defaultFrames);
+    
+    // Switch to create tab
+    setActiveTab("create");
+    
+    toast({
+      title: "Default timeframes created",
+      description: `Created ${defaultFrames.length} timeframes based on ${primaryCadence} cadence`,
+    });
   };
 
   // Create timeframe mutation
@@ -224,6 +232,10 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       // Clear the timeframes list since they're now in the database
       setTimeframes([]);
       
+      // Switch to the view tab to show saved timeframes
+      setActiveTab("view");
+      refetchTimeframes();
+      
       toast({
         title: "Success!",
         description: `${saveCount} timeframes have been saved to the database.`
@@ -283,11 +295,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       endDate: addMonths(new Date(), getCadenceDuration(primaryCadence)),
     });
     setIsAddingTimeframe(false);
+    
+    toast({
+      description: "Timeframe added to your list. Don't forget to save your changes!"
+    });
   };
 
   // Remove a timeframe from the list
   const handleRemoveTimeframe = (index: number) => {
     setTimeframes(prev => prev.filter((_, i) => i !== index));
+    
+    toast({
+      description: "Timeframe removed"
+    });
   };
 
   return (
@@ -380,139 +400,144 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         <TabsContent value="create" className="mt-4">
           {/* Add new timeframe form */}
           {isAddingTimeframe && (
-        <Card className="border border-dashed">
-          <CardHeader>
-            <CardTitle>New Timeframe</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Q1 2025"
-                value={formState.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                placeholder="First quarter of 2025"
-                value={formState.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formState.startDate ? format(formState.startDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formState.startDate}
-                      onSelect={(date) => handleInputChange("startDate", date)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div>
-                <Label>End Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formState.endDate ? format(formState.endDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formState.endDate}
-                      onSelect={(date) => handleInputChange("endDate", date)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="ghost" onClick={() => setIsAddingTimeframe(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddTimeframe}>
-              Add Timeframe
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      {/* List of timeframes */}
-      {timeframes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          {timeframes.map((timeframe, index) => (
-            <Card key={index} className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2"
-                onClick={() => handleRemoveTimeframe(index)}
-              >
-                <Trash2 className="h-4 w-4 text-gray-500" />
-              </Button>
+            <Card className="border border-dashed mb-6">
               <CardHeader>
-                <CardTitle>{timeframe.name}</CardTitle>
+                <CardTitle>New Timeframe</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-sm">
-                  {timeframe.description && (
-                    <p className="text-gray-500 mb-2">{timeframe.description}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">Start Date:</p>
-                      <p>{format(new Date(timeframe.startDate), "PPP")}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">End Date:</p>
-                      <p>{format(new Date(timeframe.endDate), "PPP")}</p>
-                    </div>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Q1 2025"
+                    value={formState.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="First quarter of 2025"
+                    value={formState.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formState.startDate ? format(formState.startDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formState.startDate}
+                          onSelect={(date) => handleInputChange("startDate", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div>
+                    <Label>End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formState.endDate ? format(formState.endDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={formState.endDate}
+                          onSelect={(date) => handleInputChange("endDate", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="ghost" onClick={() => setIsAddingTimeframe(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddTimeframe}>
+                  Add Timeframe
+                </Button>
+              </CardFooter>
             </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center p-8 border rounded-md bg-gray-50">
-          <p className="text-gray-500">No timeframes added yet. Click "Add Timeframe" to create one or use "Apply Default Timeframes".</p>
-        </div>
-      )}
-      
-      {timeframes.length > 0 && (
-        <div className="flex justify-end mt-4">
-          <Button onClick={saveAllTimeframes} disabled={createTimeframeMutation.isPending}>
-            {createTimeframeMutation.isPending ? "Saving..." : "Save All Timeframes"}
-          </Button>
-        </div>
-      )}
+          )}
+          
+          {/* List of temporary timeframes */}
+          {timeframes.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-gray-500">Your Unsaved Timeframes:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {timeframes.map((timeframe, index) => (
+                  <Card key={index} className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => handleRemoveTimeframe(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-gray-500" />
+                    </Button>
+                    <CardHeader>
+                      <CardTitle>{timeframe.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm">
+                        {timeframe.description && (
+                          <p className="text-gray-500 mb-2">{timeframe.description}</p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">Start Date:</p>
+                            <p>{format(new Date(timeframe.startDate), "PPP")}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">End Date:</p>
+                            <p>{format(new Date(timeframe.endDate), "PPP")}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <div className="flex justify-end mt-4">
+                <Button 
+                  onClick={saveAllTimeframes} 
+                  disabled={createTimeframeMutation.isPending}
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                >
+                  {createTimeframeMutation.isPending ? "Saving..." : "Save All Timeframes"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-8 border rounded-md bg-gray-50">
+              <p className="text-gray-500">No timeframes added yet. Click "Add Timeframe" to create one or use "Apply Default Timeframes".</p>
+            </div>
+          )}
         </TabsContent>
       
         <TabsContent value="view" className="mt-4">

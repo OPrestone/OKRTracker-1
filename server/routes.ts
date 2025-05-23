@@ -1950,13 +1950,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/timeframes", withTenant, async (req, res, next) => {
     try {
-      // Temporarily allowing timeframe creation without authentication for testing
-      // Will be restored after testing
-      // if (!req.isAuthenticated()) {
-      //   return res.status(401).json({ error: "Unauthorized" });
-      // }
+      if (!req.isAuthenticated()) {
+        console.log("Unauthorized timeframe creation attempt");
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       
-      const tenantId = req.body.tenantId || req.tenantId || "01JVZJKJABBY7YTV06Z9F81QRZ";
+      const tenantId = req.tenantId || req.body.tenantId;
+      console.log("Creating timeframe for tenant:", tenantId);
       
       // Convert date strings to actual Date objects
       // We need to ensure the dates are valid before trying to create Date objects
