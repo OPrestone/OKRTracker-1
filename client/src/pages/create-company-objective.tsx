@@ -117,7 +117,7 @@ const objectiveFormSchema = z.object({
   description: z.string().optional(),
   teamId: z.string().optional(),
   ownerId: z.string().optional(),
-  timeframeId: z.string().optional(),
+  timeframeId: z.string(), // Making timeframeId required
   status: z.enum(["draft", "active", "completed", "archived"]).default("draft"),
   parentId: z.string().optional(),
   // Tags and contributors will be handled separately
@@ -182,7 +182,7 @@ export default function CreateCompanyObjective() {
       status: 'draft',
       teamId: undefined,
       ownerId: undefined,
-      timeframeId: undefined,
+      timeframeId: '', // Using empty string as initial value until user selects a timeframe
       parentId: undefined,
     }
   });
@@ -425,11 +425,24 @@ export default function CreateCompanyObjective() {
     setKeyResults(newKeyResults);
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     // Validate current step
     if (currentStep === 1) {
-      const result = form.trigger(["title", "description"]);
+      const result = await form.trigger(["title", "description"]);
       if (!result) return;
+    }
+    
+    // If on alignment step, validate timeframe selection
+    if (currentStep === 2) {
+      const result = await form.trigger(["timeframeId"]);
+      if (!result) {
+        toast({
+          title: "Timeframe Required",
+          description: "Please select a timeframe before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     setCurrentStep(Math.min(currentStep + 1, 3));
