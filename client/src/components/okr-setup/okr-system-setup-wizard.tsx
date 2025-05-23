@@ -131,7 +131,13 @@ export default function OKRSystemSetupWizard() {
         }
         
         const userData = await userResponse.json();
-        const currentTenantId = userData.defaultTenant || (userData.tenants && userData.tenants.length > 0 ? userData.tenants[0].id : null);
+        console.log("User data received:", userData);
+        
+        // First try to get default tenant, then first tenant from array if available
+        const currentTenantId = userData.defaultTenant || 
+                               (userData.tenants && userData.tenants.length > 0 && userData.tenants[0].id);
+        
+        console.log("Detected tenant ID:", currentTenantId);
         
         if (!currentTenantId) {
           console.error("No tenant ID available");
@@ -228,10 +234,21 @@ export default function OKRSystemSetupWizard() {
       }
       
       // Make API request to save OKR system setup
+      console.log("Using tenant ID for save:", tenantId);
+      
+      // Create a new object with tenant_id property
+      const formDataWithTenant = {
+        ...data,
+        tenant_id: tenantId // Add tenant ID to the request body
+      };
+      
+      // Log the full data being sent
+      console.log("Sending data with tenant:", formDataWithTenant);
+      
       const response = await fetch(`/api/okr-system-setup?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formDataWithTenant),
         credentials: 'include'
       });
       

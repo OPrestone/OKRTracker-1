@@ -7,6 +7,7 @@ import { ulid } from 'ulid';
 
 // Define schema for OKR system setup
 const okrSystemSetupSchema = z.object({
+  tenant_id: z.string().optional(),
   generalSettings: z.object({
     companyMission: z.string().min(1),
     companyVision: z.string().min(1),
@@ -53,6 +54,9 @@ export function setupConfigRoutes(router: Router) {
       // Use either the tenant ID from middleware or from query params
       let tenantId = req.tenantId || req.query.tenantId as string;
       
+      console.log("GET /api/okr-system - Tenant ID:", tenantId);
+      console.log("Request query:", req.query);
+      
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
@@ -75,8 +79,12 @@ export function setupConfigRoutes(router: Router) {
   // Save OKR system configuration
   router.post('/api/okr-system-setup', async (req: Request, res: Response) => {
     try {
-      // Use either the tenant ID from middleware or from query params
-      let tenantId = req.tenantId || req.query.tenantId as string;
+      // Use tenant ID from multiple possible sources
+      let tenantId = req.tenantId || req.query.tenantId as string || req.body.tenant_id;
+      
+      console.log("POST /api/okr-system-setup - Tenant ID:", tenantId);
+      console.log("Request query:", req.query);
+      console.log("Request body:", req.body);
       
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
@@ -92,6 +100,11 @@ export function setupConfigRoutes(router: Router) {
       }
       
       const okrSystemData = validationResult.data;
+      
+      // Make sure we have a tenant ID in the data
+      if (!okrSystemData.tenant_id) {
+        okrSystemData.tenant_id = tenantId;
+      }
       
       // Check if config already exists for this tenant
       const existingConfig = await db.query.okrSystemConfigs.findFirst({
