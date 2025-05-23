@@ -149,9 +149,46 @@ export default function OKRSystemSetupWizard() {
         // Set tenant ID for later use in the submit function
         setTenantId(currentTenantId);
         
-        // First, try to fetch organization mission data to prefill mission and vision fields
+        // First, fetch organization mission data to prefill mission and vision fields
         console.log("Fetching organization mission data for tenant:", currentTenantId);
         
+        // Create a FormValues object to store our form data
+        const formValues: FormValues = {
+          generalSettings: {
+            companyMission: "",
+            companyVision: "",
+            companyValues: "",
+            trackingFrequency: "weekly",
+            enableNotifications: true,
+          },
+          timeframes: {
+            primaryCadence: "quarterly",
+            enableQuarterlyCadence: true,
+            enableAnnualCadence: true,
+            customCadence: "",
+            startMonth: "january",
+          },
+          objectiveSettings: {
+            defaultObjectiveCategory: "growth",
+            maxObjectivesPerTeam: "5",
+            maxKeyResultsPerObjective: "3",
+            requireObjectiveApproval: true,
+            enableObjectiveAlignment: true,
+          },
+          teamConfiguration: {
+            orgStructureType: "functional",
+            enableCrossTeamObjectives: true,
+            defaultVisibility: "public",
+          },
+          integrations: {
+            enableSlackIntegration: false,
+            enableEmailNotifications: true,
+            enableCalendarSync: false,
+            enableAnalyticsReporting: true,
+          },
+        };
+        
+        // Prioritize mission data from the organization-mission API
         const missionResponse = await fetch(`/api/organization-mission?tenantId=${currentTenantId}`, {
           method: 'GET',
           headers: { 
@@ -161,17 +198,51 @@ export default function OKRSystemSetupWizard() {
           credentials: 'include'
         });
         
-        let missionData = null;
+        // If mission data is available, use it for mission, vision, and values
         if (missionResponse.ok) {
-          const missionResult = await missionResponse.json();
-          console.log("Organization mission data loaded:", missionResult);
-          missionData = missionResult;
+          const missionData = await missionResponse.json();
+          console.log("Organization mission data loaded:", missionData);
+          
+          if (missionData && missionData.exists) {
+            // Populate the mission and vision fields from organization mission data
+            formValues.generalSettings.companyMission = missionData.mission || "";
+            formValues.generalSettings.companyVision = missionData.vision || "";
+            
+            // If behaviors is a JSON string, parse it; otherwise, use as is
+            if (missionData.behaviors) {
+              try {
+                // Check if it's a JSON string that needs parsing
+                if (typeof missionData.behaviors === 'string' && 
+                    (missionData.behaviors.startsWith('[') || missionData.behaviors.startsWith('{'))) {
+                  const parsedBehaviors = JSON.parse(missionData.behaviors);
+                  
+                  // If it's an array, join with commas
+                  if (Array.isArray(parsedBehaviors)) {
+                    formValues.generalSettings.companyValues = parsedBehaviors.join(', ');
+                  } else {
+                    formValues.generalSettings.companyValues = missionData.behaviors;
+                  }
+                } else {
+                  formValues.generalSettings.companyValues = missionData.behaviors;
+                }
+              } catch (e) {
+                // If parsing fails, use the raw string
+                formValues.generalSettings.companyValues = missionData.behaviors;
+              }
+            }
+            
+            console.log("Prefilled form with mission data:", {
+              mission: formValues.generalSettings.companyMission,
+              vision: formValues.generalSettings.companyVision,
+              values: formValues.generalSettings.companyValues
+            });
+          }
         }
         
         // Then fetch OKR system config for remaining form fields
         console.log("Fetching OKR system config with tenant ID:", currentTenantId);
         
-        const response = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
+        const systemResponse = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
@@ -180,71 +251,106 @@ export default function OKRSystemSetupWizard() {
           credentials: 'include'
         });
         
-        let configData = {};
-        
-        // If we have OKR system config data, use it
-        if (response.ok) {
-          const config = await response.json();
-          console.log("Loaded existing OKR system config:", config);
+        // If OKR system config is available, use it to populate remaining fields
+        if (systemResponse.ok) {
+          const systemConfig = await systemResponse.json();
+          console.log("Loaded existing OKR system config:", systemConfig);
           
-          if (config.data) {
-            try {
-              configData = JSON.parse(config.data);
-              console.log("Parsed config data:", configData);
-            } catch (error) {
-              console.error("Error parsing OKR system config:", error);
+          // Map database fields to form fields
+          if (systemConfig) {
+            // Only override mission/vision if not already set from mission API
+            if (!formValues.generalSettings.companyMission && systemConfig.company_mission) {
+              formValues.generalSettings.companyMission = systemConfig.company_mission;
             }
+            
+            if (!formValues.generalSettings.companyVision && systemConfig.company_vision) {
+              formValues.generalSettings.companyVision = systemConfig.company_vision;
+            }
+            
+            if (!formValues.generalSettings.companyValues && systemConfig.company_values) {
+              formValues.generalSettings.companyValues = systemConfig.company_values;
+            }
+            
+            // Map remaining fields
+            if (systemConfig.tracking_frequency) {
+              formValues.generalSettings.trackingFrequency = systemConfig.tracking_frequency;
+            }
+            
+            formValues.generalSettings.enableNotifications = systemConfig.enable_notifications !== false;
+            
+            if (systemConfig.primary_cadence) {
+              formValues.timeframes.primaryCadence = systemConfig.primary_cadence;
+            }
+            
+            formValues.timeframes.enableQuarterlyCadence = systemConfig.enable_quarterly_cadence !== false;
+            formValues.timeframes.enableAnnualCadence = systemConfig.enable_annual_cadence !== false;
+            
+            if (systemConfig.custom_cadence) {
+              formValues.timeframes.customCadence = systemConfig.custom_cadence;
+            }
+            
+            if (systemConfig.start_month) {
+              formValues.timeframes.startMonth = systemConfig.start_month;
+            }
+            
+            if (systemConfig.default_objective_category) {
+              formValues.objectiveSettings.defaultObjectiveCategory = systemConfig.default_objective_category;
+            }
+            
+            if (systemConfig.max_objectives_per_team) {
+              formValues.objectiveSettings.maxObjectivesPerTeam = systemConfig.max_objectives_per_team.toString();
+            }
+            
+            if (systemConfig.max_key_results_per_objective) {
+              formValues.objectiveSettings.maxKeyResultsPerObjective = 
+                systemConfig.max_key_results_per_objective.toString();
+            }
+            
+            formValues.objectiveSettings.requireObjectiveApproval = 
+              systemConfig.require_objective_approval !== false;
+            
+            formValues.objectiveSettings.enableObjectiveAlignment = 
+              systemConfig.enable_objective_alignment !== false;
+            
+            if (systemConfig.org_structure_type) {
+              formValues.teamConfiguration.orgStructureType = systemConfig.org_structure_type;
+            }
+            
+            formValues.teamConfiguration.enableCrossTeamObjectives = 
+              systemConfig.enable_cross_team_objectives !== false;
+            
+            if (systemConfig.default_visibility) {
+              formValues.teamConfiguration.defaultVisibility = systemConfig.default_visibility;
+            }
+            
+            formValues.integrations.enableSlackIntegration = 
+              systemConfig.enable_slack_integration === true;
+            
+            formValues.integrations.enableEmailNotifications = 
+              systemConfig.enable_email_notifications !== false;
+            
+            formValues.integrations.enableCalendarSync = 
+              systemConfig.enable_calendar_sync === true;
+            
+            formValues.integrations.enableAnalyticsReporting = 
+              systemConfig.enable_analytics_reporting !== false;
           }
         }
         
-        // Prepare the form values, prioritizing mission/vision from organization-mission endpoint
-        form.reset({
-          generalSettings: {
-            companyMission: missionData?.mission || 
-                           (configData as any).generalSettings?.companyMission || "",
-            companyVision: missionData?.vision || 
-                          (configData as any).generalSettings?.companyVision || "",
-            companyValues: missionData?.behaviors || 
-                          (configData as any).generalSettings?.companyValues || "",
-            trackingFrequency: (configData as any).generalSettings?.trackingFrequency || "weekly",
-            enableNotifications: (configData as any).generalSettings?.enableNotifications !== false,
-          },
-          timeframes: {
-            primaryCadence: (configData as any).timeframes?.primaryCadence || "quarterly",
-            enableQuarterlyCadence: (configData as any).timeframes?.enableQuarterlyCadence !== false,
-            enableAnnualCadence: (configData as any).timeframes?.enableAnnualCadence !== false,
-            customCadence: (configData as any).timeframes?.customCadence || "",
-            startMonth: (configData as any).timeframes?.startMonth || "january",
-          },
-          objectiveSettings: {
-            defaultObjectiveCategory: (configData as any).objectiveSettings?.defaultObjectiveCategory || "growth",
-            maxObjectivesPerTeam: (configData as any).objectiveSettings?.maxObjectivesPerTeam || "5",
-            maxKeyResultsPerObjective: (configData as any).objectiveSettings?.maxKeyResultsPerObjective || "3",
-            requireObjectiveApproval: (configData as any).objectiveSettings?.requireObjectiveApproval !== false,
-            enableObjectiveAlignment: (configData as any).objectiveSettings?.enableObjectiveAlignment !== false,
-          },
-          teamConfiguration: {
-            orgStructureType: (configData as any).teamConfiguration?.orgStructureType || "functional",
-            enableCrossTeamObjectives: (configData as any).teamConfiguration?.enableCrossTeamObjectives !== false,
-            defaultVisibility: (configData as any).teamConfiguration?.defaultVisibility || "public",
-          },
-          integrations: {
-            enableSlackIntegration: (configData as any).integrations?.enableSlackIntegration === true,
-            enableEmailNotifications: (configData as any).integrations?.enableEmailNotifications !== false,
-            enableCalendarSync: (configData as any).integrations?.enableCalendarSync === true,
-            enableAnalyticsReporting: (configData as any).integrations?.enableAnalyticsReporting !== false,
-          },
-        });
+        // Finally, reset the form with all the collected data
+        console.log("Resetting form with data:", formValues);
+        form.reset(formValues);
         
-        if (missionData?.mission || missionData?.vision || Object.keys(configData).length > 0) {
+        // Show notification that data was loaded if mission or vision is available
+        if (formValues.generalSettings.companyMission || formValues.generalSettings.companyVision) {
           toast({
             title: "Configuration Loaded",
-            description: "Your existing OKR system configuration has been loaded.",
+            description: "Your existing mission and vision data has been loaded.",
           });
         }
         
       } catch (error) {
-        console.error("Error fetching OKR system config:", error);
+        console.error("Error fetching configuration data:", error);
       } finally {
         setIsLoading(false);
       }
