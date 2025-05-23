@@ -119,16 +119,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Unauthorized" });
     }
     
-    // Get tenantId from query param, body, or use default from user
-    // Check all possible places the tenant ID could be provided
-    const requestedTenantId = req.query.tenantId || 
+    // Get tenantId from all possible sources: headers, query params, body, or use default from user
+    // Added support for custom X-Tenant-ID header that we use in our fetch requests
+    const requestedTenantId = req.headers['x-tenant-id'] ||
+                            req.query.tenantId || 
                             req.query.tenant_id ||
                             req.body?.tenantId || 
                             req.body?.tenant_id || 
-                            (req.user as any).defaultTenantId;
+                            (req.user as any).defaultTenant;
     
     // If no tenantId provided or found, return error
     if (!requestedTenantId) {
+      console.log("Missing tenantId from all sources:", {
+        headers: req.headers['x-tenant-id'],
+        query: req.query.tenantId || req.query.tenant_id,
+        body: req.body?.tenantId || req.body?.tenant_id,
+        defaultTenant: (req.user as any).defaultTenant
+      });
       return res.status(400).json({ error: "Missing tenantId parameter" });
     }
     

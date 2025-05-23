@@ -149,9 +149,14 @@ export default function OKRSystemSetupWizard() {
         // Set tenant ID for later use in the submit function
         setTenantId(currentTenantId);
         
+        console.log("Fetching OKR system config with tenant ID:", currentTenantId);
+        
         const response = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': currentTenantId // Add tenant ID in header for middleware
+          },
           credentials: 'include'
         });
         
@@ -245,9 +250,14 @@ export default function OKRSystemSetupWizard() {
       // Log the full data being sent
       console.log("Sending data with tenant:", formDataWithTenant);
       
+      console.log("Sending OKR system config with tenant ID:", tenantId);
+      
       const response = await fetch(`/api/okr-system-setup?tenantId=${tenantId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId // Add tenant ID in header for middleware
+        },
         body: JSON.stringify(formDataWithTenant),
         credentials: 'include'
       });
