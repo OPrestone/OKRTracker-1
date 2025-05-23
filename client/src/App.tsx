@@ -54,6 +54,7 @@ import ProgressDashboard from "@/pages/progress-dashboard";
 import Configure from "@/pages/configure";
 import TestLoginPage from "@/pages/test-login-page";
 import LoginTest from "@/pages/login-test";
+import OKRSystemSetupPage from "@/pages/okr-system-setup-page";
 
 // Import tenant-related pages
 import TenantsPage from "@/pages/tenants-page";
@@ -107,6 +108,8 @@ function AppRoutes() {
       <Route path="/test-login" component={TestLoginPage} />
       <Route path="/login-test" component={LoginTest} />
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
+      <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
+      <Route path="/okr-system-setup" component={OKRSystemSetupPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />
