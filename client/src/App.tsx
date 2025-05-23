@@ -61,6 +61,7 @@ import TenantPage from "@/pages/tenant-page";
 import OrganizationPage from "@/pages/organization-page";
 import TenantOnboardingPage from "@/pages/tenant-onboarding-page";
 import TenantOnboardingDemoPage from "@/pages/tenant-onboarding-demo-page";
+import TenantOnboardingSummaryDemo from "@/pages/tenant-onboarding-summary-demo";
 import TenantDashboardRedirect from "@/components/tenant/tenant-dashboard-redirect";
 
 // Import new drag-and-drop pages
@@ -256,6 +257,7 @@ function AppRoutes() {
       {/* Onboarding */}
       <ProtectedRoute path="/tenant-onboarding" component={TenantOnboardingPage} />
       <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
+      <Route path="/tenant-onboarding-summary-demo" component={TenantOnboardingSummaryDemo} />
       
       {/* Drag and Drop Interfaces */}
       <ProtectedRoute path="/objectives-organizer" component={ObjectivesOrganizer} />
