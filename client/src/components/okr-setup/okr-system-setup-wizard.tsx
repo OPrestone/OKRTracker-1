@@ -68,6 +68,7 @@ export default function OKRSystemSetupWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [tenantId, setTenantId] = useState<string>("");
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -221,8 +222,8 @@ export default function OKRSystemSetupWizard() {
     fetchExistingConfig();
   }, []);
 
-  // State to store the tenant ID
-  const [tenantId, setTenantId] = useState<string | null>(null);
+  // Tenant ID is already defined above
+  // (Using existing tenantId state)
   
   // Create mutation for saving OKR system setup
   const saveOKRSystemMutation = useMutation({
