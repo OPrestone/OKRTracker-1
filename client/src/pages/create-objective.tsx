@@ -100,7 +100,7 @@ export default function CreateObjective() {
     alignmentType: 'strategic-pillar',
     alignmentTarget: '',
     teamId: '',
-    leadId: '',
+    ownerId: '',
     timeframeId: '',
     updateFrequency: 'weekly',
     progressDriver: 'key-results',
@@ -122,6 +122,10 @@ export default function CreateObjective() {
     
     if (!objectiveData.teamId) {
       newErrors.teamId = 'Team selection is required';
+    }
+    
+    if (!objectiveData.ownerId) {
+      newErrors.ownerId = 'Lead selection is required';
     }
     
     if (!objectiveData.timeframeId) {
@@ -156,7 +160,7 @@ export default function CreateObjective() {
         title: objectiveData.name,
         description: objectiveData.description,
         team_id: objectiveData.teamId,
-        owner_id: objectiveData.leadId,
+        owner_id: objectiveData.ownerId,
         timeframe_id: objectiveData.timeframeId,
         update_frequency: objectiveData.updateFrequency,
         progress_type: objectiveData.progressDriver,
