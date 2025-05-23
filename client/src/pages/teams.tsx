@@ -722,6 +722,7 @@ const Teams = () => {
           <pre className="text-xs">{JSON.stringify(teams, null, 2)}</pre>
         </div>
       </div>
+
     </DashboardLayout>
   );
 };
