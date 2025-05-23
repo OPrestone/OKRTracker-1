@@ -109,6 +109,8 @@ function AppRoutes() {
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-login" component={TestLoginPage} />
       <Route path="/login-test" component={LoginTest} />
+      <Route path="/auth-test" component={React.lazy(() => import("@/pages/auth-test"))} />
+      <Route path="/diagnostic" component={React.lazy(() => import("@/pages/diagnostic"))} />
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
       <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
       <Route path="/okr-system-setup" component={OKRSystemSetupPage} />

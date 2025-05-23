@@ -1,123 +1,171 @@
-import { Express } from "express";
-import { storage } from "./storage";
-import { hashPassword } from "./auth";
+import { Express, Request, Response, NextFunction } from "express";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { users, tenants } from "../shared/schema";
+import { eq, sql } from "drizzle-orm";
 import { ulid } from "ulid";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { comparePasswords, hashPassword } from "./auth";
+import session from "express-session";
+import MemoryStore from "memorystore";
 
-/**
- * Set up test authentication routes for development purposes
- */
-export function setupTestAuthRoutes(app: Express) {
-  // Create test user route - accessible only in development environment
-  app.get("/api/dev/create-test-user", async (req, res) => {
-    if (process.env.NODE_ENV !== "development") {
-      return res.status(403).json({ error: "This route is only available in development mode" });
-    }
+// Creates a simple session store
+const SessionStore = MemoryStore(session);
 
+export function setupTestAuth(app: Express) {
+  // Simple session configuration for testing
+  app.use(
+    session({
+      secret: "test-secret-key",
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }, // 1 day
+      store: new SessionStore({
+        checkPeriod: 86400000 // 24 hours
+      })
+    })
+  );
+
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Configure Local Strategy
+  passport.use(
+    new LocalStrategy(
+      { usernameField: "email" },
+      async (email, password, done) => {
+        console.log(`Login attempt for email: ${email}`);
+        try {
+          // Find user by email
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, email),
+          });
+
+          if (!user) {
+            console.log(`User not found: ${email}`);
+            return done(null, false, { message: "Incorrect email." });
+          }
+
+          // Compare password
+          const isValid = await comparePasswords(password, user.passwordHash || "");
+          if (!isValid) {
+            console.log(`Invalid password for user: ${email}`);
+            return done(null, false, { message: "Incorrect password." });
+          }
+
+          console.log(`User authenticated: ${user.id}`);
+          return done(null, user);
+        } catch (error) {
+          console.error("Authentication error:", error);
+          return done(error);
+        }
+      }
+    )
+  );
+
+  // Setup serialization/deserialization - simplified for test
+  passport.serializeUser((user: any, done) => {
+    console.log(`Serializing user: ${user.id}`);
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: string, done) => {
+    console.log(`Deserializing user ID: ${id}`);
     try {
-      // Create a test user
-      const testUserEmail = "test@example.com";
-      const testUserPassword = "password123";
+      // Simple user lookup without tenant-related queries to avoid loops
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, id),
+      });
       
-      // Check if user already exists - try using proper method for user lookup by username or email
-      let existingUser;
-      try {
-        existingUser = await storage.getUserByUsername(testUserEmail);
-      } catch (error) {
-        console.log("Error looking up user by username, will create new:", error);
-        existingUser = null;
+      if (!user) {
+        console.log(`User not found during deserialization: ${id}`);
+        return done(null, false);
       }
       
-      let user;
-      
+      console.log(`User deserialized successfully: ${id}`);
+      return done(null, user);
+    } catch (error) {
+      console.error("Deserialization error:", error);
+      return done(error);
+    }
+  });
+
+  // Test routes
+  app.post('/api/test-login', passport.authenticate('local'), (req, res) => {
+    console.log('Test login successful');
+    res.json({ success: true, user: req.user });
+  });
+
+  app.get('/api/test-user', (req, res) => {
+    if (req.isAuthenticated()) {
+      console.log('User is authenticated');
+      res.json({ 
+        authenticated: true, 
+        user: req.user 
+      });
+    } else {
+      console.log('User is not authenticated');
+      res.json({ authenticated: false });
+    }
+  });
+
+  app.post('/api/test-logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ success: false, error: 'Logout failed' });
+      }
+      console.log('Test logout successful');
+      res.json({ success: true });
+    });
+  });
+
+  // Create test user if needed
+  app.get('/api/create-test-user', async (req, res) => {
+    try {
+      // Check if test user exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, 'test@example.com'),
+      });
+
       if (existingUser) {
-        user = existingUser;
-        console.log("Test user already exists:", user.id);
-      } else {
-        // Create new user
-        user = await storage.createUser({
-          email: testUserEmail,
-          username: testUserEmail,
-          name: "Test User",
-          password: await hashPassword(testUserPassword),
-          status: "active",
-          role: "admin",
-          avatar_url: null,
-          preferences: {},
-          verification_token: null,
-          reset_token: null,
-          email_verified: true
-        });
-        console.log("Created test user:", user.id);
+        return res.json({ success: true, message: 'Test user already exists', user: existingUser });
       }
+
+      // Create test user
+      const passwordHash = await hashPassword('password123');
       
-      // Get user's tenants
-      const userTenants = await storage.getUserTenants(user.id);
-      
-      let testTenant;
-      
-      if (userTenants.length > 0) {
-        testTenant = userTenants[0];
-        console.log("User already has tenant:", testTenant.id);
-      } else {
-        // Create test tenant
-        const tenantId = ulid();
-        const tenantName = "Test Organization";
-        
-        // Insert tenant directly with SQL to avoid type issues
-        const { rows: [tenant] } = await db.execute(
-          sql`INSERT INTO tenants (id, name, display_name, description, industry, slug, plan, status, max_users, domain, logo_url, settings, enabled_features)
-              VALUES (
-                ${tenantId},
-                ${tenantName}, 
-                ${tenantName}, 
-                ${"Test tenant for development"},
-                ${"Technology"},
-                ${"test-org"}, 
-                ${"free"}, 
-                ${"active"}, 
-                ${10}, 
-                ${null},
-                ${null},
-                ${JSON.stringify({})},
-                ${JSON.stringify([])}
-              )
-              RETURNING *`
-        );
-        
-        testTenant = tenant;
-        
-        // Associate user with tenant
-        const userToTenantId = ulid();
-        await db.execute(
-          sql`INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default)
-              VALUES (${userToTenantId}, ${user.id}, ${tenant.id}, ${"admin"}, TRUE)`
-        );
-        
-        console.log("Created test tenant for user:", testTenant.id);
-      }
-      
-      // Return information
-      res.json({
-        success: true,
-        message: "Test user and tenant created/verified successfully",
-        user: {
-          id: user.id,
-          email: testUserEmail,
-          password: testUserPassword,
-        },
-        tenant: {
-          id: testTenant.id,
-          name: testTenant.name
-        },
-        loginUrl: "/test-login"
+      const [newUser] = await db.insert(users).values({
+        email: 'test@example.com',
+        name: 'Test User',
+        passwordHash,
+        role: 'admin',
+      }).returning();
+
+      // Create test tenant
+      const [tenant] = await db.insert(tenants).values({
+        name: 'Test Organization',
+        subdomain: 'test-org',
+      }).returning();
+
+      // Associate user with tenant using usersToTenants
+      await db.execute(sql`
+        INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default)
+        VALUES (${ulid()}, ${newUser.id}, ${tenant.id}, 'admin', true)
+      `);
+
+      res.json({ 
+        success: true, 
+        message: 'Test user created', 
+        user: newUser,
+        tenant: tenant
       });
     } catch (error) {
-      console.error("Error creating test user:", error);
+      console.error('Error creating test user:', error);
       res.status(500).json({ 
-        error: "Failed to create test user",
-        details: error instanceof Error ? error.message : String(error)
+        success: false, 
+        error: 'Failed to create test user'
       });
     }
   });

@@ -6,6 +6,12 @@ type OnboardingContextType = {
   completedSteps: Record<string, boolean>;
   markStepCompleted: (step: string) => void;
   resetOnboarding: () => void;
+  showIntroVideo: boolean;
+  setShowIntroVideo: (show: boolean) => void;
+  showGetStarted: boolean;
+  setShowGetStarted: (show: boolean) => void;
+  showWalkthroughs: boolean;
+  setShowWalkthroughs: (show: boolean) => void;
 };
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -13,6 +19,9 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
+  const [showIntroVideo, setShowIntroVideo] = useState(false);
+  const [showGetStarted, setShowGetStarted] = useState(false);
+  const [showWalkthroughs, setShowWalkthroughs] = useState(false);
 
   const markStepCompleted = (step: string) => {
     setCompletedSteps((prev) => ({
@@ -34,6 +43,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         completedSteps,
         markStepCompleted,
         resetOnboarding,
+        showIntroVideo,
+        setShowIntroVideo,
+        showGetStarted,
+        setShowGetStarted,
+        showWalkthroughs,
+        setShowWalkthroughs,
       }}
     >
       {children}
