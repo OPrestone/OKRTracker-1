@@ -663,8 +663,6 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
   const [teamIcon, setTeamIcon] = useState("users");
   const [teamDescription, setTeamDescription] = useState("");
   const [teamParent, setTeamParent] = useState("");
-  const [teamLeaderId, setTeamLeaderId] = useState<string | null>(null);
-  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all teams for parent selection
@@ -673,34 +671,17 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
     queryKey: ["/api/teams", currentTenant?.id],
     enabled: !!currentTenant?.id && isOpen,
   });
-  
-  // Fetch all users for team leader selection
-  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ["/api/users", currentTenant?.id],
-    enabled: !!currentTenant?.id && isOpen,
-  });
 
   // Initialize form values when team changes
   useEffect(() => {
-    if (team && isOpen) {
+    if (team) {
       setTeamName(team.name);
       setTeamColor(team.color || "#3B82F6");
       setTeamIcon(team.icon || "users");
       setTeamDescription(team.description || "");
       setTeamParent(team.parentId || "none");
-      setTeamLeaderId(team.leaderId || null);
-      setUserSearchQuery("");
     }
-  }, [team, isOpen]);
-
-  // Filter users based on search query
-  const filteredUsers = userSearchQuery.trim() === "" 
-    ? users 
-    : users.filter(user => 
-        (user.firstName && user.firstName.toLowerCase().includes(userSearchQuery.toLowerCase())) || 
-        (user.lastName && user.lastName.toLowerCase().includes(userSearchQuery.toLowerCase())) ||
-        (user.username && user.username.toLowerCase().includes(userSearchQuery.toLowerCase()))
-      );
+  }, [team]);
 
   const handleUpdateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -733,7 +714,6 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
         color: teamColor,
         icon: teamIcon,
         parentId: teamParent === "none" ? null : teamParent,
-        leaderId: teamLeaderId,
         tenantId: currentTenant?.id,  // Include tenant ID to preserve multi-tenancy
       };
 
@@ -762,12 +742,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
   };
   
   return (
-    <Dialog 
-      open={isOpen} 
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Edit Team</DialogTitle>
@@ -850,62 +825,6 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
                       </div>
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid gap-2">
-            <label htmlFor="team-leader" className="text-sm font-medium">
-              Team Leader
-            </label>
-            <div className="space-y-2">
-              <div className="relative">
-                <Input
-                  id="search-users"
-                  placeholder="Search users..."
-                  value={userSearchQuery}
-                  onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="mb-1"
-                />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-              
-              <Select value={teamLeaderId || ""} onValueChange={setTeamLeaderId}>
-                <SelectTrigger id="team-leader" className={teamLeaderId ? "border-primary/30" : ""}>
-                  <SelectValue placeholder="Select a team leader" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
-                  <SelectItem value="">None (No specific leader)</SelectItem>
-                  {filteredUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {user.firstName && user.lastName 
-                              ? `${user.firstName[0]}${user.lastName[0]}` 
-                              : (user.username ? user.username[0].toUpperCase() : 'U')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>
-                          {user.firstName && user.lastName 
-                            ? `${user.firstName} ${user.lastName}` 
-                            : user.username}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                  {usersLoading && (
-                    <div className="flex items-center justify-center py-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
-                      <span className="text-sm">Loading users...</span>
-                    </div>
-                  )}
-                  {!usersLoading && filteredUsers.length === 0 && (
-                    <div className="py-2 px-2 text-center text-sm text-gray-500">
-                      No users match your search
-                    </div>
-                  )}
                 </SelectContent>
               </Select>
             </div>
