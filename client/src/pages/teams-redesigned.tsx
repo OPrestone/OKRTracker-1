@@ -1,30 +1,29 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import DashboardLayout from "@/layouts/dashboard-layout";
-import { useTenantContext } from "@/hooks/use-tenant-context";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardFooter
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { ColumnDef } from "@tanstack/react-table";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useToast } from "@/hooks/use-toast";
+import DashboardLayout from "@/layouts/dashboard-layout";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Team, User } from "@shared/schema";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 import {
   Dialog,
@@ -65,31 +64,26 @@ import {
 } from "@/components/ui/select";
 
 import {
-  Users,
-  User as UserIcon,
-  Search,
-  PlusCircle,
+  AlertCircle,
+  BarChart,
+  Briefcase,
   Building,
   Building2,
-  LayoutGrid,
-  List,
-  BarChart,
-  PieChart,
-  Target,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  MoreHorizontal,
   Edit,
+  Eye,
+  LayoutGrid,
+  List,
+  MoreHorizontal,
+  PlusCircle,
+  Rocket,
+  Search,
+  Target,
   Trash2,
   UserPlus,
-  Eye,
-  ChevronRight,
-  Filter,
-  Briefcase,
-  Rocket,
-  Zap,
-  ArrowUpRight
+  Users,
+  Zap
 } from "lucide-react";
 
 // Define TeamObjective interface
@@ -469,12 +463,24 @@ const CreateTeamDialog = () => {
   const [newTeamIcon, setNewTeamIcon] = useState("users");
   const [newTeamDescription, setNewTeamDescription] = useState("");
   const [newTeamParent, setNewTeamParent] = useState("");
+  const [newTeamLead, setNewTeamLead] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all teams for parent selection with tenant context
   const { currentTenant } = useTenantContext();
   const { data: teams } = useQuery<Team[]>({
     queryKey: ["/api/teams", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+  });
+
+  // Get all users in the tenant
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["/api/users", currentTenant?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/users?tenantId=${currentTenant?.id}`);
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
     enabled: !!currentTenant?.id,
   });
 
@@ -636,6 +642,25 @@ const CreateTeamDialog = () => {
               {teams?.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="grid gap-2">
+          <label htmlFor="parent-team" className="text-sm font-medium">
+            Team Lead
+          </label>
+          <Select value={newTeamLead} onValueChange={setNewTeamLead}>
+            <SelectTrigger id="parent-team">
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {users?.map((user) => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.name}
                 </SelectItem>
               ))}
             </SelectContent>

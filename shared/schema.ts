@@ -1,6 +1,6 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import { boolean, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { integer, pgEnum, pgTable, text, timestamp, boolean, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { pgTableWithUlid } from "./utils/schema";
 
@@ -64,7 +64,7 @@ export const users = pgTableWithUlid("users", {
   timezone: text("timezone").default("UTC"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id),
   defaultTenantId: text("default_tenant_id").references(() => tenants.id),
   isEnabled: boolean("is_enabled").default(true).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
@@ -324,6 +324,8 @@ export const tenants = pgTableWithUlid("tenants", {
   logoUrl: text("logo_url"),
   settings: jsonb("settings").default({}).notNull(),
   plan: text("plan").default("free").notNull(),
+  status: text("status").default("active").notNull(),
+  max_users: integer("max_users").default(5).notNull(),
   domain: text("domain"),
   enabledFeatures: jsonb("enabled_features").default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
