@@ -177,6 +177,12 @@ const TeamCard = ({
     queryKey: ["/api/teams", team.id, "users", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
   });
+  
+  // Get team leader if leaderId is available
+  const { data: leader } = useQuery<User>({
+    queryKey: ["/api/users", team.leaderId, currentTenant?.id],
+    enabled: !!team.id && !!team.leaderId && !!currentTenant?.id,
+  });
 
   // Get objectives for the team
   const { data: objectives = [] } = useQuery<TeamObjective[]>({
@@ -255,6 +261,28 @@ const TeamCard = ({
               </div>
               <Progress value={progress} className="h-2" indicatorStyle={{ background: getProgressColor(progress) }} />
             </div>
+            
+            {/* Team leader section */}
+            {leader && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md border border-gray-200 mb-3">
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="text-xs bg-primary/80 text-white">
+                    {leader.firstName?.[0]}{leader.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {leader.firstName} {leader.lastName}
+                    </span>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                      Leader
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{leader.title || leader.email}</p>
+                </div>
+              </div>
+            )}
             
             <div className="flex gap-3 justify-between">
               <div className="rounded-md border border-gray-200 bg-white p-2 flex flex-col items-center text-center">
