@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -67,6 +67,7 @@ export default function OKRSystemSetupWizard() {
   const [activePage, setActivePage] = useState("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -112,6 +113,84 @@ export default function OKRSystemSetupWizard() {
       },
     },
   });
+  
+  // Fetch existing OKR system configuration
+  useEffect(() => {
+    const fetchExistingConfig = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/okr-system', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const config = await response.json();
+          console.log("Loaded existing OKR system config:", config);
+          
+          // Map the database config to form values
+          if (config.data) {
+            try {
+              const data = JSON.parse(config.data);
+              
+              // Update form with existing values
+              form.reset({
+                generalSettings: {
+                  companyMission: data.generalSettings?.companyMission || "",
+                  companyVision: data.generalSettings?.companyVision || "",
+                  companyValues: data.generalSettings?.companyValues || "",
+                  trackingFrequency: data.generalSettings?.trackingFrequency || "weekly",
+                  enableNotifications: data.generalSettings?.enableNotifications !== false,
+                },
+                timeframes: {
+                  primaryCadence: data.timeframes?.primaryCadence || "quarterly",
+                  enableQuarterlyCadence: data.timeframes?.enableQuarterlyCadence !== false,
+                  enableAnnualCadence: data.timeframes?.enableAnnualCadence !== false,
+                  customCadence: data.timeframes?.customCadence || "",
+                  startMonth: data.timeframes?.startMonth || "january",
+                },
+                objectiveSettings: {
+                  defaultObjectiveCategory: data.objectiveSettings?.defaultObjectiveCategory || "growth",
+                  maxObjectivesPerTeam: data.objectiveSettings?.maxObjectivesPerTeam || "5",
+                  maxKeyResultsPerObjective: data.objectiveSettings?.maxKeyResultsPerObjective || "3",
+                  requireObjectiveApproval: data.objectiveSettings?.requireObjectiveApproval !== false,
+                  enableObjectiveAlignment: data.objectiveSettings?.enableObjectiveAlignment !== false,
+                },
+                teamConfiguration: {
+                  orgStructureType: data.teamConfiguration?.orgStructureType || "functional",
+                  enableCrossTeamObjectives: data.teamConfiguration?.enableCrossTeamObjectives !== false,
+                  defaultVisibility: data.teamConfiguration?.defaultVisibility || "public",
+                },
+                integrations: {
+                  enableSlackIntegration: data.integrations?.enableSlackIntegration === true,
+                  enableEmailNotifications: data.integrations?.enableEmailNotifications !== false,
+                  enableCalendarSync: data.integrations?.enableCalendarSync === true,
+                  enableAnalyticsReporting: data.integrations?.enableAnalyticsReporting !== false,
+                },
+              });
+              
+              toast({
+                title: "Configuration Loaded",
+                description: "Your existing OKR system configuration has been loaded.",
+              });
+            } catch (parseError) {
+              console.error("Error parsing configuration data:", parseError);
+            }
+          }
+        } else if (response.status !== 404) {
+          // 404 is expected for new tenants, only show error for other statuses
+          console.warn(`Failed to load OKR system config: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Error fetching OKR system config:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchExistingConfig();
+  }, []);
 
   // Create mutation for saving OKR system setup
   const saveOKRSystemMutation = useMutation({
@@ -238,6 +317,14 @@ export default function OKRSystemSetupWizard() {
           Follow this guided workflow to set up your complete OKR system. 
           You'll configure timeframes, objective settings, and team structure.
         </p>
+        {isLoading && (
+          <div className="flex justify-center mt-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-md">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading existing configuration...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-8">
