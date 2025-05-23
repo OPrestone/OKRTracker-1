@@ -483,31 +483,7 @@ export default function TenantOnboardingWizard() {
         setIsSubmitting(false);
       }
     },
-    onSuccess: async (data) => {
-      // Create time cadences for the organization
-      try {
-        // Create Annual cadence
-        await apiRequest('POST', '/api/timeframes', {
-          name: "Annual",
-          description: "Yearly planning cycle",
-          period: "annual",
-          tenant_id: data.id
-        });
-        
-        // Create Quarterly cadence
-        await apiRequest('POST', '/api/timeframes', {
-          name: "Quarterly",
-          description: "Quarterly planning cycle",
-          period: "quarterly",
-          tenant_id: data.id
-        });
-        
-        console.log("Time cadences created successfully for tenant:", data.id);
-      } catch (cadenceError) {
-        console.error("Error creating time cadences:", cadenceError);
-        // Don't block the flow if cadence creation fails
-      }
-      
+    onSuccess: (data) => {
       toast({
         title: "Organization created!",
         description: "Your new organization has been set up successfully.",
