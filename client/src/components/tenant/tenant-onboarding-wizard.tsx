@@ -649,17 +649,13 @@ export default function TenantOnboardingWizard() {
         // If there are team members, validate their emails
         if (team.length > 0) {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          const validEmails = team.every(member => emailRegex.test(member.email));
+          const validEmails = team.every(member => !member.email || emailRegex.test(member.email));
           return validEmails;
         }
         // Team members are optional
         return true;
       case "setup":
-        // If createInitialOKRs is checked, a template or imported OKRs is required
-        const setup = form.getValues().setup;
-        if (setup.createInitialOKRs) {
-          return !!setup.template || (setup.importedOKRs && setup.importedOKRs.length > 0);
-        }
+        // Setup is always valid - we just want to allow organization creation
         return true;
     }
     return false;
