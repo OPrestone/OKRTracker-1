@@ -110,6 +110,7 @@ function AppRoutes() {
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
       <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
       <Route path="/okr-system-setup" component={OKRSystemSetupPage} />
+      <ProtectedRoute path="/:tenantId/okr-system-setup" component={OKRSystemSetupPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/home" component={Home} />
       <ProtectedRoute path="/quick-start-guide" component={QuickStartGuide} />
