@@ -504,6 +504,10 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
     fields: [teams.ownerId],
     references: [users.id]
   }),
+  leader: one(users, {
+    fields: [teams.leaderId],
+    references: [users.id]
+  }),
   members: many(users),
   objectives: many(objectives),
   chatRoom: many(chatRooms)
