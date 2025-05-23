@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
@@ -186,6 +186,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Just keeping the test endpoint for troubleshooting
   // The actual API endpoints for approved objectives are defined later in this file
+  
+  // Test route to create a test user and tenant
+  app.get("/api/create-test-user", async (req, res) => {
+    try {
+      // Create test user
+      const testUser = {
+        email: "test@example.com",
+        name: "Test User",
+        password: await hashPassword("password123")
+      };
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(testUser.email);
+      
+      let userId;
+      if (existingUser) {
+        userId = existingUser.id;
+        console.log("Test user already exists:", userId);
+      } else {
+        const createdUser = await storage.createUser(testUser);
+        userId = createdUser.id;
+        console.log("Created test user:", userId);
+      }
+      
+      // Create test tenant if needed
+      const tenantName = "Test Organization";
+      const userTenants = await storage.getUserTenants(userId);
+      
+      let testTenant;
+      if (userTenants.length > 0) {
+        testTenant = userTenants[0];
+        console.log("User already has tenant:", testTenant.id);
+      } else {
+        testTenant = await storage.createTenant({ 
+          name: tenantName,
+          description: "A test organization",
+          owner_id: userId
+        });
+        
+        // Associate user with tenant
+        await storage.addUserToTenant({
+          userId,
+          tenantId: testTenant.id,
+          role: "admin"
+        });
+        
+        console.log("Created new tenant for test user:", testTenant.id);
+      }
+      
+      res.json({
+        success: true,
+        message: "Test user and tenant created successfully",
+        login: {
+          email: testUser.email,
+          password: "password123"
+        },
+        userId,
+        tenantId: testTenant.id
+      });
+    } catch (error) {
+      console.error("Error creating test user:", error);
+      res.status(500).json({ error: "Failed to create test user and tenant" });
+    }
+  });
 
   // Initialize data
   initializeData();
