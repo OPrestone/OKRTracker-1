@@ -450,6 +450,44 @@ export default function TenantOnboardingWizard() {
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
 
+  // Create default teams if none are added
+  useEffect(() => {
+    // Add default teams automatically if no teams have been added yet
+    if (addedTeams.length === 0 && activePage === "team") {
+      console.log("Setting up default example teams");
+      
+      // Create Marketing Team (blue, megaphone)
+      const marketingTeam = {
+        name: "Marketing Team",
+        description: "Team responsible for brand, communications and marketing campaigns",
+        color: "#3B82F6", // Blue
+        icon: "megaphone",
+        members: []
+      };
+      
+      // Create Sales Team (green, chart)
+      const salesTeam = {
+        name: "Sales Team",
+        description: "Team responsible for sales and revenue growth",
+        color: "#10B981", // Green 
+        icon: "briefcase",
+        members: []
+      };
+      
+      // Create Engineering Team (purple, code)
+      const engineeringTeam = {
+        name: "Engineering Team",
+        description: "Team responsible for product development and technical operations",
+        color: "#8B5CF6", // Purple
+        icon: "code",
+        members: []
+      };
+      
+      setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
+      console.log("Default teams created and ready for user to customize");
+    }
+  }, [activePage, addedTeams.length]);
+
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
@@ -461,13 +499,34 @@ export default function TenantOnboardingWizard() {
         const selectedUsers = values.team.users?.filter(user => user.selected) || [];
         console.log("Selected users:", selectedUsers);
 
-        // Process teams data from the state we've been tracking
-        const teams = addedTeams.map(team => ({
+        // Use the teams that the user has added
+        // If no teams have been explicitly added, use the default set
+        const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
           name: team.name,
           description: team.description,
           icon: team.icon,
           color: team.color
-        }));
+        })) : [
+          {
+            name: "Marketing Team",
+            description: "Team responsible for brand, communications and marketing campaigns",
+            color: "#3B82F6", // Blue
+            icon: "megaphone"
+          },
+          {
+            name: "Sales Team",
+            description: "Team responsible for sales and revenue growth", 
+            color: "#10B981", // Green
+            icon: "briefcase"
+          },
+          {
+            name: "Engineering Team",
+            description: "Team responsible for product development and technical operations",
+            color: "#8B5CF6", // Purple
+            icon: "code"
+          }
+        ];
+        
         console.log("Teams to be created:", teams);
 
         const requestData = {
@@ -489,28 +548,22 @@ export default function TenantOnboardingWizard() {
 
         console.log("Submitting organization data:", requestDataWithRole);
         
-        // Use direct fetch for more control over the request
-        const response = await fetch('/api/tenants', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestDataWithRole),
-          credentials: 'include'
-        });
+        // Use apiRequest function from the imported library
+        const response = await apiRequest('POST', '/api/tenants', requestDataWithRole);
+        console.log("API response received:", response);
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`API error ${response.status}: ${errorText}`);
-          throw new Error(`Failed to create organization: ${errorText}`);
-        }
-        
+        // Parse and return the JSON data
         const orgData = await response.json();
         console.log("Organization created successfully:", orgData);
 
         return orgData;
       } catch (error) {
         console.error("Error creating organization:", error);
+        toast({
+          title: "Failed to create organization",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive"
+        });
         throw error;
       } finally {
         setIsSubmitting(false);
