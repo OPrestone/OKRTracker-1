@@ -336,6 +336,7 @@ export default function OKRSystemSetupWizard() {
             orgStructureType: "functional",
             enableCrossTeamObjectives: true,
             defaultVisibility: "public",
+            selectedTeams: [],
           },
           integrations: {
             enableSlackIntegration: false,
