@@ -1,32 +1,53 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import {
+  cycles,
+  insertActionItemSchema,
+  insertCadenceSchema,
+  insertChatRoomMemberSchema,
+  insertChatRoomSchema,
+  insertCheckInSchema,
+  insertCycleSchema,
+  insertInitiativeSchema,
+  insertKeyResultSchema,
+  insertMeetingSchema,
+  insertMessageSchema,
+  insertMoodEntrySchema,
+  insertObjectiveSchema,
+  insertProjectSchema,
+  insertReactionSchema,
+  insertTeamSchema,
+  insertTenantSchema,
+  insertTimeframeSchema,
+  keyResults as keyResultsTable,
+  moodEntries,
+  objectives as objectivesTable,
+  objectiveStatusEnum,
+  organizationMission,
+  projectStatusEnum,
+  teams,
+  timeframes,
+  User,
+  users,
+  usersToTenants
+} from "@shared/schema";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
+import type { Express, NextFunction, Request, Response } from "express";
+import { Router } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth } from "./auth";
-import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
-         insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
-         insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
-         insertAttachmentSchema, insertReactionSchema, insertFeedbackSchema, insertBadgeSchema, insertUserBadgeSchema,
-         insertTeamMoodSchema, insertTenantSchema, insertMoodEntrySchema, users, teams, objectives as objectivesTable, 
-         keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
-         timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
-         insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
-         projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema } from "@shared/schema";
-import { z } from "zod";
-import { db } from "./db";
-import { or, sql, and, eq, inArray } from "drizzle-orm";
+import Stripe from "stripe";
 import { ulid } from "ulid";
+import { WebSocket, WebSocketServer } from "ws";
+import { z } from "zod";
+import { setupAuth } from "./auth";
+import { db } from "./db";
+import { registerConfigRoutes } from "./routes/config-routes";
+import { setupTeamLeaderRoutes } from "./routes/team-leader";
+import { createTestTeamLeader } from "./routes/test-team-leader";
 import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";
 import { stripeService } from "./services/stripe-service";
 import { tenantService } from "./services/tenant-service";
-import { configService } from "./services/config-service";
-import { WebSocketServer, WebSocket } from "ws";
+import { storage } from "./storage";
 import { setupTestAuthRoutes } from "./test-auth";
-import Stripe from "stripe";
-import { registerConfigRoutes } from "./routes/config-routes";
-import { setupTeamLeaderRoutes } from "./routes/team-leader";
-import { Router } from "express";
-import { createTestTeamLeader } from "./routes/test-team-leader";
 
 // Extend Request interface to include tenantId
 declare global {
@@ -402,6 +423,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail the entire request if just the user setup fails
         }
       }
+
+      //Add Teams of Provided
+      console.log(`Processing teams for tenant ${tenant.id}`);
+      console.log(`Teams data:`, JSON.stringify(restData.teams));
+        try {
+          if (restData.teams && Array.isArray(restData.teams) && restData.teams.length > 0) {
+            restData.teams.forEach(async (okrTeam) => {
+            const validatedTeamData = insertTeamSchema.parse({
+									...okrTeam,
+									ownerId: user.id, // This links the team to a user in this tenant
+									tenantId: tenant.id, // Critical: Associate team with current tenant
+								});
+
+						console.log(`Validated data:`, JSON.stringify(validatedData));
+
+						const team = await storage.createTeam(validatedTeamData);
+          }) 
+        }
+        } catch (teamError) {
+          console.error("Error processing initial teams setup:", teamError);
+          // Don't fail the entire request if just the OKR setup fails
+        }
       
       res.status(201).json({ tenant, userToTenant });
     } catch (error) {
