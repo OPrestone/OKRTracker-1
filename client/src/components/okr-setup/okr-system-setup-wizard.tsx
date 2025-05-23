@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User, Lightbulb } from "lucide-react";
 import TimeframeSetup from "./timeframe-setup";
 
 // Team interface
@@ -213,12 +213,48 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const steps = [
-  { id: "general", label: "General", icon: Settings2 },
-  { id: "timeframes", label: "Timeframes", icon: Calendar },
-  { id: "objectives", label: "Objectives", icon: Target },
-  { id: "teams", label: "Teams", icon: Users2 },
-  { id: "integrations", label: "Integrations", icon: Layers },
-  { id: "review", label: "Review", icon: CheckCircle2 },
+  { 
+    id: "general", 
+    label: "General", 
+    icon: Settings2,
+    description: "Define your company's mission, vision, and core values",
+    hint: "This foundational information guides all your organization's objectives"
+  },
+  { 
+    id: "timeframes", 
+    label: "Timeframes", 
+    icon: Calendar,
+    description: "Set up planning periods for your OKR cycles",
+    hint: "Most companies use quarterly and annual timeframes for tracking objectives"
+  },
+  { 
+    id: "objectives", 
+    label: "Objectives", 
+    icon: Target,
+    description: "Configure objective settings and defaults",
+    hint: "These settings determine how objectives are created and tracked"
+  },
+  { 
+    id: "teams", 
+    label: "Teams", 
+    icon: Users2,
+    description: "Select which teams will participate in OKRs",
+    hint: "Team alignment is critical for successful OKR implementation"
+  },
+  { 
+    id: "integrations", 
+    label: "Integrations", 
+    icon: Layers,
+    description: "Connect your OKR system with other tools",
+    hint: "Integrations help embed OKRs into your team's daily workflow"
+  },
+  { 
+    id: "review", 
+    label: "Review", 
+    icon: CheckCircle2,
+    description: "Review your configuration before launching",
+    hint: "Verify all settings before going live with your OKR system"
+  },
 ];
 
 export default function OKRSystemSetupWizard() {
@@ -763,56 +799,110 @@ export default function OKRSystemSetupWizard() {
       </div>
 
       <div className="mb-8">
-        {/* Progress indicator */}
-        <div className="hidden sm:flex items-center justify-between mb-8">
-          {steps.map((step, index) => (
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">Setup Progress</span>
+            <span className="text-sm font-medium">{Math.round((activeIndex / (steps.length - 1)) * 100)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
-              key={step.id} 
-              className="flex flex-col items-center"
-            >
-              <button
-                onClick={() => goToStep(step.id)}
-                disabled={setupComplete}
-                className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 
-                  ${activeIndex === index 
-                    ? 'border-primary bg-primary text-white' 
-                    : index < activeIndex 
-                      ? 'border-primary bg-primary/10 text-primary' 
-                      : 'border-gray-300 bg-white text-gray-400'}`}
-              >
-                <step.icon className="w-5 h-5" />
-              </button>
-              <span className={`mt-2 text-xs font-medium ${activeIndex === index ? 'text-primary' : 'text-gray-500'}`}>
-                {step.label}
-              </span>
-              {index < steps.length - 1 && (
-                <div className={`absolute left-0 right-0 top-5 h-0.5 -z-10 
-                  ${index < activeIndex ? 'bg-primary' : 'bg-gray-200'}`}
-                  style={{ left: "calc(50% + 1rem)", right: "calc(-50% + 1rem)" }}
-                />
-              )}
-            </div>
-          ))}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+              style={{ width: `${Math.round((activeIndex / (steps.length - 1)) * 100)}%` }}
+            ></div>
+          </div>
+        </div>
+        
+        {/* Desktop step navigator */}
+        <div className="hidden md:block mb-8">
+          <div className="flex items-center justify-between relative">
+            {/* Connecting line */}
+            <div className="absolute h-1 bg-gray-200 left-0 right-0 top-1/2 transform -translate-y-1/2 -z-10"></div>
+            
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex flex-col items-center relative z-10">
+                <div className="mb-3">
+                  {index < activeIndex ? (
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                      <Check className="h-5 w-5 text-white" />
+                    </div>
+                  ) : activeIndex === index ? (
+                    <div className="w-10 h-10 rounded-full bg-primary border-4 border-blue-100 flex items-center justify-center shadow-md">
+                      <step.icon className="h-5 w-5 text-white" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 font-medium">{index + 1}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => goToStep(step.id)}
+                  disabled={setupComplete || index > activeIndex + 1}
+                  className={`text-sm font-medium ${
+                    activeIndex === index
+                      ? 'text-primary'
+                      : index < activeIndex
+                        ? 'text-green-600' 
+                        : 'text-gray-500'
+                  } ${index <= activeIndex + 1 && !setupComplete ? 'cursor-pointer hover:underline' : 'cursor-default'}`}
+                >
+                  {step.label}
+                </button>
+                
+                {activeIndex === index && (
+                  <p className="text-xs text-gray-500 mt-1 max-w-[120px] text-center">
+                    {step.hint}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Mobile steps */}
-        <div className="flex overflow-x-auto sm:hidden pb-4 mb-4">
-          {steps.map((step, index) => (
-            <button
-              key={step.id}
-              onClick={() => goToStep(step.id)}
-              disabled={setupComplete}
-              className={`flex items-center min-w-max px-4 py-2 mx-1 rounded-full text-sm font-medium whitespace-nowrap
-                ${activeIndex === index 
-                  ? 'bg-primary text-white' 
-                  : index < activeIndex 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'bg-gray-100 text-gray-700'}`}
-            >
-              <step.icon className="w-4 h-4 mr-1.5" />
-              {step.label}
-            </button>
-          ))}
+        <div className="md:hidden mb-6">
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                {(() => {
+                  const StepIcon = steps[activeIndex].icon;
+                  return <StepIcon className="w-5 h-5" />;
+                })()}
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900">Step {activeIndex + 1}: {steps[activeIndex].label}</h3>
+                <p className="text-sm text-gray-500">{steps[activeIndex].description}</p>
+              </div>
+            </div>
+            
+            <div className="flex overflow-x-auto py-2 gap-2">
+              {steps.map((step, index) => (
+                <button
+                  key={step.id}
+                  onClick={() => goToStep(step.id)}
+                  disabled={setupComplete || index > activeIndex + 1}
+                  className={`flex items-center min-w-max px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border
+                    ${activeIndex === index
+                      ? 'bg-primary text-white border-primary'
+                      : index < activeIndex
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                >
+                  {index < activeIndex ? (
+                    <Check className="w-3 h-3 mr-1" />
+                  ) : (
+                    (() => {
+                      const StepIcon = step.icon;
+                      return <StepIcon className="w-3 h-3 mr-1" />;
+                    })()
+                  )}
+                  {step.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Main form */}
@@ -821,16 +911,27 @@ export default function OKRSystemSetupWizard() {
             <Tabs value={activePage} className="w-full">
               {/* General Settings */}
               <TabsContent value="general">
-                <Card>
+                <Card className="border border-gray-200 shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Settings2 className="mr-2 h-5 w-5 text-primary" />
-                        General Settings
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Define your organization's mission, vision, and values to align your OKRs with your strategic goals.
-                      </p>
+                    <div className="space-y-6">
+                      <div className="border-b pb-4">
+                        <h2 className="text-2xl font-semibold flex items-center text-gray-800">
+                          <Settings2 className="mr-3 h-6 w-6 text-primary" />
+                          General Settings
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                          Define your organization's mission, vision, and values to align your OKRs with your strategic goals.
+                        </p>
+                      </div>
+
+                      <div className="bg-blue-50 p-4 rounded-md border border-blue-100 mb-6">
+                        <h3 className="text-blue-700 font-medium mb-2 flex items-center">
+                          <Lightbulb className="mr-2 h-4 w-4" /> Why this matters
+                        </h3>
+                        <p className="text-blue-600 text-sm">
+                          Your mission and vision statements provide direction and context for all OKRs. Teams will use these foundational statements to ensure their objectives align with your organization's purpose.
+                        </p>
+                      </div>
                       
                       <div className="space-y-4">
                         <div className="grid gap-4">
