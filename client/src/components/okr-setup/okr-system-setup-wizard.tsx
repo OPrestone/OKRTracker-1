@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User } from "lucide-react";
+import TimeframeSetup from "./timeframe-setup";
 
 // Team interface
 interface Team {
@@ -1043,6 +1044,24 @@ export default function OKRSystemSetupWizard() {
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-gray-500 mt-1">When your OKR year begins</p>
+                        </div>
+
+                        <div className="pt-6 border-t mt-6">
+                          <h3 className="text-lg font-medium mb-4">Create Your OKR Timeframes</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Set up specific timeframes for your OKR cycles. These will be used when creating objectives.
+                          </p>
+                          
+                          {tenantId && (
+                            <TimeframeSetup
+                              tenantId={tenantId}
+                              primaryCadence={form.getValues("timeframes.primaryCadence")}
+                              startMonth={form.getValues("timeframes.startMonth")}
+                            />
+                          )}
+                          <p className="text-xs text-gray-500 mt-4">
+                            Tip: Creating timeframes now will make it easier for your team to align objectives to specific time periods.
+                          </p>
                         </div>
                       </div>
                     </div>
