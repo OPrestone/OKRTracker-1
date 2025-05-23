@@ -50,7 +50,8 @@ export function setupConfigRoutes(router: Router) {
   // Get OKR system configuration
   router.get('/api/okr-system', async (req: Request, res: Response) => {
     try {
-      const tenantId = req.tenantId;
+      // Use either the tenant ID from middleware or from query params
+      let tenantId = req.tenantId || req.query.tenantId as string;
       
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
@@ -74,7 +75,8 @@ export function setupConfigRoutes(router: Router) {
   // Save OKR system configuration
   router.post('/api/okr-system-setup', async (req: Request, res: Response) => {
     try {
-      const tenantId = req.tenantId;
+      // Use either the tenant ID from middleware or from query params
+      let tenantId = req.tenantId || req.query.tenantId as string;
       
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });

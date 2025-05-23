@@ -119,7 +119,30 @@ export default function OKRSystemSetupWizard() {
     const fetchExistingConfig = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/okr-system', {
+        // Get active tenant ID from session if available
+        const userResponse = await fetch('/api/user', {
+          credentials: 'include'
+        });
+        
+        if (!userResponse.ok) {
+          console.error("Failed to get user information");
+          setIsLoading(false);
+          return;
+        }
+        
+        const userData = await userResponse.json();
+        const currentTenantId = userData.defaultTenant || (userData.tenants && userData.tenants.length > 0 ? userData.tenants[0].id : null);
+        
+        if (!currentTenantId) {
+          console.error("No tenant ID available");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Set tenant ID for later use in the submit function
+        setTenantId(currentTenantId);
+        
+        const response = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
@@ -192,13 +215,20 @@ export default function OKRSystemSetupWizard() {
     fetchExistingConfig();
   }, []);
 
+  // State to store the tenant ID
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  
   // Create mutation for saving OKR system setup
   const saveOKRSystemMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       console.log("Saving OKR system setup:", data);
       
+      if (!tenantId) {
+        throw new Error("No tenant ID available. Please refresh the page and try again.");
+      }
+      
       // Make API request to save OKR system setup
-      const response = await fetch('/api/okr-system-setup', {
+      const response = await fetch(`/api/okr-system-setup?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
