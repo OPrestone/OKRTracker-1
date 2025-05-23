@@ -234,8 +234,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    // Make username lookup case-insensitive
+    console.log(`Looking up user with case-insensitive username: ${username}`);
+    
     // Select specific columns to avoid issues with missing columns
-    const [user] = await db.select({
+    const results = await db.select({
       id: users.id,
       username: users.username,
       password: users.password,
@@ -255,9 +258,17 @@ export class DatabaseStorage implements IStorage {
       lastLoginAt: users.lastLoginAt,
       stripeCustomerId: users.stripeCustomerId,
       stripeSubscriptionId: users.stripeSubscriptionId
-    }).from(users).where(eq(users.username, username));
+    }).from(users).where(
+      sql`LOWER(${users.username}) = LOWER(${username})`
+    );
     
-    return user;
+    if (results.length > 0) {
+      console.log(`Found user by case-insensitive username match: ${username}`);
+      return results[0];
+    }
+    
+    console.log(`No user found with username: ${username} (case-insensitive)`);
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
