@@ -672,6 +672,7 @@ export default function OKRSystemSetupWizard() {
                               placeholder="Our company's mission is to..."
                               {...form.register("generalSettings.companyMission")}
                               className="resize-none h-20"
+                              defaultValue={form.getValues("generalSettings.companyMission")}
                             />
                             {form.formState.errors.generalSettings?.companyMission && (
                               <p className="text-sm text-red-500 mt-1">
@@ -686,6 +687,7 @@ export default function OKRSystemSetupWizard() {
                               placeholder="Our vision for the future is..."
                               {...form.register("generalSettings.companyVision")}
                               className="resize-none h-20"
+                              defaultValue={form.getValues("generalSettings.companyVision")}
                             />
                             {form.formState.errors.generalSettings?.companyVision && (
                               <p className="text-sm text-red-500 mt-1">
@@ -700,6 +702,7 @@ export default function OKRSystemSetupWizard() {
                               placeholder="Our core values include..."
                               {...form.register("generalSettings.companyValues")}
                               className="resize-none h-20"
+                              defaultValue={form.getValues("generalSettings.companyValues")}
                             />
                             {form.formState.errors.generalSettings?.companyValues && (
                               <p className="text-sm text-red-500 mt-1">
