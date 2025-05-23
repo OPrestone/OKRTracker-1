@@ -85,6 +85,8 @@ import { AuthGuard } from "@/lib/auth-guard";
 import { saveRedirectPath } from "@/lib/redirect-service";
 import { useAuth } from "@/hooks/use-auth";
 
+// This component is defined below, removed duplicate declaration
+
 // Location tracker component to monitor navigation for proper redirects
 function LocationTracker() {
   const [location] = useLocation();
@@ -285,15 +287,15 @@ function AppRoutes() {
   );
 }
 
-// Onboarding controller component
+// Onboarding controller component to manage all onboarding-related UI elements
 function OnboardingController() {
-  // Get Started menu should only show when manually triggered by clicking the help icon
-  // or other UI elements, not automatically on first login
+  const { showIntroVideo, showGetStarted, showWalkthroughs } = useOnboarding();
+  
   return (
     <>
-      <GetStartedMenu />
-      <IntroVideoDialog />
-      <WalkthroughGuides />
+      {showGetStarted && <GetStartedMenu />}
+      {showIntroVideo && <IntroVideoDialog />}
+      {showWalkthroughs && <WalkthroughGuides />}
     </>
   );
 }
