@@ -189,7 +189,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Organization Mission API Endpoints
   app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const tenantId = req.tenantId;
+      // Get tenant ID from middleware or query parameter
+      const tenantId = req.tenantId || req.query.tenantId as string;
+      
+      console.log("GET /api/organization-mission - Tenant ID from multiple sources:", {
+        fromMiddleware: req.tenantId,
+        fromQuery: req.query.tenantId,
+        resolved: tenantId
+      });
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });
@@ -214,8 +221,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const tenantId = req.tenantId;
+      // Get tenant ID from middleware, query parameter, or request body
+      const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
       const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
+      
+      console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
+        fromMiddleware: req.tenantId,
+        fromQuery: req.query.tenantId,
+        fromBody: req.body.tenantId,
+        resolved: tenantId
+      });
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });

@@ -222,8 +222,7 @@ export default function OKRSystemSetupWizard() {
     fetchExistingConfig();
   }, []);
 
-  // Tenant ID is already defined above
-  // (Using existing tenantId state)
+  // Using the tenantId state initialized above
   
   // Create mutation for saving OKR system setup
   const saveOKRSystemMutation = useMutation({
