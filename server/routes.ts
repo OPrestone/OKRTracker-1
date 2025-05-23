@@ -21,7 +21,7 @@ import { stripeService } from "./services/stripe-service";
 import { tenantService } from "./services/tenant-service";
 import { configService } from "./services/config-service";
 import { WebSocketServer, WebSocket } from "ws";
-import { setupHealthRoutes } from "./routes/health-routes";
+import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
 import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
@@ -38,12 +38,11 @@ declare global {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up health check routes for diagnostic purposes
-  setupHealthRoutes(app);
   // Authentication routes
   setupAuth(app);
   
-  // No test auth for now as we're focusing on getting basic functionality working
+  // Setup test auth routes for debugging session issues
+  setupTestAuthRoutes(app);
   
   // Register configuration routes
   setupConfigRoutes(app);

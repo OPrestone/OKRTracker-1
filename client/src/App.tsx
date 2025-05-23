@@ -85,8 +85,6 @@ import { AuthGuard } from "@/lib/auth-guard";
 import { saveRedirectPath } from "@/lib/redirect-service";
 import { useAuth } from "@/hooks/use-auth";
 
-// This component is defined below, removed duplicate declaration
-
 // Location tracker component to monitor navigation for proper redirects
 function LocationTracker() {
   const [location] = useLocation();
@@ -109,8 +107,6 @@ function AppRoutes() {
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-login" component={TestLoginPage} />
       <Route path="/login-test" component={LoginTest} />
-      <Route path="/auth-test" component={React.lazy(() => import("@/pages/auth-test"))} />
-      <Route path="/diagnostic" component={React.lazy(() => import("@/pages/diagnostic"))} />
       <Route path="/tenant-onboarding" component={TenantOnboardingPage} />
       <Route path="/tenant-onboarding-demo" component={TenantOnboardingDemoPage} />
       <Route path="/okr-system-setup" component={OKRSystemSetupPage} />
@@ -289,15 +285,15 @@ function AppRoutes() {
   );
 }
 
-// Onboarding controller component to manage all onboarding-related UI elements
+// Onboarding controller component
 function OnboardingController() {
-  const { showIntroVideo, showGetStarted, showWalkthroughs } = useOnboarding();
-  
+  // Get Started menu should only show when manually triggered by clicking the help icon
+  // or other UI elements, not automatically on first login
   return (
     <>
-      {showGetStarted && <GetStartedMenu />}
-      {showIntroVideo && <IntroVideoDialog />}
-      {showWalkthroughs && <WalkthroughGuides />}
+      <GetStartedMenu />
+      <IntroVideoDialog />
+      <WalkthroughGuides />
     </>
   );
 }
