@@ -1200,14 +1200,79 @@ export default function TenantOnboardingWizard() {
 
                           <div className="flex items-center">
                             <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
-                            <div className="flex items-center space-x-2">
-                              <Input 
-                                id="marketingTeamColor"
-                                type="color" 
-                                defaultValue="#3B82F6" 
-                                className="w-10 h-10 p-1 rounded-md cursor-pointer border-gray-200"
-                              />
-                              <span className="text-sm text-gray-700" id="colorHexValue">#3B82F6</span>
+                            <div className="flex-1">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center space-x-2">
+                                  <Input 
+                                    id="marketingTeamColor"
+                                    type="color" 
+                                    defaultValue="#3B82F6" 
+                                    className="w-10 h-10 p-1 rounded-md cursor-pointer border-gray-200"
+                                    onChange={(e) => {
+                                      const colorDisplay = document.getElementById('colorHexValue');
+                                      if (colorDisplay) colorDisplay.textContent = e.target.value;
+                                    }}
+                                  />
+                                  <span className="text-sm text-gray-700" id="colorHexValue">#3B82F6</span>
+                                </div>
+                                <Select 
+                                  defaultValue="#3B82F6"
+                                  onValueChange={(value) => {
+                                    const colorInput = document.getElementById('marketingTeamColor') as HTMLInputElement;
+                                    const colorDisplay = document.getElementById('colorHexValue');
+                                    if (colorInput) colorInput.value = value;
+                                    if (colorDisplay) colorDisplay.textContent = value;
+                                  }}
+                                >
+                                  <SelectTrigger className="border-gray-200">
+                                    <SelectValue placeholder="Choose a color" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="#3B82F6">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-blue-500"></div>
+                                        <span>Blue</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#10B981">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-emerald-500"></div>
+                                        <span>Green</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#F59E0B">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-amber-500"></div>
+                                        <span>Amber</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#EF4444">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-red-500"></div>
+                                        <span>Red</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#8B5CF6">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-violet-500"></div>
+                                        <span>Purple</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#EC4899">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-pink-500"></div>
+                                        <span>Pink</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="#6B7280">
+                                      <div className="flex items-center">
+                                        <div className="w-4 h-4 mr-2 rounded-full bg-gray-500"></div>
+                                        <span>Gray</span>
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           </div>
                           
