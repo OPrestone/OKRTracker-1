@@ -22,6 +22,7 @@ import { tenantService } from "./services/tenant-service";
 import { configService } from "./services/config-service";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
+import { createTestAuthRouter } from "./routes/test-auth-route";
 import Stripe from "stripe";
 import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
@@ -38,6 +39,11 @@ declare global {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up test authentication routes
+  setupTestAuthRoutes(app);
+  
+  // Mount the test auth router
+  app.use(createTestAuthRouter());
   // Authentication routes
   setupAuth(app);
   
