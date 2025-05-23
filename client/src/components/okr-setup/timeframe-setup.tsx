@@ -278,11 +278,25 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-100">
+        <h3 className="text-lg font-medium text-blue-700 mb-2">About Timeframes</h3>
+        <p className="text-blue-600 mb-2">Timeframes define your OKR planning periods (e.g., quarters, years) and help you organize objectives within specific time boundaries.</p>
+        <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
+          <li>Use <strong>Apply Default Timeframes</strong> to quickly create standard timeframes based on your selected cadence</li>
+          <li>Click <strong>Add Timeframe</strong> to create custom timeframes for special planning periods</li>
+          <li>You can edit and remove timeframes before saving them</li>
+        </ul>
+      </div>
+      
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Timeframes</h3>
+        <h3 className="text-lg font-medium">Your Timeframes</h3>
         <div className="space-x-2">
-          <Button variant="outline" onClick={handleApplyDefaultTimeframes}>
+          <Button 
+            variant="default" 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+            onClick={handleApplyDefaultTimeframes}
+          >
             Apply Default Timeframes
           </Button>
           <Button 

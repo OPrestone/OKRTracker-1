@@ -227,6 +227,7 @@ export default function OKRSystemSetupWizard() {
   const [setupComplete, setSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string>("");
+  const [progress, setProgress] = useState<number>(0);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
