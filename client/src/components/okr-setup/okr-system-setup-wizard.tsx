@@ -782,18 +782,17 @@ export default function OKRSystemSetupWizard() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-center mb-2 text-primary">OKR System Setup</h1>
-        <p className="text-center text-gray-600 max-w-2xl mx-auto">
-          Follow this guided workflow to set up your complete OKR system. 
-          You'll configure timeframes, objective settings, and team structure.
+    <div className="max-w-4xl mx-auto p-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">OKR System Setup</h1>
+        <p className="text-gray-600 text-sm">
+          Configure your OKR tracking system in 5 quick steps.
         </p>
         {isLoading && (
-          <div className="flex justify-center mt-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-md">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Loading existing configuration...</span>
+          <div className="mt-2">
+            <div className="flex items-center gap-2 text-sm px-3 py-1.5 bg-primary-50 text-primary-700 rounded-md inline-block">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Loading...</span>
             </div>
           </div>
         )}
@@ -801,14 +800,14 @@ export default function OKRSystemSetupWizard() {
 
       <div className="mb-8">
         {/* Progress bar */}
-        <div className="mb-6">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium">Setup Progress</span>
-            <span className="text-sm font-medium">{Math.round((activeIndex / (steps.length - 1)) * 100)}%</span>
+        <div className="mb-3">
+          <div className="flex justify-between mb-1">
+            <span className="text-xs font-medium">Step {activeIndex + 1} of {steps.length}</span>
+            <span className="text-xs font-medium">{Math.round((activeIndex / (steps.length - 1)) * 100)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+              className="bg-primary h-1.5 rounded-full transition-all duration-300" 
               style={{ width: `${Math.round((activeIndex / (steps.length - 1)) * 100)}%` }}
             ></div>
           </div>
