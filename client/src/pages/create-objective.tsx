@@ -349,6 +349,9 @@ export default function CreateObjective() {
                   )}
                 </SelectContent>
               </Select>
+              {errors.teamId && (
+                <div className="text-red-500 text-sm mt-1">{errors.teamId}</div>
+              )}
             </div>
           </div>
 
@@ -364,7 +367,16 @@ export default function CreateObjective() {
                 value={objectiveData.teamId}
               >
                 <SelectTrigger className={`w-full ${errors.teamId ? 'border-red-500' : ''}`}>
-                  <SelectValue placeholder="Select Team..." />
+                  {objectiveData.teamId ? (
+                    <div className="flex items-center">
+                      <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium text-sm mr-2">
+                        {teams?.find(team => team.id.toString() === objectiveData.teamId)?.name?.substring(0, 2).toUpperCase() || 'TM'}
+                      </div>
+                      <span>{teams?.find(team => team.id.toString() === objectiveData.teamId)?.name || 'Team'}</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Select Team..." />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {teams?.map((team: Team) => (
