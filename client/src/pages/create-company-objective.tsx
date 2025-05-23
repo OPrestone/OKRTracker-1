@@ -285,6 +285,22 @@ export default function CreateCompanyObjective() {
     console.log("Form values:", values);
     console.log("Key results:", keyResults);
     
+    // Check if timeframeId is missing or empty, and provide a fallback if needed
+    if (!values.timeframeId) {
+      // Check if we have any timeframes available
+      if (timeframes && timeframes.length > 0) {
+        values.timeframeId = timeframes[0].id;
+        console.log("Using default timeframe ID:", values.timeframeId);
+      } else {
+        toast({
+          title: "Timeframe Required",
+          description: "Please create a timeframe before creating objectives.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     // Validate key results before submission
     if (progressDriver === "key-results") {
       // Check if any key result doesn't have a title or has a title shorter than 3 characters
