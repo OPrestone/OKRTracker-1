@@ -387,6 +387,13 @@ export default function TenantOnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
+  const [addedTeams, setAddedTeams] = useState<Array<{
+    name: string;
+    description: string;
+    color: string;
+    icon: string;
+    members: any[];
+  }>>([]);
 
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -1178,6 +1185,7 @@ export default function TenantOnboardingWizard() {
                                   id="marketingTeamFullName"
                                   defaultValue="Marketing Team" 
                                   className="border-gray-200" 
+                                  disabled={addedTeams.some(team => team.name.includes("Marketing"))}
                                 />
                               </div>
                             </div>
@@ -1188,6 +1196,7 @@ export default function TenantOnboardingWizard() {
                                 id="marketingTeamDescription"
                                 defaultValue="Team responsible for all marketing activities" 
                                 className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                                disabled={addedTeams.some(team => team.name.includes("Marketing"))}
                               />
                             </div>
 
@@ -1205,6 +1214,7 @@ export default function TenantOnboardingWizard() {
                                         const colorDisplay = document.getElementById('marketingColorHexValue');
                                         if (colorDisplay) colorDisplay.textContent = e.target.value;
                                       }}
+                                      disabled={addedTeams.some(team => team.name.includes("Marketing"))}
                                     />
                                     <span className="text-sm text-gray-700" id="marketingColorHexValue">#3B82F6</span>
                                   </div>
@@ -1216,6 +1226,7 @@ export default function TenantOnboardingWizard() {
                                       if (colorInput) colorInput.value = value;
                                       if (colorDisplay) colorDisplay.textContent = value;
                                     }}
+                                    disabled={addedTeams.some(team => team.name.includes("Marketing"))}
                                   >
                                     <SelectTrigger className="border-gray-200">
                                       <SelectValue placeholder="Choose a color" />
@@ -1272,7 +1283,7 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="marketingTeamIcon" defaultValue="megaphone">
+                                <Select id="marketingTeamIcon" defaultValue="megaphone" disabled={addedTeams.some(team => team.name.includes("Marketing"))}>
                                   <SelectTrigger className="border-gray-200">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
@@ -1288,55 +1299,72 @@ export default function TenantOnboardingWizard() {
                           </div>
                           
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                            <span className="text-sm font-medium text-gray-500">
+                              {addedTeams.some(team => team.name.includes("Marketing")) ? "Team added" : "Add this team?"}
+                            </span>
                             <Button 
                               type="button" 
                               variant="outline" 
                               size="sm"
                               id="marketingTeamButton"
-                              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                              className={addedTeams.some(team => team.name.includes("Marketing")) 
+                                ? "border-red-200 text-red-600 hover:bg-red-50" 
+                                : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                              }
                               onClick={() => {
-                                // Get values from the editable fields
-                                const teamName = (document.getElementById('marketingTeamFullName') as HTMLInputElement)?.value || "Marketing Team";
-                                const teamDescription = (document.getElementById('marketingTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
-                                const teamColor = (document.getElementById('marketingTeamColor') as HTMLInputElement)?.value || "#3B82F6";
-                                const teamIcon = (document.getElementById('marketingTeamIcon') as HTMLSelectElement)?.value || "megaphone";
+                                const isTeamAdded = addedTeams.some(team => team.name.includes("Marketing"));
                                 
-                                // Create team object
-                                const teamData = {
-                                  name: teamName,
-                                  description: teamDescription,
-                                  color: teamColor,
-                                  icon: teamIcon,
-                                  members: []
-                                };
+                                if (isTeamAdded) {
+                                  // Remove team functionality
+                                  const updatedTeams = addedTeams.filter(team => !team.name.includes("Marketing"));
+                                  setAddedTeams(updatedTeams);
+                                  
+                                  toast({
+                                    title: "Team removed",
+                                    description: "Marketing Team has been removed from your organization",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  // Get values from the editable fields
+                                  const teamName = (document.getElementById('marketingTeamFullName') as HTMLInputElement)?.value || "Marketing Team";
+                                  const teamDescription = (document.getElementById('marketingTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
+                                  const teamColor = (document.getElementById('marketingTeamColor') as HTMLInputElement)?.value || "#3B82F6";
+                                  const teamIcon = (document.getElementById('marketingTeamIcon') as HTMLSelectElement)?.value || "megaphone";
+                                  
+                                  // Create team object
+                                  const teamData = {
+                                    name: teamName,
+                                    description: teamDescription,
+                                    color: teamColor,
+                                    icon: teamIcon,
+                                    members: []
+                                  };
 
-                                // Create JSON display element
-                                const jsonDisplay = document.createElement('div');
-                                jsonDisplay.className = 'mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md';
-                                jsonDisplay.innerHTML = `
-                                  <p class="text-sm font-medium text-gray-700 mb-2">Team Data:</p>
-                                  <pre class="text-xs text-gray-800 overflow-auto max-h-[150px]"><code>${JSON.stringify(teamData, null, 2)}</code></pre>
-                                `;
+                                  // Save to state
+                                  setAddedTeams([...addedTeams, teamData]);
 
-                                // Add the JSON display below the button
-                                const buttonParent = document.querySelector('.marketing-team-card');
-                                const existingJson = buttonParent.querySelector('.mt-4.p-3.bg-gray-50');
-                                if (existingJson) existingJson.remove();
-                                buttonParent.appendChild(jsonDisplay);
+                                  // Show success message
+                                  toast({
+                                    title: "Team added",
+                                    description: `${teamName} has been added to your organization`,
+                                  });
 
-                                // Show success message
-                                toast({
-                                  title: "Team added",
-                                  description: `${teamName} has been added to your organization`,
-                                });
-
-                                // Show the manual team member form
-                                addTeamMember(new Event('click'));
+                                  // Show the manual team member form
+                                  addTeamMember(new Event('click'));
+                                }
                               }}
                             >
-                              <Plus className="h-3.5 w-3.5 mr-1.5" />
-                              Add Team
+                              {addedTeams.some(team => team.name.includes("Marketing")) ? (
+                                <>
+                                  <X className="h-3.5 w-3.5 mr-1.5" />
+                                  Remove Team
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                  Add Team
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1369,6 +1397,7 @@ export default function TenantOnboardingWizard() {
                                   id="salesTeamFullName"
                                   defaultValue="Sales Team" 
                                   className="border-gray-200" 
+                                  disabled={addedTeams.some(team => team.name.includes("Sales"))}
                                 />
                               </div>
                             </div>
@@ -1379,6 +1408,7 @@ export default function TenantOnboardingWizard() {
                                 id="salesTeamDescription"
                                 defaultValue="Team responsible for sales and revenue growth" 
                                 className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                                disabled={addedTeams.some(team => team.name.includes("Sales"))}
                               />
                             </div>
 
@@ -1396,6 +1426,7 @@ export default function TenantOnboardingWizard() {
                                         const colorDisplay = document.getElementById('salesColorHexValue');
                                         if (colorDisplay) colorDisplay.textContent = e.target.value;
                                       }}
+                                      disabled={addedTeams.some(team => team.name.includes("Sales"))}
                                     />
                                     <span className="text-sm text-gray-700" id="salesColorHexValue">#10B981</span>
                                   </div>
@@ -1407,6 +1438,7 @@ export default function TenantOnboardingWizard() {
                                       if (colorInput) colorInput.value = value;
                                       if (colorDisplay) colorDisplay.textContent = value;
                                     }}
+                                    disabled={addedTeams.some(team => team.name.includes("Sales"))}
                                   >
                                     <SelectTrigger className="border-gray-200">
                                       <SelectValue placeholder="Choose a color" />
@@ -1463,7 +1495,7 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="salesTeamIcon" defaultValue="briefcase">
+                                <Select id="salesTeamIcon" defaultValue="briefcase" disabled={addedTeams.some(team => team.name.includes("Sales"))}>
                                   <SelectTrigger className="border-gray-200">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
@@ -1479,55 +1511,72 @@ export default function TenantOnboardingWizard() {
                           </div>
                           
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                            <span className="text-sm font-medium text-gray-500">
+                              {addedTeams.some(team => team.name.includes("Sales")) ? "Team added" : "Add this team?"}
+                            </span>
                             <Button 
                               type="button" 
                               variant="outline" 
                               size="sm"
                               id="salesTeamButton"
-                              className="border-green-200 text-green-600 hover:bg-green-50"
+                              className={addedTeams.some(team => team.name.includes("Sales")) 
+                                ? "border-red-200 text-red-600 hover:bg-red-50" 
+                                : "border-green-200 text-green-600 hover:bg-green-50"
+                              }
                               onClick={() => {
-                                // Get values from the editable fields
-                                const teamName = (document.getElementById('salesTeamFullName') as HTMLInputElement)?.value || "Sales Team";
-                                const teamDescription = (document.getElementById('salesTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for sales and revenue growth";
-                                const teamColor = (document.getElementById('salesTeamColor') as HTMLInputElement)?.value || "#10B981";
-                                const teamIcon = (document.getElementById('salesTeamIcon') as HTMLSelectElement)?.value || "briefcase";
+                                const isTeamAdded = addedTeams.some(team => team.name.includes("Sales"));
                                 
-                                // Create team object
-                                const teamData = {
-                                  name: teamName,
-                                  description: teamDescription,
-                                  color: teamColor,
-                                  icon: teamIcon,
-                                  members: []
-                                };
+                                if (isTeamAdded) {
+                                  // Remove team functionality
+                                  const updatedTeams = addedTeams.filter(team => !team.name.includes("Sales"));
+                                  setAddedTeams(updatedTeams);
+                                  
+                                  toast({
+                                    title: "Team removed",
+                                    description: "Sales Team has been removed from your organization",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  // Get values from the editable fields
+                                  const teamName = (document.getElementById('salesTeamFullName') as HTMLInputElement)?.value || "Sales Team";
+                                  const teamDescription = (document.getElementById('salesTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for sales and revenue growth";
+                                  const teamColor = (document.getElementById('salesTeamColor') as HTMLInputElement)?.value || "#10B981";
+                                  const teamIcon = (document.getElementById('salesTeamIcon') as HTMLSelectElement)?.value || "briefcase";
+                                  
+                                  // Create team object
+                                  const teamData = {
+                                    name: teamName,
+                                    description: teamDescription,
+                                    color: teamColor,
+                                    icon: teamIcon,
+                                    members: []
+                                  };
 
-                                // Create JSON display element
-                                const jsonDisplay = document.createElement('div');
-                                jsonDisplay.className = 'mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md';
-                                jsonDisplay.innerHTML = `
-                                  <p class="text-sm font-medium text-gray-700 mb-2">Team Data:</p>
-                                  <pre class="text-xs text-gray-800 overflow-auto max-h-[150px]"><code>${JSON.stringify(teamData, null, 2)}</code></pre>
-                                `;
+                                  // Save to state
+                                  setAddedTeams([...addedTeams, teamData]);
 
-                                // Add the JSON display below the button
-                                const buttonParent = document.querySelector('.sales-team-card');
-                                const existingJson = buttonParent.querySelector('.mt-4.p-3.bg-gray-50');
-                                if (existingJson) existingJson.remove();
-                                buttonParent.appendChild(jsonDisplay);
+                                  // Show success message
+                                  toast({
+                                    title: "Team added",
+                                    description: `${teamName} has been added to your organization`,
+                                  });
 
-                                // Show success message
-                                toast({
-                                  title: "Team added",
-                                  description: `${teamName} has been added to your organization`,
-                                });
-
-                                // Show the manual team member form
-                                addTeamMember(new Event('click'));
+                                  // Show the manual team member form
+                                  addTeamMember(new Event('click'));
+                                }
                               }}
                             >
-                              <Plus className="h-3.5 w-3.5 mr-1.5" />
-                              Add Team
+                              {addedTeams.some(team => team.name.includes("Sales")) ? (
+                                <>
+                                  <X className="h-3.5 w-3.5 mr-1.5" />
+                                  Remove Team
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                  Add Team
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1559,6 +1608,7 @@ export default function TenantOnboardingWizard() {
                                   id="engineeringTeamFullName"
                                   defaultValue="Engineering Team" 
                                   className="border-gray-200" 
+                                  disabled={addedTeams.some(team => team.name.includes("Engineering"))}
                                 />
                               </div>
                             </div>
@@ -1569,6 +1619,7 @@ export default function TenantOnboardingWizard() {
                                 id="engineeringTeamDescription"
                                 defaultValue="Team responsible for product development and technical operations" 
                                 className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                                disabled={addedTeams.some(team => team.name.includes("Engineering"))}
                               />
                             </div>
 
@@ -1586,6 +1637,7 @@ export default function TenantOnboardingWizard() {
                                         const colorDisplay = document.getElementById('engineeringColorHexValue');
                                         if (colorDisplay) colorDisplay.textContent = e.target.value;
                                       }}
+                                      disabled={addedTeams.some(team => team.name.includes("Engineering"))}
                                     />
                                     <span className="text-sm text-gray-700" id="engineeringColorHexValue">#8B5CF6</span>
                                   </div>
@@ -1597,6 +1649,7 @@ export default function TenantOnboardingWizard() {
                                       if (colorInput) colorInput.value = value;
                                       if (colorDisplay) colorDisplay.textContent = value;
                                     }}
+                                    disabled={addedTeams.some(team => team.name.includes("Engineering"))}
                                   >
                                     <SelectTrigger className="border-gray-200">
                                       <SelectValue placeholder="Choose a color" />
@@ -1653,7 +1706,7 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="engineeringTeamIcon" defaultValue="code">
+                                <Select id="engineeringTeamIcon" defaultValue="code" disabled={addedTeams.some(team => team.name.includes("Engineering"))}>
                                   <SelectTrigger className="border-gray-200">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
@@ -1669,246 +1722,77 @@ export default function TenantOnboardingWizard() {
                           </div>
                           
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                            <span className="text-sm font-medium text-gray-500">
+                              {addedTeams.some(team => team.name.includes("Engineering")) ? "Team added" : "Add this team?"}
+                            </span>
                             <Button 
                               type="button" 
                               variant="outline" 
                               size="sm"
                               id="engineeringTeamButton"
-                              className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                              className={addedTeams.some(team => team.name.includes("Engineering")) 
+                                ? "border-red-200 text-red-600 hover:bg-red-50" 
+                                : "border-purple-200 text-purple-600 hover:bg-purple-50"
+                              }
                               onClick={() => {
-                                // Get values from the editable fields
-                                const teamName = (document.getElementById('engineeringTeamFullName') as HTMLInputElement)?.value || "Engineering Team";
-                                const teamDescription = (document.getElementById('engineeringTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for product development and technical operations";
-                                const teamColor = (document.getElementById('engineeringTeamColor') as HTMLInputElement)?.value || "#8B5CF6";
-                                const teamIcon = (document.getElementById('engineeringTeamIcon') as HTMLSelectElement)?.value || "code";
+                                const isTeamAdded = addedTeams.some(team => team.name.includes("Engineering"));
                                 
-                                // Create team object
-                                const teamData = {
-                                  name: teamName,
-                                  description: teamDescription,
-                                  color: teamColor,
-                                  icon: teamIcon,
-                                  members: []
-                                };
+                                if (isTeamAdded) {
+                                  // Remove team functionality
+                                  const updatedTeams = addedTeams.filter(team => !team.name.includes("Engineering"));
+                                  setAddedTeams(updatedTeams);
+                                  
+                                  toast({
+                                    title: "Team removed",
+                                    description: "Engineering Team has been removed from your organization",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  // Get values from the editable fields
+                                  const teamName = (document.getElementById('engineeringTeamFullName') as HTMLInputElement)?.value || "Engineering Team";
+                                  const teamDescription = (document.getElementById('engineeringTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for product development and technical operations";
+                                  const teamColor = (document.getElementById('engineeringTeamColor') as HTMLInputElement)?.value || "#8B5CF6";
+                                  const teamIcon = (document.getElementById('engineeringTeamIcon') as HTMLSelectElement)?.value || "code";
+                                  
+                                  // Create team object
+                                  const teamData = {
+                                    name: teamName,
+                                    description: teamDescription,
+                                    color: teamColor,
+                                    icon: teamIcon,
+                                    members: []
+                                  };
 
-                                // Create JSON display element
-                                const jsonDisplay = document.createElement('div');
-                                jsonDisplay.className = 'mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md';
-                                jsonDisplay.innerHTML = `
-                                  <p class="text-sm font-medium text-gray-700 mb-2">Team Data:</p>
-                                  <pre class="text-xs text-gray-800 overflow-auto max-h-[150px]"><code>${JSON.stringify(teamData, null, 2)}</code></pre>
-                                `;
+                                  // Save to state
+                                  setAddedTeams([...addedTeams, teamData]);
 
-                                // Add the JSON display below the button
-                                const buttonParent = document.querySelector('.engineering-team-card');
-                                const existingJson = buttonParent.querySelector('.mt-4.p-3.bg-gray-50');
-                                if (existingJson) existingJson.remove();
-                                buttonParent.appendChild(jsonDisplay);
+                                  // Show success message
+                                  toast({
+                                    title: "Team added",
+                                    description: `${teamName} has been added to your organization`,
+                                  });
 
-                                // Show success message
-                                toast({
-                                  title: "Team added",
-                                  description: `${teamName} has been added to your organization`,
-                                });
-
-                                // Show the manual team member form
-                                addTeamMember(new Event('click'));
+                                  // Show the manual team member form
+                                  addTeamMember(new Event('click'));
+                                }
                               }}
                             >
-                              <Plus className="h-3.5 w-3.5 mr-1.5" />
-                              Add Team
+                              {addedTeams.some(team => team.name.includes("Engineering")) ? (
+                                <>
+                                  <X className="h-3.5 w-3.5 mr-1.5" />
+                                  Remove Team
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                  Add Team
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    {/* Team Members List */}
-                    <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
-                      <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-800">
-                          Your Team ({teamMembers.length})
-                        </h3>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => addTeamMember(e)}
-                          className="shadow-sm hover:bg-gray-50"
-                        >
-                          <Plus className="h-3.5 w-3.5 mr-1.5" />
-                          Add Manually
-                        </Button>
-                      </div>
-
-                      {teamMembers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50/50">
-                          <div className="bg-gray-100 rounded-full p-4 mb-4">
-                            <Users className="h-8 w-8 text-gray-400" />
-                          </div>
-                          <h4 className="text-lg font-medium text-gray-800 mb-2">Your team is empty</h4>
-                          <p className="text-gray-500 text-center max-w-md mb-6">
-                            Add team members using one of the methods above or manually add them one by one.
-                          </p>
-                          <Button 
-                            type="button" 
-                            variant="default" 
-                            onClick={(e) => addTeamMember(e)}
-                            className="shadow-sm"
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Start Adding Team Members
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-gray-100">
-                          <div className="bg-gray-50 px-6 py-3 text-sm font-medium text-gray-600 grid grid-cols-12 gap-4 hidden md:grid">
-                            <div className="col-span-5">User</div>
-                            <div className="col-span-4">Department</div>
-                            <div className="col-span-2">Role</div>
-                            <div className="col-span-1 text-right">Actions</div>
-                          </div>
-                          <div>
-                            {teamMembers.map((member, index) => (
-                              <div key={index} className="px-6 py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center hover:bg-gray-50/50 transition-colors">
-                                <div className="md:col-span-5 flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center">
-                                  <div className="flex items-center mb-2 md:mb-0 md:mr-3">
-                                    <Avatar className="h-8 w-8 mr-3">
-                                      <AvatarFallback className="bg-primary/10 text-primary">
-                                        {member.name ? member.name.charAt(0).toUpperCase() : (member.email ? member.email.charAt(0).toUpperCase() : 'U')}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="md:hidden font-medium text-gray-800">User</div>
-                                  </div>
-                                  <div className="flex flex-col md:flex-col space-y-2">
-                                    <FormField
-                                      control={form.control}
-                                      name={`team.users.${index}.email`}
-                                      render={({ field }) => (
-                                        <FormItem className="mb-0">
-                                          <FormControl>
-                                            <Input 
-                                              placeholder="Email address" 
-                                              {...field}
-                                              onBlur={(e) => {
-                                                field.onBlur();
-                                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                                if (e.target.value && !emailRegex.test(e.target.value)) {
-                                                  toast({
-                                                    title: "Invalid email",
-                                                    description: "Please enter a valid email address",
-                                                    variant: "destructive",
-                                                  });
-                                                }
-                                              }}
-                                              className={
-                                                field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)
-                                                  ? "border-red-300 focus-visible:ring-red-500"
-                                                  : ""
-                                              }/>
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={form.control}
-                                      name={`team.users.${index}.name`}
-                                      render={({ field }) => (
-                                        <FormItem className="mb-0">
-                                          <FormControl>
-                                            <Input placeholder="Full name (optional)" {...field} />
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="md:col-span-4 flex items-center">
-                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Department</div>
-                                  <FormField
-                                    control={form.control}
-                                    name={`team.users.${index}.department`}
-                                    render={({ field }) => (
-                                      <FormItem className="mb-0 w-full">
-                                        <FormControl>
-                                          <Input placeholder="Department (optional)" {...field} />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="md:col-span-2 flex items-center">
-                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Role</div>
-                                  <FormField
-                                    control={form.control}
-                                    name={`team.users.${index}.role`}
-                                    render={({ field }) => (
-                                      <FormItem className="mb-0">
-                                        <Select 
-                                          onValueChange={field.onChange} 
-                                          defaultValue={field.value}
-                                        >
-                                          <FormControl>
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select role" />
-                                            </SelectTrigger>
-                                          </FormControl>
-                                          <SelectContent>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="member">Member</SelectItem>
-                                            <SelectItem value="viewer">Viewer</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="md:col-span-1 flex md:justify-end">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
-                                    onClick={() => {
-                                      const currentUsers = form.getValues("team.users") || [];
-                                      const newUsers = [
-                                        ...currentUsers.slice(0, index),
-                                        ...currentUsers.slice(index + 1)
-                                      ];
-                                      form.setValue("team.users", newUsers);
-
-                                      toast({
-                                        title: "Team member removed",
-                                        variant: "default",
-                                      });
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {teamMembers.length > 0 && (
-                        <div className="bg-gray-50 px-6 py-3 text-sm text-gray-500 border-t">
-                          {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''} added to your organization
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Helpful tip */}
-                    {teamMembers.length > 0 && (
-                      <div className="mt-6 text-center text-gray-500 text-sm">
-                        <p>You can always add more team members later from your organization settings</p>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
 
