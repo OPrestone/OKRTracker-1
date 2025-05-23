@@ -504,25 +504,29 @@ export default function TenantOnboardingWizard() {
           name: team.name,
           description: team.description,
           icon: team.icon,
-          color: team.color
+          color: team.color,
+          leaderId: null // Explicitly set team leader as null initially
         })) : [
           {
             name: "Marketing Team",
             description: "Team responsible for brand, communications and marketing campaigns",
             color: "#3B82F6", // Blue
-            icon: "megaphone"
+            icon: "megaphone",
+            leaderId: null // Explicitly set team leader as null initially
           },
           {
             name: "Sales Team",
             description: "Team responsible for sales and revenue growth", 
             color: "#10B981", // Green
-            icon: "briefcase"
+            icon: "briefcase",
+            leaderId: null // Explicitly set team leader as null initially
           },
           {
             name: "Engineering Team",
             description: "Team responsible for product development and technical operations",
             color: "#8B5CF6", // Purple
-            icon: "code"
+            icon: "code",
+            leaderId: null // Explicitly set team leader as null initially
           }
         ];
 
