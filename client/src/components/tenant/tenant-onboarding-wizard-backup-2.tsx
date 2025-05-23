@@ -387,11 +387,6 @@ export default function TenantOnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
-  const [orgInfo, setOrgInfo] = useState({
-    name: "",
-    description: "",
-    industry: ""
-  });
   const [addedTeams, setAddedTeams] = useState<Array<{
     name: string;
     description: string;
@@ -409,8 +404,7 @@ export default function TenantOnboardingWizard() {
     { id: "organization", label: "Organization", icon: Building2 },
     { id: "plan", label: "Subscription", icon: CreditCard },
     { id: "team", label: "Team", icon: Users },
-    { id: "setup", label: "Initial Setup", icon: Rocket },
-    { id: "summary", label: "Summary", icon: CheckCircle }
+    { id: "setup", label: "Initial Setup", icon: Rocket }
   ];
 
   // Find active step index
@@ -637,6 +631,11 @@ export default function TenantOnboardingWizard() {
         // Team members are optional
         return true;
       case "setup":
+        // If createInitialOKRs is checked, a template or imported OKRs is required
+        const setup = form.getValues().setup;
+        if (setup.createInitialOKRs) {
+          return !!setup.template || (setup.importedOKRs && setup.importedOKRs.length > 0);
+        }
         return true;
     }
     return false;
@@ -1823,8 +1822,8 @@ export default function TenantOnboardingWizard() {
               {/* Initial Setup */}
               <TabsContent value="setup" className="mt-0 space-y-6">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Final Step</h2>
-                  <p className="text-gray-500">Overview</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Initial Setup</h2>
+                  <p className="text-gray-500">Configure initial OKR settings for your organization</p>
                 </div>
 
                 <Card>
