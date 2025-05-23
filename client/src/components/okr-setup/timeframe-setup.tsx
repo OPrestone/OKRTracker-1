@@ -135,44 +135,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   };
   
   // When Apply Default Timeframes button is clicked
-  const handleApplyDefaultTimeframes = async () => {
-    try {
-      // Generate the default timeframes
-      const defaultFrames = createDefaultTimeframes();
-      
-      // Show loading toast
-      toast({
-        title: "Creating Default Timeframes",
-        description: "Setting up your timeframes based on your configuration...",
-      });
-      
-      // Save each timeframe to the database
-      for (const timeframe of defaultFrames) {
-        const timeframeData = {
-          ...timeframe,
-          startDate: timeframe.startDate instanceof Date ? timeframe.startDate.toISOString() : timeframe.startDate,
-          endDate: timeframe.endDate instanceof Date ? timeframe.endDate.toISOString() : timeframe.endDate,
-        };
-        
-        await createTimeframeMutation.mutateAsync(timeframeData);
-      }
-      
-      // Success toast
-      toast({
-        title: "Success!",
-        description: `${defaultFrames.length} default timeframes have been created.`,
-      });
-      
-      // Update the UI with created timeframes
-      setTimeframes(defaultFrames);
-    } catch (error) {
-      console.error("Failed to create default timeframes:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create default timeframes. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleApplyDefaultTimeframes = () => {
+    const defaultFrames = createDefaultTimeframes();
+    setTimeframes(defaultFrames);
   };
 
   // Create timeframe mutation
