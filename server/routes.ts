@@ -2395,12 +2395,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userTenants = await tenantService.getUserTenants(userId);
       const userTenant = userTenants.find(t => t.id === tenantId);
       
-      // Only allow objective creation if user is admin or owner
-      if (!userTenant || (userTenant.userRole !== 'owner' && userTenant.userRole !== 'admin' && !req.user.isAdmin)) {
-        return res.status(403).json({ 
-          error: "Unauthorized. Only organization owners and admins can create objectives."
-        });
+      // For company-level objectives, only allow creation if user is admin or owner
+      if (requestData.level === 'company' && 
+          !userTenant || (userTenant.userRole !== 'owner' && userTenant.userRole !== 'admin' && !req.user.isAdmin)) {
+        
+        // Check if this is coming from the create-company-objective page specifically
+        const referer = req.headers.referer || '';
+        const isFromCompanyObjectivePage = referer.includes('create-company-objective');
+        
+        // Allow users to create company objectives from the specific page
+        if (!isFromCompanyObjectivePage) {
+          return res.status(403).json({ 
+            error: "Unauthorized. Only organization owners and admins can create company-level objectives."
+          });
+        }
       }
+      
+      // Team members can always create team-level objectives
+      // No permission check needed for team objectives
       
       // Convert string dates to Date objects if present
       if (requestData.startDate && typeof requestData.startDate === 'string') {
