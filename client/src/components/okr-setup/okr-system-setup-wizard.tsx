@@ -1429,80 +1429,143 @@ export default function OKRSystemSetupWizard() {
               
               {/* Integrations */}
               <TabsContent value="integrations">
-                <Card>
+                <Card className="border border-gray-200 shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Layers className="mr-2 h-5 w-5 text-primary" />
-                        Integrations & Notifications
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Configure how your OKR system connects with other tools and how users receive updates.
-                      </p>
+                    <div className="space-y-6">
+                      <div className="border-b pb-4">
+                        <h2 className="text-2xl font-semibold flex items-center text-gray-800">
+                          <Layers className="mr-3 h-6 w-6 text-primary" />
+                          Integrations & Notifications
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                          Connect your OKR system with other tools and configure how users receive updates.
+                        </p>
+                      </div>
+
+                      <div className="bg-purple-50 p-4 rounded-md border border-purple-100 mb-6">
+                        <h3 className="text-purple-700 font-medium mb-2 flex items-center">
+                          <Lightbulb className="mr-2 h-4 w-4" /> Integration Benefits
+                        </h3>
+                        <ul className="text-purple-600 text-sm space-y-2">
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Slack integration brings OKR updates directly to your communication channels</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Email notifications ensure team members stay informed even when offline</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Calendar syncing helps schedule check-ins and review meetings automatically</span>
+                          </li>
+                        </ul>
+                      </div>
                       
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableSlackIntegration"
-                            checked={form.getValues("integrations.enableSlackIntegration")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableSlackIntegration", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableSlackIntegration"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Slack Integration
-                          </label>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-indigo-100 rounded-md p-2 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-indigo-600">
+                                  <path d="M22 11.5c0-1-.1-1.9-.3-2.8A8.5 8.5 0 0 0 7.2 3.3L2 6.2l7 3.8L0 11.5h3c0 1 .1 1.9.3 2.8A8.5 8.5 0 0 0 16.8 19.7L22 16.8l-7-3.8L24 11.5z"></path>
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-medium">Slack Integration</h3>
+                                  <Checkbox
+                                    id="enableSlackIntegration"
+                                    checked={form.getValues("integrations.enableSlackIntegration")}
+                                    onCheckedChange={(checked) => 
+                                      form.setValue("integrations.enableSlackIntegration", checked as boolean)
+                                    }
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-500">Post updates and notifications directly to Slack channels</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-blue-100 rounded-md p-2 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-blue-600">
+                                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                  <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-medium">Email Notifications</h3>
+                                  <Checkbox
+                                    id="enableEmailNotifications"
+                                    checked={form.getValues("integrations.enableEmailNotifications")}
+                                    onCheckedChange={(checked) => 
+                                      form.setValue("integrations.enableEmailNotifications", checked as boolean)
+                                    }
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-500">Send timely email updates about OKR progress</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-green-100 rounded-md p-2 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-green-600">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-medium">Calendar Sync</h3>
+                                  <Checkbox
+                                    id="enableCalendarSync"
+                                    checked={form.getValues("integrations.enableCalendarSync")}
+                                    onCheckedChange={(checked) => 
+                                      form.setValue("integrations.enableCalendarSync", checked as boolean)
+                                    }
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-500">Sync OKR check-ins and reviews with calendars</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-orange-100 rounded-md p-2 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-orange-600">
+                                  <path d="M3 3v18h18"></path>
+                                  <path d="m19 9-5 5-4-4-3 3"></path>
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-medium">Analytics & Reporting</h3>
+                                  <Checkbox
+                                    id="enableAnalyticsReporting"
+                                    checked={form.getValues("integrations.enableAnalyticsReporting")}
+                                    onCheckedChange={(checked) => 
+                                      form.setValue("integrations.enableAnalyticsReporting", checked as boolean)
+                                    }
+                                  />
+                                </div>
+                                <p className="text-xs text-gray-500">Generate detailed performance reports and insights</p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableEmailNotifications"
-                            checked={form.getValues("integrations.enableEmailNotifications")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableEmailNotifications", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableEmailNotifications"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Email Notifications
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableCalendarSync"
-                            checked={form.getValues("integrations.enableCalendarSync")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableCalendarSync", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableCalendarSync"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Calendar Sync (Check-ins & Reviews)
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableAnalyticsReporting"
-                            checked={form.getValues("integrations.enableAnalyticsReporting")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableAnalyticsReporting", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableAnalyticsReporting"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Analytics & Reporting Dashboard
-                          </label>
+                        <div className="mt-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Note:</span> You can modify these integration settings later in your organization settings.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1512,16 +1575,16 @@ export default function OKRSystemSetupWizard() {
               
               {/* Review */}
               <TabsContent value="review">
-                <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
+                <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100 shadow-md">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
                       <div className="bg-emerald-100 text-emerald-700 rounded-full p-3 mt-1">
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR System!</h3>
+                        <h3 className="font-semibold text-2xl mb-2 text-gray-800">Ready to Launch Your OKR System!</h3>
                         <p className="text-gray-600 mb-3">
-                          You've completed setting up your OKR system. Click the button below to save your configuration and start tracking your organizational goals.
+                          You've completed setting up your OKR system. Review your configuration below and click the button to save your settings and start tracking your organizational goals.
                         </p>
                         <p className="text-sm text-gray-500">
                           You can always adjust these settings later from your organization's admin panel.
@@ -1531,10 +1594,18 @@ export default function OKRSystemSetupWizard() {
                   </CardContent>
                 </Card>
                 
-                <div className="mt-6 space-y-4">
-                  <h3 className="font-medium text-lg">Configuration Summary</h3>
+                <div className="mt-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
+                      <ClipboardCheck className="h-5 w-5 text-primary" />
+                      Configuration Summary
+                    </h3>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
+                      All sections completed
+                    </Badge>
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white rounded-lg border p-4">
                       <h4 className="font-medium text-primary mb-2 flex items-center">
                         <Settings2 className="w-4 h-4 mr-1" /> General Settings
