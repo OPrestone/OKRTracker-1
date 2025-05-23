@@ -1161,7 +1161,15 @@ export default function TenantOnboardingWizard() {
                                 <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
                               </svg>
                             </div>
-                            <h3 className="text-white font-medium text-lg">Example Team: Marketing</h3>
+                            <div>
+                              <h3 className="text-white font-medium text-lg">Example Team: 
+                                <Input 
+                                  id="marketingTeamName" 
+                                  defaultValue="Marketing" 
+                                  className="inline-block ml-1 bg-transparent border-none text-white focus:ring-0 p-0 max-w-[120px] h-auto" 
+                                />
+                              </h3>
+                            </div>
                           </div>
                           <div className="text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
                             Example Team
@@ -1169,28 +1177,54 @@ export default function TenantOnboardingWizard() {
                         </div>
                       </div>
                       <div className="px-6 py-5">
-                        <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
+                        <div className="mb-4">
+                          <Textarea 
+                            id="marketingTeamDescription"
+                            defaultValue="Team responsible for all marketing activities" 
+                            className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                          />
+                        </div>
                         
                         {/* Show Team Properties */}
                         <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
                           <div className="flex items-center">
-                            <span className="text-sm font-medium text-gray-500 w-24">Description:</span>
-                            <span className="text-sm text-gray-700">"Team responsible for all marketing activities"</span>
-                          </div>
-                          <div className="flex items-center">
-                            <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
-                            <div className="flex items-center">
-                              <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
-                              <span className="text-sm text-gray-700">#3B82F6 (Blue)</span>
+                            <span className="text-sm font-medium text-gray-500 w-24">Name:</span>
+                            <div className="flex-1">
+                              <Input 
+                                id="marketingTeamFullName"
+                                defaultValue="Marketing Team" 
+                                className="border-gray-200" 
+                              />
                             </div>
                           </div>
+
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
+                            <div className="flex items-center space-x-2">
+                              <Input 
+                                id="marketingTeamColor"
+                                type="color" 
+                                defaultValue="#3B82F6" 
+                                className="w-10 h-10 p-1 rounded-md cursor-pointer border-gray-200"
+                              />
+                              <span className="text-sm text-gray-700" id="colorHexValue">#3B82F6</span>
+                            </div>
+                          </div>
+                          
                           <div className="flex items-center">
                             <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
-                            <div className="flex items-center">
-                              <div className="bg-blue-100 p-1 rounded-md mr-2">
-                                <Building className="h-3.5 w-3.5 text-blue-600" />
-                              </div>
-                              <span className="text-sm text-gray-700">"building"</span>
+                            <div className="flex-1">
+                              <Select id="marketingTeamIcon" defaultValue="building">
+                                <SelectTrigger className="border-gray-200">
+                                  <SelectValue placeholder="Select an icon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="building">Building</SelectItem>
+                                  <SelectItem value="megaphone">Megaphone</SelectItem>
+                                  <SelectItem value="code">Code</SelectItem>
+                                  <SelectItem value="briefcase">Briefcase</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
                         </div>
@@ -1203,19 +1237,25 @@ export default function TenantOnboardingWizard() {
                             size="sm"
                             className="border-blue-200 text-blue-600 hover:bg-blue-50"
                             onClick={() => {
-                              // Add the Marketing Team
+                              // Get values from the editable fields
+                              const teamName = (document.getElementById('marketingTeamFullName') as HTMLInputElement)?.value || "Marketing Team";
+                              const teamDescription = (document.getElementById('marketingTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
+                              const teamColor = (document.getElementById('marketingTeamColor') as HTMLInputElement)?.value || "#3B82F6";
+                              const teamIcon = (document.getElementById('marketingTeamIcon') as HTMLSelectElement)?.value || "building";
+                              
+                              // Add the Marketing Team with the custom values
                               const marketingTeam = {
-                                name: "Marketing Team",
-                                description: "Team responsible for all marketing activities",
-                                color: "#3B82F6",
-                                icon: "building",
+                                name: teamName,
+                                description: teamDescription,
+                                color: teamColor,
+                                icon: teamIcon,
                                 members: []
                               };
 
                               // Show success message
                               toast({
                                 title: "Team added",
-                                description: "Marketing Team has been added to your organization",
+                                description: `${teamName} has been added to your organization`,
                               });
 
                               // Show the manual team member form
