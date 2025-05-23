@@ -29,10 +29,11 @@ const TeamSelectionSection: React.FC<TeamSelectionSectionProps> = ({
 }) => {
   const [selectedTeams, setSelectedTeams] = useState<string[]>(value);
 
-  // Fetch teams for the current tenant
+  // Fetch teams for the current tenant with proper authentication
   const { data: teams = [], isLoading, error } = useQuery<Team[]>({
     queryKey: ['/api/teams', tenantId],
     enabled: !!tenantId,
+    meta: { requiresTenant: true },
   });
 
   // Update local state when external value changes
