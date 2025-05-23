@@ -118,31 +118,21 @@ export default function OKRSystemSetupWizard() {
     mutationFn: async (data: FormValues) => {
       console.log("Saving OKR system setup:", data);
       
-      try {
-        const response = await fetch('/api/okr-system-setup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          return await response.json();
-        } else {
-          console.warn(`API request failed: ${response.status} ${response.statusText}`);
-          throw new Error("Failed to save OKR system setup");
-        }
-      } catch (apiError) {
-        console.log("Using simulated response flow:", apiError);
-        
-        // Return simulated successful response for demonstration
-        return {
-          id: `okr-system-setup-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          ...data,
-        };
+      // Make API request to save OKR system setup
+      const response = await fetch('/api/okr-system-setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to save OKR system setup:", response.status, errorData);
+        throw new Error(errorData.error || "Failed to save OKR system setup");
       }
+      
+      return await response.json();
     },
     onSuccess: async (data) => {
       console.log("OKR system setup saved successfully:", data);
@@ -162,7 +152,7 @@ export default function OKRSystemSetupWizard() {
         console.log("Setup complete");
         
         toast({
-          title: "Ready to Launch!",
+          title: "Ready to Launch your OKR Platform!",
           description: "Your OKR system is ready to use. You will now be redirected to your dashboard.",
         });
         
