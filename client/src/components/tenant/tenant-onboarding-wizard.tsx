@@ -532,9 +532,13 @@ export default function TenantOnboardingWizard() {
     }
   });
 
-  const handleSubmit = form.handleSubmit((data) => {
+  // This function handles the form submission
+  const onSubmitForm = (data: z.infer<typeof formSchema>) => {
+    console.log("Form submitted with data:", data);
     createTenantMutation.mutate(data);
-  });
+  };
+  
+  const handleSubmit = form.handleSubmit(onSubmitForm);
 
   // Navigation handlers
   const goToNextStep = () => {
@@ -775,7 +779,11 @@ export default function TenantOnboardingWizard() {
       {/* Main content area */}
       <div className="w-full lg:w-2/3 overflow-y-auto p-8">
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            console.log("Form submission event triggered");
+            handleSubmit(e);
+          }} className="max-w-3xl mx-auto">
             <Tabs value={activePage} onValueChange={goToStep} className="w-full">
               {/* Organization Details */}
               <TabsContent value="organization" className="mt-0 space-y-6">
@@ -1891,6 +1899,14 @@ export default function TenantOnboardingWizard() {
               ) : (
                 <Button
                   type="submit"
+                  onClick={(e) => {
+                    // Prevent the default browser submission
+                    e.preventDefault();
+                    // Log when the button is clicked
+                    console.log("Create Organization button clicked");
+                    // Manually trigger form submission
+                    handleSubmit(e);
+                  }}
                   disabled={isSubmitting || !isCurrentStepValid()}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
