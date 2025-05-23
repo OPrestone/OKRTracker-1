@@ -477,6 +477,80 @@ export default function OKRSystemSetupWizard() {
     saveOKRSystemMutation.mutate(data);
   };
   
+  // Handle saving just the mission data
+  const saveMissionData = async () => {
+    try {
+      // Get values from the form
+      const { generalSettings } = form.getValues();
+      
+      if (!tenantId) {
+        toast({
+          title: "Error",
+          description: "No tenant ID available. Please refresh the page and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!generalSettings.companyMission || !generalSettings.companyVision) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in both mission and vision statements.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Show loading state
+      setIsSubmitting(true);
+      
+      // Prepare the data for the mission API
+      const missionData = {
+        mission: generalSettings.companyMission,
+        vision: generalSettings.companyVision,
+        behaviors: generalSettings.companyValues,
+        tenantId: tenantId
+      };
+      
+      console.log("Saving mission data:", missionData);
+      
+      // Send the request to the mission API
+      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        },
+        body: JSON.stringify(missionData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save mission data: ${errorText}`);
+      }
+      
+      // Show success message
+      toast({
+        title: "Mission Setup Complete!",
+        description: "Your company mission, vision, and values have been saved.",
+      });
+      
+      // Move to the next step automatically
+      goToNextStep();
+      
+    } catch (error) {
+      console.error("Error saving mission data:", error);
+      toast({
+        title: "Error Saving Mission",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const handleSubmit = form.handleSubmit(onSubmitForm);
 
   // Navigation handlers
@@ -647,6 +721,27 @@ export default function OKRSystemSetupWizard() {
                                 <SelectItem value="monthly">Monthly</SelectItem>
                               </SelectContent>
                             </Select>
+                          </div>
+                          
+                          {/* Complete Mission Setup button */}
+                          <div className="col-span-1 md:col-span-2 mt-6">
+                            <Button 
+                              type="button"
+                              onClick={saveMissionData}
+                              disabled={isSubmitting || !form.getValues("generalSettings.companyMission") || !form.getValues("generalSettings.companyVision")}
+                              className="w-full"
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  Complete Mission Setup
+                                </>
+                              )}
+                            </Button>
                           </div>
                           
                           <div className="flex items-center space-x-2 pt-6">
