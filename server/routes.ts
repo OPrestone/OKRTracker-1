@@ -23,7 +23,7 @@ import { configService } from "./services/config-service";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
-import { registerConfigRoutes } from "./routes/config-routes";
+import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
 import { Router } from "express";
 import { createTestTeamLeader } from "./routes/test-team-leader";
@@ -45,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTestAuthRoutes(app);
   
   // Register configuration routes
-  registerConfigRoutes(app);
+  setupConfigRoutes(app);
   
   // Test endpoint to create a team leader account for testing
   app.post('/api/create-test-team-leader', createTestTeamLeader);
