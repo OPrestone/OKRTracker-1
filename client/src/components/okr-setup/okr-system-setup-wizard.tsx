@@ -38,9 +38,10 @@ const TeamSelectionSection = ({
   const [selectedTeams, setSelectedTeams] = useState<string[]>(value);
   
   // Fetch teams from the API - use the built-in query client
-  const { data: teams = [], isLoading, error } = useQuery({
+  const { data: teams = [] as Team[], isLoading, error } = useQuery<Team[]>({
     queryKey: ['/api/teams', tenantId],
     enabled: !!tenantId,
+    meta: { requiresTenant: true },
   });
 
   // Toggle team selection
@@ -105,7 +106,7 @@ const TeamSelectionSection = ({
   }
 
   // If no teams, show message
-  if (!teams || teams.length === 0) {
+  if (!teams || (Array.isArray(teams) && teams.length === 0)) {
     return (
       <div className="bg-yellow-50 p-4 rounded-md">
         <p className="text-yellow-700">No teams found. Please create teams first in the Team Management section.</p>
