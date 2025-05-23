@@ -27,7 +27,7 @@ export default function TenantOnboardingPage() {
     if (user && tenants && tenants.length > 0 && !isLoadingTenants) {
       // User already has at least one tenant, redirect to tenant dashboard
       const tenantId = tenants[0].id; // Use the first tenant's ID
-      navigate(`/${tenantId}/dashboard`);
+      navigate(`/${tenantId}/`);
     }
   }, [user, isLoading, navigate, tenants, isLoadingTenants]);
 
