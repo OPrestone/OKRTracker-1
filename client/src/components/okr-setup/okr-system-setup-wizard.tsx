@@ -37,28 +37,10 @@ const TeamSelectionSection = ({
 }) => {
   const [selectedTeams, setSelectedTeams] = useState<string[]>(value);
   
-  // Fetch teams from the API
-  const { data: teams, isLoading, error } = useQuery({
+  // Fetch teams from the API - use the built-in query client
+  const { data: teams = [], isLoading, error } = useQuery({
     queryKey: ['/api/teams', tenantId],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/teams?tenantId=${tenantId}`, {
-          headers: {
-            "X-Tenant-ID": tenantId,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-        
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-        throw error;
-      }
-    },
+    enabled: !!tenantId,
   });
 
   // Toggle team selection
@@ -94,6 +76,34 @@ const TeamSelectionSection = ({
     );
   }
 
+  // If loading, show loading indicator 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="border rounded-md p-4 opacity-70">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // If error, show error message
+  if (error) {
+    return (
+      <div className="bg-red-50 p-4 rounded-md">
+        <p className="text-red-500">Error loading teams. Please try again.</p>
+      </div>
+    );
+  }
+
   // If no teams, show message
   if (!teams || teams.length === 0) {
     return (
@@ -106,45 +116,55 @@ const TeamSelectionSection = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {teams.map((team: Team) => (
-          <div 
-            key={team.id}
-            className={`border rounded-md p-4 cursor-pointer transition-all ${
-              selectedTeams.includes(team.id) 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => toggleTeamSelection(team.id)}
-          >
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                style={{ backgroundColor: team.color || '#6366F1' }}
-              >
-                {team.icon ? (
-                  <span className="text-lg">{team.icon}</span>
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-              </div>
-              
-              <div className="flex-1">
-                <h4 className="font-medium">{team.name}</h4>
-                <p className="text-sm text-gray-500 truncate">{team.description}</p>
-              </div>
-              
-              <div className="flex-shrink-0">
-                {selectedTeams.includes(team.id) ? (
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                ) : (
-                  <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
-                )}
+        {teams.map((team: Team) => {
+          // Get team initials for the avatar
+          const initials = team.name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
+            
+          return (
+            <div 
+              key={team.id}
+              className={`border rounded-md p-4 cursor-pointer transition-all ${
+                selectedTeams.includes(team.id) 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => toggleTeamSelection(team.id)}
+            >
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: team.color || '#6366F1' }}
+                >
+                  {team.icon ? (
+                    <span className="text-lg">{team.icon}</span>
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <h4 className="font-medium">{team.name}</h4>
+                  <p className="text-sm text-gray-500 truncate">{team.description || `Team in ${team.name} department`}</p>
+                </div>
+                
+                <div className="flex-shrink-0">
+                  {selectedTeams.includes(team.id) ? (
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="h-4 w-4 text-white" />
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
