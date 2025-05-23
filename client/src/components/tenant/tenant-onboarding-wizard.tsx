@@ -1308,6 +1308,20 @@ export default function TenantOnboardingWizard() {
                                 members: []
                               };
 
+                              // Create JSON display element
+                              const jsonDisplay = document.createElement('div');
+                              jsonDisplay.className = 'mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md';
+                              jsonDisplay.innerHTML = `
+                                <p class="text-sm font-medium text-gray-700 mb-2">Team Data:</p>
+                                <pre class="text-xs text-gray-800 overflow-auto max-h-[150px]"><code>${JSON.stringify(marketingTeam, null, 2)}</code></pre>
+                              `;
+
+                              // Add the JSON display below the button
+                              const buttonParent = document.querySelector('.marketing-team-card');
+                              const existingJson = buttonParent.querySelector('.mt-4.p-3.bg-gray-50');
+                              if (existingJson) existingJson.remove();
+                              buttonParent.appendChild(jsonDisplay);
+
                               // Show success message
                               toast({
                                 title: "Team added",
