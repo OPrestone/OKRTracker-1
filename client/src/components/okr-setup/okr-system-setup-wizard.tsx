@@ -203,7 +203,8 @@ export default function OKRSystemSetupWizard() {
           const missionData = await missionResponse.json();
           console.log("Organization mission data loaded:", missionData);
           
-          if (missionData && missionData.exists) {
+          // Check if data exists by checking for mission, id, or mission string
+          if (missionData && (missionData.id || missionData.mission)) {
             // Populate the mission and vision fields from organization mission data
             formValues.generalSettings.companyMission = missionData.mission || "";
             formValues.generalSettings.companyVision = missionData.vision || "";
@@ -341,11 +342,14 @@ export default function OKRSystemSetupWizard() {
         console.log("Resetting form with data:", formValues);
         form.reset(formValues);
         
+        // Update internal state to match the loaded data
+        setActivePage("general"); // Start on the general page where mission data is displayed
+        
         // Show notification that data was loaded if mission or vision is available
         if (formValues.generalSettings.companyMission || formValues.generalSettings.companyVision) {
           toast({
             title: "Configuration Loaded",
-            description: "Your existing mission and vision data has been loaded.",
+            description: "Your existing mission and vision data has been loaded. You can edit and save changes using the Complete Mission Setup button.",
           });
         }
         
