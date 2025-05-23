@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check } from "lucide-react";
 
 // Define the form schema for OKR system setup
 const formSchema = z.object({
@@ -1065,6 +1065,16 @@ export default function OKRSystemSetupWizard() {
                           >
                             Enable Cross-Team Objectives
                           </label>
+                        </div>
+                        
+                        {/* Team Selection Section */}
+                        <div className="mt-6 border-t pt-6">
+                          <h3 className="text-lg font-medium mb-4">Select Teams to Include in OKR System</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Select the teams that will be participating in your OKR program. Teams not selected can be added later.
+                          </p>
+                          
+                          <TeamSelectionSection tenantId={tenantId} />
                         </div>
                       </div>
                     </div>
