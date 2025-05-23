@@ -22,6 +22,7 @@ import {
   Code,
   Edit,
   LinkIcon,
+  Loader2,
   MoreHorizontal,
   NetworkIcon,
   Plus,
@@ -566,8 +567,10 @@ export default function CreateObjective() {
                     </div>
                     <Textarea 
                       id="description" 
-                      placeholder="Why is it a priority?" 
+                      placeholder="Why is this objective a priority? What will it help us achieve?"
                       className="mt-1 h-24"
+                      value={objectiveData.description}
+                      onChange={(e) => handleChange('description', e.target.value)}
                     />
                   </div>
 
@@ -575,7 +578,10 @@ export default function CreateObjective() {
                   <div>
                     <Label>Update frequency</Label>
                     <div className="mt-1">
-                      <Select defaultValue="weekly">
+                      <Select 
+                        value={objectiveData.updateFrequency}
+                        onValueChange={(value) => handleChange('updateFrequency', value)}
+                      >
                         <SelectTrigger className="w-full">
                           <span>Weekly</span>
                         </SelectTrigger>
@@ -701,16 +707,34 @@ export default function CreateObjective() {
             </div>
 
             <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleCancel}>
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button 
-                className="bg-blue-600 hover:bg-blue-700 text-white" 
+                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[120px]" 
                 onClick={handleSave}
+                disabled={isSubmitting}
               >
-                Save
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
+            
+            {errors.submit && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600">
+                {errors.submit}
+              </div>
+            )}
           </div>
         </div>
       </div>
