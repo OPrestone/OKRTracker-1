@@ -828,7 +828,11 @@ export default function OKRSystemSetupWizard() {
                     </div>
                   ) : activeIndex === index ? (
                     <div className="w-10 h-10 rounded-full bg-primary border-4 border-blue-100 flex items-center justify-center shadow-md">
-                      <step.icon className="h-5 w-5 text-white" />
+                      {step.icon === Settings2 && <Settings2 className="h-5 w-5 text-white" />}
+                      {step.icon === Calendar && <Calendar className="h-5 w-5 text-white" />}
+                      {step.icon === Target && <Target className="h-5 w-5 text-white" />}
+                      {step.icon === Users2 && <Users2 className="h-5 w-5 text-white" />}
+                      {step.icon === Layers && <Layers className="h-5 w-5 text-white" />}
                     </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -866,10 +870,11 @@ export default function OKRSystemSetupWizard() {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-                {(() => {
-                  const StepIcon = steps[activeIndex].icon;
-                  return <StepIcon className="w-5 h-5" />;
-                })()}
+                {steps[activeIndex].icon === Settings2 && <Settings2 className="w-5 h-5" />}
+                {steps[activeIndex].icon === Calendar && <Calendar className="w-5 h-5" />}
+                {steps[activeIndex].icon === Target && <Target className="w-5 h-5" />}
+                {steps[activeIndex].icon === Users2 && <Users2 className="w-5 h-5" />}
+                {steps[activeIndex].icon === Layers && <Layers className="w-5 h-5" />}
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">Step {activeIndex + 1}: {steps[activeIndex].label}</h3>
@@ -893,10 +898,13 @@ export default function OKRSystemSetupWizard() {
                   {index < activeIndex ? (
                     <Check className="w-3 h-3 mr-1" />
                   ) : (
-                    (() => {
-                      const StepIcon = step.icon;
-                      return <StepIcon className="w-3 h-3 mr-1" />;
-                    })()
+                    <>
+                      {step.icon === Settings2 && <Settings2 className="w-3 h-3 mr-1" />}
+                      {step.icon === Calendar && <Calendar className="w-3 h-3 mr-1" />}
+                      {step.icon === Target && <Target className="w-3 h-3 mr-1" />}
+                      {step.icon === Users2 && <Users2 className="w-3 h-3 mr-1" />}
+                      {step.icon === Layers && <Layers className="w-3 h-3 mr-1" />}
+                    </>
                   )}
                   {step.label}
                 </button>
@@ -1173,16 +1181,38 @@ export default function OKRSystemSetupWizard() {
               
               {/* Objective Settings */}
               <TabsContent value="objectives">
-                <Card>
+                <Card className="border border-gray-200 shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Target className="mr-2 h-5 w-5 text-primary" />
-                        Objective Settings
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Configure how objectives and key results will be structured in your organization.
-                      </p>
+                    <div className="space-y-6">
+                      <div className="border-b pb-4">
+                        <h2 className="text-2xl font-semibold flex items-center text-gray-800">
+                          <Target className="mr-3 h-6 w-6 text-primary" />
+                          Objective Settings
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                          Configure how objectives and key results will be structured within your organization.
+                        </p>
+                      </div>
+
+                      <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100 mb-6">
+                        <h3 className="text-indigo-700 font-medium mb-2 flex items-center">
+                          <Lightbulb className="mr-2 h-4 w-4" /> OKR Best Practices
+                        </h3>
+                        <ul className="text-indigo-600 text-sm space-y-2">
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Limit to 3-5 objectives per team to maintain focus</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Each objective should have 2-5 measurable key results</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Objectives should be ambitious but achievable</span>
+                          </li>
+                        </ul>
+                      </div>
                       
                       <div className="space-y-6">
                         <div>
@@ -1289,16 +1319,38 @@ export default function OKRSystemSetupWizard() {
               
               {/* Teams Configuration */}
               <TabsContent value="teams">
-                <Card>
+                <Card className="border border-gray-200 shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Users2 className="mr-2 h-5 w-5 text-primary" />
-                        Team Configuration
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Configure how teams will collaborate and organize their OKRs within your system.
-                      </p>
+                    <div className="space-y-6">
+                      <div className="border-b pb-4">
+                        <h2 className="text-2xl font-semibold flex items-center text-gray-800">
+                          <Users2 className="mr-3 h-6 w-6 text-primary" />
+                          Team Configuration
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                          Configure how teams will collaborate and organize their OKRs within your system.
+                        </p>
+                      </div>
+
+                      <div className="bg-green-50 p-4 rounded-md border border-green-100 mb-6">
+                        <h3 className="text-green-700 font-medium mb-2 flex items-center">
+                          <Lightbulb className="mr-2 h-4 w-4" /> Team Collaboration Benefits
+                        </h3>
+                        <ul className="text-green-600 text-sm space-y-2">
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Cross-team OKRs help break down organizational silos</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Public visibility encourages accountability and knowledge sharing</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Choosing the right org structure ensures OKRs follow your existing workflows</span>
+                          </li>
+                        </ul>
+                      </div>
                       
                       <div className="space-y-6">
                         <div>
