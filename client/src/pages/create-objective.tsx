@@ -92,10 +92,108 @@ export default function CreateObjective() {
     setLocation("/");
   };
 
-  const handleSave = () => {
-    // Here you would normally save the data
-    // After saving, redirect to create key result page
-    setLocation("/create-key-result");
+  // States to track form data
+  const [objectiveData, setObjectiveData] = useState({
+    name: '',
+    description: '',
+    alignmentType: 'strategic-pillar',
+    alignmentTarget: '',
+    teamId: '',
+    leadId: '',
+    timeframeId: '',
+    updateFrequency: 'weekly',
+    progressDriver: 'key-results',
+    tags: [] as string[],
+    contributors: [] as number[],
+    visibility: 'all'
+  });
+
+  // Form validation
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Function to validate the form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!objectiveData.name.trim()) {
+      newErrors.name = 'Objective name is required';
+    }
+    
+    if (!objectiveData.teamId) {
+      newErrors.teamId = 'Team selection is required';
+    }
+    
+    if (!objectiveData.timeframeId) {
+      newErrors.timeframeId = 'Timeframe is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Update form data when fields change
+  const handleChange = (field: string, value: any) => {
+    setObjectiveData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    
+    // Validate form
+    const isValid = validateForm();
+    if (!isValid) {
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      // Prepare data for API
+      const apiData = {
+        title: objectiveData.name,
+        description: objectiveData.description,
+        team_id: objectiveData.teamId,
+        owner_id: objectiveData.leadId,
+        timeframe_id: objectiveData.timeframeId,
+        update_frequency: objectiveData.updateFrequency,
+        progress_type: objectiveData.progressDriver,
+        tags: objectiveData.tags,
+        contributors: objectiveData.contributors,
+        visibility: objectiveData.visibility,
+        alignment_type: objectiveData.alignmentType,
+        alignment_target_id: objectiveData.alignmentTarget,
+        status: 'active'
+      };
+      
+      // Submit to API
+      const response = await fetch('/api/objectives', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': localStorage.getItem('currentTenantId') || ''
+        },
+        body: JSON.stringify(apiData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create objective');
+      }
+      
+      const data = await response.json();
+      
+      // Redirect to create key result page with the objective ID
+      setLocation(`/create-key-result?objectiveId=${data.id}`);
+    } catch (error) {
+      console.error('Error creating objective:', error);
+      // Show error in UI
+      setErrors({
+        submit: 'Failed to create objective. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTeamChange = (teamId: string) => {
@@ -149,8 +247,13 @@ export default function CreateObjective() {
               <Input 
                 id="name" 
                 placeholder="Our onboarding process is smooth and fast" 
-                className="flex-1"
+                className={`flex-1 ${errors.name ? 'border-red-500' : ''}`}
+                value={objectiveData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
               />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+              )}
               <Button variant="outline" size="icon">
                 <Edit className="h-4 w-4" />
               </Button>
@@ -161,11 +264,30 @@ export default function CreateObjective() {
           <div>
             <Label>Alignment</Label>
             <div className="grid grid-cols-2 gap-4 mt-1">
-              <Select defaultValue="strategic-pillar">
+              <Select 
+                value={objectiveData.alignmentType}
+                onValueChange={(value) => handleChange('alignmentType', value)}
+              >
                 <SelectTrigger className="w-full">
                   <div className="flex items-center">
-                    <Building className="h-5 w-5 mr-2 text-green-600" />
-                    <span>Support a Strategic Pillar</span>
+                    {objectiveData.alignmentType === 'strategic-pillar' && (
+                      <>
+                        <Building className="h-5 w-5 mr-2 text-green-600" />
+                        <span>Support a Strategic Pillar</span>
+                      </>
+                    )}
+                    {objectiveData.alignmentType === 'team-objective' && (
+                      <>
+                        <Users className="h-5 w-5 mr-2 text-blue-600" />
+                        <span>Support a Team Objective</span>
+                      </>
+                    )}
+                    {objectiveData.alignmentType === 'company-objective' && (
+                      <>
+                        <Target className="h-5 w-5 mr-2 text-red-600" />
+                        <span>Support a Company Objective</span>
+                      </>
+                    )}
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -190,15 +312,40 @@ export default function CreateObjective() {
                 </SelectContent>
               </Select>
 
-              <Select>
+              <Select
+                value={objectiveData.alignmentTarget}
+                onValueChange={(value) => handleChange('alignmentTarget', value)}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Strategic Pillar..." />
+                  <SelectValue placeholder={
+                    objectiveData.alignmentType === 'strategic-pillar' ? "Select Strategic Pillar..." :
+                    objectiveData.alignmentType === 'team-objective' ? "Select Team Objective..." :
+                    "Select Company Objective..."
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="growth">Growth</SelectItem>
-                  <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
-                  <SelectItem value="innovation">Innovation</SelectItem>
-                  <SelectItem value="operational-excellence">Operational Excellence</SelectItem>
+                  {objectiveData.alignmentType === 'strategic-pillar' && (
+                    <>
+                      <SelectItem value="growth">Growth</SelectItem>
+                      <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
+                      <SelectItem value="innovation">Innovation</SelectItem>
+                      <SelectItem value="operational-excellence">Operational Excellence</SelectItem>
+                    </>
+                  )}
+                  {objectiveData.alignmentType === 'team-objective' && (
+                    <>
+                      <SelectItem value="team-obj-1">Improve Team Velocity</SelectItem>
+                      <SelectItem value="team-obj-2">Enhance Team Collaboration</SelectItem>
+                      <SelectItem value="team-obj-3">Reduce Technical Debt</SelectItem>
+                    </>
+                  )}
+                  {objectiveData.alignmentType === 'company-objective' && (
+                    <>
+                      <SelectItem value="company-obj-1">Increase Market Share</SelectItem>
+                      <SelectItem value="company-obj-2">Improve Customer Satisfaction</SelectItem>
+                      <SelectItem value="company-obj-3">Launch New Product Line</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -208,8 +355,14 @@ export default function CreateObjective() {
           <div>
             <Label>Team</Label>
             <div className="mt-1">
-              <Select onValueChange={handleTeamChange}>
-                <SelectTrigger className="w-full">
+              <Select 
+                onValueChange={(value) => {
+                  handleTeamChange(value);
+                  handleChange('teamId', value);
+                }}
+                value={objectiveData.teamId}
+              >
+                <SelectTrigger className={`w-full ${errors.teamId ? 'border-red-500' : ''}`}>
                   <SelectValue placeholder="Select Team..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,6 +378,9 @@ export default function CreateObjective() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.teamId && (
+                <p className="text-sm text-red-500 mt-1">{errors.teamId}</p>
+              )}
             </div>
           </div>
           
@@ -363,11 +519,20 @@ export default function CreateObjective() {
             <div>
               <Label>Timeframe</Label>
               <div className="mt-1">
-                <Select>
-                  <SelectTrigger className="w-full">
+                <Select
+                  value={objectiveData.timeframeId}
+                  onValueChange={(value) => handleChange('timeframeId', value)}
+                >
+                  <SelectTrigger className={`w-full ${errors.timeframeId ? 'border-red-500' : ''}`}>
                     <div className="flex items-center">
                       <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Q2 2025</span>
+                      <span>{objectiveData.timeframeId ? 
+                        objectiveData.timeframeId === 'q1-2025' ? 'Q1 2025' :
+                        objectiveData.timeframeId === 'q2-2025' ? 'Q2 2025' :
+                        objectiveData.timeframeId === 'q3-2025' ? 'Q3 2025' :
+                        objectiveData.timeframeId === 'q4-2025' ? 'Q4 2025' : 'Select Timeframe...'
+                        : 'Select Timeframe...'}
+                      </span>
                     </div>
                   </SelectTrigger>
                   <SelectContent>
@@ -377,6 +542,9 @@ export default function CreateObjective() {
                     <SelectItem value="q4-2025">Q4 2025</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.timeframeId && (
+                  <p className="text-sm text-red-500 mt-1">{errors.timeframeId}</p>
+                )}
               </div>
             </div>
           </div>
