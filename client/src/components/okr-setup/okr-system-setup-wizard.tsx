@@ -241,7 +241,7 @@ export default function OKRSystemSetupWizard() {
         orgStructureType: "functional",
         enableCrossTeamObjectives: true,
         defaultVisibility: "public",
-        selectedTeams: [],
+        selectedTeams: [] as string[],
       },
       integrations: {
         enableSlackIntegration: false,
@@ -459,6 +459,13 @@ export default function OKRSystemSetupWizard() {
             
             if (systemConfig.default_visibility) {
               formValues.teamConfiguration.defaultVisibility = systemConfig.default_visibility;
+            }
+            
+            // If there are selected teams in the config, use them
+            if (systemConfig.selected_teams && Array.isArray(systemConfig.selected_teams)) {
+              formValues.teamConfiguration.selectedTeams = systemConfig.selected_teams;
+            } else {
+              formValues.teamConfiguration.selectedTeams = [];
             }
             
             formValues.integrations.enableSlackIntegration = 

@@ -36,6 +36,7 @@ const okrSystemSetupSchema = z.object({
     orgStructureType: z.enum(["functional", "divisional", "matrix", "flat", "hierarchical"]),
     enableCrossTeamObjectives: z.boolean(),
     defaultVisibility: z.enum(["public", "team", "private"]),
+    selectedTeams: z.array(z.string()).default([]),
   }),
   integrations: z.object({
     enableSlackIntegration: z.boolean(),
@@ -139,6 +140,7 @@ export function setupConfigRoutes(router: Router) {
         enable_email_notifications: okrSystemData.integrations.enableEmailNotifications,
         enable_calendar_sync: okrSystemData.integrations.enableCalendarSync,
         enable_analytics_reporting: okrSystemData.integrations.enableAnalyticsReporting,
+        selected_teams: okrSystemData.teamConfiguration.selectedTeams || [],
         created_at: existingConfig?.created_at || new Date(),
         updated_at: new Date(),
       };

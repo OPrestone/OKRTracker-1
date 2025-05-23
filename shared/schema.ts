@@ -1214,6 +1214,7 @@ export const okrSystemConfigs = pgTableWithUlid("okr_system_configs", {
   max_key_results_per_objective: integer("max_key_results_per_objective").default(3).notNull(),
   org_structure_type: text("org_structure_type").default("functional").notNull(), // functional, divisional, matrix, flat, hierarchical
   default_visibility: text("default_visibility").default("public").notNull(), // public, team, private
+  selected_teams: text("selected_teams").array(), // IDs of teams participating in OKR program
   company_mission: text("company_mission"),
   company_vision: text("company_vision"),
   company_values: text("company_values"),
