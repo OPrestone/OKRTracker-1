@@ -453,11 +453,22 @@ export default function TenantOnboardingWizard() {
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      console.log("createTenantMutation started with values:", values);
       setIsSubmitting(true);
 
       try {
         // Extract users that were selected
         const selectedUsers = values.team.users?.filter(user => user.selected) || [];
+        console.log("Selected users:", selectedUsers);
+
+        // Process teams data from the state we've been tracking
+        const teams = addedTeams.map(team => ({
+          name: team.name,
+          description: team.description,
+          icon: team.icon,
+          color: team.color
+        }));
+        console.log("Teams to be created:", teams);
 
         const requestData = {
           name: values.orgDetails.name,
@@ -467,6 +478,7 @@ export default function TenantOnboardingWizard() {
           planType: values.plan.plan,
           users: selectedUsers,
           setup: values.setup,
+          teams: teams // Include teams data
         };
 
         // Make the API request with role explicitly set to "owner"
@@ -475,10 +487,31 @@ export default function TenantOnboardingWizard() {
           role: "owner" // Set creator's role to owner (highest privilege level)
         };
 
-        const response = await apiRequest('POST', '/api/tenants', requestDataWithRole);
+        console.log("Submitting organization data:", requestDataWithRole);
+        
+        // Use direct fetch for more control over the request
+        const response = await fetch('/api/tenants', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestDataWithRole),
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API error ${response.status}: ${errorText}`);
+          throw new Error(`Failed to create organization: ${errorText}`);
+        }
+        
         const orgData = await response.json();
+        console.log("Organization created successfully:", orgData);
 
         return orgData;
+      } catch (error) {
+        console.error("Error creating organization:", error);
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
