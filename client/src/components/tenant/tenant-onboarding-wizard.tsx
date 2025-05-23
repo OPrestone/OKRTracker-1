@@ -1325,6 +1325,182 @@ export default function TenantOnboardingWizard() {
                       </div>
                     </div>
 
+                    {/* Sales Team Example Card */}
+                    <div className="w-full bg-white border border-green-100 rounded-xl shadow-sm mb-8 overflow-hidden">
+                      <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <LineChart className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-white font-medium text-lg">Example Team: Sales</h3>
+                            </div>
+                          </div>
+                          <div className="text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                            Example Team
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-6 py-5">
+                        <div className="mb-4">
+                          <label htmlFor="salesTeamName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Team Name
+                          </label>
+                          <Input 
+                            id="salesTeamName"
+                            defaultValue="Sales Team" 
+                            className="border-gray-200 mb-3" 
+                          />
+                          
+                          <label htmlFor="salesTeamDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <Textarea 
+                            id="salesTeamDescription"
+                            defaultValue="Team responsible for sales and revenue generation" 
+                            className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                          />
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
+                            <div className="flex items-center">
+                              <div className="h-4 w-4 rounded-full bg-emerald-500 mr-2"></div>
+                              <span className="text-sm text-gray-700">#10B981 (Green)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
+                            <div className="flex items-center">
+                              <div className="bg-emerald-100 p-1 rounded-md mr-2">
+                                <LineChart className="h-3.5 w-3.5 text-emerald-600" />
+                              </div>
+                              <span className="text-sm text-gray-700">"line-chart"</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                            onClick={() => {
+                              // Add the Sales Team
+                              const salesTeam = {
+                                name: "Sales Team",
+                                description: "Team responsible for sales and revenue generation",
+                                color: "#10B981",
+                                icon: "line-chart",
+                                members: []
+                              };
+
+                              // Show success message
+                              toast({
+                                title: "Team added",
+                                description: "Sales Team has been added to your organization",
+                              });
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5 mr-1.5" />
+                            Add Team
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Engineering Team Example Card */}
+                    <div className="w-full bg-white border border-purple-100 rounded-xl shadow-sm mb-8 overflow-hidden">
+                      <div className="bg-gradient-to-r from-violet-500 to-violet-600 px-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="bg-white/20 rounded-full p-2 mr-3">
+                              <Code className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-white font-medium text-lg">Example Team: Engineering</h3>
+                            </div>
+                          </div>
+                          <div className="text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                            Example Team
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-6 py-5">
+                        <div className="mb-4">
+                          <label htmlFor="engineeringTeamName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Team Name
+                          </label>
+                          <Input 
+                            id="engineeringTeamName"
+                            defaultValue="Engineering Team" 
+                            className="border-gray-200 mb-3" 
+                          />
+                          
+                          <label htmlFor="engineeringTeamDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <Textarea 
+                            id="engineeringTeamDescription"
+                            defaultValue="The engineering team is responsible for building and maintaining the company's technical infrastructure." 
+                            className="w-full bg-gray-50 border-gray-100 text-gray-600 resize-none" 
+                          />
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
+                            <div className="flex items-center">
+                              <div className="h-4 w-4 rounded-full bg-violet-500 mr-2"></div>
+                              <span className="text-sm text-gray-700">#8B5CF6 (Purple)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
+                            <div className="flex items-center">
+                              <div className="bg-violet-100 p-1 rounded-md mr-2">
+                                <CodeSquare className="h-3.5 w-3.5 text-violet-600" />
+                              </div>
+                              <span className="text-sm text-gray-700">"code-box"</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-500">Add this team?</span>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            className="border-violet-200 text-violet-600 hover:bg-violet-50"
+                            onClick={() => {
+                              // Add the Engineering Team
+                              const engineeringTeam = {
+                                name: "Engineering Team",
+                                description: "The engineering team is responsible for building and maintaining the company's technical infrastructure.",
+                                color: "#8B5CF6",
+                                icon: "code-box",
+                                members: []
+                              };
+
+                              // Show success message
+                              toast({
+                                title: "Team added",
+                                description: "Engineering Team has been added to your organization",
+                              });
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5 mr-1.5" />
+                            Add Team
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Team Members List */}
                     <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
                       <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
