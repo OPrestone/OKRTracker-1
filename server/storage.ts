@@ -9,7 +9,8 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetingsToObjectives, MeetingToObjective, InsertMeetingToObjective,
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
          actionItems, ActionItem, InsertActionItem,
-         projects, Project, InsertProject } from "@shared/schema";
+         projects, Project, InsertProject,
+         userProgress, UserProgress, InsertUserProgress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -31,6 +32,13 @@ export interface IStorage {
   getUsersByTeam(teamId: string): Promise<User[]>;
   getUserTenants(userId: string): Promise<Array<Tenant & { userRole?: string, isDefault?: boolean }>>;
   updateLastLogin(userId: string): Promise<void>;
+  
+  // User Progress Tracking
+  createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
+  getUserProgress(id: string): Promise<UserProgress | undefined>;
+  getUserProgressByUserAndObjective(userId: string, objectiveId: string): Promise<UserProgress | undefined>;
+  getUserObjectivesProgress(userId: string, tenantId: string): Promise<UserProgress[]>;
+  updateUserProgress(id: string, progress: Partial<InsertUserProgress>): Promise<UserProgress>;
   
   // Team Management
   createTeam(team: InsertTeam): Promise<Team>;
@@ -113,6 +121,7 @@ export interface IStorage {
   getAllTimeframes(): Promise<Timeframe[]>;
   getTimeframesByCadence(cadenceId: string): Promise<Timeframe[]>;
   getTimeframesByTenant(tenantId: string): Promise<Timeframe[]>;
+  getTimeframesWithObjectives(tenantId: string): Promise<Array<Timeframe & { objectives: Objective[] }>>;
   
   // Objectives
   createObjective(objective: InsertObjective): Promise<Objective>;
@@ -2972,6 +2981,98 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: string): Promise<void> {
     await db.delete(projects).where(eq(projects.id, id));
+  }
+
+  // User Progress Tracking
+  async createUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
+    try {
+      // Check if a progress record already exists for this user and objective
+      const existingProgress = await this.getUserProgressByUserAndObjective(
+        progress.userId, 
+        progress.objectiveId || ''
+      );
+      
+      if (existingProgress) {
+        // Update the existing progress record instead of creating a new one
+        return await this.updateUserProgress(existingProgress.id, {
+          progress: progress.progress,
+          lastUpdated: new Date()
+        });
+      }
+      
+      // Create a new progress record
+      const [createdProgress] = await db.insert(userProgress)
+        .values({
+          ...progress,
+          lastUpdated: new Date() // Ensure lastUpdated is current
+        })
+        .returning();
+      
+      return createdProgress;
+    } catch (error) {
+      console.error("Error creating user progress:", error);
+      throw error;
+    }
+  }
+
+  async getUserProgress(id: string): Promise<UserProgress | undefined> {
+    try {
+      const [progress] = await db.select().from(userProgress).where(eq(userProgress.id, id));
+      return progress;
+    } catch (error) {
+      console.error("Error getting user progress:", error);
+      throw error;
+    }
+  }
+
+  async getUserProgressByUserAndObjective(userId: string, objectiveId: string): Promise<UserProgress | undefined> {
+    try {
+      const [progress] = await db.select()
+        .from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.objectiveId, objectiveId)
+        ));
+      return progress;
+    } catch (error) {
+      console.error("Error getting user progress by user and objective:", error);
+      throw error;
+    }
+  }
+
+  async getUserObjectivesProgress(userId: string, tenantId: string): Promise<UserProgress[]> {
+    try {
+      return await db.select()
+        .from(userProgress)
+        .where(and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.tenantId, tenantId)
+        ));
+    } catch (error) {
+      console.error("Error getting user objectives progress:", error);
+      throw error;
+    }
+  }
+
+  async updateUserProgress(id: string, progress: Partial<InsertUserProgress>): Promise<UserProgress> {
+    try {
+      const [updatedProgress] = await db.update(userProgress)
+        .set({
+          ...progress,
+          lastUpdated: new Date() // Always update the lastUpdated field
+        })
+        .where(eq(userProgress.id, id))
+        .returning();
+      
+      if (!updatedProgress) {
+        throw new Error(`User progress with id ${id} not found`);
+      }
+      
+      return updatedProgress;
+    } catch (error) {
+      console.error("Error updating user progress:", error);
+      throw error;
+    }
   }
 }
 

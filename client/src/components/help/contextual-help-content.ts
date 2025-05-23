@@ -29,7 +29,7 @@ export const cadencesContextualHelp: Record<string, ContextualHelpItem> = {
     priority: "medium",
     helpfulTips: [
       "The period defines how long each OKR cycle will last.",
-      "The start month determines when your OKR cycles begin each year.",
+      "Specific timeframes can be created after defining the cadence.",
       "A descriptive name helps users understand the cadence purpose."
     ]
   },

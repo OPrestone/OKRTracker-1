@@ -10,7 +10,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
-         projects, projectStatusEnum, insertProjectSchema } from "@shared/schema";
+         projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -56,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics
+
   app.get("/api/project-diagnostics", async (req, res) => {
     try {
       // Check authentication status
@@ -184,6 +185,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use the middleware defined above
   // The rest of the routes will use the existing middleware
+  
+  // Organization Mission API Endpoints
+  app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Query the database to find mission data for this tenant
+      const missionData = await db.select().from(organizationMission)
+        .where(eq(organizationMission.tenantId, tenantId))
+        .limit(1);
+      
+      // If no data found, return empty object
+      if (missionData.length === 0) {
+        return res.json({ exists: false });
+      }
+      
+      res.json({ ...missionData[0], exists: true });
+    } catch (error) {
+      console.error("Error getting organization mission:", error);
+      res.status(500).json({ error: "Failed to get organization mission" });
+    }
+  });
+
+  app.post('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Check if the user has permission to update the tenant
+      const userTenant = await db.select().from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+
+      if (userTenant.length === 0 || !['owner', 'admin'].includes(userTenant[0].role)) {
+        return res.status(403).json({ error: "You do not have permission to update organization mission" });
+      }
+
+      // Check if mission already exists for this tenant
+      const existingMission = await db.select().from(organizationMission)
+        .where(eq(organizationMission.tenantId, tenantId))
+        .limit(1);
+
+      let result;
+
+      if (existingMission.length > 0) {
+        // Update existing record
+        result = await db.update(organizationMission)
+          .set({
+            mission,
+            vision,
+            boundaries,
+            strategicDirection,
+            behaviors,
+            updatedAt: new Date()
+          })
+          .where(eq(organizationMission.id, existingMission[0].id))
+          .returning();
+      } else {
+        // Create new record
+        result = await db.insert(organizationMission)
+          .values({
+            id: ulid(),
+            tenantId,
+            mission,
+            vision,
+            boundaries,
+            strategicDirection,
+            behaviors
+          })
+          .returning();
+      }
+      
+      // Make sure we have a result to return
+      if (result && result.length > 0) {
+        return res.json({
+          success: true,
+          data: result[0]
+        });
+      } else {
+        return res.json({
+          success: true,
+          message: "Mission data saved successfully"
+        });
+      }
+    } catch (error) {
+      console.error("Error updating organization mission:", error);
+      res.status(500).json({ error: "Failed to update organization mission" });
+    }
+  });
   
   // Multi-tenancy API Endpoints
   
@@ -1693,6 +1794,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get timeframes with objectives for timeline editor
+  app.get("/api/timeframes/with-objectives/:tenantId", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = req.params.tenantId;
+      
+      // Verify the user has access to this tenant
+      const userTenants = await storage.getUserTenants(req.user.id);
+      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "Access to tenant denied" });
+      }
+      
+      // Get all timeframes for this tenant
+      const timeframes = await storage.getTimeframesByTenant(tenantId);
+      
+      if (timeframes.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get all objectives for this tenant
+      const objectives = await storage.getObjectivesByTenant(tenantId);
+      
+      // Group objectives by timeframe
+      const result = timeframes.map(timeframe => {
+        const timeframeObjectives = objectives.filter(obj => obj.timeframeId === timeframe.id);
+        return {
+          ...timeframe,
+          objectives: timeframeObjectives
+        };
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting timeframes with objectives:", error);
+      next(error);
+    }
+  });
+  
   // Get timeframes by cadence
   app.get("/api/cadences/:cadenceId/timeframes", withTenant, async (req, res, next) => {
     try {

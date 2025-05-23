@@ -5,13 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-// Helper for month names
-const MONTH_NAMES = [
-  "January", "February", "March", "April", 
-  "May", "June", "July", "August", 
-  "September", "October", "November", "December"
-];
 import { 
   Table,
   TableBody,
@@ -67,7 +60,7 @@ interface CadenceFormState {
   name: string;
   description: string;
   period: string;
-  startMonth: number; // Using number type for startMonth
+  // Removed startMonth field as requested
 }
 
 export default function Cadences() {
@@ -81,27 +74,38 @@ export default function Cadences() {
   const [newCadence, setNewCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
-    period: "quarterly",
-    startMonth: 1 // Using integer now
+    period: "quarterly"
+    // Removed startMonth field as requested
   });
 
   // Edit cadence form state
   const [editCadence, setEditCadence] = useState<CadenceFormState>({
     name: "",
     description: "",
-    period: "quarterly",
-    startMonth: 1 // Using integer now
+    period: "quarterly"
+    // Removed startMonth field as requested
   });
 
   // Fetch cadences
   const { data: cadences, isLoading } = useQuery<Cadence[]>({
-    queryKey: ["/api/cadences"]
+    queryKey: ["/api/cadences"],
+    meta: { 
+      requiresTenant: true
+    },
   });
 
-  // Create cadence mutation
+  // Get current tenant ID from sessionStorage
+  const getCurrentTenantId = () => {
+    return sessionStorage.getItem('currentTenantId');
+  };
+
+  // Create cadence mutation with tenant ID
   const createCadenceMutation = useMutation({
     mutationFn: async (data: CadenceFormState) => {
-      const res = await apiRequest("POST", "/api/cadences", data);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences?tenantId=${tenantId}` : '/api/cadences';
+      const res = await apiRequest("POST", url, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -125,7 +129,10 @@ export default function Cadences() {
   // Update cadence mutation
   const updateCadenceMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string, data: CadenceFormState }) => {
-      const res = await apiRequest("PATCH", `/api/cadences/${id}`, data);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences/${id}?tenantId=${tenantId}` : `/api/cadences/${id}`;
+      const res = await apiRequest("PATCH", url, data);
       return await res.json();
     },
     onSuccess: () => {
@@ -149,7 +156,10 @@ export default function Cadences() {
   // Delete cadence mutation
   const deleteCadenceMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/cadences/${id}`);
+      // Append tenant ID to the request URL as a query parameter
+      const tenantId = getCurrentTenantId();
+      const url = tenantId ? `/api/cadences/${id}?tenantId=${tenantId}` : `/api/cadences/${id}`;
+      await apiRequest("DELETE", url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cadences"] });
@@ -175,35 +185,31 @@ export default function Cadences() {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    // Convert startMonth to integer if that's the field being updated
-    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
-    setNewCadence(prev => ({ ...prev, [name]: newValue }));
+    // No need to convert values now that startMonth is removed
+    setNewCadence(prev => ({ ...prev, [name]: value }));
   };
 
   const handleEditSelectChange = (name: string, value: string) => {
-    // Convert startMonth to integer if that's the field being updated
-    const newValue = name === 'startMonth' ? parseInt(value, 10) : value;
-    setEditCadence(prev => ({ ...prev, [name]: newValue }));
+    // No need to convert values now that startMonth is removed
+    setEditCadence(prev => ({ ...prev, [name]: value }));
   };
 
   const resetNewCadenceForm = () => {
     setNewCadence({
       name: "",
       description: "",
-      period: "quarterly",
-      startMonth: 1 // Using integer now
+      period: "quarterly"
+      // Removed startMonth field as requested
     });
   };
 
   const handleCreateCadence = () => {
-    // startMonth is already an integer, no need to convert
     createCadenceMutation.mutate(newCadence);
   };
 
   const handleUpdateCadence = () => {
     if (!selectedCadence) return;
     
-    // startMonth is already an integer, no need to convert
     updateCadenceMutation.mutate({
       id: selectedCadence.id,
       data: editCadence
@@ -300,24 +306,7 @@ export default function Cadences() {
                 </Select>
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="startMonth">Start Month</Label>
-                <Select 
-                  value={newCadence.startMonth.toString()} 
-                  onValueChange={(value) => handleSelectChange("startMonth", value)}
-                >
-                  <SelectTrigger id="startMonth">
-                    <SelectValue placeholder="Select start month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTH_NAMES.map((month, index) => (
-                      <SelectItem key={index} value={(index + 1).toString()}>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Removed Start Month field as requested */}
             </div>
             
             <DialogFooter>
@@ -392,24 +381,7 @@ export default function Cadences() {
               </Select>
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="editStartMonth">Start Month</Label>
-              <Select 
-                value={editCadence.startMonth.toString()} 
-                onValueChange={(value) => handleEditSelectChange("startMonth", value)}
-              >
-                <SelectTrigger id="editStartMonth">
-                  <SelectValue placeholder="Select start month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTH_NAMES.map((month, index) => (
-                    <SelectItem key={index} value={(index + 1).toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Removed Start Month field as requested */}
           </div>
           
           <DialogFooter>
@@ -480,19 +452,12 @@ export default function Cadences() {
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Period</TableHead>
-                  <TableHead>Start Month</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cadences.map(cadence => {
-                  // Convert numeric month to name
-                  const monthNames = [
-                    "January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December"
-                  ];
-                  const startMonth = cadence.startMonth || 1; // Default to January if null
-                  const monthName = monthNames[(startMonth - 1) % 12];
+                  // No month name conversion needed anymore
                   
                   return (
                     <TableRow key={cadence.id}>
@@ -503,7 +468,6 @@ export default function Cadences() {
                           {cadence.period.charAt(0).toUpperCase() + cadence.period.slice(1)}
                         </Badge>
                       </TableCell>
-                      <TableCell>{monthName}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -532,8 +496,7 @@ export default function Cadences() {
                                 setEditCadence({
                                   name: cadence.name,
                                   description: cadence.description || "",
-                                  period: cadence.period,
-                                  startMonth: cadence.startMonth || 1 // Keep as integer, don't convert to string
+                                  period: cadence.period
                                 });
                                 
                                 setIsEditCadenceDialogOpen(true);

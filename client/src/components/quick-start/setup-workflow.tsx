@@ -19,6 +19,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Target,
   Users,
@@ -59,6 +62,98 @@ export function SetupWorkflow() {
   const [cycleType, setCycleType] = useState<string>("quarterly");
   const [_, navigate] = useLocation();
   const { canCreateObjectives } = useUserPermissions();
+  const { toast } = useToast();
+  
+  // State for mission and vision inputs
+  const [missionStatement, setMissionStatement] = useState("");
+  const [visionStatement, setVisionStatement] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Create mutation for saving mission data
+  const saveMissionMutation = useMutation({
+    mutationFn: async (data: {
+      mission: string;
+      vision: string;
+    }) => {
+      // Get the tenant ID from the user's current tenant
+      let tenantId = '';
+      
+      // Try from localStorage first (used by some components)
+      const localTenant = localStorage.getItem('currentTenant');
+      if (localTenant) tenantId = localTenant;
+      
+      // If not found, try from sessionStorage (used by queryClient)
+      if (!tenantId) {
+        const sessionTenant = sessionStorage.getItem('currentTenantId');
+        if (sessionTenant) tenantId = sessionTenant;
+      }
+      
+      // If still not found, try from user object
+      if (!tenantId && window.__USER__?.defaultTenant) {
+        tenantId = window.__USER__.defaultTenant;
+      }
+      
+      // If still no tenant ID, get it from the user's first tenant
+      if (!tenantId && window.__USER__?.tenants && window.__USER__.tenants.length > 0) {
+        tenantId = window.__USER__.tenants[0].id;
+      }
+      
+      console.log("Setting up mission with tenant ID:", tenantId);
+      
+      // 1. Add tenant ID to URL query parameters
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      // 2. Create complete request data with tenant ID included in body
+      const requestData = {
+        mission: data.mission,
+        vision: data.vision,
+        tenantId: tenantId, // Include in body as well to be safe
+        // Create empty placeholders for the other required fields
+        strategicDirection: "",
+        behaviors: JSON.stringify([]),
+        boundaries: JSON.stringify({ freedoms: [], constraints: [] })
+      };
+      
+      console.log("Complete request data:", JSON.stringify(requestData));
+      
+      // 3. Using direct fetch with X-Tenant-ID header AND query param AND body inclusion
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include', // Important: Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Failed to save mission data: ' + errorText);
+      }
+      
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Mission and vision saved successfully",
+      });
+      // Proceed to the next step in the workflow instead of navigating away
+      setCurrentStep(currentStep + 1);
+    },
+    onError: (error) => {
+      console.error("Error saving mission data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save mission and vision data",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+    }
+  });
 
   // Sample OKR cycles
   const okrCycles: OKRCycle[] = [
@@ -99,10 +194,10 @@ export function SetupWorkflow() {
           </Alert>
           
           <div className="space-y-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="company-name">Company Name</Label>
               <Input id="company-name" placeholder="Enter your company name" />
-            </div>
+            </div> */}
             
             <div className="space-y-2">
               <Label htmlFor="mission-statement">Mission Statement</Label>
@@ -110,6 +205,8 @@ export function SetupWorkflow() {
                 id="mission-statement"
                 placeholder="Why does your company exist? What problem are you solving?"
                 className="min-h-[100px]"
+                value={missionStatement}
+                onChange={(e) => setMissionStatement(e.target.value)}
               />
             </div>
             
@@ -119,13 +216,29 @@ export function SetupWorkflow() {
                 id="vision-statement"
                 placeholder="What does the future look like if you succeed in your mission?"
                 className="min-h-[100px]"
+                value={visionStatement}
+                onChange={(e) => setVisionStatement(e.target.value)}
               />
             </div>
           </div>
           
           <div className="pt-4">
-            <Button onClick={() => navigate('/mission')}>
-              Complete Mission Setup
+            <Button 
+              onClick={() => {
+                setIsSubmitting(true);
+                saveMissionMutation.mutate(
+                  { mission: missionStatement, vision: visionStatement },
+                  {
+                    onSuccess: () => {
+                      setCurrentStep(1);
+                      setIsSubmitting(false);
+                    }
+                  }
+                );
+              }}
+              disabled={isSubmitting || !missionStatement.trim() || !visionStatement.trim()}
+            >
+              {isSubmitting ? "Saving..." : "Complete Mission Setup"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

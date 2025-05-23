@@ -3,7 +3,9 @@ import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { dashboardHelp } from "@/components/help/help-content";
-import { Menu } from "lucide-react";
+import { Menu, Building } from "lucide-react";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,6 +19,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   subtitle
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentTenant } = useTenantContext();
+
+  // Create tenant-aware title that shows organization context
+  const tenantDisplay = currentTenant 
+    ? `${title} - ${currentTenant.displayName || currentTenant.name}`
+    : title;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f9fafb] text-[#495057]">
@@ -26,11 +34,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main content */}
       <main className="flex-1 overflow-y-auto relative">
         <Header 
-          title={title}
+          title={tenantDisplay}
           subtitle={subtitle}
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
         />
+        
+        {/* Organization context banner */}
+        {currentTenant && (
+          <div className="bg-primary/10 border-b border-primary/20 px-6 py-2 flex items-center">
+            <Building className="h-4 w-4 text-primary mr-2" />
+            <span className="text-sm font-medium text-primary mr-2">Current Organization:</span>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+              {currentTenant.displayName || currentTenant.name}
+            </Badge>
+            <span className="text-xs text-muted-foreground ml-2">ID: {currentTenant.id}</span>
+          </div>
+        )}
         <div className="px-6 py-6 pb-24">
           {children}
         </div>

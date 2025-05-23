@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Accordion,
   AccordionContent,
@@ -28,12 +28,56 @@ import {
   CheckCircle2,
   XCircle,
   Check,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Mission() {
+  const [location] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Get tenant ID from multiple sources to ensure it's available
+  let extractedTenantId = '';
+  
+  // 1. Try to extract from URL path - format could be either:
+  //    - /:id([A-Z0-9]{26})/mission (new ULID format)
+  //    - /organization/:organisation/mission (legacy format)
+  const pathParts = location.split('/');
+  extractedTenantId = pathParts[1] === 'organization' ? pathParts[2] : pathParts[1];
+  
+  // 2. If not valid ID format or missing, try from localStorage
+  if (!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) {
+    const localTenant = localStorage.getItem('currentTenant');
+    if (localTenant) extractedTenantId = localTenant;
+  }
+  
+  // 3. If still not found, try from sessionStorage
+  if (!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) {
+    const sessionTenant = sessionStorage.getItem('currentTenantId');
+    if (sessionTenant) extractedTenantId = sessionTenant;
+  }
+  
+  // 4. If still not found, try from user object
+  if ((!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) && window.__USER__?.defaultTenant) {
+    extractedTenantId = window.__USER__.defaultTenant;
+  }
+  
+  // 5. If still no tenant ID, get it from the user's first tenant
+  if ((!extractedTenantId || !/^[A-Z0-9]{26}$/.test(extractedTenantId)) && 
+      window.__USER__?.tenants && window.__USER__.tenants.length > 0) {
+    extractedTenantId = window.__USER__.tenants[0].id;
+  }
+  
+  const tenantId = extractedTenantId;
+  console.log("Using tenant ID:", tenantId);
+
   // State for full page edit mode
   const [fullPageEditMode, setFullPageEditMode] = useState(false);
   const [activeEditTab, setActiveEditTab] = useState<'strategic' | 'boundaries' | 'behaviors'>('strategic');
@@ -54,17 +98,12 @@ export default function Mission() {
   const [title, setTitle] = useState("Head of Information, Communication & Technology");
 
   // Mission state
-  const [missionStatement, setMissionStatement] = useState(
-    "To provide cutting edge technological and digital solutions that ensures RAL is able to generate 1.5B in revenue and a cumulative audience of 37M"
-  );
-  const [missionDraft, setMissionDraft] = useState(missionStatement);
+  const [missionStatement, setMissionStatement] = useState("");
+  const [missionDraft, setMissionDraft] = useState("");
 
-  // Strategic Direction state (read from company)
-  const strategicDirection = `One Level Up
-To become the biggest reach, most influential and trusted company in the communications
-landscape in order to deliver sustainable profits for shareholders and staff - by providing
-indispensable information and entertainment that enhance the lives of 16-35 year old
-Kenyans.`;
+  // Strategic Direction state
+  const [strategicDirection, setStrategicDirection] = useState("");
+  const [strategicDirectionDraft, setStrategicDirectionDraft] = useState("");
 
   // Level mission statements
   const [oneLevelMission, setOneLevelMission] = useState(
@@ -76,8 +115,9 @@ Kenyans.`;
   const [overrideOneLevelMission, setOverrideOneLevelMission] = useState(false);
   const [overrideTwoLevelMission, setOverrideTwoLevelMission] = useState(false);
 
-  // Vision state (read from company)
-  const [vision, setVision] = useState("Enter Vision");
+  // Vision state
+  const [vision, setVision] = useState("");
+  const [visionDraft, setVisionDraft] = useState("");
   
   // Purpose state (read from company)
   const [purpose, setPurpose] = useState("Enter Purpose");
@@ -86,46 +126,247 @@ Kenyans.`;
   const [values, setValues] = useState("Enter Values");
 
   // Behaviors state
-  const [behaviors, setBehaviors] = useState([
-    "I will mentor my team more effectively by acknowledging their achievements and challenges",
-    "I will delegate more task and responsibilities to my team",
-    "I will strive to deliver efficient and cost efficient ICT solutions",
-    "I will keep abreast with emerging technologies and encourage innovation within the team"
-  ]);
-  const [behaviorsDraft, setBehaviorsDraft] = useState([...behaviors]);
+  const [behaviors, setBehaviors] = useState<string[]>([]);
+  const [behaviorsDraft, setBehaviorsDraft] = useState<string[]>([]);
   const [newBehavior, setNewBehavior] = useState("");
-
+  
   // Boundaries state
-  const [boundaries, setBoundaries] = useState({
-    freedoms: [
-      "Supportive GCEO, GCCO and management team",
-      "Motivated and professional team",
-      "Flexibility to experiment and implement ICT solutions"
-    ],
-    constraints: [
-      "Financial resources, affecting their ability to invest in new technologies or upgrades",
-      "Consultant Delivery Timelines",
-      "Resistance to Change challenges"
-    ]
+  const [boundaries, setBoundaries] = useState<{
+    freedoms: string[];
+    constraints: string[];
+  }>({
+    freedoms: [],
+    constraints: []
   });
   
-  const [boundariesDraft, setBoundariesDraft] = useState({
-    freedoms: [...boundaries.freedoms],
-    constraints: [...boundaries.constraints]
+  const [boundariesDraft, setBoundariesDraft] = useState<{
+    freedoms: string[];
+    constraints: string[];
+  }>({
+    freedoms: [],
+    constraints: []
   });
   
   const [newFreedom, setNewFreedom] = useState("");
   const [newConstraint, setNewConstraint] = useState("");
+  
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Query to fetch organization mission data
+  const { data: missionData, isLoading: isMissionLoading, error: missionError } = useQuery({
+    queryKey: ['/api/organization-mission', tenantId],
+    queryFn: async () => {
+      console.log("Fetching mission data with tenant ID:", tenantId);
+      
+      // Make sure we have a valid tenant ID
+      if (!tenantId) {
+        console.error("No tenant ID available");
+        throw new Error("No tenant ID available");
+      }
+      
+      // Add tenant ID in query parameters to ensure it's available on the server
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      try {
+        // Include credentials to ensure cookies for authentication are sent
+        const response = await fetch(url, { 
+          method: 'GET',
+          credentials: 'include', // Important: Include credentials for authentication
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': tenantId // Use the custom header for tenant ID
+          }
+        });
+        
+        // Log the response to help debug
+        console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error fetching mission data:', errorText);
+          throw new Error('Failed to fetch mission data: ' + errorText);
+        }
+        
+        return response.json();
+      } catch (err) {
+        console.error("Error in mission data fetch:", err);
+        throw err;
+      }
+    },
+    enabled: !!tenantId, // Only run query when tenantId is available
+    retry: 3 // Retry failed queries up to 3 times
+  });
+
+  // Mutation to save organization mission data
+  const saveMissionMutation = useMutation({
+    mutationFn: async (data: {
+      mission: string;
+      vision: string;
+      behaviors: string;
+      boundaries: string;
+      strategicDirection: string;
+    }) => {
+      console.log("Saving mission data with tenant ID:", tenantId);
+      
+      // Add tenant ID in all possible locations to ensure it's available
+      // 1. In the URL query parameters
+      const url = `/api/organization-mission?tenantId=${encodeURIComponent(tenantId)}`;
+      
+      // 2. In the request headers
+      // 3. In the request body
+      const requestData = {
+        ...data,
+        tenantId: tenantId // Include tenant ID in the body too
+      };
+      
+      console.log("Complete request data:", JSON.stringify(requestData));
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include', // Important: Include cookies for authentication
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId // Use the custom header for tenant ID
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Failed to save mission data: ' + errorText);
+      }
+      
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Mission and vision data saved successfully",
+        variant: "default"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/organization-mission', tenantId] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save mission and vision data",
+        variant: "destructive"
+      });
+      console.error("Error saving mission data:", error);
+    }
+  });
+
+  // Initialize data when mission data is loaded
+  useEffect(() => {
+    if (missionData?.exists) {
+      setMissionStatement(missionData.mission || "");
+      setMissionDraft(missionData.mission || "");
+      
+      setVision(missionData.vision || "");
+      setVisionDraft(missionData.vision || "");
+      
+      setStrategicDirection(missionData.strategicDirection || "");
+      setStrategicDirectionDraft(missionData.strategicDirection || "");
+      
+      // Parse behaviors from JSON string if available
+      try {
+        const parsedBehaviors = missionData.behaviors ? JSON.parse(missionData.behaviors) : [];
+        setBehaviors(Array.isArray(parsedBehaviors) ? parsedBehaviors : []);
+        setBehaviorsDraft(Array.isArray(parsedBehaviors) ? [...parsedBehaviors] : []);
+      } catch (error) {
+        console.error("Error parsing behaviors:", error);
+        setBehaviors([]);
+        setBehaviorsDraft([]);
+      }
+      
+      // Parse boundaries from JSON string if available
+      try {
+        const parsedBoundaries = missionData.boundaries ? JSON.parse(missionData.boundaries) : { freedoms: [], constraints: [] };
+        setBoundaries({
+          freedoms: Array.isArray(parsedBoundaries.freedoms) ? parsedBoundaries.freedoms : [],
+          constraints: Array.isArray(parsedBoundaries.constraints) ? parsedBoundaries.constraints : []
+        });
+        setBoundariesDraft({
+          freedoms: Array.isArray(parsedBoundaries.freedoms) ? [...parsedBoundaries.freedoms] : [],
+          constraints: Array.isArray(parsedBoundaries.constraints) ? [...parsedBoundaries.constraints] : []
+        });
+      } catch (error) {
+        console.error("Error parsing boundaries:", error);
+        setBoundaries({ freedoms: [], constraints: [] });
+        setBoundariesDraft({ freedoms: [], constraints: [] });
+      }
+    } else {
+      // Set default values if no data exists
+      const defaultBehaviors = [
+        "I will mentor my team more effectively by acknowledging their achievements and challenges",
+        "I will delegate more tasks and responsibilities to my team",
+        "I will strive to deliver efficient and cost-effective solutions",
+        "I will keep abreast with emerging technologies and encourage innovation within the team"
+      ];
+      
+      const defaultBoundaries = {
+        freedoms: [
+          "Supportive management team", 
+          "Motivated and professional team", 
+          "Flexibility to experiment and implement new solutions"
+        ],
+        constraints: [
+          "Financial resources, affecting ability to invest in new technologies",
+          "Delivery timelines",
+          "Resistance to change challenges"
+        ]
+      };
+      
+      setBehaviors(defaultBehaviors);
+      setBehaviorsDraft([...defaultBehaviors]);
+      
+      setBoundaries(defaultBoundaries);
+      setBoundariesDraft({...defaultBoundaries});
+    }
+  }, [missionData]);
+
+  // Boundaries state is already defined above, no need to re-declare
 
   // Handle full page edit save
-  const saveFullPageEdit = () => {
-    setMissionStatement(missionDraft);
-    setBoundaries({
-      freedoms: [...boundariesDraft.freedoms],
-      constraints: [...boundariesDraft.constraints]
-    });
-    setBehaviors([...behaviorsDraft]);
-    setFullPageEditMode(false);
+  const saveFullPageEdit = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        mission: missionDraft,
+        vision: visionDraft, 
+        strategicDirection: strategicDirectionDraft,
+        behaviors: JSON.stringify(behaviorsDraft),
+        boundaries: JSON.stringify(boundariesDraft)
+      });
+      
+      setMissionStatement(missionDraft);
+      setVision(visionDraft);
+      setStrategicDirection(strategicDirectionDraft);
+      setBoundaries({
+        freedoms: [...boundariesDraft.freedoms],
+        constraints: [...boundariesDraft.constraints]
+      });
+      setBehaviors([...behaviorsDraft]);
+      setFullPageEditMode(false);
+      
+      toast({
+        title: "Success",
+        description: "Organization mission data saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save organization mission data",
+        variant: "destructive"
+      });
+      console.error("Error saving mission data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Cancel full page edit
@@ -140,27 +381,105 @@ Kenyans.`;
   };
 
   // Handle mission save (for individual card edits)
-  const saveMission = () => {
-    setMissionStatement(missionDraft);
-    setEditMode({...editMode, mission: false});
+  const saveMission = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        mission: missionDraft,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviors),
+        boundaries: JSON.stringify(boundaries)
+      });
+      
+      setMissionStatement(missionDraft);
+      setEditMode({...editMode, mission: false});
+      
+      toast({
+        title: "Success",
+        description: "Mission statement updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update mission statement",
+        variant: "destructive"
+      });
+      console.error("Error saving mission:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle behaviors save (for individual card edits)
-  const saveBehaviors = () => {
-    setBehaviors([...behaviorsDraft]);
-    setEditMode({...editMode, behaviors: false});
-    setNewBehavior("");
+  const saveBehaviors = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        mission: missionStatement,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviorsDraft),
+        boundaries: JSON.stringify(boundaries)
+      });
+      
+      setBehaviors([...behaviorsDraft]);
+      setEditMode({...editMode, behaviors: false});
+      setNewBehavior("");
+      
+      toast({
+        title: "Success",
+        description: "Behaviors updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update behaviors",
+        variant: "destructive"
+      });
+      console.error("Error saving behaviors:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle boundaries save (for individual card edits)
-  const saveBoundaries = () => {
-    setBoundaries({
-      freedoms: [...boundariesDraft.freedoms],
-      constraints: [...boundariesDraft.constraints]
-    });
-    setEditMode({...editMode, boundaries: false});
-    setNewFreedom("");
-    setNewConstraint("");
+  const saveBoundaries = async () => {
+    setIsLoading(true);
+    
+    try {
+      await saveMissionMutation.mutateAsync({
+        mission: missionStatement,
+        vision: vision,
+        strategicDirection: strategicDirection,
+        behaviors: JSON.stringify(behaviors),
+        boundaries: JSON.stringify(boundariesDraft)
+      });
+      
+      setBoundaries({
+        freedoms: [...boundariesDraft.freedoms],
+        constraints: [...boundariesDraft.constraints]
+      });
+      setEditMode({...editMode, boundaries: false});
+      setNewFreedom("");
+      setNewConstraint("");
+      
+      toast({
+        title: "Success",
+        description: "Boundaries updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update boundaries",
+        variant: "destructive"
+      });
+      console.error("Error saving boundaries:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Add new behavior
@@ -562,9 +881,19 @@ Kenyans.`;
                   variant="ghost" 
                   size="sm" 
                   onClick={saveMission}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>
@@ -650,9 +979,19 @@ Kenyans.`;
                   variant="ghost" 
                   size="sm" 
                   onClick={saveBoundaries}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>
@@ -794,9 +1133,19 @@ Kenyans.`;
                   variant="ghost" 
                   size="sm" 
                   onClick={saveBehaviors}
+                  disabled={isLoading}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
                 </Button>
               )}
             </CardHeader>

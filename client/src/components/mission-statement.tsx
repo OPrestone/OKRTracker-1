@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -19,16 +19,68 @@ import {
   Download,
   Target,
   Unlock,
-  UserCog
+  UserCog,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 interface MissionStatementProps {
   className?: string;
+  tenantId?: string;
 }
 
-export function MissionStatement({ className }: MissionStatementProps) {
+export function MissionStatement({ className, tenantId: propTenantId }: MissionStatementProps) {
+  const [location] = useLocation();
+  
+  // Extract tenantId from URL path if not provided as prop
+  // Format could be either:
+  // 1. /:id([A-Z0-9]{26})/mission (new ULID format)
+  // 2. /organization/:organisation/mission (legacy format)
+  const pathParts = location.split('/');
+  const urlTenantId = pathParts[1] === 'organization' ? pathParts[2] : pathParts[1];
+  
+  // Use provided tenantId or extract from URL
+  const tenantId = propTenantId || urlTenantId;
+  
+  // Fetch mission data from API
+  const { data: missionData, isLoading, error } = useQuery({
+    queryKey: ['/api/organization-mission', tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      
+      // Note: The server uses withTenant middleware which extracts tenantId from URL params,
+      // but we need to explicitly include it in the header for the API to use it correctly
+      const response = await fetch('/api/organization-mission', { 
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch mission data');
+      }
+      
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    },
+    enabled: !!tenantId // Only run query when tenantId is available
+  });
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading mission data...</span>
+      </div>
+    );
+  }
+  
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header */}
@@ -47,10 +99,14 @@ export function MissionStatement({ className }: MissionStatementProps) {
             <Presentation className="h-4 w-4" />
             <span>Present</span>
           </Button>
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <FileEdit className="h-4 w-4" />
-            <span>Edit</span>
-          </Button>
+          {tenantId && (
+            <Button variant="outline" size="sm" className="flex items-center gap-1" asChild>
+              <Link href={`/${tenantId}/mission`}>
+                <FileEdit className="h-4 w-4" />
+                <span>Edit</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
       
@@ -62,9 +118,13 @@ export function MissionStatement({ className }: MissionStatementProps) {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Our Mission</h3>
-            <p className="text-gray-700 leading-relaxed">
-              To provide cutting edge technological and digital solutions that ensures RAL is able to generate 1.5B in revenue and a cumulative audience of 37M
-            </p>
+            {missionData?.mission_statement ? (
+              <p className="text-gray-700 leading-relaxed">
+                {missionData.mission_statement}
+              </p>
+            ) : (
+              <p className="text-gray-500 italic">No mission statement defined yet. Click edit to add one.</p>
+            )}
           </div>
         </div>
       </div>
@@ -82,7 +142,9 @@ export function MissionStatement({ className }: MissionStatementProps) {
               </div>
             </CardHeader>
             <CardContent className="pt-3">
-              <p className="text-sm text-gray-600">Align our technical capabilities with business objectives to drive growth.</p>
+              <p className="text-sm text-gray-600">
+                {missionData?.strategic_direction || "Define your organization's strategic direction."}
+              </p>
             </CardContent>
           </Card>
           
@@ -92,19 +154,14 @@ export function MissionStatement({ className }: MissionStatementProps) {
                 <div className="bg-primary bg-opacity-10 p-1.5 rounded-full">
                   <CheckCircle className="h-4 w-4 text-primary" />
                 </div>
-                <CardTitle className="text-base font-medium">One Level Up</CardTitle>
+                <CardTitle className="text-base font-medium">Vision</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="pt-3">
-              <p className="text-sm text-gray-600">
-                To become the biggest reach, most influential and trusted company in the communication 
-                business in order to deliver sustainable profits for shareholders and staff - by providing
-                cutting-edge, innovative products and services that delight our customers, clients, and
-                listeners.
-              </p>
-              <div className="mt-4 px-3 py-2 bg-gray-50 rounded-md border border-gray-100">
-                <h4 className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-2">Vision</h4>
-                <p className="text-sm text-gray-700">Creating a digital ecosystem that empowers businesses and engages audiences.</p>
+              <div className="px-3 py-2 bg-gray-50 rounded-md border border-gray-100">
+                <p className="text-sm text-gray-700">
+                  {missionData?.vision_statement || "Define your organization's vision."}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -120,7 +177,9 @@ export function MissionStatement({ className }: MissionStatementProps) {
             </CardHeader>
             <CardContent className="pt-3">
               <div className="px-3 py-2 bg-gray-50 rounded-md border border-gray-100">
-                <p className="text-sm text-gray-700">To transform how people connect through technology and digital solutions.</p>
+                <p className="text-sm text-gray-700">
+                  {missionData?.purpose || "To transform how people connect through technology and digital solutions."}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -150,18 +209,19 @@ export function MissionStatement({ className }: MissionStatementProps) {
               </div>
             </CardHeader>
             <CardContent className="pt-3 space-y-3">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Supportive GCEO, GCOO and management team</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Motivated and professional team</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Flexibility to experiment and implement ICT solutions</p>
-              </div>
+              {missionData?.boundaries?.freedoms && Array.isArray(missionData.boundaries.freedoms) ? (
+                missionData.boundaries.freedoms.map((freedom, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <p className="text-sm text-gray-600">{freedom}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">Define the freedoms your team has.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           
@@ -173,18 +233,19 @@ export function MissionStatement({ className }: MissionStatementProps) {
               </div>
             </CardHeader>
             <CardContent className="pt-3 space-y-3">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Financial resources, affecting their ability to invest in new technologies or upgrades</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Consultants Delivery Timelines</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-                <p className="text-sm text-gray-600">Resistance to Change challenges</p>
-              </div>
+              {missionData?.boundaries?.constraints && Array.isArray(missionData.boundaries.constraints) ? (
+                missionData.boundaries.constraints.map((constraint, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                    <p className="text-sm text-gray-600">{constraint}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">Define the constraints your team works within.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -199,22 +260,19 @@ export function MissionStatement({ className }: MissionStatementProps) {
               </div>
             </CardHeader>
             <CardContent className="pt-3 space-y-3">
-              <div className="flex items-start gap-2">
-                <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
-                <p className="text-sm text-gray-600">I will mentor my team more effectively by acknowledging their achievements and challenges</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
-                <p className="text-sm text-gray-600">I will delegate more task and responsibilities to my team</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
-                <p className="text-sm text-gray-600">I will strive to deliver effective and cost-efficient ICT solutions</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
-                <p className="text-sm text-gray-600">I will keep abreast with emerging technologies and encourage innovation within the team</p>
-              </div>
+              {missionData?.behaviors && Array.isArray(missionData.behaviors) ? (
+                missionData.behaviors.map((behavior, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
+                    <p className="text-sm text-gray-600">{behavior}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-start gap-2">
+                  <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
+                  <p className="text-sm text-gray-600">Define the behaviors that will drive success.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           
@@ -227,8 +285,7 @@ export function MissionStatement({ className }: MissionStatementProps) {
             </CardHeader>
             <CardContent className="pt-3">
               <p className="text-sm text-gray-600">
-                We prioritize staying ahead of the technology curve, exploring emerging trends, and investing in 
-                solutions that position us as industry leaders.
+                {missionData?.innovation_focus || "We prioritize staying ahead of the technology curve, exploring emerging trends, and investing in solutions that position us as industry leaders."}
               </p>
             </CardContent>
           </Card>

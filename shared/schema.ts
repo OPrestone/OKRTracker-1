@@ -23,6 +23,17 @@ export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "z
 
 // TABLE SCHEMAS
 
+export const organizationMission = pgTableWithUlid("organization_mission", {
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  mission: text("mission"),
+  vision: text("vision"),
+  boundaries: text("boundaries"),
+  strategicDirection: text("strategic_direction"),
+  behaviors: text("behaviors"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const cycles = pgTableWithUlid("cycles", {
   name: text("name").notNull(),
   description: text("description"),
@@ -111,7 +122,7 @@ export const cadences = pgTableWithUlid("cadences", {
   description: text("description"),
   // The database has 'period' column instead of 'period_days'
   period: text("period"), // e.g., 'weekly', 'quarterly'
-  startMonth: integer("start_month"), // Integer representing months 1-12
+  // Removed startMonth field as requested
   // Tenant ID to ensure cadences are organization-specific
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -190,6 +201,25 @@ export const checkIns = pgTableWithUlid("check_ins", {
   tenantId: text("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const userProgress = pgTableWithUlid("user_progress", {
+  userId: text("user_id").references(() => users.id).notNull(),
+  objectiveId: text("objective_id").references(() => objectives.id),
+  progress: integer("progress").default(0).notNull(), // 0-100 percentage
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schema for userProgress
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ 
+  id: true, 
+  createdAt: true,
+  lastUpdated: true 
+});
+
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
 
 export const projects = pgTableWithUlid("projects", {
   title: text("title").notNull(),
@@ -287,6 +317,9 @@ export const userBadges = pgTable("user_badges", {
 
 export const tenants = pgTableWithUlid("tenants", {
   name: text("name").notNull(),
+  displayName: text("display_name"),
+  description: text("description"),
+  industry: text("industry"),
   slug: text("slug").notNull().unique(),
   logoUrl: text("logo_url"),
   settings: jsonb("settings").default({}).notNull(),
@@ -928,6 +961,7 @@ export const insertFinancialAccountSchema = createInsertSchema(financialAccounts
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
+export const insertOrganizationMissionSchema = createInsertSchema(organizationMission).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCycleSchema = createInsertSchema(cycles)
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
@@ -1029,6 +1063,9 @@ export type InsertFinancialTransaction = z.infer<typeof insertFinancialTransacti
 
 export type FinancialBudget = typeof financialBudgets.$inferSelect;
 export type InsertFinancialBudget = z.infer<typeof insertFinancialBudgetSchema>;
+
+export type OrganizationMission = typeof organizationMission.$inferSelect;
+export type InsertOrganizationMission = z.infer<typeof insertOrganizationMissionSchema>;
 
 // 1:1 Meetings
 export const meetings = pgTableWithUlid("meetings", {

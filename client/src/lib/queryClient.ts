@@ -1,7 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Function to get the current tenant ID from the URL
-function getCurrentTenantFromUrl(): string | null {
+export function getCurrentTenantFromUrl(): string | null {
   // First priority: Check for direct ULID in path /id format
   const directUlidMatch = window.location.pathname.match(/^\/([A-Z0-9]{26})/);
   if (directUlidMatch) {
@@ -68,18 +68,21 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Add tenant query parameter if available
+  // Get tenant ID from URL
   const tenantId = getCurrentTenantFromUrl();
   const urlObj = new URL(url, window.location.origin);
   
-  // Only add tenantId if it exists
+  // Prepare headers
+  const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
+  
+  // Add X-Tenant-ID header if tenant ID is available
   if (tenantId) {
-    urlObj.searchParams.append('tenantId', tenantId);
+    headers['X-Tenant-ID'] = tenantId;
   }
   
   const res = await fetch(urlObj.toString(), {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include", // Important for session cookies
   });
@@ -93,7 +96,9 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+  async ({ queryKey, meta }) => {
+    // Check if this query explicitly requires tenant ID
+    const requiresTenant = meta?.requiresTenant === true;
     try {
       // Enhanced debugging: log the request attempt
       console.log(`Making API request with queryKey:`, queryKey);
@@ -144,13 +149,15 @@ export const getQueryFn: <T>(options: {
         url = queryKey as string;
       }
       
-      // Add tenant query parameter if available
+      // Get tenant ID from URL
       const tenantId = getCurrentTenantFromUrl();
       const urlObj = new URL(url, window.location.origin);
       
-      // Only add tenantId if it exists and not already in the URL
-      if (tenantId && !urlObj.searchParams.has('tenantId')) {
-        urlObj.searchParams.append('tenantId', tenantId);
+      // Add tenant ID as a query parameter to ensure it's available to the server
+      if (tenantId && (requiresTenant || !urlObj.searchParams.has('tenantId'))) {
+        // Always add for requiresTenant queries or if not already present
+        urlObj.searchParams.set('tenantId', tenantId);
+        console.log(`Adding tenant ID to request: ${tenantId} for ${url}`);
       }
       
       // Show request context for debugging
@@ -161,12 +168,20 @@ export const getQueryFn: <T>(options: {
         hasTenant: !!tenantId
       });
       
+      // Prepare headers with tenant ID
+      const headers: HeadersInit = {
+        // Adding a client timestamp for debugging
+        'X-Client-Timestamp': new Date().toISOString()
+      };
+      
+      // Add X-Tenant-ID header if tenant ID is available
+      if (tenantId) {
+        headers['X-Tenant-ID'] = tenantId;
+      }
+      
       const res = await fetch(requestUrl, {
         credentials: "include", // Important for session cookies
-        headers: {
-          // Adding a client timestamp for debugging
-          'X-Client-Timestamp': new Date().toISOString()
-        }
+        headers
       });
 
       // Capture response status for better debugging

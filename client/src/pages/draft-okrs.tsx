@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 interface KeyResult {
   id: string;
@@ -91,6 +92,7 @@ const mockAIAnalysis: AIAnalysis = {
 
 export default function DraftOKRs() {
   const { toast } = useToast();
+  const { currentTenant } = useTenantContext();
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -102,6 +104,7 @@ export default function DraftOKRs() {
   const [analyzing, setAnalyzing] = useState(false);
   
   const [newDraftData, setNewDraftData] = useState({
+    id: "", // Adding id property to fix LSP error
     title: "",
     description: "",
     keyResults: [{ id: "", title: "", objective_id: "" }]
@@ -116,39 +119,40 @@ export default function DraftOKRs() {
   
   // Fetch draft objectives
   const { data: draftObjectives, isLoading, error } = useQuery<DraftObjective[]>({
-    queryKey: ["/api/objectives", "draft"],
+    queryKey: ["/api/objectives", "draft", currentTenant?.id],
     queryFn: async () => {
-      // First, ensure we have the current user information
-      const userResponse = await apiRequest("GET", "/api/user");
-      if (!userResponse.ok) {
-        throw new Error("Unable to verify authentication. Please log in again.");
-      }
-      
-      const userData = await userResponse.json();
-      
-      // Make sure we have the user's tenant information
-      if (!userData.tenants || userData.tenants.length === 0) {
-        throw new Error("No organizations found. Please contact your administrator.");
-      }
-
-      // Always use the default tenant from the user data if available
+      // First let's get the tenant ID from context or URL
       let tenantId = '';
       
-      if (userData.defaultTenant) {
-        tenantId = userData.defaultTenant;
-        console.log("Using default tenant:", tenantId);
+      if (currentTenant) {
+        // If tenant context is available, use it
+        tenantId = currentTenant.id;
+        console.log("Using tenant from context:", tenantId);
       } else {
-        // If no default, use the first tenant the user has access to
-        tenantId = userData.tenants[0].id;
-        console.log("Using first available tenant:", tenantId);
+        // If no tenant in context, check URL pattern for tenant ID
+        const ulidMatch = location.pathname.match(/^\/([A-Z0-9]{26})/);
+        
+        if (ulidMatch) {
+          tenantId = ulidMatch[1];
+          console.log("Using tenant from URL path:", tenantId);
+          // Store the tenant ID for future use
+          sessionStorage.setItem('currentTenantId', tenantId);
+        } else {
+          // Fallback to session storage
+          const storedTenantId = sessionStorage.getItem('currentTenantId');
+          if (storedTenantId) {
+            tenantId = storedTenantId;
+            console.log("Using tenant from session storage:", tenantId);
+          }
+        }
       }
       
-      // Store the tenant ID for future use
-      localStorage.setItem('defaultTenantId', tenantId);
+      if (!tenantId) {
+        throw new Error("No tenant ID found. Please select an organization first.");
+      }
       
-      // Instead of using general objectives endpoint, use the my-objectives endpoint which 
-      // has better tenant context handling and automatically filters by the current user
-      const response = await apiRequest("GET", `/api/my-objectives`);
+      // Make API request with proper tenant ID in headers
+      const response = await apiRequest("GET", `/api/my-objectives?tenantId=${tenantId}`);
       
       console.log(`Fetching my objectives for tenant: ${tenantId}`);
       
@@ -273,6 +277,7 @@ export default function DraftOKRs() {
   const handleNewDraft = () => {
     // Reset the form data
     setNewDraftData({
+      id: "", // Include id property to prevent type error
       title: "",
       description: "",
       keyResults: [{ id: "", title: "", objective_id: "" }]
@@ -287,7 +292,7 @@ export default function DraftOKRs() {
       keyResults: [...prev.keyResults, { 
         id: "", 
         title: "", 
-        objective_id: prev.id || "", // Use the objective ID if it exists
+        objective_id: prev.id, // Now the id property exists
         start_value: "0",
         current_value: "0",
         target_value: "100",
@@ -474,8 +479,32 @@ export default function DraftOKRs() {
 
     setCreating(true);
     
-    // Get tenant ID from the selected tenant in context or session storage
-    const tenantId = sessionStorage.getItem('selectedTenantId') || '';
+    // Get tenant ID from the tenant context, URL, or session storage
+    let tenantId = '';
+    
+    if (currentTenant) {
+      tenantId = currentTenant.id;
+    } else {
+      // If no tenant in context, check URL pattern for tenant ID
+      const ulidMatch = location.pathname.match(/^\/([A-Z0-9]{26})/);
+      
+      if (ulidMatch) {
+        tenantId = ulidMatch[1];
+      } else {
+        // Fallback to session storage
+        tenantId = sessionStorage.getItem('currentTenantId') || '';
+      }
+    }
+    
+    if (!tenantId) {
+      toast({
+        title: "Error",
+        description: "No tenant ID found. Please select an organization first.",
+        variant: "destructive"
+      });
+      setCreating(false);
+      return;
+    }
     
     // Prepare the new objective data
     const newObjective = {
@@ -520,6 +549,7 @@ export default function DraftOKRs() {
         
         // Reset the form data
         setNewDraftData({
+          id: "", // Include id property to fix LSP error
           title: "",
           description: "",
           keyResults: [{ id: "", title: "", objective_id: "" }]

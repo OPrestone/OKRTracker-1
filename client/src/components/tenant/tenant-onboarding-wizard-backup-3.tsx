@@ -455,7 +455,7 @@ export default function TenantOnboardingWizard() {
     // Add default teams automatically if no teams have been added yet
     if (addedTeams.length === 0 && activePage === "team") {
       console.log("Setting up default example teams");
-
+      
       // Create Marketing Team (blue, megaphone)
       const marketingTeam = {
         name: "Marketing Team",
@@ -464,7 +464,7 @@ export default function TenantOnboardingWizard() {
         icon: "megaphone",
         members: []
       };
-
+      
       // Create Sales Team (green, chart)
       const salesTeam = {
         name: "Sales Team",
@@ -473,7 +473,7 @@ export default function TenantOnboardingWizard() {
         icon: "briefcase",
         members: []
       };
-
+      
       // Create Engineering Team (purple, code)
       const engineeringTeam = {
         name: "Engineering Team",
@@ -482,7 +482,7 @@ export default function TenantOnboardingWizard() {
         icon: "code",
         members: []
       };
-
+      
       setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
       console.log("Default teams created and ready for user to customize");
     }
@@ -498,7 +498,7 @@ export default function TenantOnboardingWizard() {
         // Extract users that were selected
         const selectedUsers = values.team.users?.filter(user => user.selected) || [];
         console.log("Selected users:", selectedUsers);
-
+        
         // Use teams from state or default if none added
         const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
           name: team.name,
@@ -525,7 +525,7 @@ export default function TenantOnboardingWizard() {
             icon: "code"
           }
         ];
-
+        
         console.log("Teams to be created:", teams);
 
         // Prepare the request data
@@ -542,7 +542,7 @@ export default function TenantOnboardingWizard() {
         };
 
         console.log("Submitting organization data:", requestData);
-
+        
         // Attempt API call first
         try {
           const response = await fetch('/api/tenants', {
@@ -551,7 +551,7 @@ export default function TenantOnboardingWizard() {
             body: JSON.stringify(requestData),
             credentials: 'include'
           });
-
+          
           if (response.ok) {
             const orgData = await response.json();
             console.log("Organization created successfully via API:", orgData);
@@ -559,7 +559,7 @@ export default function TenantOnboardingWizard() {
             // Create time cadences for the organization
             const tenantId = orgData.tenant.id;
             console.log("Creating time cadences for tenant:", tenantId);
-
+            
             // Annual cadence
             const annualResponse = await fetch('/api/cadences', {
               method: 'POST',
@@ -604,17 +604,17 @@ export default function TenantOnboardingWizard() {
           }
         } catch (apiError) {
           console.log("Using simulated tenant creation flow:", apiError);
-
+          
           // Generate a unique ID for the tenant
           const tenantId = `demo-tenant-${Date.now()}`;
-
+          
           // Create team entries with IDs
           const teamsWithIds = teams.map((team, index) => ({
             ...team,
             id: `team-${Date.now()}-${index}`,
             tenantId
           }));
-
+          
           // Return simulated API response
           return {
             id: tenantId,
@@ -642,25 +642,25 @@ export default function TenantOnboardingWizard() {
     onSuccess: async (data) => {
       console.log("Organization created successfully:", data);
       setTenantCreated(true);
-
+      
       // Show success message
       toast({
         title: "Organization created!",
         description: "Your new organization has been set up successfully with teams and time cadences.",
       });
-
+      
       // Invalidate queries to refresh lists
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-
+      
       // For demo purposes, show completion message and redirect
       setTimeout(() => {
         console.log("Organization setup complete");
-
+        
         toast({
           title: "Setup complete",
           description: "Your organization is ready! You will now be redirected to your dashboard.",
         });
-
+        
         // Navigate to the dashboard
         setTimeout(() => {
           navigate("/auth");
@@ -682,7 +682,7 @@ export default function TenantOnboardingWizard() {
     console.log("Form submitted with data:", data);
     createTenantMutation.mutate(data);
   };
-
+  
   const handleSubmit = form.handleSubmit(onSubmitForm);
 
   // Navigation handlers
@@ -1362,7 +1362,7 @@ export default function TenantOnboardingWizard() {
                                 />
                               </div>
                             </div>
-
+                            
                             <div className="mb-4">
                               <span className="text-sm font-medium text-gray-500 mb-1 block">Description:</span>
                               <Textarea 
@@ -1452,7 +1452,7 @@ export default function TenantOnboardingWizard() {
                                 </div>
                               </div>
                             </div>
-
+                            
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
@@ -1470,7 +1470,7 @@ export default function TenantOnboardingWizard() {
                               </div>
                             </div>
                           </div>
-
+                          
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-500">
                               {addedTeams.some(team => team.name.includes("Marketing")) ? "Team added" : "Add this team?"}
@@ -1486,12 +1486,12 @@ export default function TenantOnboardingWizard() {
                               }
                               onClick={() => {
                                 const isTeamAdded = addedTeams.some(team => team.name.includes("Marketing"));
-
+                                
                                 if (isTeamAdded) {
                                   // Remove team functionality
                                   const updatedTeams = addedTeams.filter(team => !team.name.includes("Marketing"));
                                   setAddedTeams(updatedTeams);
-
+                                  
                                   toast({
                                     title: "Team removed",
                                     description: "Marketing Team has been removed from your organization",
@@ -1503,7 +1503,7 @@ export default function TenantOnboardingWizard() {
                                   const teamDescription = (document.getElementById('marketingTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for all marketing activities";
                                   const teamColor = (document.getElementById('marketingTeamColor') as HTMLInputElement)?.value || "#3B82F6";
                                   const teamIcon = (document.getElementById('marketingTeamIcon') as HTMLSelectElement)?.value || "megaphone";
-
+                                  
                                   // Create team object
                                   const teamData = {
                                     name: teamName,
@@ -1574,7 +1574,7 @@ export default function TenantOnboardingWizard() {
                                 />
                               </div>
                             </div>
-
+                            
                             <div className="mb-4">
                               <span className="text-sm font-medium text-gray-500 mb-1 block">Description:</span>
                               <Textarea 
@@ -1664,7 +1664,7 @@ export default function TenantOnboardingWizard() {
                                 </div>
                               </div>
                             </div>
-
+                            
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
@@ -1682,7 +1682,7 @@ export default function TenantOnboardingWizard() {
                               </div>
                             </div>
                           </div>
-
+                          
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-500">
                               {addedTeams.some(team => team.name.includes("Sales")) ? "Team added" : "Add this team?"}
@@ -1698,12 +1698,12 @@ export default function TenantOnboardingWizard() {
                               }
                               onClick={() => {
                                 const isTeamAdded = addedTeams.some(team => team.name.includes("Sales"));
-
+                                
                                 if (isTeamAdded) {
                                   // Remove team functionality
                                   const updatedTeams = addedTeams.filter(team => !team.name.includes("Sales"));
                                   setAddedTeams(updatedTeams);
-
+                                  
                                   toast({
                                     title: "Team removed",
                                     description: "Sales Team has been removed from your organization",
@@ -1715,7 +1715,7 @@ export default function TenantOnboardingWizard() {
                                   const teamDescription = (document.getElementById('salesTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for sales and revenue growth";
                                   const teamColor = (document.getElementById('salesTeamColor') as HTMLInputElement)?.value || "#10B981";
                                   const teamIcon = (document.getElementById('salesTeamIcon') as HTMLSelectElement)?.value || "briefcase";
-
+                                  
                                   // Create team object
                                   const teamData = {
                                     name: teamName,
@@ -1785,7 +1785,7 @@ export default function TenantOnboardingWizard() {
                                 />
                               </div>
                             </div>
-
+                            
                             <div className="mb-4">
                               <span className="text-sm font-medium text-gray-500 mb-1 block">Description:</span>
                               <Textarea 
@@ -1875,7 +1875,7 @@ export default function TenantOnboardingWizard() {
                                 </div>
                               </div>
                             </div>
-
+                            
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
@@ -1893,7 +1893,7 @@ export default function TenantOnboardingWizard() {
                               </div>
                             </div>
                           </div>
-
+                          
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-500">
                               {addedTeams.some(team => team.name.includes("Engineering")) ? "Team added" : "Add this team?"}
@@ -1909,12 +1909,12 @@ export default function TenantOnboardingWizard() {
                               }
                               onClick={() => {
                                 const isTeamAdded = addedTeams.some(team => team.name.includes("Engineering"));
-
+                                
                                 if (isTeamAdded) {
                                   // Remove team functionality
                                   const updatedTeams = addedTeams.filter(team => !team.name.includes("Engineering"));
                                   setAddedTeams(updatedTeams);
-
+                                  
                                   toast({
                                     title: "Team removed",
                                     description: "Engineering Team has been removed from your organization",
@@ -1926,7 +1926,7 @@ export default function TenantOnboardingWizard() {
                                   const teamDescription = (document.getElementById('engineeringTeamDescription') as HTMLTextAreaElement)?.value || "Team responsible for product development and technical operations";
                                   const teamColor = (document.getElementById('engineeringTeamColor') as HTMLInputElement)?.value || "#8B5CF6";
                                   const teamIcon = (document.getElementById('engineeringTeamIcon') as HTMLSelectElement)?.value || "code";
-
+                                  
                                   // Create team object
                                   const teamData = {
                                     name: teamName,
@@ -2006,7 +2006,7 @@ export default function TenantOnboardingWizard() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform!</h3>
+                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform</h3>
                         <p className="text-gray-600 mb-3">
                           You're all set to create your organization. Click the button below to finish setup and start tracking your objectives and key results.
                         </p>
