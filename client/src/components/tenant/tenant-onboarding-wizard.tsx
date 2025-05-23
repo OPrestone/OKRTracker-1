@@ -1162,32 +1162,13 @@ export default function TenantOnboardingWizard() {
                               </svg>
                             </div>
                             <div>
-                              <h3 className="text-white font-medium text-lg">Team Name: 
-                                <Input 
-                                  id="marketingTeamName" 
-                                  defaultValue="Marketing" 
-                                  className="inline-block ml-1 bg-transparent border-none text-white focus:ring-0 p-0 max-w-[120px] h-auto" 
-                                />
-                              </h3>
+                              <h3 className="text-white font-medium text-lg">Team</h3>
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="px-6 py-5">
-                        {/* Name field moved above description */}
                         <div className="mb-4">
-                          <label htmlFor="marketingTeamFullName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Team Name
-                          </label>
-                          <Input 
-                            id="marketingTeamFullName"
-                            defaultValue="Marketing Team" 
-                            className="border-gray-200 mb-3" 
-                          />
-                          
-                          <label htmlFor="marketingTeamDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                          </label>
                           <Textarea 
                             id="marketingTeamDescription"
                             defaultValue="Team responsible for all marketing activities" 
@@ -1197,6 +1178,16 @@ export default function TenantOnboardingWizard() {
                         
                         {/* Show Team Properties */}
                         <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Name:</span>
+                            <div className="flex-1">
+                              <Input 
+                                id="marketingTeamFullName"
+                                defaultValue="Marketing Team" 
+                                className="border-gray-200" 
+                              />
+                            </div>
+                          </div>
 
                           <div className="flex items-center">
                             <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
