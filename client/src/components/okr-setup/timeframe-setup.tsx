@@ -143,10 +143,12 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   // Create timeframe mutation
   const createTimeframeMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Creating timeframe with data:", data);
       const res = await apiRequest("POST", "/api/timeframes", data);
       return await res.json();
     },
     onSuccess: (data) => {
+      console.log("Timeframe created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
       toast({
         title: "Success!",
@@ -163,15 +165,15 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       setIsAddingTimeframe(false);
       
       // Add the new timeframe to the local list
-      setTimeframes(prev => [...prev, data]);
+      setTimeframes(prev => prev.map(tf => tf.id ? tf : {...tf, id: data.id}));
     },
     onError: (error) => {
+      console.error("Failed to create timeframe:", error);
       toast({
         title: "Error",
         description: "Failed to create timeframe. Please try again.",
         variant: "destructive",
       });
-      console.error("Failed to create timeframe:", error);
     }
   });
 
@@ -188,15 +190,30 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     
     // Save each timeframe to the database
     try {
+      console.log("Saving timeframes:", timeframes);
+      let saveCount = 0;
+      
       for (const timeframe of timeframes) {
         if (!timeframe.id) { // Only save new timeframes
-          await createTimeframeMutation.mutateAsync(timeframe);
+          // Format dates properly for the API
+          const timeframeData = {
+            ...timeframe,
+            startDate: timeframe.startDate instanceof Date ? timeframe.startDate.toISOString() : timeframe.startDate,
+            endDate: timeframe.endDate instanceof Date ? timeframe.endDate.toISOString() : timeframe.endDate,
+          };
+          
+          console.log("Saving timeframe:", timeframeData);
+          await createTimeframeMutation.mutateAsync(timeframeData);
+          saveCount++;
         }
       }
       
+      // Clear the timeframes list since they're now in the database
+      setTimeframes([]);
+      
       toast({
         title: "Success!",
-        description: `${timeframes.length} timeframes have been saved.`
+        description: `${saveCount} timeframes have been saved to the database.`
       });
     } catch (error) {
       toast({
