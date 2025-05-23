@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User, Lightbulb } from "lucide-react";
 import TimeframeSetup from "./timeframe-setup";
@@ -1606,51 +1607,116 @@ export default function OKRSystemSetupWizard() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-lg border p-4">
-                      <h4 className="font-medium text-primary mb-2 flex items-center">
-                        <Settings2 className="w-4 h-4 mr-1" /> General Settings
+                    <div className="bg-white rounded-lg border hover:border-primary/40 transition-colors p-5 shadow-sm">
+                      <h4 className="font-medium text-primary mb-3 flex items-center">
+                        <Settings2 className="w-4 h-4 mr-2" /> General Settings
                       </h4>
-                      <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Tracking Frequency:</span> {form.getValues("generalSettings.trackingFrequency")}</li>
-                        <li><span className="font-medium">Notifications:</span> {form.getValues("generalSettings.enableNotifications") ? "Enabled" : "Disabled"}</li>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Tracking Frequency:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("generalSettings.trackingFrequency")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Notifications:</span> 
+                          <Badge variant={form.getValues("generalSettings.enableNotifications") ? "default" : "outline"} className={form.getValues("generalSettings.enableNotifications") ? "bg-green-100 text-green-800 hover:bg-green-100" : "text-gray-500"}>
+                            {form.getValues("generalSettings.enableNotifications") ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Visibility Mode:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">
+                            {form.getValues("generalSettings.defaultVisibility")}
+                          </span>
+                        </li>
                       </ul>
                     </div>
                     
-                    <div className="bg-white rounded-lg border p-4">
-                      <h4 className="font-medium text-primary mb-2 flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" /> Timeframes
+                    <div className="bg-white rounded-lg border hover:border-primary/40 transition-colors p-5 shadow-sm">
+                      <h4 className="font-medium text-primary mb-3 flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" /> Timeframes
                       </h4>
-                      <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Primary Cadence:</span> {form.getValues("timeframes.primaryCadence")}</li>
-                        <li><span className="font-medium">Start Month:</span> {form.getValues("timeframes.startMonth")}</li>
-                        <li><span className="font-medium">Additional Cadences:</span> {[
-                          form.getValues("timeframes.enableQuarterlyCadence") ? "Quarterly" : "",
-                          form.getValues("timeframes.enableAnnualCadence") ? "Annual" : "",
-                          form.getValues("timeframes.customCadence") || ""
-                        ].filter(Boolean).join(", ") || "None"}</li>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Primary Cadence:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("timeframes.primaryCadence")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Start Month:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("timeframes.startMonth")}</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Additional Cadences:</span> 
+                          <div className="flex flex-wrap gap-1">
+                            {form.getValues("timeframes.enableQuarterlyCadence") && (
+                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Quarterly</Badge>
+                            )}
+                            {form.getValues("timeframes.enableAnnualCadence") && (
+                              <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100">Annual</Badge>
+                            )}
+                            {form.getValues("timeframes.customCadence") && (
+                              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">{form.getValues("timeframes.customCadence")}</Badge>
+                            )}
+                            {!form.getValues("timeframes.enableQuarterlyCadence") && 
+                             !form.getValues("timeframes.enableAnnualCadence") && 
+                             !form.getValues("timeframes.customCadence") && (
+                              <span className="text-gray-500 italic">None</span>
+                            )}
+                          </div>
+                        </li>
                       </ul>
                     </div>
                     
-                    <div className="bg-white rounded-lg border p-4">
-                      <h4 className="font-medium text-primary mb-2 flex items-center">
-                        <Target className="w-4 h-4 mr-1" /> Objective Settings
+                    <div className="bg-white rounded-lg border hover:border-primary/40 transition-colors p-5 shadow-sm">
+                      <h4 className="font-medium text-primary mb-3 flex items-center">
+                        <Target className="w-4 h-4 mr-2" /> Objective Settings
                       </h4>
-                      <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Max Objectives/Team:</span> {form.getValues("objectiveSettings.maxObjectivesPerTeam")}</li>
-                        <li><span className="font-medium">Max KRs/Objective:</span> {form.getValues("objectiveSettings.maxKeyResultsPerObjective")}</li>
-                        <li><span className="font-medium">Approval Required:</span> {form.getValues("objectiveSettings.requireObjectiveApproval") ? "Yes" : "No"}</li>
-                        <li><span className="font-medium">Default Category:</span> {form.getValues("objectiveSettings.defaultObjectiveCategory")}</li>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Max Objectives/Team:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("objectiveSettings.maxObjectivesPerTeam")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Max KRs/Objective:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("objectiveSettings.maxKeyResultsPerObjective")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Approval Required:</span> 
+                          <Badge variant={form.getValues("objectiveSettings.requireObjectiveApproval") ? "default" : "outline"} className={form.getValues("objectiveSettings.requireObjectiveApproval") ? "bg-green-100 text-green-800 hover:bg-green-100" : "text-gray-500"}>
+                            {form.getValues("objectiveSettings.requireObjectiveApproval") ? "Yes" : "No"}
+                          </Badge>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Default Category:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800">{form.getValues("objectiveSettings.defaultObjectiveCategory") || "None"}</span>
+                        </li>
                       </ul>
                     </div>
                     
-                    <div className="bg-white rounded-lg border p-4">
-                      <h4 className="font-medium text-primary mb-2 flex items-center">
-                        <Users2 className="w-4 h-4 mr-1" /> Team Configuration
+                    <div className="bg-white rounded-lg border hover:border-primary/40 transition-colors p-5 shadow-sm">
+                      <h4 className="font-medium text-primary mb-3 flex items-center">
+                        <Users2 className="w-4 h-4 mr-2" /> Team Configuration
                       </h4>
-                      <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Org Structure:</span> {form.getValues("teamConfiguration.orgStructureType")}</li>
-                        <li><span className="font-medium">Default Visibility:</span> {form.getValues("teamConfiguration.defaultVisibility")}</li>
-                        <li><span className="font-medium">Cross-Team Objectives:</span> {form.getValues("teamConfiguration.enableCrossTeamObjectives") ? "Enabled" : "Disabled"}</li>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Organization Structure:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800 capitalize">{form.getValues("teamConfiguration.orgStructureType")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Default Visibility:</span> 
+                          <span className="bg-gray-50 px-2 py-1 rounded text-gray-800 capitalize">{form.getValues("teamConfiguration.defaultVisibility")}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Cross-Team Objectives:</span> 
+                          <Badge variant={form.getValues("teamConfiguration.enableCrossTeamObjectives") ? "default" : "outline"} className={form.getValues("teamConfiguration.enableCrossTeamObjectives") ? "bg-green-100 text-green-800 hover:bg-green-100" : "text-gray-500"}>
+                            {form.getValues("teamConfiguration.enableCrossTeamObjectives") ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1/2 font-medium text-gray-700">Selected Teams:</span> 
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                            {form.getValues("teamConfiguration.selectedTeams")?.length || 0} teams
+                          </Badge>
+                        </li>
                       </ul>
                     </div>
                   </div>
