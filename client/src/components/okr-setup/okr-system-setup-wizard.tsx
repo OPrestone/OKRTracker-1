@@ -1720,6 +1720,48 @@ export default function OKRSystemSetupWizard() {
                       </ul>
                     </div>
                   </div>
+                  
+                  <div className="mt-8 pt-6 border-t">
+                    <h2 className="text-xl font-semibold mb-4 flex items-center">
+                      <ArrowRight className="mr-2 h-5 w-5 text-primary" />
+                      Next Steps
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      <div className="bg-white p-5 rounded-lg border hover:border-primary/40 transition-colors shadow-sm">
+                        <div className="bg-blue-50 text-blue-700 p-2 rounded-md w-12 h-12 flex items-center justify-center mb-3">
+                          <Target className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Create Your First Objective</h3>
+                        <p className="text-sm text-gray-600 mb-3">Start defining your organization's key objectives for the current timeframe.</p>
+                        <Button variant="outline" size="sm" className="mt-1 w-full">
+                          <Target className="h-4 w-4 mr-2" /> Create Objective
+                        </Button>
+                      </div>
+                      
+                      <div className="bg-white p-5 rounded-lg border hover:border-primary/40 transition-colors shadow-sm">
+                        <div className="bg-green-50 text-green-700 p-2 rounded-md w-12 h-12 flex items-center justify-center mb-3">
+                          <Users2 className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Invite Team Members</h3>
+                        <p className="text-sm text-gray-600 mb-3">Add members to your teams so they can start collaborating on OKRs.</p>
+                        <Button variant="outline" size="sm" className="mt-1 w-full">
+                          <Users2 className="h-4 w-4 mr-2" /> Manage Teams
+                        </Button>
+                      </div>
+                      
+                      <div className="bg-white p-5 rounded-lg border hover:border-primary/40 transition-colors shadow-sm">
+                        <div className="bg-purple-50 text-purple-700 p-2 rounded-md w-12 h-12 flex items-center justify-center mb-3">
+                          <Layers className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Set Up Integrations</h3>
+                        <p className="text-sm text-gray-600 mb-3">Connect your OKR platform with other tools to streamline workflows.</p>
+                        <Button variant="outline" size="sm" className="mt-1 w-full">
+                          <Layers className="h-4 w-4 mr-2" /> Configure Integrations
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
@@ -1754,18 +1796,23 @@ export default function OKRSystemSetupWizard() {
                     handleSubmit(e);
                   }}
                   disabled={isSubmitting || setupComplete}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-6 py-5 h-auto text-base shadow-md"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving Configuration...
+                      <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                      <span>Saving Your Configuration...</span>
+                    </>
+                  ) : setupComplete ? (
+                    <>
+                      <CheckCircle2 className="mr-3 h-5 w-5" />
+                      <span>Configuration Successfully Saved!</span>
                     </>
                   ) : (
-                    <>
-                      Save Configuration
-                      <Zap className="ml-2 h-4 w-4" />
-                    </>
+                    <div className="flex flex-col items-center">
+                      <span className="text-base font-medium">Launch Your OKR System</span>
+                      <span className="text-xs opacity-90 mt-1">Save configuration and get started</span>
+                    </div>
                   )}
                 </Button>
               )}
