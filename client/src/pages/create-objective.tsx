@@ -169,7 +169,8 @@ export default function CreateObjective() {
         visibility: objectiveData.visibility,
         alignment_type: objectiveData.alignmentType,
         alignment_target_id: objectiveData.alignmentTarget,
-        status: 'active'
+        status: 'active',
+        level: 'team' // Required field in the schema
       };
       
       // Submit to API
