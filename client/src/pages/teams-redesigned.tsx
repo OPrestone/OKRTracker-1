@@ -682,15 +682,16 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
 
   // Initialize form values when team changes
   useEffect(() => {
-    if (team) {
+    if (team && isOpen) {
       setTeamName(team.name);
       setTeamColor(team.color || "#3B82F6");
       setTeamIcon(team.icon || "users");
       setTeamDescription(team.description || "");
       setTeamParent(team.parentId || "none");
       setTeamLeaderId(team.leaderId || null);
+      setUserSearchQuery("");
     }
-  }, [team]);
+  }, [team, isOpen]);
 
   // Filter users based on search query
   const filteredUsers = userSearchQuery.trim() === "" 
@@ -761,7 +762,12 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Edit Team</DialogTitle>
