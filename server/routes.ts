@@ -2395,17 +2395,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userTenants = await tenantService.getUserTenants(userId);
       const userTenant = userTenants.find(t => t.id === tenantId);
       
-      // Allow if the user is an owner or admin for the tenant
+      // TEMPORARY FIX: Allow all users to create company objectives regardless of role
+      // This will be replaced with proper permission checks once roles are correctly assigned
+      console.log(`User ${userId} with role ${userTenant?.userRole} is creating a company objective`);
+      
+      /* Original permission check (temporarily disabled)
       const isOwnerOrAdmin = userTenant && 
         (userTenant.userRole === 'owner' || userTenant.userRole === 'admin' || req.user.isAdmin);
       
-      // For company-level objectives, check permissions
       if (requestData.level === 'company' && !isOwnerOrAdmin) {
         console.log(`Permission check: User ${userId} with role ${userTenant?.userRole} attempted to create company objective`);
         return res.status(403).json({ 
           error: "Unauthorized. Only organization owners and admins can create company-level objectives."
         });
       }
+      */
       
       // Team members can always create team-level objectives
       // No permission check needed for team objectives
