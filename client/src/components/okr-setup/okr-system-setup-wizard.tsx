@@ -149,74 +149,100 @@ export default function OKRSystemSetupWizard() {
         // Set tenant ID for later use in the submit function
         setTenantId(currentTenantId);
         
+        // First, try to fetch organization mission data to prefill mission and vision fields
+        console.log("Fetching organization mission data for tenant:", currentTenantId);
+        
+        const missionResponse = await fetch(`/api/organization-mission?tenantId=${currentTenantId}`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': currentTenantId
+          },
+          credentials: 'include'
+        });
+        
+        let missionData = null;
+        if (missionResponse.ok) {
+          const missionResult = await missionResponse.json();
+          console.log("Organization mission data loaded:", missionResult);
+          missionData = missionResult;
+        }
+        
+        // Then fetch OKR system config for remaining form fields
         console.log("Fetching OKR system config with tenant ID:", currentTenantId);
         
         const response = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
-            'X-Tenant-ID': currentTenantId // Add tenant ID in header for middleware
+            'X-Tenant-ID': currentTenantId
           },
           credentials: 'include'
         });
         
+        let configData = {};
+        
+        // If we have OKR system config data, use it
         if (response.ok) {
           const config = await response.json();
           console.log("Loaded existing OKR system config:", config);
           
-          // Map the database config to form values
           if (config.data) {
             try {
-              const data = JSON.parse(config.data);
-              
-              // Update form with existing values
-              form.reset({
-                generalSettings: {
-                  companyMission: data.generalSettings?.companyMission || "",
-                  companyVision: data.generalSettings?.companyVision || "",
-                  companyValues: data.generalSettings?.companyValues || "",
-                  trackingFrequency: data.generalSettings?.trackingFrequency || "weekly",
-                  enableNotifications: data.generalSettings?.enableNotifications !== false,
-                },
-                timeframes: {
-                  primaryCadence: data.timeframes?.primaryCadence || "quarterly",
-                  enableQuarterlyCadence: data.timeframes?.enableQuarterlyCadence !== false,
-                  enableAnnualCadence: data.timeframes?.enableAnnualCadence !== false,
-                  customCadence: data.timeframes?.customCadence || "",
-                  startMonth: data.timeframes?.startMonth || "january",
-                },
-                objectiveSettings: {
-                  defaultObjectiveCategory: data.objectiveSettings?.defaultObjectiveCategory || "growth",
-                  maxObjectivesPerTeam: data.objectiveSettings?.maxObjectivesPerTeam || "5",
-                  maxKeyResultsPerObjective: data.objectiveSettings?.maxKeyResultsPerObjective || "3",
-                  requireObjectiveApproval: data.objectiveSettings?.requireObjectiveApproval !== false,
-                  enableObjectiveAlignment: data.objectiveSettings?.enableObjectiveAlignment !== false,
-                },
-                teamConfiguration: {
-                  orgStructureType: data.teamConfiguration?.orgStructureType || "functional",
-                  enableCrossTeamObjectives: data.teamConfiguration?.enableCrossTeamObjectives !== false,
-                  defaultVisibility: data.teamConfiguration?.defaultVisibility || "public",
-                },
-                integrations: {
-                  enableSlackIntegration: data.integrations?.enableSlackIntegration === true,
-                  enableEmailNotifications: data.integrations?.enableEmailNotifications !== false,
-                  enableCalendarSync: data.integrations?.enableCalendarSync === true,
-                  enableAnalyticsReporting: data.integrations?.enableAnalyticsReporting !== false,
-                },
-              });
-              
-              toast({
-                title: "Configuration Loaded",
-                description: "Your existing OKR system configuration has been loaded.",
-              });
-            } catch (parseError) {
-              console.error("Error parsing configuration data:", parseError);
+              configData = JSON.parse(config.data);
+              console.log("Parsed config data:", configData);
+            } catch (error) {
+              console.error("Error parsing OKR system config:", error);
             }
           }
-        } else if (response.status !== 404) {
-          // 404 is expected for new tenants, only show error for other statuses
-          console.warn(`Failed to load OKR system config: ${response.status}`);
         }
+        
+        // Prepare the form values, prioritizing mission/vision from organization-mission endpoint
+        form.reset({
+          generalSettings: {
+            companyMission: missionData?.mission || 
+                           (configData as any).generalSettings?.companyMission || "",
+            companyVision: missionData?.vision || 
+                          (configData as any).generalSettings?.companyVision || "",
+            companyValues: missionData?.behaviors || 
+                          (configData as any).generalSettings?.companyValues || "",
+            trackingFrequency: (configData as any).generalSettings?.trackingFrequency || "weekly",
+            enableNotifications: (configData as any).generalSettings?.enableNotifications !== false,
+          },
+          timeframes: {
+            primaryCadence: (configData as any).timeframes?.primaryCadence || "quarterly",
+            enableQuarterlyCadence: (configData as any).timeframes?.enableQuarterlyCadence !== false,
+            enableAnnualCadence: (configData as any).timeframes?.enableAnnualCadence !== false,
+            customCadence: (configData as any).timeframes?.customCadence || "",
+            startMonth: (configData as any).timeframes?.startMonth || "january",
+          },
+          objectiveSettings: {
+            defaultObjectiveCategory: (configData as any).objectiveSettings?.defaultObjectiveCategory || "growth",
+            maxObjectivesPerTeam: (configData as any).objectiveSettings?.maxObjectivesPerTeam || "5",
+            maxKeyResultsPerObjective: (configData as any).objectiveSettings?.maxKeyResultsPerObjective || "3",
+            requireObjectiveApproval: (configData as any).objectiveSettings?.requireObjectiveApproval !== false,
+            enableObjectiveAlignment: (configData as any).objectiveSettings?.enableObjectiveAlignment !== false,
+          },
+          teamConfiguration: {
+            orgStructureType: (configData as any).teamConfiguration?.orgStructureType || "functional",
+            enableCrossTeamObjectives: (configData as any).teamConfiguration?.enableCrossTeamObjectives !== false,
+            defaultVisibility: (configData as any).teamConfiguration?.defaultVisibility || "public",
+          },
+          integrations: {
+            enableSlackIntegration: (configData as any).integrations?.enableSlackIntegration === true,
+            enableEmailNotifications: (configData as any).integrations?.enableEmailNotifications !== false,
+            enableCalendarSync: (configData as any).integrations?.enableCalendarSync === true,
+            enableAnalyticsReporting: (configData as any).integrations?.enableAnalyticsReporting !== false,
+          },
+        });
+        
+        if (missionData?.mission || missionData?.vision || Object.keys(configData).length > 0) {
+          toast({
+            title: "Configuration Loaded",
+            description: "Your existing OKR system configuration has been loaded.",
+          });
+        }
+        
       } catch (error) {
         console.error("Error fetching OKR system config:", error);
       } finally {
@@ -225,7 +251,7 @@ export default function OKRSystemSetupWizard() {
     };
     
     fetchExistingConfig();
-  }, []);
+  }, [form, toast]);
 
   // Using the tenantId state initialized above
   
