@@ -665,10 +665,16 @@ export default function TenantOnboardingWizard() {
           description: "Your organization is ready! You will now be redirected to your dashboard.",
         });
 
-        // Navigate to the dashboard
+        // Navigate to the OKR system setup page
         setTimeout(() => {
-          navigate("/auth");
-          window.location.reload();
+          const tenantId = data.tenant?.id || data.id;
+          if (tenantId) {
+            navigate(`/${tenantId}/okr-system-setup`);
+          } else {
+            // Fallback to dashboard if tenant ID isn't available
+            navigate("/auth");
+            window.location.reload();
+          }
         }, 800);
       }, 1500);
     },
