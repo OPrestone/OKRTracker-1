@@ -1170,6 +1170,31 @@ export default function TenantOnboardingWizard() {
                       </div>
                       <div className="px-6 py-5">
                         <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
+                        
+                        {/* Show Team Properties */}
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Description:</span>
+                            <span className="text-sm text-gray-700">"Team responsible for all marketing activities"</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Color:</span>
+                            <div className="flex items-center">
+                              <div className="h-4 w-4 rounded-full bg-blue-500 mr-2"></div>
+                              <span className="text-sm text-gray-700">#3B82F6 (Blue)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
+                            <div className="flex items-center">
+                              <div className="bg-blue-100 p-1 rounded-md mr-2">
+                                <Building className="h-3.5 w-3.5 text-blue-600" />
+                              </div>
+                              <span className="text-sm text-gray-700">"building"</span>
+                            </div>
+                          </div>
+                        </div>
+                        
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-500">Add this team?</span>
                           <Button 
