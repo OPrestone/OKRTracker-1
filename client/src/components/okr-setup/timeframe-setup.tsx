@@ -44,13 +44,13 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   const [isAddingTimeframe, setIsAddingTimeframe] = useState(false);
   const [activeTab, setActiveTab] = useState("create");
   
-  // Fetch existing timeframes
+  // Fetch existing timeframes with modified query to use the relaxed authentication endpoint
   const { 
     data: existingTimeframes = [], 
     isLoading: isLoadingTimeframes,
     refetch: refetchTimeframes 
   } = useQuery<Timeframe[]>({
-    queryKey: [`/api/timeframes/${tenantId}`],
+    queryKey: [`/api/timeframes?tenantId=${tenantId}`],
     enabled: !!tenantId,
   });
   
@@ -315,7 +315,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           </div>
         </div>
       )}
-      
       {/* Tabs for Create/View */}
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-between items-center mb-4">
