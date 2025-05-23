@@ -13,7 +13,142 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User } from "lucide-react";
+
+// Team interface
+interface Team {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  color?: string;
+  selected?: boolean;
+}
+
+// Team Selection Component
+const TeamSelectionSection = ({ 
+  tenantId, 
+  value = [], 
+  onChange 
+}: { 
+  tenantId: string; 
+  value?: string[]; 
+  onChange?: (selectedTeams: string[]) => void;
+}) => {
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(value);
+  
+  // Fetch teams from the API
+  const { data: teams, isLoading, error } = useQuery({
+    queryKey: ['/api/teams', tenantId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/teams?tenantId=${tenantId}`, {
+          headers: {
+            "X-Tenant-ID": tenantId,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch teams");
+        }
+        
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+        throw error;
+      }
+    },
+  });
+
+  // Toggle team selection
+  const toggleTeamSelection = (teamId: string) => {
+    const updatedTeams = selectedTeams.includes(teamId)
+      ? selectedTeams.filter(id => id !== teamId)
+      : [...selectedTeams, teamId];
+    
+    setSelectedTeams(updatedTeams);
+    
+    // Call the onChange handler if provided
+    if (onChange) {
+      onChange(updatedTeams);
+    }
+  };
+
+  // If loading, show loading indicator
+  if (isLoading) {
+    return (
+      <div className="flex items-center py-4">
+        <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+        <span>Loading teams...</span>
+      </div>
+    );
+  }
+
+  // If error, show error message
+  if (error) {
+    return (
+      <div className="bg-red-50 p-4 rounded-md">
+        <p className="text-red-500">Error loading teams. Please try again.</p>
+      </div>
+    );
+  }
+
+  // If no teams, show message
+  if (!teams || teams.length === 0) {
+    return (
+      <div className="bg-yellow-50 p-4 rounded-md">
+        <p className="text-yellow-700">No teams found. Please create teams first in the Team Management section.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {teams.map((team: Team) => (
+          <div 
+            key={team.id}
+            className={`border rounded-md p-4 cursor-pointer transition-all ${
+              selectedTeams.includes(team.id) 
+                ? 'border-primary bg-primary/5' 
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+            onClick={() => toggleTeamSelection(team.id)}
+          >
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                style={{ backgroundColor: team.color || '#6366F1' }}
+              >
+                {team.icon ? (
+                  <span className="text-lg">{team.icon}</span>
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
+              </div>
+              
+              <div className="flex-1">
+                <h4 className="font-medium">{team.name}</h4>
+                <p className="text-sm text-gray-500 truncate">{team.description}</p>
+              </div>
+              
+              <div className="flex-shrink-0">
+                {selectedTeams.includes(team.id) ? (
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // Define the form schema for OKR system setup
 const formSchema = z.object({
@@ -42,6 +177,7 @@ const formSchema = z.object({
     orgStructureType: z.enum(["functional", "divisional", "matrix", "flat", "hierarchical"]),
     enableCrossTeamObjectives: z.boolean().default(true),
     defaultVisibility: z.enum(["public", "team", "private"]).default("public"),
+    selectedTeams: z.array(z.string()).default([]),
   }),
   integrations: z.object({
     enableSlackIntegration: z.boolean().default(false),
@@ -105,6 +241,7 @@ export default function OKRSystemSetupWizard() {
         orgStructureType: "functional",
         enableCrossTeamObjectives: true,
         defaultVisibility: "public",
+        selectedTeams: [],
       },
       integrations: {
         enableSlackIntegration: false,
@@ -1074,7 +1211,13 @@ export default function OKRSystemSetupWizard() {
                             Select the teams that will be participating in your OKR program. Teams not selected can be added later.
                           </p>
                           
-                          <TeamSelectionSection tenantId={tenantId} />
+                          <TeamSelectionSection 
+                            tenantId={tenantId}
+                            value={form.getValues("teamConfiguration.selectedTeams")}
+                            onChange={(selectedTeams) => {
+                              form.setValue("teamConfiguration.selectedTeams", selectedTeams);
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
