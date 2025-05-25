@@ -527,7 +527,7 @@ export default function OKRSystemSetupWizard() {
         selectedTeams: [] as string[],
         defaultTeams: [] as string[],
         csvUsers: [] as any[],
-        useDefaultTeams: false,
+        useDefaultTeams: true, // Check this by default
       },
       integrations: {
         enableSlackIntegration: false,

@@ -94,7 +94,7 @@ export const teams = pgTableWithUlid("teams", {
   icon: text("icon"),
   parentId: text("parent_id").references(() => teams.id),
   ownerId: text("owner_id").references(() => users.id),
-  leaderId: text("leader_id").references(() => users.id),
+  leaderId: text("leader_id").references(() => users.id, { onDelete: 'set null' }),
   tenantId: text("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
