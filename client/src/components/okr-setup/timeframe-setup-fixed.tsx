@@ -50,30 +50,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     isLoading: isLoadingTimeframes,
     refetch: refetchTimeframes 
   } = useQuery<Timeframe[]>({
-    queryKey: [`/api/timeframes?tenantId=${tenantId}`],
+    queryKey: [`/api/timeframes/${tenantId}`],
     enabled: !!tenantId,
   });
-  
-  // Fetch cadences for this tenant
-  const { 
-    data: tenantCadences = [], 
-    isLoading: isLoadingCadences 
-  } = useQuery({
-    queryKey: [`/api/cadences?tenantId=${tenantId}`],
-    enabled: !!tenantId,
-    select: (data) => {
-      console.log("Fetched tenant cadences:", data);
-      return Array.isArray(data) ? data : [];
-    }
-  });
-  
-  // Effect to automatically create default cadences when component loads if none exist
-  useEffect(() => {
-    if (!isLoadingCadences && tenantCadences.length === 0 && tenantId) {
-      console.log("No cadences found, creating defaults...");
-      createDefaultCadences();
-    }
-  }, [isLoadingCadences, tenantCadences.length, tenantId]);
   
   // New timeframe form state
   const [formState, setFormState] = useState({
@@ -81,7 +60,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     description: "",
     startDate: new Date(),
     endDate: addMonths(new Date(), 3), // Default to 3 months for quarterly
-    cadenceId: "", // Added cadence ID field
   });
 
   // Helper to get month number from name
@@ -104,41 +82,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     }
   };
 
-  // Find corresponding cadence from the tenant's cadences
-  const findCadenceId = (cadenceType: string) => {
-    if (!tenantCadences || tenantCadences.length === 0) return null;
-    
-    // Try to find by exact period match
-    const exactPeriodMatch = tenantCadences.find(c => 
-      c.period?.toLowerCase() === cadenceType.toLowerCase()
-    );
-    if (exactPeriodMatch) return exactPeriodMatch.id;
-    
-    // Try to find by exact name match
-    const exactNameMatch = tenantCadences.find(c => 
-      c.name?.toLowerCase() === cadenceType.toLowerCase()
-    );
-    if (exactNameMatch) return exactNameMatch.id;
-    
-    // Try partial name matches
-    const partialNameMatch = tenantCadences.find(c => 
-      c.name?.toLowerCase().includes(cadenceType.toLowerCase()) ||
-      cadenceType.toLowerCase().includes(c.name?.toLowerCase() || '')
-    );
-    if (partialNameMatch) return partialNameMatch.id;
-    
-    // Try partial period matches
-    const partialPeriodMatch = tenantCadences.find(c => 
-      c.period?.toLowerCase().includes(cadenceType.toLowerCase()) ||
-      cadenceType.toLowerCase().includes(c.period?.toLowerCase() || '')
-    );
-    if (partialPeriodMatch) return partialPeriodMatch.id;
-    
-    // If still nothing found, return the first cadence as fallback
-    console.log(`Could not find exact cadence match for ${cadenceType}, using first available cadence as fallback`);
-    return tenantCadences[0]?.id || null;
-  };
-
   // Create default timeframes based on primary cadence and start month
   const createDefaultTimeframes = () => {
     const now = new Date();
@@ -146,29 +89,10 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     const monthNum = getMonthNumber(startMonth);
     const duration = getCadenceDuration(primaryCadence);
     
-    // Check if we have cadences to work with
-    if (tenantCadences.length === 0) {
-      console.error("No cadences available to create timeframes");
-      return [];
-    }
-    
-    // Get the cadence ID for the primary cadence
-    const primaryCadenceId = findCadenceId(primaryCadence);
-    
-    if (!primaryCadenceId) {
-      console.error(`Could not find cadence ID for primary cadence: ${primaryCadence}`);
-      return [];
-    }
-    
-    console.log(`Creating timeframes with primary cadence ID: ${primaryCadenceId}`);
-    
     // Create timeframes for the current year
     const defaultTimeframes = [];
     
     if (primaryCadence === "quarterly") {
-      // Find quarterly cadence ID
-      const quarterlyCadenceId = findCadenceId("quarterly");
-      
       // Create 4 quarters
       for (let i = 0; i < 4; i++) {
         const startDate = new Date(year, monthNum + (i * 3), 1);
@@ -179,13 +103,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
-          cadenceId: quarterlyCadenceId
         });
       }
     } else if (primaryCadence === "annual") {
-      // Find annual cadence ID
-      const annualCadenceId = findCadenceId("annual");
-      
       // Create annual timeframe
       const startDate = new Date(year, monthNum, 1);
       const endDate = new Date(year + 1, monthNum, 0);
@@ -195,12 +115,8 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         startDate,
         endDate,
         tenantId,
-        cadenceId: annualCadenceId
       });
     } else if (primaryCadence === "halfYearly") {
-      // Try to find half-yearly cadence ID
-      const halfYearlyCadenceId = findCadenceId("halfYearly") || findCadenceId("half-yearly");
-      
       // Create 2 half-year timeframes
       for (let i = 0; i < 2; i++) {
         const startDate = new Date(year, monthNum + (i * 6), 1);
@@ -211,13 +127,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
-          cadenceId: halfYearlyCadenceId
         });
       }
     } else if (primaryCadence === "trimester") {
-      // Try to find trimester cadence ID
-      const trimesterCadenceId = findCadenceId("trimester");
-      
       // Create 3 trimesters
       for (let i = 0; i < 3; i++) {
         const startDate = new Date(year, monthNum + (i * 4), 1);
@@ -228,135 +140,25 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
-          cadenceId: trimesterCadenceId
         });
       }
     }
     
-    console.log("Created default timeframes with cadence connections:", defaultTimeframes);
     return defaultTimeframes;
   };
   
-  // Create default cadences if none exist
-  const createDefaultCadences = async () => {
-    if (tenantCadences.length === 0) {
-      try {
-        const defaultCadences = [
-          {
-            name: "Annual",
-            description: "Yearly planning cycle",
-            period: "annual",
-            tenantId
-          },
-          {
-            name: "Half-Yearly",
-            description: "6-month planning cycle",
-            period: "halfYearly",
-            tenantId
-          },
-          {
-            name: "Quarterly",
-            description: "3-month planning cycle",
-            period: "quarterly",
-            tenantId
-          },
-          {
-            name: "Trimester",
-            description: "4-month planning cycle",
-            period: "trimester",
-            tenantId
-          }
-        ];
-        
-        // Save default cadences to database
-        for (const cadence of defaultCadences) {
-          await apiRequest("POST", "/api/cadences", cadence);
-        }
-        
-        // Refresh cadences
-        queryClient.invalidateQueries({ queryKey: [`/api/cadences?tenantId=${tenantId}`] });
-        
-        toast({
-          title: "Default cadences created",
-          description: "Created standard planning cadences for your organization."
-        });
-        
-        // Return true to indicate cadences were created
-        return true;
-      } catch (error) {
-        console.error("Failed to create default cadences:", error);
-        return false;
-      }
-    }
-    return false;
-  };
-
   // When Apply Default Timeframes button is clicked
-  const handleApplyDefaultTimeframes = async () => {
-    try {
-      // First ensure we have cadences available for the timeframes
-      if (tenantCadences.length === 0) {
-        toast({
-          title: "Creating default cadences",
-          description: "Setting up cadences for your organization..."
-        });
-        
-        const cadencesCreated = await createDefaultCadences();
-        
-        // Wait a moment for the cadences to be processed
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Refresh cadences query
-        await queryClient.invalidateQueries({ queryKey: [`/api/cadences?tenantId=${tenantId}`] });
-        
-        if (!cadencesCreated) {
-          toast({
-            title: "Couldn't create cadences",
-            description: "Please try again or create timeframes manually.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Give the cadences a chance to load before continuing
-        if (tenantCadences.length === 0) {
-          toast({
-            title: "Please try again",
-            description: "Cadences were created but need to be loaded. Click Apply Default Timeframes again.",
-            variant: "default"
-          });
-          return;
-        }
-      }
-      
-      const defaultFrames = createDefaultTimeframes();
-      
-      if (!defaultFrames || defaultFrames.length === 0) {
-        toast({
-          title: "Could not create timeframes",
-          description: "Could not find appropriate cadences. Please refresh the page and try again.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setTimeframes(defaultFrames);
-      
-      // Switch to create tab
-      setActiveTab("create");
-      
-      toast({
-        title: "Default timeframes created",
-        description: `Created ${defaultFrames.length} timeframes based on ${primaryCadence} cadence`,
-      });
-    } catch (error) {
-      console.error("Error creating default timeframes:", error);
-      toast({
-        title: "Error creating timeframes",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
-    }
+  const handleApplyDefaultTimeframes = () => {
+    const defaultFrames = createDefaultTimeframes();
+    setTimeframes(defaultFrames);
+    
+    // Switch to create tab
+    setActiveTab("create");
+    
+    toast({
+      title: "Default timeframes created",
+      description: `Created ${defaultFrames.length} timeframes based on ${primaryCadence} cadence`,
+    });
   };
 
   // Create timeframe mutation
@@ -380,7 +182,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         description: "",
         startDate: new Date(),
         endDate: addMonths(new Date(), getCadenceDuration(primaryCadence)),
-        cadenceId: "",
       });
       setIsAddingTimeframe(false);
       
@@ -478,28 +279,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       return;
     }
     
-    // If cadence ID is not selected, try to find an appropriate one
-    let cadenceId = formState.cadenceId;
-    if (!cadenceId && tenantCadences.length > 0) {
-      // Find the best matching cadence based on duration
-      const durationMonths = Math.round(
-        (formState.endDate.getTime() - formState.startDate.getTime()) / 
-        (30 * 24 * 60 * 60 * 1000)
-      );
-      
-      if (durationMonths <= 3) {
-        cadenceId = findCadenceId("quarterly");
-      } else if (durationMonths <= 6) {
-        cadenceId = findCadenceId("halfYearly");
-      } else {
-        cadenceId = findCadenceId("annual");
-      }
-    }
-    
     // Add the new timeframe to the list
     const newTimeframe = {
       ...formState,
-      cadenceId: cadenceId || "",
       tenantId,
     };
     
@@ -511,7 +293,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       description: "",
       startDate: new Date(),
       endDate: addMonths(new Date(), getCadenceDuration(primaryCadence)),
-      cadenceId: "",
     });
     setIsAddingTimeframe(false);
     
@@ -644,35 +425,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                   />
                 </div>
                 
-                <div>
-                  <Label>Cadence</Label>
-                  <Select
-                    value={formState.cadenceId}
-                    onValueChange={(value) => handleInputChange("cadenceId", value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a cadence" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingCadences ? (
-                        <SelectItem value="loading" disabled>Loading cadences...</SelectItem>
-                      ) : tenantCadences.length > 0 ? (
-                        tenantCadences.map((cadence) => (
-                          <SelectItem key={cadence.id} value={cadence.id}>
-                            {cadence.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>No cadences available</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select the time period type for this timeframe
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Start Date</Label>
                     <Popover>
@@ -754,7 +507,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                         {timeframe.description && (
                           <p className="text-gray-500 mb-2">{timeframe.description}</p>
                         )}
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between">
                           <div>
                             <p className="font-semibold">Start Date:</p>
                             <p>{format(new Date(timeframe.startDate), "PPP")}</p>
@@ -764,19 +517,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                             <p>{format(new Date(timeframe.endDate), "PPP")}</p>
                           </div>
                         </div>
-                        
-                        {/* Show associated cadence if available */}
-                        {timeframe.cadenceId && (
-                          <div className="mt-2 pt-2 border-t">
-                            <p className="font-semibold text-xs text-gray-600">Cadence Type:</p>
-                            <div className="flex items-center mt-1">
-                              <Clock className="h-3 w-3 text-primary mr-1" />
-                              <span className="text-xs">
-                                {tenantCadences.find(c => c.id === timeframe.cadenceId)?.name || 'Custom'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -820,7 +560,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                       {timeframe.description && (
                         <p className="text-gray-500 mb-2">{timeframe.description}</p>
                       )}
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold">Start Date:</p>
                           <p>{format(new Date(timeframe.startDate), "PPP")}</p>
@@ -830,19 +570,6 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                           <p>{format(new Date(timeframe.endDate), "PPP")}</p>
                         </div>
                       </div>
-                      
-                      {/* Show associated cadence if available */}
-                      {timeframe.cadenceId && (
-                        <div className="mt-2 pt-2 border-t">
-                          <p className="font-semibold text-xs text-gray-600">Cadence Type:</p>
-                          <div className="flex items-center mt-1">
-                            <Clock className="h-3 w-3 text-primary mr-1" />
-                            <span className="text-xs">
-                              {tenantCadences.find(c => c.id === timeframe.cadenceId)?.name || 'Custom'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
