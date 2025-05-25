@@ -1298,9 +1298,6 @@ export default function ObjectiveDetail() {
           onOpenChange={setIsAddKeyResultModalOpen}
         />
       )}
-      
-      {/* Debug: Log objectiveId */}
-      {console.log("ObjectiveDetail objectiveId:", objectiveId)}
     </DashboardLayout>
   );
 }
