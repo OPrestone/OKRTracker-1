@@ -266,33 +266,22 @@ export default function TeamDetailPage() {
     }
   ];
 
+  // Get team operations from context
+  const { setTeamLeader } = useTeams();
+  
   // Handle setting a user as team leader
   const handleMakeTeamLead = async (userId: string) => {
     if (!team?.id || !tenantId) return;
     
     try {
-      const response = await fetch(`/api/teams/${team.id}/leader`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId
-        },
-        body: JSON.stringify({ leaderId: userId }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update team leader');
-      }
+      // Use the centralized function from team context
+      await setTeamLeader(team.id, userId);
       
       // Show success message
       toast({
         title: "Team Leader Updated",
         description: "The team leader has been successfully updated.",
       });
-      
-      // Invalidate team query to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/teams", team.id, tenantId] });
       
     } catch (error) {
       toast({
