@@ -49,17 +49,28 @@ export default function SimpleAddKeyResultForm({
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Sending key result data:", data);
-      const response = await apiRequest("POST", "/api/simple-key-results", data);
+      
+      const response = await fetch("/api/simple-key-results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include", // Important for session authentication
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Server error response:", errorText);
+        throw new Error(`Server error: ${response.status}`);
       }
-      const text = await response.text();
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.error("Failed to parse JSON:", text);
-        throw new Error("Invalid response format");
-      }
+
+      const result = await response.json();
+      console.log("Successful response:", result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId] });

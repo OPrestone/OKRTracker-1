@@ -3073,6 +3073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
       
       console.log("Key result created successfully:", result.rows[0]);
+      res.setHeader('Content-Type', 'application/json');
       res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("Error creating simple key result:", error);
