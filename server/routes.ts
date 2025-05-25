@@ -55,6 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register team leader routes
   const apiRouter = Router();
   setupTeamLeaderRoutes(apiRouter);
+  setupTeamRoutes(apiRouter);
   setupApprovedOkrsRoutes(apiRouter);
   app.use('/api', apiRouter);
   
