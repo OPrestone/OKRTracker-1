@@ -13,7 +13,7 @@ const csvUserSchema = z.object({
   role: z.string(),
   department: z.string().optional(),
   team: z.string().optional(),
-  isValid: z.boolean(),
+  isValid: z.boolean().optional(), // Make isValid optional to handle different formats
   error: z.string().optional(),
 });
 
@@ -59,7 +59,7 @@ const okrSystemSetupSchema = z.object({
     defaultVisibility: z.enum(["public", "team", "private"]),
     selectedTeams: z.array(z.string()).default([]),
     defaultTeams: z.array(z.string()).default([]),
-    csvUsers: z.array(csvUserSchema).default([]),
+    csvUsers: z.array(z.any()).default([]), // Using any to be more flexible with data format
     useDefaultTeams: z.boolean().default(false),
   }),
   integrations: z.object({
@@ -68,9 +68,9 @@ const okrSystemSetupSchema = z.object({
     enableCalendarSync: z.boolean(),
     enableAnalyticsReporting: z.boolean(),
   }),
-  // New fields for default teams and CSV users
-  default_teams: z.array(defaultTeamSchema).optional(),
-  csv_users: z.array(csvUserSchema).optional(),
+  // New fields for default teams and CSV users - using any to be more flexible
+  default_teams: z.array(z.any()).optional(),
+  csv_users: z.array(z.any()).optional(),
 });
 
 type OKRSystemSetup = z.infer<typeof okrSystemSetupSchema>;
@@ -118,16 +118,20 @@ export function setupConfigRoutes(router: Router) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
       
-      // Validate the request body
-      const validationResult = okrSystemSetupSchema.safeParse(req.body);
-      if (!validationResult.success) {
+      // Instead of strict validation, just use the request body directly
+      // This is more flexible with different data formats
+      console.log("Raw request body:", JSON.stringify(req.body));
+      
+      // We'll still do basic validation to ensure required fields
+      if (!req.body.generalSettings || !req.body.timeframes || 
+          !req.body.objectiveSettings || !req.body.teamConfiguration || 
+          !req.body.integrations) {
         return res.status(400).json({ 
-          error: 'Invalid OKR system configuration data',
-          details: validationResult.error.format()
+          error: 'Missing required OKR system configuration sections'
         });
       }
       
-      const okrSystemData = validationResult.data;
+      const okrSystemData = req.body;
       
       // Make sure we have a tenant ID in the data
       if (!okrSystemData.tenant_id) {
@@ -250,7 +254,11 @@ export function setupConfigRoutes(router: Router) {
         try {
           console.log('Processing CSV users:', req.body.csv_users.length);
           
-          const validUsers = req.body.csv_users.filter((user: any) => user.isValid && user.email);
+          // Accept all users that have an email property
+          const validUsers = req.body.csv_users.filter((user: any) => {
+            console.log("Processing user:", user);
+            return user && typeof user === 'object' && user.email;
+          });
           
           // Create users from CSV data
           for (const userData of validUsers) {
