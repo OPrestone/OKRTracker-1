@@ -538,7 +538,10 @@ export default function CompanyOKRs() {
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      onClick={() => navigateToObjective(objective.id)}
+                      onClick={() => {
+                        const tenantId = user?.defaultTenant || "";
+                        navigate(`/${tenantId}/objectives/${objective.id}`);
+                      }}
                     >
                       Details <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
