@@ -3030,7 +3030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a completely new route for simple key result creation
   app.post("/api/simple-key-results", withTenant, async (req, res, next) => {
     try {
-      const { title, description, objectiveId, startValue, targetValue, currentValue, tenantId } = req.body;
+      const { title, description, objectiveId, startValue, targetValue, currentValue, status, tenantId } = req.body;
       
       console.log("Received key result data:", req.body);
       
@@ -3068,7 +3068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetValue || "100",
         currentValue || startValue || "0",
         progress,
-        "not_started",
+        status || "not_started",
         req.tenantId
       ]);
       

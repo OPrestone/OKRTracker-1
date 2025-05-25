@@ -16,6 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SimpleAddKeyResultFormProps {
   objectiveId: string;
@@ -37,12 +44,22 @@ export default function SimpleAddKeyResultForm({
   const [startValue, setStartValue] = useState("0");
   const [targetValue, setTargetValue] = useState("100");
   const [currentValue, setCurrentValue] = useState("0");
+  const [status, setStatus] = useState("not_started");
 
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Sending key result data:", data);
       const response = await apiRequest("POST", "/api/simple-key-results", data);
-      return response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error("Failed to parse JSON:", text);
+        throw new Error("Invalid response format");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId] });
@@ -82,6 +99,7 @@ export default function SimpleAddKeyResultForm({
       startValue,
       targetValue,
       currentValue,
+      status,
       tenantId: currentTenant?.id
     };
 
@@ -94,6 +112,7 @@ export default function SimpleAddKeyResultForm({
     setStartValue("0");
     setTargetValue("100");
     setCurrentValue("0");
+    setStatus("not_started");
     onOpenChange(false);
   };
 
@@ -160,6 +179,22 @@ export default function SimpleAddKeyResultForm({
                 placeholder="100"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_started">Not Started</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="at_risk">At Risk</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
