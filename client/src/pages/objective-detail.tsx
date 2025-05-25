@@ -52,7 +52,7 @@ import {
   CheckSquare,
   AlertCircle
 } from "lucide-react";
-import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
+import SimpleAddKeyResultForm from "@/components/okrs/simple-add-key-result-form";
 
 // Types for the Objective Detail based on the database schema
 interface User {
@@ -1292,7 +1292,7 @@ export default function ObjectiveDetail() {
 
       {/* Add Key Result Dialog */}
       {objectiveId && (
-        <AddKeyResultDialog
+        <SimpleAddKeyResultForm
           objectiveId={objectiveId}
           open={isAddKeyResultModalOpen}
           onOpenChange={setIsAddKeyResultModalOpen}

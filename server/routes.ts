@@ -3027,29 +3027,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/key-results", withTenant, async (req, res, next) => {
+  // Create a completely new route for simple key result creation
+  app.post("/api/simple-key-results", withTenant, async (req, res, next) => {
     try {
-      const { title, description, objectiveId, startValue, targetValue, currentValue, status } = req.body;
+      const { title, description, objectiveId, startValue, targetValue, currentValue, tenantId } = req.body;
+      
+      console.log("Received key result data:", req.body);
       
       // Validate required fields
       if (!title || !objectiveId) {
         return res.status(400).json({ message: "Title and objectiveId are required" });
       }
       
-      // Direct database insertion using Drizzle
-      const newKeyResult = await db.insert(keyResults).values({
-        title,
-        description: description || null,
-        objectiveId, // Use camelCase as expected by schema
-        startValue: startValue || "0",
-        targetValue: targetValue || "100", 
-        currentValue: currentValue || startValue || "0",
-        progress: Math.round(((parseFloat(currentValue || startValue || "0") - parseFloat(startValue || "0")) / (parseFloat(targetValue || "100") - parseFloat(startValue || "0"))) * 100) || 0,
-        status: status || "not_started",
-        tenantId: req.tenantId
-      }).returning();
+      // Use raw SQL with proper parameter binding to avoid any schema issues
+      const query = `
+        INSERT INTO key_results (
+          id, title, description, objective_id, start_value, target_value, 
+          current_value, progress, status, tenant_id, created_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
+        ) RETURNING *
+      `;
       
-      res.status(201).json(newKeyResult[0]);
+      // Generate a new ULID for the key result
+      const { ulid } = await import('ulid');
+      const newId = ulid();
+      
+      // Calculate progress
+      const start = parseFloat(startValue || "0");
+      const target = parseFloat(targetValue || "100");
+      const current = parseFloat(currentValue || startValue || "0");
+      const progress = Math.round(((current - start) / (target - start)) * 100) || 0;
+      
+      const result = await pool.query(query, [
+        newId,
+        title,
+        description || null,
+        objectiveId,
+        startValue || "0",
+        targetValue || "100",
+        currentValue || startValue || "0",
+        progress,
+        "not_started",
+        req.tenantId
+      ]);
+      
+      console.log("Key result created successfully:", result.rows[0]);
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating simple key result:", error);
+      res.status(500).json({ message: "Failed to create key result" });
+    }
+  });
+
+  app.post("/api/key-results", withTenant, async (req, res, next) => {
+    try {
+      const validatedData = insertKeyResultSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
+      const keyResult = await storage.createKeyResult(validatedData);
+      res.status(201).json(keyResult);
     } catch (error) {
       next(error);
     }
