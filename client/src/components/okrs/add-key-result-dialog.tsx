@@ -72,11 +72,11 @@ export default function AddKeyResultDialog({
     mutationFn: async (data: KeyResultFormValues) => {
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       
-      // The API is expecting objectiveId in camelCase, not snake_case
+      // The database is expecting objective_id in snake_case
       const formattedData = {
         title: data.title,
         description: data.description,
-        objectiveId: objectiveId,  // Use camelCase as expected by the API
+        objective_id: objectiveId,  // Use snake_case as required by the database
         startValue: String(data.startValue),
         targetValue: String(data.targetValue),
         currentValue: String(data.currentValue || data.startValue),
