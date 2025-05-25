@@ -181,6 +181,11 @@ import {
   Award,
   Zap,
   Sparkles,
+  Save,
+  Megaphone,
+  Briefcase,
+  Code,
+  Building
 } from "lucide-react";
 
 import { CSVImport } from "@/components/csv/csv-import";
@@ -715,9 +720,10 @@ export default function TenantOnboardingWizard() {
     setActivePage(stepId);
   };
 
-  const addTeamMember = (e?: React.MouseEvent | null) => {
-    // Prevent form submission if event is provided
-    if (e && 'preventDefault' in e) {
+  // Updated to handle different event types or no event
+  const addTeamMember = (e?: React.MouseEvent | null | any) => {
+    // Prevent form submission if event is provided and has preventDefault method
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
 
