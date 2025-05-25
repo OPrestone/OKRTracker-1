@@ -612,7 +612,7 @@ export default function DraftOKRs() {
               onClick={(e) => {
                 // Prevent navigation if clicking on buttons inside the card
                 if ((e.target as HTMLElement).closest('button')) return;
-                navigate(`/objectives/${objective.id}`);
+                navigate(`/objective/${objective.id}`);
               }}
             >
               <CardHeader className="pb-3">

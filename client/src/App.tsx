@@ -126,7 +126,7 @@ function AppRoutes() {
       <ProtectedRoute path="/draft-okrs" component={DraftOKRs} />
       <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
-      <ProtectedRoute path="/objectives/:id" component={ObjectiveDetail} />
+      <ProtectedRoute path="/objective/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/:tenantId/approved-okrs" component={ApprovedTenantOKRsPage} />
       <ProtectedRoute path="/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/create-objective" component={CreateObjective} />
@@ -182,7 +182,7 @@ function AppRoutes() {
       <ProtectedRoute path="/:id([A-Z0-9]{26})/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/company-strategy" component={CompanyStrategy} />
-      <ProtectedRoute path="/:id([A-Z0-9]{26})/objective-detail/:objectiveId" component={ObjectiveDetail} />
+      <ProtectedRoute path="/:id([A-Z0-9]{26})/objective/:objectiveId" component={ObjectiveDetail} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-objective" component={CreateObjective} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/create-company-objective" component={CreateCompanyObjective} />
       <ProtectedRoute path="/:id([A-Z0-9]{26})/teams" component={TeamsRedesigned} />
@@ -239,7 +239,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/organization/:organisation/company-strategy" component={CompanyStrategy} />
       <ProtectedRoute path="/organization/:organisation/teams" component={TeamsRedesigned} />
-      <ProtectedRoute path="/organization/:organisation/objectives/:id" component={ObjectiveDetail} />
+      <ProtectedRoute path="/organization/:organisation/objective/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/organization/:organisation/teams/:id" component={TeamDetail} />
       <ProtectedRoute path="/organization/:organisation/users" component={UsersPage} />
       <ProtectedRoute path="/organization/:organisation/all-users" component={AllUsers} />
