@@ -983,6 +983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedData = insertTeamSchema.parse({
             ...teamData,
             ownerId: req.user.id, // This links the team to a user in this tenant
+            leaderId: teamData.leaderId || req.user.id, // Ensure leaderId is saved, default to owner
             tenantId: req.tenantId // Critical: Associate team with current tenant
           });
           
@@ -1028,6 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedData = insertTeamSchema.parse({
           ...req.body,
           ownerId: req.user.id, // This links the team to a user in this tenant
+          leaderId: req.body.leaderId || req.user.id, // Ensure leaderId is saved, default to owner
           tenantId: req.tenantId // Critical: Associate team with current tenant
         });
         
