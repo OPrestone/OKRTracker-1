@@ -157,7 +157,13 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   const createTimeframeMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Creating timeframe with data:", data);
-      const res = await apiRequest("POST", "/api/timeframes", data);
+      // Ensure tenant ID is explicitly included in the request
+      const timeframeData = {
+        ...data,
+        tenantId: tenantId
+      };
+      console.log("Sending timeframe with tenant ID:", timeframeData);
+      const res = await apiRequest("POST", "/api/timeframes", timeframeData);
       return await res.json();
     },
     onSuccess: (data) => {
@@ -208,14 +214,15 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       
       for (const timeframe of timeframes) {
         if (!timeframe.id) { // Only save new timeframes
-          // Format dates properly for the API
+          // Format dates properly for the API and ensure tenant ID is included
           const timeframeData = {
             ...timeframe,
             startDate: timeframe.startDate instanceof Date ? timeframe.startDate.toISOString() : timeframe.startDate,
             endDate: timeframe.endDate instanceof Date ? timeframe.endDate.toISOString() : timeframe.endDate,
+            tenantId: tenantId // Explicitly set tenant ID
           };
           
-          console.log("Saving timeframe:", timeframeData);
+          console.log("Saving timeframe with tenant ID:", timeframeData);
           await createTimeframeMutation.mutateAsync(timeframeData);
           saveCount++;
         }
