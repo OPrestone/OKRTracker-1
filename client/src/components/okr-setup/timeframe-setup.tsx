@@ -35,9 +35,10 @@ interface TimeframeSetupProps {
   tenantId: string;
   primaryCadence: string;
   startMonth: string;
+  onTimeframesSaved?: () => void; // Callback for when timeframes are saved
 }
 
-export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }: TimeframeSetupProps) {
+export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, onTimeframesSaved }: TimeframeSetupProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [timeframes, setTimeframes] = useState<any[]>([]);
@@ -256,6 +257,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       
       // Switch to the "view" tab to show the saved timeframes
       setActiveTab("view");
+      
+      // Call the callback if provided to notify parent component
+      if (onTimeframesSaved) {
+        // Slight delay to ensure UI updates first
+        setTimeout(() => {
+          onTimeframesSaved();
+        }, 500);
+      }
     } catch (error) {
       toast({
         title: "Error",

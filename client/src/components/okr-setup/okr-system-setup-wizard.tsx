@@ -1058,6 +1058,7 @@ export default function OKRSystemSetupWizard() {
                               tenantId={tenantId}
                               primaryCadence={form.getValues("timeframes.primaryCadence")}
                               startMonth={form.getValues("timeframes.startMonth")}
+                              onTimeframesSaved={goToNextStep}
                             />
                           )}
                           <p className="text-xs text-gray-500 mt-4">
