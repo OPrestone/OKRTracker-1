@@ -76,7 +76,7 @@ export default function AddKeyResultDialog({
       const formattedData = {
         title: data.title,
         description: data.description,
-        objective_id: objectiveId,  // Use snake_case as required by the database
+        objectiveId: objectiveId,  // Use camelCase as required by the server-side validation
         start_value: String(data.startValue),
         target_value: String(data.targetValue),
         current_value: String(data.currentValue || data.startValue),
