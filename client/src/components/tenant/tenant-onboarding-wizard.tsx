@@ -6,13 +6,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { 
-  Megaphone, 
-  Briefcase, 
-  Code, 
-  Save,
-  Building
-} from "lucide-react";
 
 // Comprehensive industry list for organization selection
 const industryOptions = [
