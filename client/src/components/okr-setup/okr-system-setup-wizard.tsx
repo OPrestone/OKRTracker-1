@@ -849,7 +849,8 @@ export default function OKRSystemSetupWizard() {
       
       console.log("Sending OKR system config with tenant ID:", tenantId);
       
-      const response = await fetch(`/api/okr-system-setup?tenantId=${tenantId}`, {
+      // Use our new simplified endpoint which has more flexible validation
+      const response = await fetch(`/api/okr-system-setup-simple?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

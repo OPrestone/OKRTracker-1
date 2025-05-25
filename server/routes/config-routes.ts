@@ -76,6 +76,185 @@ const okrSystemSetupSchema = z.object({
 type OKRSystemSetup = z.infer<typeof okrSystemSetupSchema>;
 
 export function setupConfigRoutes(router: Router) {
+  // Add a simplified OKR system setup endpoint
+  router.post('/api/okr-system-setup-simple', async (req: Request, res: Response) => {
+    try {
+      // Use tenant ID from multiple possible sources
+      let tenantId = req.tenantId || req.query.tenantId as string || req.body.tenant_id;
+      
+      console.log("Using simplified OKR setup endpoint with tenant ID:", tenantId);
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Missing tenantId parameter' });
+      }
+      
+      // Check if config already exists for this tenant
+      const existingConfig = await db.query.okrSystemConfigs.findFirst({
+        where: eq(okrSystemConfigs.tenant_id, tenantId)
+      });
+      
+      // Extract data from request body
+      const generalSettings = req.body.generalSettings || {};
+      const timeframes = req.body.timeframes || {};
+      const objectiveSettings = req.body.objectiveSettings || {};
+      const teamConfiguration = req.body.teamConfiguration || {};
+      const integrations = req.body.integrations || {};
+      
+      // Create a valid config object
+      const configData = {
+        id: existingConfig?.id || ulid(),
+        tenant_id: tenantId,
+        tracking_frequency: generalSettings.trackingFrequency || 'weekly',
+        primary_cadence: timeframes.primaryCadence || 'quarterly',
+        start_month: timeframes.startMonth || 'january',
+        max_objectives_per_team: parseInt(objectiveSettings.maxObjectivesPerTeam || '5'),
+        max_key_results_per_objective: parseInt(objectiveSettings.maxKeyResultsPerObjective || '3'),
+        org_structure_type: teamConfiguration.orgStructureType || 'functional',
+        default_visibility: teamConfiguration.defaultVisibility || 'public',
+        company_mission: generalSettings.companyMission || '',
+        company_vision: generalSettings.companyVision || '',
+        company_values: generalSettings.companyValues || '',
+        enable_notifications: generalSettings.enableNotifications || false,
+        enable_quarterly_cadence: timeframes.enableQuarterlyCadence || true,
+        enable_annual_cadence: timeframes.enableAnnualCadence || true,
+        custom_cadence: timeframes.customCadence || null,
+        default_objective_category: objectiveSettings.defaultObjectiveCategory || 'growth',
+        require_objective_approval: objectiveSettings.requireObjectiveApproval || true,
+        enable_objective_alignment: objectiveSettings.enableObjectiveAlignment || true,
+        enable_cross_team_objectives: teamConfiguration.enableCrossTeamObjectives || true,
+        enable_slack_integration: integrations.enableSlackIntegration || false,
+        enable_email_notifications: integrations.enableEmailNotifications || true,
+        enable_calendar_sync: integrations.enableCalendarSync || false,
+        enable_analytics_reporting: integrations.enableAnalyticsReporting || true,
+        created_at: existingConfig?.created_at || new Date(),
+        updated_at: new Date(),
+      };
+      
+      let result;
+      
+      if (existingConfig) {
+        // Update existing configuration
+        result = await db
+          .update(okrSystemConfigs)
+          .set(configData)
+          .where(eq(okrSystemConfigs.id, existingConfig.id))
+          .returning();
+          
+        console.log('Updated OKR system config:', result);
+      } else {
+        // Insert new configuration
+        result = await db
+          .insert(okrSystemConfigs)
+          .values(configData)
+          .returning();
+          
+        console.log('Created new OKR system config:', result);
+      }
+      
+      // Process default teams if provided
+      if (Array.isArray(req.body.default_teams) && req.body.default_teams.length > 0) {
+        try {
+          console.log('Creating default teams:', req.body.default_teams.length);
+          
+          for (const teamTemplate of req.body.default_teams) {
+            // Create a valid team object
+            const teamData = {
+              id: ulid(),
+              name: teamTemplate.name || 'New Team',
+              description: teamTemplate.description || '',
+              color: teamTemplate.color || '#4f46e5',
+              icon: teamTemplate.icon || 'users',
+              tenantId: tenantId,
+              type: 'team'
+            };
+            
+            // Insert the team
+            const newTeam = await db.insert(teams).values(teamData).returning();
+            console.log(`Created default team: ${teamData.name} with ID: ${newTeam[0].id}`);
+          }
+        } catch (teamError) {
+          console.error('Error creating default teams:', teamError);
+          // Continue execution
+        }
+      }
+      
+      // Process CSV users if provided
+      if (Array.isArray(req.body.csv_users) && req.body.csv_users.length > 0) {
+        try {
+          console.log('Processing CSV users:', req.body.csv_users.length);
+          
+          // Process each valid user
+          for (const userData of req.body.csv_users) {
+            if (!userData || !userData.email) continue;
+            
+            try {
+              // Generate a username from email
+              const username = userData.email.split('@')[0].toLowerCase();
+              
+              // Generate a temporary password
+              const tempPassword = Math.random().toString(36).slice(-8);
+              const hashedPassword = await hashPassword(tempPassword);
+              
+              // Create a valid user object
+              const newUserData = {
+                id: ulid(),
+                username: username,
+                email: userData.email.toLowerCase(),
+                password: hashedPassword,
+                name: userData.name || username,
+                title: userData.department || '',
+                tenantId: tenantId,
+                defaultTenantId: tenantId,
+                firstLogin: true
+              };
+              
+              // Check if user already exists
+              const existingUser = await db.query.users.findFirst({
+                where: (users, { eq, or }) => 
+                  or(
+                    eq(users.email, userData.email.toLowerCase()),
+                    eq(users.username, username)
+                  )
+              });
+              
+              if (existingUser) {
+                console.log(`User with email ${userData.email} already exists, skipping`);
+                continue;
+              }
+              
+              // Insert the user
+              const newUser = await db.insert(users).values(newUserData).returning();
+              console.log(`Created user: ${newUserData.username} with ID: ${newUser[0].id}`);
+              
+              // Add user to tenant with role
+              const userRole = userData.role && ['admin', 'member', 'viewer'].includes(userData.role.toLowerCase()) 
+                ? userData.role.toLowerCase() 
+                : 'member';
+              
+              await db.execute(
+                `INSERT INTO users_to_tenants (user_id, tenant_id, role) VALUES (?, ?, ?)`,
+                [newUser[0].id, tenantId, userRole]
+              );
+              
+              console.log(`Added user ${newUserData.username} to tenant with role: ${userRole}`);
+            } catch (userError) {
+              console.error(`Error creating user ${userData.email}:`, userError);
+            }
+          }
+        } catch (usersError) {
+          console.error('Error processing CSV users:', usersError);
+        }
+      }
+      
+      return res.json(result[0]);
+    } catch (error) {
+      console.error('Error saving OKR system config:', error);
+      return res.status(500).json({ 
+        error: 'Failed to save OKR system configuration',
+        details: error
+      });
+    }
+  });
   // Get OKR system configuration
   router.get('/api/okr-system', async (req: Request, res: Response) => {
     try {
