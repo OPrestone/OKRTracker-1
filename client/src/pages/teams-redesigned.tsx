@@ -921,7 +921,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
 const DeleteTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: boolean, onClose: () => void }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentTenant } = useTenantContext();
+  const { deleteTeam } = useTeams();
 
   const handleDeleteTeam = async () => {
     if (!team?.id) {
@@ -936,10 +936,8 @@ const DeleteTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen
     setIsSubmitting(true);
     
     try {
-      await apiRequest("DELETE", `/api/teams/${team.id}?tenantId=${currentTenant?.id}`);
-      
-      // Invalidate and refetch teams
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      // Use the centralized team context for deleting teams
+      await deleteTeam(team.id);
       
       toast({
         title: "Team deleted",

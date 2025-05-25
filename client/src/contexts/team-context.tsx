@@ -19,6 +19,9 @@ interface TeamContextValue {
   error: Error | null;
   refetchTeams: () => Promise<void>;
   setTeamLeader: (teamId: string, userId: string) => Promise<void>;
+  deleteTeam: (teamId: string) => Promise<void>;
+  updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
+  createTeam: (teamData: Omit<Team, 'id' | 'createdAt'>) => Promise<Team>;
 }
 
 const TeamContext = createContext<TeamContextValue | undefined>(undefined);
@@ -72,12 +75,94 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Delete a team
+  const deleteTeam = async (teamId: string) => {
+    try {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete team');
+      }
+      
+      // Invalidate team queries to refresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      await refetchTeams();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      setError(error instanceof Error ? error : new Error('Failed to delete team'));
+      throw error;
+    }
+  };
+
+  // Update a team
+  const updateTeam = async (teamId: string, teamData: Partial<Team>) => {
+    try {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(teamData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update team');
+      }
+      
+      // Invalidate team queries to refresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}`] });
+      await refetchTeams();
+    } catch (error) {
+      console.error('Error updating team:', error);
+      setError(error instanceof Error ? error : new Error('Failed to update team'));
+      throw error;
+    }
+  };
+
+  // Create a team
+  const createTeam = async (teamData: Omit<Team, 'id' | 'createdAt'>): Promise<Team> => {
+    try {
+      const response = await fetch('/api/teams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(teamData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create team');
+      }
+      
+      const newTeam = await response.json();
+      
+      // Invalidate team queries to refresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      await refetchTeams();
+      
+      return newTeam;
+    } catch (error) {
+      console.error('Error creating team:', error);
+      setError(error instanceof Error ? error : new Error('Failed to create team'));
+      throw error;
+    }
+  };
+
   const value = {
     teams: teams as Team[],
     isLoading,
     error,
     refetchTeams,
     setTeamLeader,
+    deleteTeam,
+    updateTeam,
+    createTeam,
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;
