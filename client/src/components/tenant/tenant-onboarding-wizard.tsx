@@ -622,7 +622,8 @@ export default function TenantOnboardingWizard() {
                     description: team.description,
                     icon: team.icon,
                     color: team.color,
-                    leaderId: team.leaderId || null
+                    leaderId: team.leaderId || null,
+                    tenant_id: tenantId // Explicitly include the tenant ID for each team
                   }))
                 }),
                 credentials: 'include'
