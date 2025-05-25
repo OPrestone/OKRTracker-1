@@ -437,9 +437,6 @@ export default function TenantOnboardingWizard() {
         plan: "free",
         agreeToTerms: false,
       },
-      // team: {
-      //   users: [],
-      // },
       setup: {
         createInitialOKRs: false,
         template: "",
@@ -451,16 +448,13 @@ export default function TenantOnboardingWizard() {
   // Watch for values changes for conditional rendering
   const createInitialOKRs = form.watch("setup.createInitialOKRs");
   const selectedTemplate = form.watch("setup.template");
-  // const teamMembers = form.watch("team.users") || [];
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
 
-  // Create default teams if none are added
+  // Create default teams 
   useEffect(() => {
-    // Add default teams automatically if no teams have been added yet
-    if (addedTeams.length === 0 && activePage === "team") {
-      console.log("Setting up default example teams");
-
+    // We'll automatically create default teams when setting up the organization
+    if (addedTeams.length === 0) {
       // Create Marketing Team (blue, megaphone)
       const marketingTeam = {
         name: "Marketing Team",
@@ -489,9 +483,8 @@ export default function TenantOnboardingWizard() {
       };
 
       setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
-      console.log("Default teams created and ready for user to customize");
     }
-  }, [activePage, addedTeams.length]);
+  }, [addedTeams.length]);
 
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
