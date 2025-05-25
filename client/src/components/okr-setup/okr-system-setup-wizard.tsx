@@ -319,7 +319,7 @@ const steps = [
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
-// Default team templates declaration happens elsewhere in the file
+
 
 export default function OKRSystemSetupWizard() {
   const [activePage, setActivePage] = useState("general");
