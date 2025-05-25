@@ -73,6 +73,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { HelpProvider } from "@/hooks/use-help-context";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { TenantProvider } from "@/hooks/use-tenant-context";
+import { TeamProvider } from "@/contexts/team-context";
 import { FeatureTour } from "@/components/help/feature-tour";
 import { Loader2 } from "lucide-react";
 // Import onboarding components
@@ -306,14 +307,16 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
       <TenantProvider>
         <AuthProvider>
-          <HelpProvider>
-            <OnboardingProvider>
-              <LocationTracker />
-              <FeatureTour />
-              <OnboardingController />
-              <AppRoutes />
-            </OnboardingProvider>
-          </HelpProvider>
+          <TeamProvider>
+            <HelpProvider>
+              <OnboardingProvider>
+                <LocationTracker />
+                <FeatureTour />
+                <OnboardingController />
+                <AppRoutes />
+              </OnboardingProvider>
+            </HelpProvider>
+          </TeamProvider>
         </AuthProvider>
       </TenantProvider>
     </ThemeProvider>

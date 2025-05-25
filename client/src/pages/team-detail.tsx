@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTeams } from "@/contexts/team-context";
 import { useParams, useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import {
