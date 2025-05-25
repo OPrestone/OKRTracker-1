@@ -36,8 +36,14 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const { data: teams = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/teams', currentTenant?.id],
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Enable refetch on window focus to keep data fresh
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!currentTenant?.id,
+    onError: (error) => {
+      console.error('Error loading teams:', error);
+      setError(error instanceof Error ? error : new Error('Failed to load teams'));
+    }
   });
 
   // Refetch teams

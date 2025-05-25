@@ -270,7 +270,8 @@ export default function TeamDetailPage() {
           console.error("Failed to fetch members, status:", res.status);
           return [];
         }
-        return res.json();
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Error fetching members:", error);
         return [];
@@ -278,10 +279,14 @@ export default function TeamDetailPage() {
     },
     // Only enable the query once we have a team ID to use
     enabled: !!(team?.id || teamId) && !!tenantId,
-    onError: (err) => {
+    onSuccess: (data) => {
+      console.log("Team members loaded successfully:", Array.isArray(data) ? data.length : "not an array");
+    },
+    onError: (error: Error) => {
+      console.error("Error loading team members:", error);
       toast({
         title: "Error loading team members",
-        description: err instanceof Error ? err.message : String(err),
+        description: error.message || "Failed to load team members",
         variant: "destructive"
       });
     }
@@ -595,11 +600,26 @@ export default function TeamDetailPage() {
   };
   
   // Use team performance data if available, otherwise use calculated stats
-  // Handle the case where teamPerformance might not have the expected structure
-  let performanceStats = fallbackStats;
+  // Always use fallback stats to ensure the UI renders correctly
+  const performanceStats = {
+    completionRate: fallbackStats.completionRate,
+    weeklyProgress: fallbackStats.weeklyProgress,
+    teamEngagement: fallbackStats.teamEngagement
+  };
+  
+  // Try to enhance with real performance data if available
   try {
     if (teamPerformance && typeof teamPerformance === 'object' && 'stats' in teamPerformance && teamPerformance.stats) {
-      performanceStats = teamPerformance.stats;
+      // Only update properties that exist in the API response
+      if (typeof teamPerformance.stats.completionRate === 'number') {
+        performanceStats.completionRate = teamPerformance.stats.completionRate;
+      }
+      if (typeof teamPerformance.stats.weeklyProgress === 'number') {
+        performanceStats.weeklyProgress = teamPerformance.stats.weeklyProgress;
+      }
+      if (typeof teamPerformance.stats.teamEngagement === 'number') {
+        performanceStats.teamEngagement = teamPerformance.stats.teamEngagement;
+      }
     }
   } catch (error) {
     console.error("Error accessing team performance stats:", error);
