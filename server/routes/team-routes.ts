@@ -17,7 +17,7 @@ export function setupTeamRoutes(router: Router) {
         leaderId: z.string().min(1)
       }).parse(req.body);
       
-      // Check if user is authorized (admin or team leader/owner)
+      // Check if user is authorized (admin, tenant owner, or team owner)
       const userRole = await db.query.usersToTenants.findFirst({
         where: (utt, { and, eq }) => and(
           eq(utt.userId, userId),
@@ -25,11 +25,7 @@ export function setupTeamRoutes(router: Router) {
         )
       });
       
-      if (!userRole || (userRole.role !== 'admin' && userRole.role !== 'owner')) {
-        return res.status(403).json({ error: "Not authorized to update team leader" });
-      }
-      
-      // Check if team exists and belongs to this tenant
+      // Check if team exists and belongs to this tenant first
       const team = await db.query.teams.findFirst({
         where: (t, { and, eq }) => and(
           eq(t.id, teamId),
@@ -39,6 +35,14 @@ export function setupTeamRoutes(router: Router) {
       
       if (!team) {
         return res.status(404).json({ error: "Team not found" });
+      }
+      
+      // Allow if user is tenant admin/owner OR team owner
+      const isAuthorized = (userRole && (userRole.role === 'admin' || userRole.role === 'owner')) || 
+                          (team.ownerId === userId);
+      
+      if (!isAuthorized) {
+        return res.status(403).json({ error: "Not authorized to update team leader" });
       }
       
       // Check if the new leader is a user in the system
