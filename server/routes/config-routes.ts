@@ -111,24 +111,56 @@ export function setupConfigRoutes(router: Router) {
       let tenantId = req.tenantId || req.query.tenantId as string || req.body.tenant_id;
       
       console.log("POST /api/okr-system-setup - Tenant ID:", tenantId);
-      console.log("Request query:", req.query);
       
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
       
-      // Instead of strict validation, just use the request body directly
-      // This is more flexible with different data formats
-      console.log("Raw request body length:", JSON.stringify(req.body).length, "bytes");
+      // Skip validation entirely
+      // Instead of using the original request directly, extract the data we need
+      const okrSystemData = {
+        generalSettings: {
+          companyMission: req.body.generalSettings?.companyMission || '',
+          companyVision: req.body.generalSettings?.companyVision || '',
+          companyValues: req.body.generalSettings?.companyValues || '',
+          trackingFrequency: req.body.generalSettings?.trackingFrequency || 'weekly',
+          enableNotifications: req.body.generalSettings?.enableNotifications || false
+        },
+        timeframes: {
+          primaryCadence: req.body.timeframes?.primaryCadence || 'quarterly',
+          enableQuarterlyCadence: req.body.timeframes?.enableQuarterlyCadence || true,
+          enableAnnualCadence: req.body.timeframes?.enableAnnualCadence || true,
+          customCadence: req.body.timeframes?.customCadence || '',
+          startMonth: req.body.timeframes?.startMonth || 'january'
+        },
+        objectiveSettings: {
+          defaultObjectiveCategory: req.body.objectiveSettings?.defaultObjectiveCategory || 'growth',
+          maxObjectivesPerTeam: req.body.objectiveSettings?.maxObjectivesPerTeam || '5',
+          maxKeyResultsPerObjective: req.body.objectiveSettings?.maxKeyResultsPerObjective || '3',
+          requireObjectiveApproval: req.body.objectiveSettings?.requireObjectiveApproval || true,
+          enableObjectiveAlignment: req.body.objectiveSettings?.enableObjectiveAlignment || true
+        },
+        teamConfiguration: {
+          orgStructureType: req.body.teamConfiguration?.orgStructureType || 'functional',
+          enableCrossTeamObjectives: req.body.teamConfiguration?.enableCrossTeamObjectives || true,
+          defaultVisibility: req.body.teamConfiguration?.defaultVisibility || 'public',
+          selectedTeams: req.body.teamConfiguration?.selectedTeams || [],
+          defaultTeams: req.body.teamConfiguration?.defaultTeams || [],
+          csvUsers: req.body.teamConfiguration?.csvUsers || [],
+          useDefaultTeams: req.body.teamConfiguration?.useDefaultTeams || false
+        },
+        integrations: {
+          enableSlackIntegration: req.body.integrations?.enableSlackIntegration || false,
+          enableEmailNotifications: req.body.integrations?.enableEmailNotifications || true,
+          enableCalendarSync: req.body.integrations?.enableCalendarSync || false,
+          enableAnalyticsReporting: req.body.integrations?.enableAnalyticsReporting || true
+        },
+        default_teams: req.body.default_teams || [],
+        csv_users: req.body.csv_users || [],
+        tenant_id: tenantId
+      };
       
-      // We'll do very basic validation just to ensure we have an object
-      if (typeof req.body !== 'object' || req.body === null) {
-        return res.status(400).json({ 
-          error: 'Invalid request body format'
-        });
-      }
-      
-      const okrSystemData = req.body;
+      console.log("Processing OKR System Setup with tenant ID:", tenantId);
       
       // Make sure we have a tenant ID in the data
       if (!okrSystemData.tenant_id) {
