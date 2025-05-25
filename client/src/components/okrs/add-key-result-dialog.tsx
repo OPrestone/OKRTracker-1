@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 import {
   Dialog,
@@ -65,13 +66,16 @@ export default function AddKeyResultDialog({
     }
   });
 
+  const { currentTenant } = useTenantContext();
+  
   const addKeyResultMutation = useMutation({
     mutationFn: async (data: KeyResultFormValues) => {
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       const response = await apiRequest("POST", "/api/key-results", {
         ...data,
         objective_id: objectiveId,
-        progress: calculatedProgress
+        progress: calculatedProgress,
+        tenantId: currentTenant?.id
       });
       return response.json();
     },

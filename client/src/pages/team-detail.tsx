@@ -1090,17 +1090,17 @@ export default function TeamDetailPage() {
                                     {objective.assignee && (
                                       <Avatar className="h-8 w-8">
                                         {objective.assignee.avatarUrl ? (
-                                        <AvatarImage 
-                                          src={objective.assignee.avatarUrl} 
-                                          alt={`${objective.assignee.firstName} ${objective.assignee.lastName}`} 
-                                        />
-                                      ) : (
-                                        <AvatarFallback className="text-xs">
-                                          {objective.assignee.firstName?.[0]}{objective.assignee.lastName?.[0]}
-                                        </AvatarFallback>
-                                      )}
-                                    </Avatar>
-                                  )}
+                                          <AvatarImage 
+                                            src={objective.assignee.avatarUrl} 
+                                            alt={`${objective.assignee.firstName} ${objective.assignee.lastName}`} 
+                                          />
+                                        ) : (
+                                          <AvatarFallback className="text-xs">
+                                            {objective.assignee.firstName?.[0]}{objective.assignee.lastName?.[0]}
+                                          </AvatarFallback>
+                                        )}
+                                      </Avatar>
+                                    )}
                                 </div>
                                 
                                 <div className="mt-4">
