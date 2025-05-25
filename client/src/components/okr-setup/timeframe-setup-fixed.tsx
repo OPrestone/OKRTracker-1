@@ -67,6 +67,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     }
   });
   
+  // Effect to automatically create default cadences when component loads if none exist
+  useEffect(() => {
+    if (!isLoadingCadences && tenantCadences.length === 0 && tenantId) {
+      console.log("No cadences found, creating defaults...");
+      createDefaultCadences();
+    }
+  }, [isLoadingCadences, tenantCadences.length, tenantId]);
+  
   // New timeframe form state
   const [formState, setFormState] = useState({
     name: "",
