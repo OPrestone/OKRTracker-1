@@ -347,9 +347,13 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
             {activeTab === "create" && (
               <>
                 <Button 
+                  type="button"
                   variant="default" 
                   className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                  onClick={handleApplyDefaultTimeframes}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleApplyDefaultTimeframes();
+                  }}
                 >
                   Apply Default Timeframes
                 </Button>
