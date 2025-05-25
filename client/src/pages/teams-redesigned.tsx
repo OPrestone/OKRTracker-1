@@ -20,6 +20,7 @@ import DashboardLayout from "@/layouts/dashboard-layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Team, User } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { useTeams } from "@/contexts/team-context";
 import { ColumnDef } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -998,22 +999,8 @@ const TeamsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Fetch all teams with tenant context
-  const { data: teams = [], isLoading, error } = useQuery<Team[]>({
-    queryKey: ["/api/teams", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    onSuccess: (data) => {
-      console.log("Teams data successfully fetched:", data);
-    },
-    onError: (err) => {
-      console.error("Error fetching teams:", err);
-      toast({
-        title: "Error loading teams",
-        description: "There was an error loading teams data. Please try again later.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Use centralized team context instead of direct API query
+  const { teams = [], isLoading, error, deleteTeam, updateTeam } = useTeams();
 
   // Filter teams by search query
   const filteredTeams = teams.filter(team => 
