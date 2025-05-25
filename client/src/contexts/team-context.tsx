@@ -32,11 +32,14 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const { currentTenant } = useTenantContext();
 
-  // Fetch teams data
+  // Fetch teams data with fast reload functionality
   const { data: teams = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/teams', currentTenant?.id],
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 0, // Always fetch fresh data - no caching for real-time updates
+    cacheTime: 0, // Don't cache data in memory
     refetchOnWindowFocus: true, // Enable refetch on window focus to keep data fresh
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time data
     retry: 3, // Retry failed requests 3 times
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!currentTenant?.id,
