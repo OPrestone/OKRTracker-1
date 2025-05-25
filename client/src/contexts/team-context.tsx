@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTenantContext } from '@/hooks/use-tenant-context';
 
 // Define team types
 export interface Team {
@@ -29,12 +30,14 @@ const TeamContext = createContext<TeamContextValue | undefined>(undefined);
 export function TeamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
+  const { currentTenant } = useTenantContext();
 
   // Fetch teams data
   const { data: teams = [], isLoading, refetch } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams', currentTenant?.id],
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     refetchOnWindowFocus: false,
+    enabled: !!currentTenant?.id,
   });
 
   // Refetch teams
@@ -78,7 +81,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   // Delete a team
   const deleteTeam = async (teamId: string) => {
     try {
-      const response = await fetch(`/api/teams/${teamId}`, {
+      if (!currentTenant?.id) {
+        throw new Error('No tenant selected');
+      }
+      
+      const response = await fetch(`/api/teams/${teamId}?tenantId=${currentTenant.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +97,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       }
       
       // Invalidate team queries to refresh data
-      await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/teams', currentTenant.id] });
       await refetchTeams();
     } catch (error) {
       console.error('Error deleting team:', error);
@@ -102,12 +109,20 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   // Update a team
   const updateTeam = async (teamId: string, teamData: Partial<Team>) => {
     try {
-      const response = await fetch(`/api/teams/${teamId}`, {
+      if (!currentTenant?.id) {
+        throw new Error('No tenant selected');
+      }
+      
+      // Make sure to include the tenant ID in the request
+      const response = await fetch(`/api/teams/${teamId}?tenantId=${currentTenant.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(teamData),
+        body: JSON.stringify({
+          ...teamData,
+          tenantId: currentTenant.id, // Include tenant ID in the body as well
+        }),
       });
       
       if (!response.ok) {
@@ -115,8 +130,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       }
       
       // Invalidate team queries to refresh data
-      await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
-      await queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}`] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/teams', currentTenant.id] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/teams/${teamId}`, currentTenant.id] });
       await refetchTeams();
     } catch (error) {
       console.error('Error updating team:', error);
