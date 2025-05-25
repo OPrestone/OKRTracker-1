@@ -367,20 +367,19 @@ export default function ObjectiveDetail() {
   const { tenant } = useTenantContext();
   
   // Fetch the objective data from API with tenant context
-  // Fetch the objective data from API with tenant context
   const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
     queryKey: ['/api/objectives', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
-        throw new Error("Missing objectiveId or tenant");
+      if (!objectiveId) {
+        throw new Error("Missing objectiveId");
       }
+      
+      console.log("Fetching objective with ID:", objectiveId);
       
       // Explicitly add tenantId to ensure proper authorization
       const response = await apiRequest(
         'GET', 
-        `/api/objectives/${objectiveId}`,
-        null,
-        { tenantId: tenant.id }
+        `/api/objectives/${objectiveId}`
       );
       
       if (!response.ok) {
@@ -396,15 +395,15 @@ export default function ObjectiveDetail() {
   const { data: keyResults, isLoading: keyResultsLoading } = useQuery({
     queryKey: ['/api/key-results', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
-        throw new Error("Missing objectiveId or tenant");
+      if (!objectiveId) {
+        throw new Error("Missing objectiveId");
       }
+      
+      console.log("Fetching key results for objective:", objectiveId);
       
       const response = await apiRequest(
         'GET', 
-        `/api/key-results`,
-        null,
-        { objectiveId, tenantId: tenant.id }
+        `/api/objectives/${objectiveId}/key-results`
       );
       
       if (!response.ok) {

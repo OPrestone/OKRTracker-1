@@ -480,7 +480,7 @@ export default function CompanyOKRs() {
                 key={objective.id} 
                 className="border-t-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 style={{ borderTopColor: typeColor }}
-                onClick={() => navigateToObjective(objective.id)}
+                onClick={() => navigate(`/objectives/${objective.id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-1">
