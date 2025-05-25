@@ -239,6 +239,7 @@ function AppRoutes() {
       <ProtectedRoute path="/organization/:organisation/company-okrs" component={CompanyOKRs} />
       <ProtectedRoute path="/organization/:organisation/company-strategy" component={CompanyStrategy} />
       <ProtectedRoute path="/organization/:organisation/teams" component={TeamsRedesigned} />
+      <ProtectedRoute path="/organization/:organisation/objectives/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/organization/:organisation/teams/:id" component={TeamDetail} />
       <ProtectedRoute path="/organization/:organisation/users" component={UsersPage} />
       <ProtectedRoute path="/organization/:organisation/all-users" component={AllUsers} />

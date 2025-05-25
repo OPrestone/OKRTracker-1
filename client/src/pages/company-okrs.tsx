@@ -540,7 +540,7 @@ export default function CompanyOKRs() {
                       variant="ghost"
                       onClick={() => {
                         const tenantId = user?.defaultTenant || "";
-                        navigate(`/${tenantId}/objectives/${objective.id}`);
+                        navigate(`/organization/${tenantId}/objectives/${objective.id}`);
                       }}
                     >
                       Details <ChevronRight className="ml-1 h-4 w-4" />
