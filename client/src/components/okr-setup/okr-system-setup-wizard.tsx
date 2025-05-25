@@ -946,7 +946,23 @@ export default function OKRSystemSetupWizard() {
   const onSubmitForm = (data: FormValues) => {
     console.log("Form submitted with data:", data);
     setIsSubmitting(true);
-    saveOKRSystemMutation.mutate(data);
+    
+    // Make sure teamConfiguration has all required properties to prevent submission errors
+    const validatedData = {
+      ...data,
+      teamConfiguration: {
+        ...data.teamConfiguration,
+        defaultTeams: data.teamConfiguration.defaultTeams || [],
+        csvUsers: data.teamConfiguration.csvUsers || [],
+        // Make sure useDefaultTeams is present and properly set
+        useDefaultTeams: typeof data.teamConfiguration.useDefaultTeams === 'boolean' 
+          ? data.teamConfiguration.useDefaultTeams 
+          : true // Default to true if not present
+      }
+    };
+    
+    console.log("Validated form data:", validatedData);
+    saveOKRSystemMutation.mutate(validatedData);
   };
   
   // Handle saving just the mission data
