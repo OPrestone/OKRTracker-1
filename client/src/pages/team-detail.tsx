@@ -1101,6 +1101,7 @@ export default function TeamDetailPage() {
                                         )}
                                       </Avatar>
                                     )}
+                                  </div>
                                 </div>
                                 
                                 <div className="mt-4">
