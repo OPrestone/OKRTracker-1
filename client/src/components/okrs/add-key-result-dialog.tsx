@@ -30,7 +30,7 @@ import { Slider } from "@/components/ui/slider";
 
 const keyResultSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title must be less than 100 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters").optional(),
+  description: z.string().optional().or(z.string().min(10, "Description must be at least 10 characters")),
   startValue: z.number().min(0, "Start value must be at least 0"),
   targetValue: z.number().min(1, "Target value must be at least 1"),
   unit: z.string().min(1, "Unit is required (e.g., %, tasks, revenue)"),
@@ -63,7 +63,8 @@ export default function AddKeyResultDialog({
       targetValue: 100,
       unit: "%",
       currentValue: 0
-    }
+    },
+    mode: "onSubmit" // Only validate when the form is submitted
   });
 
   const { currentTenant } = useTenantContext();
