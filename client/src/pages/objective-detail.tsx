@@ -370,7 +370,11 @@ export default function ObjectiveDetail() {
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { tenant } = useTenantContext();
+  const { currentTenant } = useTenantContext();
+  
+  // For debugging
+  console.log("Route params:", { simpleParams, tenantParams, orgParams });
+  console.log("Objective ID from URL:", objectiveId);
   
   // Fetch the objective data from API with tenant context
   const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
@@ -389,12 +393,14 @@ export default function ObjectiveDetail() {
       );
       
       if (!response.ok) {
+        console.error("Error response:", await response.text());
         throw new Error(`Error fetching objective: ${response.statusText}`);
       }
       
       return await response.json() as DbObjective;
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
+    retry: 3
   });
 
   // Fetch key results related to this objective
