@@ -832,6 +832,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Batch create teams endpoint
+  app.post("/api/teams/batch", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenant ID" });
+      }
+      
+      // Validate user's permission in the tenant
+      const userTenant = await db.select().from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+      
+      if (userTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to this tenant" });
+      }
+      
+      // Only owners and admins can create teams
+      const role = userTenant[0].role;
+      if (role !== 'owner' && role !== 'admin') {
+        return res.status(403).json({ error: "Not authorized - insufficient privileges to create teams" });
+      }
+      
+      // Expect an array of team data in the request body
+      const teamsData = req.body;
+      if (!Array.isArray(teamsData)) {
+        return res.status(400).json({ error: "Expected an array of teams" });
+      }
+      
+      console.log("Batch creating teams:", teamsData);
+      
+      // Process each team
+      const createdTeams = [];
+      for (const teamData of teamsData) {
+        // Parse and validate team data using the team schema
+        try {
+          const validTeamData = insertTeamSchema.parse({
+            ...teamData,
+            id: ulid(),
+            tenant_id: tenantId
+          });
+          
+          // Insert team into database
+          const insertResult = await db.insert(teams).values(validTeamData).returning();
+          
+          if (insertResult && insertResult.length > 0) {
+            createdTeams.push(insertResult[0]);
+          }
+        } catch (error) {
+          console.error("Error creating team:", error);
+          // Continue with other teams even if one fails
+        }
+      }
+      
+      console.log(`Successfully created ${createdTeams.length} teams`);
+      
+      // Return the created teams
+      res.status(201).json(createdTeams);
+    } catch (error) {
+      console.error("Error in batch team creation:", error);
+      next(error);
+    }
+  });
+  
   // Get a single team by ID
   app.get("/api/teams/:teamId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {

@@ -6,6 +6,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { 
+  Megaphone, 
+  Briefcase, 
+  Code, 
+  Save 
+} from "lucide-react";
 
 // Comprehensive industry list for organization selection
 const industryOptions = [
@@ -1466,8 +1472,8 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="marketingTeamIcon" defaultValue="megaphone" disabled={addedTeams.some(team => team.name.includes("Marketing"))}>
-                                  <SelectTrigger className="border-gray-200">
+                                <Select defaultValue="megaphone" disabled={addedTeams.some(team => team.name.includes("Marketing"))}>
+                                  <SelectTrigger className="border-gray-200" id="marketingTeamIcon">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -1976,6 +1982,121 @@ export default function TenantOnboardingWizard() {
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Team summary and save button */}
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Team Summary</CardTitle>
+                    <CardDescription>
+                      {addedTeams.length === 0 
+                        ? "No teams added yet. Use the team cards above to add teams." 
+                        : `${addedTeams.length} team(s) ready to be saved.`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {addedTeams.map((team, index) => (
+                        <div key={index} className="flex items-center p-3 border rounded-md" style={{borderColor: team.color}}>
+                          <div className="mr-3 p-2 rounded-full" style={{backgroundColor: team.color + "20"}}>
+                            {team.icon === "megaphone" && <Megaphone className="h-4 w-4" style={{color: team.color}} />}
+                            {team.icon === "briefcase" && <Briefcase className="h-4 w-4" style={{color: team.color}} />}
+                            {team.icon === "code" && <Code className="h-4 w-4" style={{color: team.color}} />}
+                          </div>
+                          <div>
+                            <div className="font-medium">{team.name}</div>
+                            <div className="text-sm text-gray-500 truncate max-w-[300px]">{team.description}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {addedTeams.length > 0 && (
+                      <Button 
+                        type="button"
+                        className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
+                        onClick={async () => {
+                          try {
+                            // Get current user to determine tenantId
+                            const userResponse = await fetch('/api/user', {
+                              method: 'GET',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include'
+                            });
+                            
+                            if (!userResponse.ok) {
+                              throw new Error('Failed to get current user information');
+                            }
+                            
+                            const userData = await userResponse.json();
+                            
+                            // Get tenants for the current user
+                            const tenantsResponse = await fetch('/api/tenants', {
+                              method: 'GET',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include'
+                            });
+                            
+                            if (!tenantsResponse.ok) {
+                              throw new Error('Failed to get tenant information');
+                            }
+                            
+                            const tenants = await tenantsResponse.json();
+                            
+                            if (!tenants || tenants.length === 0) {
+                              toast({
+                                title: "No Organization Found",
+                                description: "Please complete the organization setup first before saving teams.",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            
+                            const tenantId = tenants[0]?.id;
+                            
+                            // Format teams for API request
+                            const teamsToSave = addedTeams.map(team => ({
+                              name: team.name,
+                              description: team.description,
+                              icon: team.icon,
+                              color: team.color,
+                              tenant_id: tenantId,
+                              leaderId: null // No leader assigned initially
+                            }));
+                            
+                            // Send teams to API
+                            const saveResponse = await fetch('/api/teams/batch', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(teamsToSave),
+                              credentials: 'include'
+                            });
+                            
+                            if (!saveResponse.ok) {
+                              throw new Error('Failed to save teams');
+                            }
+                            
+                            const savedTeams = await saveResponse.json();
+                            
+                            toast({
+                              title: "Teams Saved Successfully",
+                              description: `${savedTeams.length} team(s) have been saved to your organization.`,
+                            });
+                          } catch (error) {
+                            console.error("Error saving teams:", error);
+                            toast({
+                              title: "Error Saving Teams",
+                              description: error instanceof Error ? error.message : "An unexpected error occurred",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Teams to Database
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 
