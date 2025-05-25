@@ -1082,12 +1082,22 @@ export default function TenantOnboardingWizard() {
                     </Button>
 
                     <Button
-                      type="button"
-                      onClick={() => setActivePage("setup")}
+                      type="submit"
+                      onClick={() => form.handleSubmit(onSubmit)()}
+                      disabled={isSubmitting || !isCurrentStepValid()}
                       className="bg-primary hover:bg-primary/90 shadow-sm"
                     >
-                      Continue to Setup
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Organization...
+                        </>
+                      ) : (
+                        <>
+                          Create Organization
+                          <Rocket className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -1137,7 +1147,7 @@ export default function TenantOnboardingWizard() {
                   ) : (
                     <>
                       Create Organization
-                      <Zap className="ml-2 h-4 w-4" />
+                      <Rocket className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
