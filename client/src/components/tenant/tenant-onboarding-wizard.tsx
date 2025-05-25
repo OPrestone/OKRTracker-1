@@ -715,9 +715,9 @@ export default function TenantOnboardingWizard() {
     setActivePage(stepId);
   };
 
-  const addTeamMember = (e?: React.MouseEvent) => {
+  const addTeamMember = (e?: React.MouseEvent | null) => {
     // Prevent form submission if event is provided
-    if (e) {
+    if (e && 'preventDefault' in e) {
       e.preventDefault();
     }
 
