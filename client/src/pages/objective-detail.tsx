@@ -947,8 +947,13 @@ export default function ObjectiveDetail() {
                             </Button>
                           </div>
                         </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No initiatives found for this objective
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1158,7 +1163,7 @@ export default function ObjectiveDetail() {
                   </div>
                   <div>
                     <p className="text-sm">New check-in added</p>
-                    <p className="text-xs text-gray-500">{objective.checkIns[0]?.date}</p>
+                    <p className="text-xs text-gray-500">{objective?.checkIns?.length > 0 ? new Date(objective.checkIns[0].createdAt || '').toLocaleDateString() : 'No date available'}</p>
                   </div>
                 </div>
                 
