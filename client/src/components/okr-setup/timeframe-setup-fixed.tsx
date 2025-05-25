@@ -226,6 +226,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         description: "",
         startDate: new Date(),
         endDate: addMonths(new Date(), getCadenceDuration(primaryCadence)),
+        cadenceId: "",
       });
       setIsAddingTimeframe(false);
       
@@ -323,9 +324,28 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       return;
     }
     
+    // If cadence ID is not selected, try to find an appropriate one
+    let cadenceId = formState.cadenceId;
+    if (!cadenceId && tenantCadences.length > 0) {
+      // Find the best matching cadence based on duration
+      const durationMonths = Math.round(
+        (formState.endDate.getTime() - formState.startDate.getTime()) / 
+        (30 * 24 * 60 * 60 * 1000)
+      );
+      
+      if (durationMonths <= 3) {
+        cadenceId = findCadenceId("quarterly");
+      } else if (durationMonths <= 6) {
+        cadenceId = findCadenceId("halfYearly");
+      } else {
+        cadenceId = findCadenceId("annual");
+      }
+    }
+    
     // Add the new timeframe to the list
     const newTimeframe = {
       ...formState,
+      cadenceId: cadenceId || "",
       tenantId,
     };
     
@@ -337,6 +357,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
       description: "",
       startDate: new Date(),
       endDate: addMonths(new Date(), getCadenceDuration(primaryCadence)),
+      cadenceId: "",
     });
     setIsAddingTimeframe(false);
     
@@ -469,7 +490,35 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Cadence</Label>
+                  <Select
+                    value={formState.cadenceId}
+                    onValueChange={(value) => handleInputChange("cadenceId", value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a cadence" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isLoadingCadences ? (
+                        <SelectItem value="loading" disabled>Loading cadences...</SelectItem>
+                      ) : tenantCadences.length > 0 ? (
+                        tenantCadences.map((cadence) => (
+                          <SelectItem key={cadence.id} value={cadence.id}>
+                            {cadence.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>No cadences available</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the time period type for this timeframe
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <Label>Start Date</Label>
                     <Popover>
@@ -551,7 +600,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                         {timeframe.description && (
                           <p className="text-gray-500 mb-2">{timeframe.description}</p>
                         )}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-3">
                           <div>
                             <p className="font-semibold">Start Date:</p>
                             <p>{format(new Date(timeframe.startDate), "PPP")}</p>
@@ -561,6 +610,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                             <p>{format(new Date(timeframe.endDate), "PPP")}</p>
                           </div>
                         </div>
+                        
+                        {/* Show associated cadence if available */}
+                        {timeframe.cadenceId && (
+                          <div className="mt-2 pt-2 border-t">
+                            <p className="font-semibold text-xs text-gray-600">Cadence Type:</p>
+                            <div className="flex items-center mt-1">
+                              <Clock className="h-3 w-3 text-primary mr-1" />
+                              <span className="text-xs">
+                                {tenantCadences.find(c => c.id === timeframe.cadenceId)?.name || 'Custom'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -604,7 +666,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                       {timeframe.description && (
                         <p className="text-gray-500 mb-2">{timeframe.description}</p>
                       )}
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-3">
                         <div>
                           <p className="font-semibold">Start Date:</p>
                           <p>{format(new Date(timeframe.startDate), "PPP")}</p>
@@ -614,6 +676,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
                           <p>{format(new Date(timeframe.endDate), "PPP")}</p>
                         </div>
                       </div>
+                      
+                      {/* Show associated cadence if available */}
+                      {timeframe.cadenceId && (
+                        <div className="mt-2 pt-2 border-t">
+                          <p className="font-semibold text-xs text-gray-600">Cadence Type:</p>
+                          <div className="flex items-center mt-1">
+                            <Clock className="h-3 w-3 text-primary mr-1" />
+                            <span className="text-xs">
+                              {tenantCadences.find(c => c.id === timeframe.cadenceId)?.name || 'Custom'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
