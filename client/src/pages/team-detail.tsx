@@ -117,15 +117,12 @@ export default function TeamDetailPage() {
   const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
   
   // Use the centralized team context for instant data access
-  const { teams, isLoading: teamsContextLoading, error: teamsContextError } = useTeams();
+  const { teams, isLoading: teamsContextLoading, error: teamsContextError, refetchTeams, setTeamLeader } = useTeams();
   
   // Get team data from the team context, eliminating the need for a separate API call
   const [team, setTeam] = useState<any>(null);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<Error | null>(null);
-  
-  // Trigger team data refresh when the page loads
-  const { refetchTeams } = useTeams();
   
   // Auto-refresh team data when page is accessed
   useEffect(() => {
@@ -134,6 +131,40 @@ export default function TeamDetailPage() {
       console.error("Error refreshing teams data:", error);
     });
   }, [refetchTeams]);
+  
+  // Handle making a user the team leader
+  const handleMakeTeamLead = async (userId: string) => {
+    try {
+      if (!team?.id) {
+        toast({
+          title: "Error",
+          description: "Team ID is not available",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Call the setTeamLeader function from the team context
+      await setTeamLeader(team.id, userId);
+      
+      toast({
+        title: "Team Leader Updated",
+        description: "The team leader has been successfully updated",
+        variant: "default"
+      });
+      
+      // Refetch data to update the UI
+      await refetchTeams();
+      
+    } catch (error) {
+      console.error("Error setting team leader:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update team leader",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Find team from the centralized context data
   useEffect(() => {
@@ -287,31 +318,7 @@ export default function TeamDetailPage() {
     }
   ];
 
-  // Get team operations from context
-  const { setTeamLeader } = useTeams();
-  
-  // Handle setting a user as team leader
-  const handleMakeTeamLead = async (userId: string) => {
-    if (!team?.id || !tenantId) return;
-    
-    try {
-      // Use the centralized function from team context
-      await setTeamLeader(team.id, userId);
-      
-      // Show success message
-      toast({
-        title: "Team Leader Updated",
-        description: "The team leader has been successfully updated.",
-      });
-      
-    } catch (error) {
-      toast({
-        title: "Error Updating Team Leader",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
-  };
+  // Using the handleMakeTeamLead function defined above
 
   const handleGoBack = () => {
     // If we have a tenant ID, navigate back to the tenant-specific teams page
