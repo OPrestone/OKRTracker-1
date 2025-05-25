@@ -195,7 +195,7 @@ export function setupConfigRoutes(router: Router) {
               const tempPassword = Math.random().toString(36).slice(-8);
               const hashedPassword = await hashPassword(tempPassword);
               
-              // Create a valid user object
+              // Create a valid user object that matches the database schema
               const newUserData = {
                 id: ulid(),
                 username: username,
@@ -203,9 +203,9 @@ export function setupConfigRoutes(router: Router) {
                 password: hashedPassword,
                 name: userData.name || username,
                 title: userData.department || '',
-                tenantId: tenantId,
-                defaultTenantId: tenantId,
-                firstLogin: true
+                first_login: true,
+                created_at: new Date(),
+                updated_at: new Date()
               };
               
               // Check if user already exists
@@ -466,9 +466,13 @@ export function setupConfigRoutes(router: Router) {
           
           // Accept all users that have an email property
           const validUsers = csvUsers.filter((user: any) => {
-            console.log("Processing user:", user);
-            return user && typeof user === 'object' && user.email;
+            // Log each user for debugging
+            console.log("Processing CSV user:", JSON.stringify(user));
+            // Make sure we have a valid user object with an email
+            return user && typeof user === 'object' && user.email && typeof user.email === 'string';
           });
+          
+          console.log(`Found ${validUsers.length} valid users to create`);
           
           // Create users from CSV data
           for (const userData of validUsers) {

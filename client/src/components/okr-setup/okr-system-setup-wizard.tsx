@@ -829,10 +829,10 @@ export default function OKRSystemSetupWizard() {
             })) 
           : [],
           
-        // Include CSV users
+        // Include CSV users - make sure to process only valid users
         csv_users: Array.isArray(data.teamConfiguration.csvUsers) ? 
           data.teamConfiguration.csvUsers
-            .filter(user => user && user.email)
+            .filter(user => user && user.email && (user.isValid !== false)) // Only include valid users or those without explicit validation
             .map(user => ({
               email: user.email,
               name: user.name || '',
