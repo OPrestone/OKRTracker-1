@@ -1128,7 +1128,8 @@ export default function TeamDetailPage() {
                                     {member.role || "Member"}
                                   </Badge>
                                   {member.id === team?.leaderId && (
-                                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
+                                      <Award className="h-3 w-3" />
                                       Team Lead
                                     </Badge>
                                   )}
@@ -1137,8 +1138,9 @@ export default function TeamDetailPage() {
                                     size="sm"
                                     onClick={() => handleMakeTeamLead(member.id)}
                                     disabled={member.id === team?.leaderId}
-                                    className="ml-auto"
+                                    className="ml-auto flex items-center gap-1"
                                   >
+                                    <Award className="h-3 w-3" />
                                     {member.id === team?.leaderId ? "Current Lead" : "Make Lead"}
                                   </Button>
                                 </div>
