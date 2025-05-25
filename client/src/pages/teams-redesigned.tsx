@@ -189,12 +189,36 @@ const TeamCard = ({
   const { data: objectives = [] } = useQuery<TeamObjective[]>({
     queryKey: ["/api/teams", team.id, "objectives", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
 
-  // Calculate progress as average of objectives or default to 0
-  const progress = objectives && objectives.length > 0
-    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + obj.progress, 0) / objectives.length
-    : 0;
+  // Get team performance data with key results
+  const { data: performanceData } = useQuery({
+    queryKey: ["/api/teams", team.id, "performance", currentTenant?.id],
+    enabled: !!team.id && !!currentTenant?.id,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+  });
+
+  // Calculate overall progress from authentic key results and objectives
+  const calculateOverallProgress = () => {
+    if (performanceData?.keyResults && performanceData.keyResults.length > 0) {
+      // Use actual key results progress from database
+      const totalProgress = performanceData.keyResults.reduce((sum: number, kr: any) => {
+        return sum + (kr.progress || 0);
+      }, 0);
+      return totalProgress / performanceData.keyResults.length;
+    } else if (objectives && objectives.length > 0) {
+      // Fallback to objectives progress
+      return objectives.reduce((sum: number, obj: TeamObjective) => sum + (obj.progress || 0), 0) / objectives.length;
+    }
+    return 0;
+  };
+
+  const progress = calculateOverallProgress();
 
   // Get team color or default
   const teamColor = team.color || "#3B82F6";
