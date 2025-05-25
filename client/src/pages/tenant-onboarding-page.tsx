@@ -3,7 +3,17 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import TenantOnboardingWizard from "@/components/tenant/tenant-onboarding-wizard";
-import { Loader2, Target, BarChart3, Layers, Rocket } from "lucide-react";
+import { 
+  Loader2, 
+  Target, 
+  BarChart3, 
+  Layers, 
+  Rocket, 
+  CheckCircle2, 
+  ArrowRight, 
+  Trophy,
+  Users 
+} from "lucide-react";
 
 export default function TenantOnboardingPage() {
   const { user, isLoading } = useAuth();
@@ -50,69 +60,105 @@ export default function TenantOnboardingPage() {
     return null;
   }
 
-  // Show onboarding wizard with sleek, modern design
+  // Show completely redesigned onboarding page
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row items-stretch gap-8 max-w-7xl">
-        {/* Cover Design - Left Side */}
-        <div className="hidden md:flex flex-col rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white md:w-5/12 p-10 shadow-xl">
-          <div className="mb-auto">
-            <h1 className="text-4xl font-bold mb-4">Get Started with OKR Master</h1>
-            <div className="w-20 h-1.5 bg-white/60 rounded-full mb-6"></div>
-            <p className="text-white/90 text-lg mb-12 leading-relaxed">
-              The most intuitive platform for tracking objectives and key results that drive your business forward.
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="container mx-auto py-12 px-4 md:px-6 lg:px-8 max-w-screen-xl">
+        <div className="flex flex-col gap-6">
+          {/* Header Section */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+              <Trophy className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4">
+              Welcome to Your OKR Journey
+            </h1>
+            <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
+              Set up your organization and get ready to achieve your most ambitious goals with our powerful OKR platform.
             </p>
           </div>
-          
-          <div className="space-y-10">
-            <div className="flex items-start space-x-5">
-              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
-                <Target className="h-7 w-7" />
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+            {/* Left Column - Feature Highlights */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-slate-900 mb-4">Why Teams Love Our Platform</h2>
+                  
+                  <div className="space-y-5">
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-slate-900">Simple Goal Tracking</h3>
+                        <p className="text-slate-600 text-sm">Set clear objectives and track progress with intuitive tools</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-slate-900">Real-Time Analytics</h3>
+                        <p className="text-slate-600 text-sm">Get instant insights into team performance and goal progress</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-slate-900">Team Alignment</h3>
+                        <p className="text-slate-600 text-sm">Keep everyone focused on the same strategic priorities</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 px-6 py-4 border-t border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">
+                      <span className="font-medium text-primary">3 default teams</span> created automatically
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Set Clear Objectives</h3>
-                <p className="text-white/80">Define measurable goals that align with your organization's mission</p>
+              
+              {/* Testimonial Card */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+                <div className="flex items-start gap-2 mb-3 text-amber-500">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <blockquote className="text-slate-800 font-medium mb-3">
+                  "This OKR platform transformed how our teams collaborate. Setting up was simple and the results were immediate."
+                </blockquote>
+                <div className="text-slate-600 text-sm">
+                  Sarah Chen, Product Director at Acme Inc.
+                </div>
               </div>
             </div>
             
-            <div className="flex items-start space-x-5">
-              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
-                <Layers className="h-7 w-7" />
+            {/* Right Column - Onboarding Form */}
+            <div className="lg:col-span-3 bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+              <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                <h2 className="text-lg font-semibold text-slate-900">Organization Setup</h2>
+                <p className="text-sm text-slate-600">Complete these steps to get started with your OKR journey</p>
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Track Key Results</h3>
-                <p className="text-white/80">Monitor progress with quantifiable metrics that drive success</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-5">
-              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
-                <BarChart3 className="h-7 w-7" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Real-time Analytics</h3>
-                <p className="text-white/80">Get powerful insights with customizable dashboards and reports</p>
+              
+              <div className="p-6">
+                <TenantOnboardingWizard />
               </div>
             </div>
           </div>
-          
-          <div className="mt-auto pt-12">
-            <div className="flex items-center space-x-3 bg-white/10 p-4 rounded-lg border border-white/20">
-              <Rocket className="h-6 w-6 text-white" />
-              <p className="font-medium">Let's set up your organization in just a few simple steps</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile header - visible only on smaller screens */}
-        <div className="md:hidden bg-primary text-white p-6 rounded-xl mb-4 shadow-md">
-          <h1 className="text-2xl font-bold mb-2">OKR Master Onboarding</h1>
-          <p className="text-white/90">Let's set up your organization to get started</p>
-        </div>
-        
-        {/* Onboarding Wizard - Right Side */}
-        <div className="flex-1 bg-white rounded-xl shadow-md p-6 md:p-8">
-          <TenantOnboardingWizard />
         </div>
       </div>
     </div>
