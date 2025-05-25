@@ -268,11 +268,23 @@ export default function TeamDetailPage() {
     queryKey: ["/api/teams", team?.id || teamId, "performance", tenantId],
     queryFn: async () => {
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/performance?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team performance data");
-      return res.json();
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing teamId or tenantId for performance data");
+        return { stats: null, activity: null };
+      }
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/performance?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.log("API returned non-200 status for team performance");
+          return { stats: null, activity: null };
+        }
+        return res.json();
+      } catch (error) {
+        console.log("Error fetching team performance:", error);
+        return { stats: null, activity: null };
+      }
     },
-    enabled: !!(team?.id || teamId && tenantId),
+    enabled: !!(team?.id || teamId) && !!tenantId,
     onError: (err) => {
       // Silently log errors without toast to avoid overwhelming users
       console.error("Error loading team performance:", err);
@@ -343,17 +355,17 @@ export default function TeamDetailPage() {
 
   // Process and use real performance data when available
   useEffect(() => {
-    if (teamPerformance && teamPerformance.activity) {
-      // If we have real data from API
-      if (Array.isArray(teamPerformance.activity) && teamPerformance.activity.length > 0) {
-        setActivityData(teamPerformance.activity);
-      } else {
-        // Generate activity data based on objectives if no performance data
-        generateActivityDataFromObjectives(objectives);
-      }
-    } else if (objectives && objectives.length > 0) {
-      // No performance data yet, but we have objectives to use
+    // If we have objectives data, generate activity data from it
+    if (objectives && Array.isArray(objectives) && objectives.length > 0) {
       generateActivityDataFromObjectives(objectives);
+    }
+    
+    // If we have performance data from API, use that instead
+    if (teamPerformance && 
+        teamPerformance.activity && 
+        Array.isArray(teamPerformance.activity) && 
+        teamPerformance.activity.length > 0) {
+      setActivityData(teamPerformance.activity);
     }
   }, [teamPerformance, objectives]);
 
@@ -494,12 +506,15 @@ export default function TeamDetailPage() {
   const teamStats = calculateTeamStats(objectives);
   const memberContributions = calculateMemberContribution(members, objectives);
   
-  // Use team performance data if available
-  const performanceStats = teamPerformance?.stats || {
-    completionRate: teamStats.completedObjectives / (teamStats.totalObjectives || 1) * 100,
-    weeklyProgress: teamStats.averageProgress,
-    teamEngagement: members?.length > 0 ? memberContributions.filter(m => m.assignedCount > 0).length / members.length * 100 : 0
+  // Create performance stats using available data
+  const fallbackStats = {
+    completionRate: teamStats.totalObjectives > 0 ? (teamStats.completedObjectives / teamStats.totalObjectives) * 100 : 0,
+    weeklyProgress: teamStats.averageProgress || 0,
+    teamEngagement: members?.length > 0 ? (memberContributions.filter(m => m.assignedCount > 0).length / members.length) * 100 : 0
   };
+  
+  // Use team performance data if available, otherwise use calculated stats
+  const performanceStats = teamPerformance && teamPerformance.stats ? teamPerformance.stats : fallbackStats;
   
   // Status distribution data for pie chart
   const statusDistribution = [
