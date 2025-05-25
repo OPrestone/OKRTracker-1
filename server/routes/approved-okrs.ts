@@ -9,13 +9,19 @@ export function setupApprovedOkrsRoutes(router: Router) {
     try {
       const { tenantId } = req.params;
       
+      console.log(`Attempting to fetch approved OKRs for tenant: ${tenantId}`);
+      
       if (!req.user) {
+        console.log('User not authenticated for approved OKRs request');
         return res.status(401).json({ error: 'Unauthorized' });
       }
       
       // Check if user has access to the requested tenant
       const userTenants = (req.user as any).tenants?.map((t: any) => t.id) || [];
+      console.log(`User has access to tenants: ${JSON.stringify(userTenants)}`);
+      
       if (!userTenants.includes(tenantId)) {
+        console.log(`User does not have access to tenant: ${tenantId}`);
         return res.status(403).json({ error: 'Access denied to this tenant' });
       }
       

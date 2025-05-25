@@ -1,17 +1,105 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'wouter';
+import { useParams, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/layouts/dashboard-layout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import ApprovedOkrsList from '@/components/dashboard/approved-okrs-list';
 
 const ApprovedTenantOKRsPage = () => {
   const params = useParams();
   const { user, isLoading: authLoading } = useAuth();
   const [selectedTab, setSelectedTab] = useState('all');
-  const tenantId = params.tenantId || '01JW2KF5Z11KG9M1VE4N2MG6FA'; // Default to the specific tenant ID requested
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
+  // Use the tenant ID from URL parameters or default to the specific tenant ID
+  const tenantId = params.tenantId || '01JW2KF5Z11KG9M1VE4N2MG6FA';
+  
+  useEffect(() => {
+    // Check authentication status when component mounts
+    if (!authLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to view approved OKRs",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    // Simulate checking tenant access
+    if (!authLoading && user) {
+      const userTenants = (user as any).tenants || [];
+      const hasTenantAccess = userTenants.some((t: any) => t.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        setError(`You don't have access to this organization's OKRs`);
+      }
+      
+      setIsLoading(false);
+    }
+  }, [user, authLoading, tenantId, navigate, toast]);
+
+  if (authLoading) {
+    return (
+      <DashboardLayout title="Loading...">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <div className="w-full max-w-md">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-8 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <DashboardLayout title="Access Error">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <Card className="w-full max-w-md border-red-200 bg-red-50">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <CardTitle className="text-red-700">Access Denied</CardTitle>
+              </div>
+              <CardDescription className="text-red-600">
+                {error}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline" 
+                className="mt-2"
+                onClick={() => navigate('/')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Return to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Approved OKRs">

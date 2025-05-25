@@ -44,14 +44,22 @@ const ApprovedOkrsList = ({ tenantId }: { tenantId: string }) => {
   const { data: approvedOkrs, isLoading, error } = useQuery({
     queryKey: [`/api/${tenantId}/approved-okrs`],
     enabled: !!tenantId && !!user,
+    retry: 1,
+    refetchOnWindowFocus: false,
     queryFn: async ({ queryKey }) => {
       try {
+        console.log(`Fetching OKRs for tenant: ${tenantId}`);
         const response = await apiRequest('GET', queryKey[0] as string);
+        
         if (!response.ok) {
           const errorData = await response.json();
+          console.error('API error response:', errorData);
           throw new Error(errorData.error || 'Failed to fetch approved OKRs');
         }
-        return response.json();
+        
+        const data = await response.json();
+        console.log(`Successfully fetched ${data.length || 0} OKRs`);
+        return data;
       } catch (error) {
         console.error('Error fetching approved OKRs:', error);
         toast({
