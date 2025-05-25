@@ -93,16 +93,16 @@ export default function TeamDetailPage() {
   const [viewMode, setViewMode] = useState<"today" | "weekly" | "monthly">("weekly");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   
-  // Sample activity data for the chart (this would come from API in real implementation)
-  const activityData: TaskActivity[] = [
-    { day: "Mon", created: 20, completed: 15 },
-    { day: "Tue", created: 32, completed: 25 },
-    { day: "Wed", created: 27, completed: 20 },
-    { day: "Thu", created: 35, completed: 30 },
-    { day: "Fri", created: 30, completed: 22 },
-    { day: "Sat", created: 18, completed: 16 },
-    { day: "Sun", created: 13, completed: 11 },
-  ];
+  // Use real performance data from the API
+  const [activityData, setActivityData] = useState<TaskActivity[]>([
+    { day: "Mon", created: 0, completed: 0 },
+    { day: "Tue", created: 0, completed: 0 },
+    { day: "Wed", created: 0, completed: 0 },
+    { day: "Thu", created: 0, completed: 0 },
+    { day: "Fri", created: 0, completed: 0 },
+    { day: "Sat", created: 0, completed: 0 },
+    { day: "Sun", created: 0, completed: 0 },
+  ]);
   
   // Get tenant ID from path and context
   const { currentTenant } = useTenantContext();
@@ -123,6 +123,9 @@ export default function TeamDetailPage() {
   const [team, setTeam] = useState<any>(null);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<Error | null>(null);
+  
+  // State for highlighting the new team leader
+  const [highlightedLeaderId, setHighlightedLeaderId] = useState<string | null>(null);
   
   // Auto-refresh team data when page is accessed
   useEffect(() => {
@@ -152,6 +155,14 @@ export default function TeamDetailPage() {
         description: "The team leader has been successfully updated",
         variant: "default"
       });
+      
+      // Set the highlighted leader ID to trigger the visual effect
+      setHighlightedLeaderId(userId);
+      
+      // Remove the highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedLeaderId(null);
+      }, 3000);
       
       // Refetch data to update the UI
       await refetchTeams();
@@ -330,9 +341,25 @@ export default function TeamDetailPage() {
     }
   };
 
+  // Process and use real performance data when available
+  useEffect(() => {
+    if (teamPerformance && teamPerformance.activity) {
+      // If we have real data from API
+      if (Array.isArray(teamPerformance.activity) && teamPerformance.activity.length > 0) {
+        setActivityData(teamPerformance.activity);
+      } else {
+        // Generate activity data based on objectives if no performance data
+        generateActivityDataFromObjectives(objectives);
+      }
+    } else if (objectives && objectives.length > 0) {
+      // No performance data yet, but we have objectives to use
+      generateActivityDataFromObjectives(objectives);
+    }
+  }, [teamPerformance, objectives]);
+
   // Generate activity data based on objectives and their progress
-  const generateActivityData = (objectives: any[]) => {
-    if (!objectives || objectives.length === 0) return activityData;
+  const generateActivityDataFromObjectives = (objectives: any[]) => {
+    if (!objectives || objectives.length === 0) return;
     
     const days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
@@ -343,10 +370,22 @@ export default function TeamDetailPage() {
       date.setDate(today.getDate() - i);
       const dayName = days_of_week[date.getDay()];
       
-      // For real implementation, we'd query actual data from the API
-      // For now, generate data based on objectives count
-      const created = Math.floor(Math.random() * 10) + (objectives.length);
-      const completed = Math.floor(Math.random() * created * 0.8);
+      // Create real data based on objectives and their timestamps
+      // Count created objectives on this date
+      const createdOnDate = objectives.filter(obj => {
+        const createdDate = new Date(obj.createdAt || Date.now());
+        return createdDate.toDateString() === date.toDateString();
+      }).length;
+      
+      // Count completed/updated objectives on this date (if status changed to completed)
+      const completedCount = objectives.filter(obj => {
+        return obj.status === "completed" && 
+               (obj.updatedAt ? new Date(obj.updatedAt).toDateString() === date.toDateString() : false);
+      }).length;
+      
+      // Use real counts, but ensure at least 1 if we have any objectives at all
+      const created = Math.max(createdOnDate, objectives.length > 0 ? 1 : 0);
+      const completed = Math.max(completedCount, objectives.length > 0 ? 1 : 0);
       
       result.push({
         day: dayName,
@@ -355,7 +394,7 @@ export default function TeamDetailPage() {
       });
     }
     
-    return result;
+    setActivityData(result);
   };
   
   // Calculate team statistics
@@ -453,8 +492,14 @@ export default function TeamDetailPage() {
 
   // Get calculated stats and data
   const teamStats = calculateTeamStats(objectives);
-  const dynamicActivityData = generateActivityData(objectives);
   const memberContributions = calculateMemberContribution(members, objectives);
+  
+  // Use team performance data if available
+  const performanceStats = teamPerformance?.stats || {
+    completionRate: teamStats.completedObjectives / (teamStats.totalObjectives || 1) * 100,
+    weeklyProgress: teamStats.averageProgress,
+    teamEngagement: members?.length > 0 ? memberContributions.filter(m => m.assignedCount > 0).length / members.length * 100 : 0
+  };
   
   // Status distribution data for pie chart
   const statusDistribution = [
@@ -1146,17 +1191,25 @@ export default function TeamDetailPage() {
                                     {member.role || "Member"}
                                   </Badge>
                                   {member.id === team?.leaderId && (
-                                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
+                                    <Badge 
+                                      className={cn(
+                                        "bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1",
+                                        highlightedLeaderId === member.id && "animate-pulse bg-green-200"
+                                      )}
+                                    >
                                       <Award className="h-3 w-3" />
                                       Team Lead
                                     </Badge>
                                   )}
                                   <Button 
-                                    variant="outline" 
+                                    variant={highlightedLeaderId === member.id ? "secondary" : "outline"}
                                     size="sm"
                                     onClick={() => handleMakeTeamLead(member.id)}
                                     disabled={member.id === team?.leaderId}
-                                    className="ml-auto flex items-center gap-1"
+                                    className={cn(
+                                      "ml-auto flex items-center gap-1",
+                                      highlightedLeaderId === member.id && "animate-pulse"
+                                    )}
                                   >
                                     <Award className="h-3 w-3" />
                                     {member.id === team?.leaderId ? "Current Lead" : "Make Lead"}
