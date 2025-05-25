@@ -61,6 +61,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
     }
   });
   
+  // Fetch cadences for this tenant
+  const { 
+    data: cadences = [], 
+    isLoading: isLoadingCadences 
+  } = useQuery({
+    queryKey: ['/api/cadences'],
+    enabled: !!tenantId,
+    select: (data) => {
+      console.log("Fetched cadences:", data);
+      return Array.isArray(data) ? data : [];
+    }
+  });
+  
   // New timeframe form state
   const [formState, setFormState] = useState({
     name: "",
@@ -91,6 +104,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
 
   // Create default timeframes based on primary cadence and start month
   const createDefaultTimeframes = () => {
+    if (isLoadingCadences) {
+      toast({
+        title: "Loading",
+        description: "Please wait while we load cadence information.",
+      });
+      return [];
+    }
+    
     const now = new Date();
     const year = now.getFullYear();
     const monthNum = getMonthNumber(startMonth);
@@ -99,11 +120,36 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
     // Create timeframes for the current year
     const defaultTimeframes = [];
     
-    // Hardcoded cadence IDs for this tenant
-    const QUARTERLY_CADENCE_ID = "01JVZJKK4N7YM225RSS25DF0VQ";
-    const ANNUAL_CADENCE_ID = "01JVZJKJQKADPAZMENPGWB46BM";
+    // Get the cadence IDs dynamically from the database
+    const QUARTERLY_CADENCE_ID = getCadenceId("quarterly");
+    const ANNUAL_CADENCE_ID = getCadenceId("annual");
+    
+    // Log for debugging
+    console.log("Using dynamic cadence IDs:", { 
+      quarterly: QUARTERLY_CADENCE_ID, 
+      annual: ANNUAL_CADENCE_ID,
+      availableCadences: cadences
+    });
+    
+    // Only proceed if we have valid cadence IDs
+    if (!QUARTERLY_CADENCE_ID && !ANNUAL_CADENCE_ID) {
+      toast({
+        title: "Missing Cadences",
+        description: "Could not find appropriate cadences. Please ensure your organization has cadences set up.",
+        variant: "destructive"
+      });
+      return [];
+    }
     
     if (primaryCadence === "quarterly") {
+      // Make sure we have the quarterly cadence ID
+      if (!QUARTERLY_CADENCE_ID) {
+        toast({
+          title: "Missing Quarterly Cadence",
+          description: "Could not find a quarterly cadence. Using annual instead.",
+        });
+      }
+      
       // Create 4 quarters
       for (let i = 0; i < 4; i++) {
         const startDate = new Date(year, monthNum + (i * 3), 1);
@@ -114,10 +160,18 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
           startDate,
           endDate,
           tenantId,
-          cadenceId: QUARTERLY_CADENCE_ID // Add the quarterly cadence ID
+          cadenceId: QUARTERLY_CADENCE_ID || ANNUAL_CADENCE_ID // Use quarterly or fall back to annual
         });
       }
     } else if (primaryCadence === "annual") {
+      // Make sure we have the annual cadence ID
+      if (!ANNUAL_CADENCE_ID) {
+        toast({
+          title: "Missing Annual Cadence",
+          description: "Could not find an annual cadence. Using quarterly instead.",
+        });
+      }
+      
       // Create annual timeframe
       const startDate = new Date(year, monthNum, 1);
       const endDate = new Date(year + 1, monthNum, 0);
@@ -127,7 +181,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
         startDate,
         endDate,
         tenantId,
-        cadenceId: ANNUAL_CADENCE_ID // Add the annual cadence ID
+        cadenceId: ANNUAL_CADENCE_ID || QUARTERLY_CADENCE_ID // Use annual or fall back to quarterly
       });
     } else if (primaryCadence === "halfYearly") {
       // Create 2 half-year timeframes
@@ -140,7 +194,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
           startDate,
           endDate,
           tenantId,
-          cadenceId: QUARTERLY_CADENCE_ID // Use quarterly as closest match
+          cadenceId: QUARTERLY_CADENCE_ID || ANNUAL_CADENCE_ID // Use quarterly as closest match
         });
       }
     } else if (primaryCadence === "trimester") {
@@ -154,7 +208,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
           startDate,
           endDate,
           tenantId,
-          cadenceId: QUARTERLY_CADENCE_ID // Use quarterly as closest match
+          cadenceId: QUARTERLY_CADENCE_ID || ANNUAL_CADENCE_ID // Use quarterly as closest match
         });
       }
     }
@@ -211,6 +265,30 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
     }
   });
 
+  // Get the appropriate cadence ID for a given cadence type
+  const getCadenceId = (cadenceType: string): string | undefined => {
+    if (!cadences || cadences.length === 0) {
+      console.warn("No cadences available");
+      return undefined;
+    }
+    
+    // Find matching cadence by name (case insensitive)
+    // Convert 'quarterly' to 'quarter' for matching purposes
+    const searchName = cadenceType === 'quarterly' ? 'quarter' : cadenceType;
+    
+    const matchedCadence = cadences.find(c => 
+      c.name.toLowerCase().includes(searchName.toLowerCase())
+    );
+    
+    if (matchedCadence) {
+      console.log(`Found cadence for ${cadenceType}:`, matchedCadence);
+      return matchedCadence.id;
+    }
+    
+    console.warn(`No cadence found for type: ${cadenceType}`);
+    return undefined;
+  };
+
   // Save all timeframes to the database
   const saveAllTimeframes = async () => {
     if (timeframes.length === 0) {
@@ -222,10 +300,23 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
       return;
     }
     
+    // Make sure we have cadences
+    if (isLoadingCadences) {
+      toast({
+        title: "Loading",
+        description: "Please wait while we load the cadence information.",
+      });
+      return;
+    }
+    
     // Save each timeframe to the database
     try {
       console.log("Saving timeframes:", timeframes);
       let saveCount = 0;
+      
+      // Get the default cadence ID based on primary cadence
+      const defaultCadenceId = getCadenceId(primaryCadence);
+      console.log("Using default cadence ID:", defaultCadenceId);
       
       for (const timeframe of timeframes) {
         if (!timeframe.id) { // Only save new timeframes
@@ -235,8 +326,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
             startDate: timeframe.startDate instanceof Date ? timeframe.startDate.toISOString() : timeframe.startDate,
             endDate: timeframe.endDate instanceof Date ? timeframe.endDate.toISOString() : timeframe.endDate,
             tenantId: tenantId, // Explicitly set tenant ID
-            cadenceId: timeframe.cadenceId || "01JVZJKK4N7YM225RSS25DF0VQ" // Ensure cadence ID is set
+            cadenceId: timeframe.cadenceId || defaultCadenceId // Use the tenant-specific cadence ID
           };
+          
+          // Skip timeframes without a valid cadence ID
+          if (!timeframeData.cadenceId) {
+            console.warn("Skipping timeframe without cadence ID:", timeframe.name);
+            continue;
+          }
           
           console.log("Saving timeframe with tenant ID:", timeframeData);
           await createTimeframeMutation.mutateAsync(timeframeData);
@@ -304,11 +401,23 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
       return;
     }
     
+    // Get the appropriate cadence ID for this timeframe
+    const cadenceId = getCadenceId(primaryCadence);
+    
+    if (!cadenceId) {
+      toast({
+        title: "Error",
+        description: `Could not find a cadence for ${primaryCadence}. Please try again later.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Add the new timeframe to the list with cadence ID
     const newTimeframe = {
       ...formState,
       tenantId,
-      cadenceId: primaryCadence === "annual" ? "01JVZJKJQKADPAZMENPGWB46BM" : "01JVZJKK4N7YM225RSS25DF0VQ"
+      cadenceId: cadenceId
     };
     
     setTimeframes(prev => [...prev, newTimeframe]);
