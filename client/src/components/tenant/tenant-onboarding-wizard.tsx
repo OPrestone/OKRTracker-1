@@ -1226,28 +1226,29 @@ export default function TenantOnboardingWizard() {
                       )}
                     />
                   </CardContent>
+                  <CardFooter className="flex justify-between pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActivePage("organization")}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={!agreeToTerms}
+                      onClick={() => setActivePage("setup")}
+                      className="w-full md:w-auto"
+                    >
+                      Continue to Initial Setup
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
 
-              {/* Team */}
-              <TabsContent value="team" className="mt-0 space-y-6">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Build Your Team</h2>
-                  <p className="text-gray-500">Add key people who will collaborate in your organization</p>
-                </div>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
-                        <Users className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <CardTitle>Team Members</CardTitle>
-                        <CardDescription>Invite collaborators to get started with your OKRs</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
+              {/* Initial Setup */}
                   <CardContent className="pt-6 pb-8 relative">
 
                     {/* Example Team Cards - All three team examples */}
