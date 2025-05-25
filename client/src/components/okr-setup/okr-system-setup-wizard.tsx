@@ -593,12 +593,12 @@ export default function OKRSystemSetupWizard() {
         
         toast({
           title: "Ready to Launch your OKR Platform!",
-          description: "Your OKR system is ready to use. You will now be redirected to your dashboard.",
+          description: "Your OKR system is ready to use. You will now be redirected to create your first company objective.",
         });
         
-        // Navigate to the dashboard
+        // Navigate to the create company objective page
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/create-company-objective");
         }, 800);
       }, 1500);
     },
