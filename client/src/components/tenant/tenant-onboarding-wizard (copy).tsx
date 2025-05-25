@@ -409,6 +409,7 @@ export default function TenantOnboardingWizard() {
   const steps = [
     { id: "organization", label: "Organization", icon: Building2 },
     { id: "plan", label: "Subscription", icon: CreditCard },
+    { id: "team", label: "Team", icon: Users },
     { id: "setup", label: "Initial Setup", icon: Rocket }
   ];
 
