@@ -108,13 +108,35 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   const findCadenceId = (cadenceType: string) => {
     if (!tenantCadences || tenantCadences.length === 0) return null;
     
-    // Try to find by period or name
-    const cadence = tenantCadences.find(c => 
-      c.period?.toLowerCase() === cadenceType.toLowerCase() || 
+    // Try to find by exact period match
+    const exactPeriodMatch = tenantCadences.find(c => 
+      c.period?.toLowerCase() === cadenceType.toLowerCase()
+    );
+    if (exactPeriodMatch) return exactPeriodMatch.id;
+    
+    // Try to find by exact name match
+    const exactNameMatch = tenantCadences.find(c => 
       c.name?.toLowerCase() === cadenceType.toLowerCase()
     );
+    if (exactNameMatch) return exactNameMatch.id;
     
-    return cadence?.id || null;
+    // Try partial name matches
+    const partialNameMatch = tenantCadences.find(c => 
+      c.name?.toLowerCase().includes(cadenceType.toLowerCase()) ||
+      cadenceType.toLowerCase().includes(c.name?.toLowerCase() || '')
+    );
+    if (partialNameMatch) return partialNameMatch.id;
+    
+    // Try partial period matches
+    const partialPeriodMatch = tenantCadences.find(c => 
+      c.period?.toLowerCase().includes(cadenceType.toLowerCase()) ||
+      cadenceType.toLowerCase().includes(c.period?.toLowerCase() || '')
+    );
+    if (partialPeriodMatch) return partialPeriodMatch.id;
+    
+    // If still nothing found, return the first cadence as fallback
+    console.log(`Could not find exact cadence match for ${cadenceType}, using first available cadence as fallback`);
+    return tenantCadences[0]?.id || null;
   };
 
   // Create default timeframes based on primary cadence and start month
@@ -124,8 +146,21 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     const monthNum = getMonthNumber(startMonth);
     const duration = getCadenceDuration(primaryCadence);
     
+    // Check if we have cadences to work with
+    if (tenantCadences.length === 0) {
+      console.error("No cadences available to create timeframes");
+      return [];
+    }
+    
     // Get the cadence ID for the primary cadence
     const primaryCadenceId = findCadenceId(primaryCadence);
+    
+    if (!primaryCadenceId) {
+      console.error(`Could not find cadence ID for primary cadence: ${primaryCadence}`);
+      return [];
+    }
+    
+    console.log(`Creating timeframes with primary cadence ID: ${primaryCadenceId}`);
     
     // Create timeframes for the current year
     const defaultTimeframes = [];
@@ -258,29 +293,70 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
 
   // When Apply Default Timeframes button is clicked
   const handleApplyDefaultTimeframes = async () => {
-    // First ensure we have cadences available for the timeframes
-    if (tenantCadences.length === 0) {
-      const cadencesCreated = await createDefaultCadences();
-      if (!cadencesCreated) {
+    try {
+      // First ensure we have cadences available for the timeframes
+      if (tenantCadences.length === 0) {
         toast({
-          title: "Couldn't create cadences",
-          description: "Please try again or create timeframes manually.",
+          title: "Creating default cadences",
+          description: "Setting up cadences for your organization..."
+        });
+        
+        const cadencesCreated = await createDefaultCadences();
+        
+        // Wait a moment for the cadences to be processed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Refresh cadences query
+        await queryClient.invalidateQueries({ queryKey: [`/api/cadences?tenantId=${tenantId}`] });
+        
+        if (!cadencesCreated) {
+          toast({
+            title: "Couldn't create cadences",
+            description: "Please try again or create timeframes manually.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Give the cadences a chance to load before continuing
+        if (tenantCadences.length === 0) {
+          toast({
+            title: "Please try again",
+            description: "Cadences were created but need to be loaded. Click Apply Default Timeframes again.",
+            variant: "default"
+          });
+          return;
+        }
+      }
+      
+      const defaultFrames = createDefaultTimeframes();
+      
+      if (!defaultFrames || defaultFrames.length === 0) {
+        toast({
+          title: "Could not create timeframes",
+          description: "Could not find appropriate cadences. Please refresh the page and try again.",
           variant: "destructive"
         });
         return;
       }
+      
+      setTimeframes(defaultFrames);
+      
+      // Switch to create tab
+      setActiveTab("create");
+      
+      toast({
+        title: "Default timeframes created",
+        description: `Created ${defaultFrames.length} timeframes based on ${primaryCadence} cadence`,
+      });
+    } catch (error) {
+      console.error("Error creating default timeframes:", error);
+      toast({
+        title: "Error creating timeframes",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
     }
-    
-    const defaultFrames = createDefaultTimeframes();
-    setTimeframes(defaultFrames);
-    
-    // Switch to create tab
-    setActiveTab("create");
-    
-    toast({
-      title: "Default timeframes created",
-      description: `Created ${defaultFrames.length} timeframes based on ${primaryCadence} cadence`,
-    });
   };
 
   // Create timeframe mutation
