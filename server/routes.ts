@@ -25,6 +25,7 @@ import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
 import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
+import { setupApprovedOkrsRoutes } from "./routes/approved-okrs";
 import { Router } from "express";
 import { createTestTeamLeader } from "./routes/test-team-leader";
 
@@ -53,6 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register team leader routes
   const apiRouter = Router();
   setupTeamLeaderRoutes(apiRouter);
+  setupApprovedOkrsRoutes(apiRouter);
   app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics

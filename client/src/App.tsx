@@ -27,6 +27,7 @@ import AdminLogin from "@/pages/admin-login";
 import MyOKRs from "@/pages/my-okrs";
 import DraftOKRs from "@/pages/draft-okrs";
 import ApprovedOKRs from "@/pages/approved-okrs";
+import ApprovedTenantOKRsPage from "@/pages/approved-tenant-okrs";
 import CompanyOKRs from "@/pages/company-okrs";
 import Reports from "@/pages/reports";
 import OKRReports from "@/pages/okr-reports";
@@ -124,6 +125,7 @@ function AppRoutes() {
       <ProtectedRoute path="/draft-okrs" component={DraftOKRs} />
       <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/:tenantId/approved-okrs" component={ApprovedTenantOKRsPage} />
       <ProtectedRoute path="/objective-detail/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/create-objective" component={CreateObjective} />
