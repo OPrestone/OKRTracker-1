@@ -26,6 +26,7 @@ import Stripe from "stripe";
 import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
 import { setupApprovedOkrsRoutes } from "./routes/approved-okrs";
+import { setupTeamRoutes } from "./routes/team-routes";
 import { Router } from "express";
 import { createTestTeamLeader } from "./routes/test-team-leader";
 
