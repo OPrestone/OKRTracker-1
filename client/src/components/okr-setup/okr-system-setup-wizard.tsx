@@ -319,6 +319,8 @@ const steps = [
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
+// Default team templates declaration happens elsewhere in the file
+
 export default function OKRSystemSetupWizard() {
   const [activePage, setActivePage] = useState("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -809,7 +811,32 @@ export default function OKRSystemSetupWizard() {
       // Create a new object with tenant_id property
       const formDataWithTenant = {
         ...data,
-        tenant_id: tenantId // Add tenant ID to the request body
+        tenant_id: tenantId, // Add tenant ID to the request body
+        
+        // Process default teams if enabled
+        default_teams: data.teamConfiguration.useDefaultTeams ? 
+          defaultTeamTemplates
+            .filter(template => data.teamConfiguration.defaultTeams.includes(template.id))
+            .map(template => ({
+              name: template.name,
+              description: template.description,
+              color: template.color,
+              icon: template.icon,
+              tenant_id: tenantId
+            })) 
+          : [],
+          
+        // Include validated CSV users
+        csv_users: data.teamConfiguration.csvUsers
+          .filter(user => user.isValid)
+          .map(user => ({
+            email: user.email,
+            name: user.name || '',
+            role: user.role,
+            department: user.department || '',
+            team: user.team || '',
+            tenant_id: tenantId
+          }))
       };
       
       // Log the full data being sent

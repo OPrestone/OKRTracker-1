@@ -1,9 +1,30 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { z } from 'zod';
-import { okrSystemConfigs } from '../../shared/schema';
+import { okrSystemConfigs, teams, users, insertTeamSchema, insertUserSchema } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 import { ulid } from 'ulid';
+import { hashPassword } from '../auth';
+
+// Define CSV User schema
+const csvUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().optional(),
+  role: z.string(),
+  department: z.string().optional(),
+  team: z.string().optional(),
+  isValid: z.boolean(),
+  error: z.string().optional(),
+});
+
+// Define default team schema
+const defaultTeamSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  color: z.string(),
+  icon: z.string(),
+  tenant_id: z.string(),
+});
 
 // Define schema for OKR system setup
 const okrSystemSetupSchema = z.object({
@@ -37,6 +58,9 @@ const okrSystemSetupSchema = z.object({
     enableCrossTeamObjectives: z.boolean(),
     defaultVisibility: z.enum(["public", "team", "private"]),
     selectedTeams: z.array(z.string()).default([]),
+    defaultTeams: z.array(z.string()).default([]),
+    csvUsers: z.array(csvUserSchema).default([]),
+    useDefaultTeams: z.boolean().default(false),
   }),
   integrations: z.object({
     enableSlackIntegration: z.boolean(),
@@ -44,6 +68,9 @@ const okrSystemSetupSchema = z.object({
     enableCalendarSync: z.boolean(),
     enableAnalyticsReporting: z.boolean(),
   }),
+  // New fields for default teams and CSV users
+  default_teams: z.array(defaultTeamSchema).optional(),
+  csv_users: z.array(csvUserSchema).optional(),
 });
 
 type OKRSystemSetup = z.infer<typeof okrSystemSetupSchema>;
@@ -188,6 +215,106 @@ export function setupConfigRoutes(router: Router) {
       } catch (missionError) {
         console.warn('Failed to update organization mission:', missionError);
         // Continue execution, don't fail the main request
+      }
+      
+      // Process default teams if available
+      if (req.body.default_teams && Array.isArray(req.body.default_teams) && req.body.default_teams.length > 0) {
+        try {
+          console.log('Creating default teams:', req.body.default_teams.length);
+          
+          // Create each team from the template
+          for (const teamTemplate of req.body.default_teams) {
+            // Create a valid team object
+            const teamData = {
+              id: ulid(),
+              name: teamTemplate.name,
+              description: teamTemplate.description || '',
+              color: teamTemplate.color || '#4f46e5',
+              icon: teamTemplate.icon || 'users',
+              tenantId: tenantId,
+              type: 'team'
+            };
+            
+            // Insert the team
+            const newTeam = await db.insert(teams).values(teamData).returning();
+            console.log(`Created default team: ${teamData.name} with ID: ${newTeam[0].id}`);
+          }
+        } catch (teamError) {
+          console.error('Error creating default teams:', teamError);
+          // Continue execution, don't fail the main request
+        }
+      }
+      
+      // Process CSV users if available
+      if (req.body.csv_users && Array.isArray(req.body.csv_users) && req.body.csv_users.length > 0) {
+        try {
+          console.log('Processing CSV users:', req.body.csv_users.length);
+          
+          const validUsers = req.body.csv_users.filter((user: any) => user.isValid && user.email);
+          
+          // Create users from CSV data
+          for (const userData of validUsers) {
+            try {
+              // Check if user already exists
+              const existingUser = await db.query.users.findFirst({
+                where: (users, { eq, or }) => 
+                  or(
+                    eq(users.email, userData.email.toLowerCase()),
+                    eq(users.username, userData.email.split('@')[0].toLowerCase())
+                  )
+              });
+              
+              if (existingUser) {
+                console.log(`User with email ${userData.email} already exists, skipping`);
+                continue;
+              }
+              
+              // Generate a username from email
+              const username = userData.email.split('@')[0].toLowerCase();
+              
+              // Generate a temporary password
+              const tempPassword = Math.random().toString(36).slice(-8);
+              const hashedPassword = await hashPassword(tempPassword);
+              
+              // Create a valid user object
+              const newUserData = {
+                id: ulid(),
+                username: username,
+                email: userData.email.toLowerCase(),
+                password: hashedPassword,
+                name: userData.name || username,
+                title: userData.department || '',
+                tenantId: tenantId,
+                defaultTenantId: tenantId,
+                firstLogin: true
+              };
+              
+              // Insert the user
+              const newUser = await db.insert(users).values(newUserData).returning();
+              console.log(`Created user: ${newUserData.username} with ID: ${newUser[0].id}`);
+              
+              // Add user to tenant with role
+              const userRole = userData.role && ['admin', 'member', 'viewer'].includes(userData.role.toLowerCase()) 
+                ? userData.role.toLowerCase() 
+                : 'member';
+                
+              await db.execute(
+                `INSERT INTO users_to_tenants (user_id, tenant_id, role) VALUES (?, ?, ?)`,
+                [newUser[0].id, tenantId, userRole]
+              );
+              
+              console.log(`Added user ${newUserData.username} to tenant with role: ${userRole}`);
+              
+              // TODO: Send welcome email with temporary password
+            } catch (userError) {
+              console.error(`Error creating user ${userData.email}:`, userError);
+              // Continue with other users
+            }
+          }
+        } catch (usersError) {
+          console.error('Error processing CSV users:', usersError);
+          // Continue execution, don't fail the main request
+        }
       }
       
       return res.json(result[0]);
