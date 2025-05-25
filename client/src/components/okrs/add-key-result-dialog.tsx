@@ -77,7 +77,7 @@ export default function AddKeyResultDialog({
       const formattedData = {
         title: data.title,
         description: data.description,
-        objective_id: objectiveId, // The backend expects snake_case parameter name
+        objectiveId: objectiveId, // The schema expects camelCase parameter name
         startValue: String(data.startValue),
         targetValue: String(data.targetValue),
         currentValue: String(data.currentValue || data.startValue),
