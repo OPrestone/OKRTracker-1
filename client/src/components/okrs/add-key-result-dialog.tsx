@@ -54,6 +54,8 @@ export default function AddKeyResultDialog({
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState(0);
 
+  console.log("AddKeyResultDialog received objectiveId:", objectiveId);
+
   const form = useForm<KeyResultFormValues>({
     resolver: zodResolver(keyResultSchema),
     defaultValues: {
@@ -71,6 +73,11 @@ export default function AddKeyResultDialog({
   
   const addKeyResultMutation = useMutation({
     mutationFn: async (data: KeyResultFormValues) => {
+      // Validate that objectiveId is available
+      if (!objectiveId) {
+        throw new Error("Objective ID is required to create a key result");
+      }
+      
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       
       // Convert to the exact format expected by the database
