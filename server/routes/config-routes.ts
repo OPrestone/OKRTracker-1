@@ -112,7 +112,6 @@ export function setupConfigRoutes(router: Router) {
       
       console.log("POST /api/okr-system-setup - Tenant ID:", tenantId);
       console.log("Request query:", req.query);
-      console.log("Request body:", req.body);
       
       if (!tenantId) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
@@ -120,14 +119,12 @@ export function setupConfigRoutes(router: Router) {
       
       // Instead of strict validation, just use the request body directly
       // This is more flexible with different data formats
-      console.log("Raw request body:", JSON.stringify(req.body));
+      console.log("Raw request body length:", JSON.stringify(req.body).length, "bytes");
       
-      // We'll still do basic validation to ensure required fields
-      if (!req.body.generalSettings || !req.body.timeframes || 
-          !req.body.objectiveSettings || !req.body.teamConfiguration || 
-          !req.body.integrations) {
+      // We'll do very basic validation just to ensure we have an object
+      if (typeof req.body !== 'object' || req.body === null) {
         return res.status(400).json({ 
-          error: 'Missing required OKR system configuration sections'
+          error: 'Invalid request body format'
         });
       }
       
@@ -221,13 +218,14 @@ export function setupConfigRoutes(router: Router) {
         // Continue execution, don't fail the main request
       }
       
-      // Process default teams if available
-      if (req.body.default_teams && Array.isArray(req.body.default_teams) && req.body.default_teams.length > 0) {
+      // Process default teams if available - either from the dedicated array or from the teamConfiguration
+      const defaultTeams = req.body.default_teams || [];
+      if (Array.isArray(defaultTeams) && defaultTeams.length > 0) {
         try {
-          console.log('Creating default teams:', req.body.default_teams.length);
+          console.log('Creating default teams:', defaultTeams.length);
           
           // Create each team from the template
-          for (const teamTemplate of req.body.default_teams) {
+          for (const teamTemplate of defaultTeams) {
             // Create a valid team object
             const teamData = {
               id: ulid(),
@@ -250,12 +248,13 @@ export function setupConfigRoutes(router: Router) {
       }
       
       // Process CSV users if available
-      if (req.body.csv_users && Array.isArray(req.body.csv_users) && req.body.csv_users.length > 0) {
+      const csvUsers = req.body.csv_users || [];
+      if (Array.isArray(csvUsers) && csvUsers.length > 0) {
         try {
-          console.log('Processing CSV users:', req.body.csv_users.length);
+          console.log('Processing CSV users:', csvUsers.length);
           
           // Accept all users that have an email property
-          const validUsers = req.body.csv_users.filter((user: any) => {
+          const validUsers = csvUsers.filter((user: any) => {
             console.log("Processing user:", user);
             return user && typeof user === 'object' && user.email;
           });

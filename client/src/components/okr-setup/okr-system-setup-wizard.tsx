@@ -808,6 +808,9 @@ export default function OKRSystemSetupWizard() {
       // Make API request to save OKR system setup
       console.log("Using tenant ID for save:", tenantId);
       
+      // Get selected default teams 
+      const selectedDefaultTeamIds = data.teamConfiguration.defaultTeams || [];
+      
       // Create a new object with tenant_id property
       const formDataWithTenant = {
         ...data,
@@ -816,7 +819,7 @@ export default function OKRSystemSetupWizard() {
         // Process default teams if enabled
         default_teams: data.teamConfiguration.useDefaultTeams ? 
           defaultTeamTemplates
-            .filter(template => data.teamConfiguration.defaultTeams.includes(template.id))
+            .filter(template => selectedDefaultTeamIds.includes(template.id))
             .map(template => ({
               name: template.name,
               description: template.description,
@@ -826,17 +829,19 @@ export default function OKRSystemSetupWizard() {
             })) 
           : [],
           
-        // Include validated CSV users
-        csv_users: data.teamConfiguration.csvUsers
-          .filter(user => user.isValid)
-          .map(user => ({
-            email: user.email,
-            name: user.name || '',
-            role: user.role,
-            department: user.department || '',
-            team: user.team || '',
-            tenant_id: tenantId
-          }))
+        // Include CSV users
+        csv_users: Array.isArray(data.teamConfiguration.csvUsers) ? 
+          data.teamConfiguration.csvUsers
+            .filter(user => user && user.email)
+            .map(user => ({
+              email: user.email,
+              name: user.name || '',
+              role: user.role || 'member',
+              department: user.department || '',
+              team: user.team || '',
+              tenant_id: tenantId
+            }))
+          : []
       };
       
       // Log the full data being sent
