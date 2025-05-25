@@ -1007,7 +1007,9 @@ export default function OKRSystemSetupWizard() {
       
       // First, check if cadences exist for this tenant
       console.log("Checking if cadences exist for tenant:", tenantId);
-      const cadenceCheckResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+      
+      // Check for existing cadences
+      const cadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -1016,68 +1018,211 @@ export default function OKRSystemSetupWizard() {
         credentials: 'include'
       });
       
-      const cadenceData = await cadenceCheckResponse.json();
-      console.log("Cadence check response:", cadenceData);
+      const cadencesData = await cadenceResponse.json();
+      console.log("Existing cadences:", cadencesData);
       
       // If no cadences exist, create default ones
-      if (!cadenceData.length || cadenceData.length === 0) {
+      if (!cadencesData.length || cadencesData.length === 0) {
         console.log("No cadences found, creating default cadences");
         
-        // Create default annual timeframe
-        const annualTimeframe = {
+        // Create default annual cadence
+        const annualCadence = {
           name: "Annual",
-          description: "Yearly objectives and key results",
-          type: "annual",
-          start_date: new Date().toISOString(),
-          end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-          tenant_id: tenantId
+          description: "Yearly planning cycle",
+          period: "annual",
+          tenantId: tenantId
         };
         
-        // Create default quarterly timeframe
-        const quarterlyTimeframe = {
+        // Create default quarterly cadence
+        const quarterlyCadence = {
           name: "Quarterly",
-          description: "Quarterly objectives and key results",
-          type: "quarterly",
-          start_date: new Date().toISOString(),
-          end_date: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(),
-          tenant_id: tenantId
+          description: "Quarterly planning cycle",
+          period: "quarterly",
+          tenantId: tenantId
         };
         
-        // Create the timeframes
         try {
-          const annualResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+          // First create the cadences
+          const annualCadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-Tenant-ID': tenantId
             },
-            body: JSON.stringify(annualTimeframe),
+            body: JSON.stringify(annualCadence),
             credentials: 'include'
           });
           
-          const quarterlyResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+          const quarterlyCadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-Tenant-ID': tenantId
             },
-            body: JSON.stringify(quarterlyTimeframe),
+            body: JSON.stringify(quarterlyCadence),
             credentials: 'include'
           });
           
-          if (annualResponse.ok && quarterlyResponse.ok) {
+          if (annualCadenceResponse.ok && quarterlyCadenceResponse.ok) {
             console.log("Default cadences created successfully");
+            
+            // Get the created cadence IDs
+            const annualCadenceData = await annualCadenceResponse.json();
+            const quarterlyCadenceData = await quarterlyCadenceResponse.json();
+            
+            // Now create timeframes for each cadence
+            const currentDate = new Date();
+            
+            // Create annual timeframe for the current year
+            const annualTimeframe = {
+              name: `${currentDate.getFullYear()} Annual`,
+              description: `Annual objectives for ${currentDate.getFullYear()}`,
+              startDate: new Date(currentDate.getFullYear(), 0, 1), // Jan 1 of current year
+              endDate: new Date(currentDate.getFullYear(), 11, 31), // Dec 31 of current year
+              cadenceId: annualCadenceData.id,
+              tenantId: tenantId
+            };
+            
+            // Get current quarter
+            const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
+            const quarterStartMonth = (currentQuarter - 1) * 3;
+            const quarterEndMonth = quarterStartMonth + 2;
+            
+            // Create quarterly timeframe for the current quarter
+            const quarterlyTimeframe = {
+              name: `Q${currentQuarter} ${currentDate.getFullYear()}`,
+              description: `Q${currentQuarter} objectives for ${currentDate.getFullYear()}`,
+              startDate: new Date(currentDate.getFullYear(), quarterStartMonth, 1),
+              endDate: new Date(currentDate.getFullYear(), quarterEndMonth + 1, 0), // Last day of end month
+              cadenceId: quarterlyCadenceData.id,
+              tenantId: tenantId
+            };
+            
+            // Create the timeframes
+            const annualTimeframeResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Tenant-ID': tenantId
+              },
+              body: JSON.stringify(annualTimeframe),
+              credentials: 'include'
+            });
+            
+            const quarterlyTimeframeResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Tenant-ID': tenantId
+              },
+              body: JSON.stringify(quarterlyTimeframe),
+              credentials: 'include'
+            });
+            
+            if (annualTimeframeResponse.ok && quarterlyTimeframeResponse.ok) {
+              console.log("Default timeframes created successfully");
+            } else {
+              console.error("Failed to create default timeframes:", 
+                await annualTimeframeResponse.text(), 
+                await quarterlyTimeframeResponse.text()
+              );
+            }
           } else {
             console.error("Failed to create default cadences:", 
-              await annualResponse.text(), 
-              await quarterlyResponse.text()
+              await annualCadenceResponse.text(), 
+              await quarterlyCadenceResponse.text()
             );
           }
-        } catch (cadenceError) {
-          console.error("Error creating default cadences:", cadenceError);
+        } catch (error) {
+          console.error("Error creating default cadences and timeframes:", error);
         }
       } else {
-        console.log("Cadences already exist for this tenant:", cadenceData.length);
+        // Check if there are any timeframes
+        const timeframesResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': tenantId
+          },
+          credentials: 'include'
+        });
+        
+        const timeframesData = await timeframesResponse.json();
+        console.log("Existing timeframes:", timeframesData);
+        
+        // If cadences exist but no timeframes, create default timeframes
+        if (!timeframesData.length || timeframesData.length === 0) {
+          console.log("No timeframes found, creating default timeframes for existing cadences");
+          
+          try {
+            // Find annual and quarterly cadences
+            const annualCadence = cadencesData.find(c => 
+              c.name.toLowerCase().includes('annual') || 
+              c.period?.toLowerCase().includes('annual')
+            );
+            
+            const quarterlyCadence = cadencesData.find(c => 
+              c.name.toLowerCase().includes('quarter') || 
+              c.period?.toLowerCase().includes('quarter')
+            );
+            
+            const currentDate = new Date();
+            
+            // Create timeframes if cadences are found
+            if (annualCadence) {
+              const annualTimeframe = {
+                name: `${currentDate.getFullYear()} Annual`,
+                description: `Annual objectives for ${currentDate.getFullYear()}`,
+                startDate: new Date(currentDate.getFullYear(), 0, 1), // Jan 1 of current year
+                endDate: new Date(currentDate.getFullYear(), 11, 31), // Dec 31 of current year
+                cadenceId: annualCadence.id,
+                tenantId: tenantId
+              };
+              
+              await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Tenant-ID': tenantId
+                },
+                body: JSON.stringify(annualTimeframe),
+                credentials: 'include'
+              });
+            }
+            
+            if (quarterlyCadence) {
+              // Get current quarter
+              const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
+              const quarterStartMonth = (currentQuarter - 1) * 3;
+              const quarterEndMonth = quarterStartMonth + 2;
+              
+              const quarterlyTimeframe = {
+                name: `Q${currentQuarter} ${currentDate.getFullYear()}`,
+                description: `Q${currentQuarter} objectives for ${currentDate.getFullYear()}`,
+                startDate: new Date(currentDate.getFullYear(), quarterStartMonth, 1),
+                endDate: new Date(currentDate.getFullYear(), quarterEndMonth + 1, 0), // Last day of end month
+                cadenceId: quarterlyCadence.id,
+                tenantId: tenantId
+              };
+              
+              await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Tenant-ID': tenantId
+                },
+                body: JSON.stringify(quarterlyTimeframe),
+                credentials: 'include'
+              });
+            }
+            
+            console.log("Default timeframes created for existing cadences");
+          } catch (error) {
+            console.error("Error creating timeframes for existing cadences:", error);
+          }
+        } else {
+          console.log("Timeframes already exist for this tenant:", timeframesData.length);
+        }
       }
       
       // Send the request to the mission API
