@@ -220,14 +220,18 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
+      refetchInterval: 3000, // Auto-refresh every 3 seconds for instant updates
       refetchOnWindowFocus: true, // Enable to handle session expiration
-      staleTime: 60000, // 1 minute stale time instead of Infinity
-      retry: 1, // Allow one retry
-      refetchOnMount: true, // Refetch on component mount
+      refetchOnMount: true, // Always refetch when component mounts
+      refetchOnReconnect: true, // Refetch when network reconnects
+      staleTime: 0, // Always fetch fresh data - no caching for instant load
+      cacheTime: 0, // Don't cache data in memory for real-time updates
+      retry: 2, // Allow retries for reliability
+      retryDelay: attemptIndex => Math.min(500 * 2 ** attemptIndex, 2000), // Fast retry
     },
     mutations: {
-      retry: 1, // Allow one retry for mutations
+      retry: 2, // Allow retries for mutations
+      retryDelay: attemptIndex => Math.min(500 * 2 ** attemptIndex, 2000), // Fast retry
     },
   },
 });
