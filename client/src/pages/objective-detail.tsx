@@ -839,7 +839,11 @@ export default function ObjectiveDetail() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle>Key Results</CardTitle>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsAddKeyResultModalOpen(true)}
+                    >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add Key Result
                     </Button>
@@ -1285,6 +1289,15 @@ export default function ObjectiveDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Key Result Dialog */}
+      {objectiveId && (
+        <AddKeyResultDialog
+          objectiveId={objectiveId}
+          open={isAddKeyResultModalOpen}
+          onOpenChange={setIsAddKeyResultModalOpen}
+        />
+      )}
     </DashboardLayout>
   );
 }
