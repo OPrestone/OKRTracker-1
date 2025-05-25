@@ -377,15 +377,15 @@ const formSchema = z.object({
     description: z.string().optional(),
     industry: z.string().optional(),
   }),
-  team: z.object({
-    users: z.array(z.object({
-      email: z.string().email(),
-      role: z.enum(["admin", "member", "viewer"]),
-      selected: z.boolean(),
-      name: z.string().optional(),
-      department: z.string().optional(),
-    })).optional(),
-  }),
+  // team: z.object({
+  //   users: z.array(z.object({
+  //     email: z.string().email(),
+  //     role: z.enum(["admin", "member", "viewer"]),
+  //     selected: z.boolean(),
+  //     name: z.string().optional(),
+  //     department: z.string().optional(),
+  //   })).optional(),
+  // }),
 });
 
 export default function TenantOnboardingWizard() {
@@ -438,9 +438,9 @@ export default function TenantOnboardingWizard() {
         plan: "free",
         agreeToTerms: false,
       },
-      team: {
-        users: [],
-      },
+      // team: {
+      //   users: [],
+      // },
       setup: {
         createInitialOKRs: false,
         template: "",
@@ -452,7 +452,7 @@ export default function TenantOnboardingWizard() {
   // Watch for values changes for conditional rendering
   const createInitialOKRs = form.watch("setup.createInitialOKRs");
   const selectedTemplate = form.watch("setup.template");
-  const teamMembers = form.watch("team.users") || [];
+  // const teamMembers = form.watch("team.users") || [];
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
 
@@ -502,8 +502,8 @@ export default function TenantOnboardingWizard() {
 
       try {
         // Extract users that were selected
-        const selectedUsers = values.team.users?.filter(user => user.selected) || [];
-        console.log("Selected users:", selectedUsers);
+        // const selectedUsers = values.team.users?.filter(user => user.selected) || [];
+        // console.log("Selected users:", selectedUsers);
 
         // Use teams from state or default if none added
         const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
@@ -545,7 +545,7 @@ export default function TenantOnboardingWizard() {
           description: values.orgDetails.description,
           industry: values.orgDetails.industry,
           planType: values.plan.plan,
-          users: selectedUsers,
+          // users: selectedUsers,
           setup: values.setup,
           teams: teams,
           role: "owner" // Set creator's role to owner
@@ -766,25 +766,25 @@ export default function TenantOnboardingWizard() {
   };
 
   // Updated to handle different event types or no event
-  const addTeamMember = (e?: React.MouseEvent | null | any) => {
+  // const addTeamMember = (e?: React.MouseEvent | null | any) => {
     // Prevent form submission if event is provided and has preventDefault method
-    if (e && typeof e.preventDefault === 'function') {
-      e.preventDefault();
-    }
+  //   if (e && typeof e.preventDefault === 'function') {
+  //     e.preventDefault();
+  //   }
 
-    const currentUsers = form.getValues("team.users") || [];
+  //   const currentUsers = form.getValues("team.users") || [];
 
-    form.setValue("team.users", [
-      ...currentUsers,
-      {
-        email: "",
-        role: "member",
-        selected: true,
-        name: "",
-        department: "",
-      }
-    ]);
-  };
+  //   form.setValue("team.users", [
+  //     ...currentUsers,
+  //     {
+  //       email: "",
+  //       role: "member",
+  //       selected: true,
+  //       name: "",
+  //       department: "",
+  //     }
+  //   ]);
+  // };
 
   // Function to invite a user by email
   const [inviteEmail, setInviteEmail] = useState("");
@@ -808,31 +808,31 @@ export default function TenantOnboardingWizard() {
       return;
     }
 
-    const currentUsers = form.getValues("team.users") || [];
+    // const currentUsers = form.getValues("team.users") || [];
 
     // Check for duplicate email
-    if (currentUsers.some(user => user.email === inviteEmail)) {
-      toast({
-        title: "Duplicate email",
-        description: "This email address has already been added",
-        variant: "destructive",
-      });
-      return;
-    }
+    // if (currentUsers.some(user => user.email === inviteEmail)) {
+    //   toast({
+    //     title: "Duplicate email",
+    //     description: "This email address has already been added",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     setIsInviting(true);
 
     // Add to team members
-    form.setValue("team.users", [
-      ...currentUsers,
-      {
-        email: inviteEmail,
-        role: inviteRole,
-        selected: true,
-        name: "",
-        department: "",
-      }
-    ]);
+    // form.setValue("team.users", [
+    //   ...currentUsers,
+    //   {
+    //     email: inviteEmail,
+    //     role: inviteRole,
+    //     selected: true,
+    //     name: "",
+    //     department: "",
+    //   }
+    // ]);
 
     // Show success toast
     toast({
@@ -856,13 +856,13 @@ export default function TenantOnboardingWizard() {
         return form.getValues().plan.agreeToTerms;
       case "team":
         // Team members validation - email format check
-        const team = form.getValues().team.users || [];
+        // const team = form.getValues().team.users || [];
         // If there are team members, validate their emails
-        if (team.length > 0) {
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          const validEmails = team.every(member => !member.email || emailRegex.test(member.email));
-          return validEmails;
-        }
+        // if (team.length > 0) {
+        //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        //   const validEmails = team.every(member => !member.email || emailRegex.test(member.email));
+        //   return validEmails;
+        // }
         // Team members are optional
         return true;
       case "setup":
@@ -1250,148 +1250,6 @@ export default function TenantOnboardingWizard() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6 pb-8 relative">
-                    {/* Role descriptions for guidance */}
-                    <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-green-50 border border-green-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-green-100 p-1.5 rounded-full mr-2">
-                            <Landmark className="h-4 w-4 text-green-600" />
-                          </div>
-                          <h4 className="font-semibold text-green-800">Admin</h4>
-                        </div>
-                        <p className="text-sm text-green-700">
-                          Can manage all aspects of the organization, including users, teams, and OKRs
-                        </p>
-                      </div>
-
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-blue-100 p-1.5 rounded-full mr-2">
-                            <Target className="h-4 w-4 text-blue-600" />
-                          </div>
-                          <h4 className="font-semibold text-blue-800">Member</h4>
-                        </div>
-                        <p className="text-sm text-blue-700">
-                          Can create and manage their own OKRs and contribute to team objectives
-                        </p>
-                      </div>
-
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-amber-100 p-1.5 rounded-full mr-2">
-                            <BarChart3 className="h-4 w-4 text-amber-600" />
-                          </div>
-                          <h4 className="font-semibold text-amber-800">Viewer</h4>
-                        </div>
-                        <p className="text-sm text-amber-700">
-                          Can view objectives and progress but cannot create or edit OKRs
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Quick add methods */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                      {/* Bulk import */}
-                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start mb-4">
-                          <div className="flex-shrink-0 bg-indigo-600 rounded-full p-2.5 mr-4 shadow-sm">
-                            <FileUp className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-lg text-indigo-900 mb-1">Bulk Import</h3>
-                            <p className="text-indigo-700 text-sm mb-4">
-                              Import your entire team from a CSV file with email, name, department, and role
-                            </p>
-                            <CSVImport 
-                              templateFields={["name", "email", "department", "role"]}
-                              templateName="Team Members"
-                              onImport={(data) => {
-                                // Convert imported data to the required format
-                                const formattedData = data.map(user => ({
-                                  name: user.name || "",
-                                  email: user.email || "",
-                                  department: user.department || "",
-                                  role: (user.role || "member").toLowerCase(),
-                                  selected: true
-                                }));
-
-                                // Set the imported data to the form
-                                form.setValue("team.users", formattedData);
-
-                                // Show success toast
-                                toast({
-                                  title: "Team imported successfully!",
-                                  description: `Added ${data.length} team members to your organization.`,
-                                  variant: "default"
-                                });
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick invite */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start mb-4">
-                          <div className="flex-shrink-0 bg-blue-600 rounded-full p-2.5 mr-4 shadow-sm">
-                            <Mail className="h-5 w-5 text-white" />
-                          </div>
-                          <div className="flex-grow">
-                            <h3 className="font-semibold text-lg text-blue-900 mb-1">Quick Invite</h3>
-                            <p className="text-blue-700 text-sm mb-4">
-                              Send invitations to individual team members to join your organization
-                            </p>
-
-                            <div className="flex flex-col space-y-3">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div className="md:col-span-2">
-                                  <Input 
-                                    value={inviteEmail}
-                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                    placeholder="Email address"
-                                    className="border-blue-200 focus-visible:ring-blue-500 h-10"
-                                  />
-                                </div>
-                                <div>
-                                  <Select
-                                    value={inviteRole}
-                                    onValueChange={setInviteRole}
-                                  >
-                                    <SelectTrigger className="border-blue-200 focus-visible:ring-blue-500 h-10">
-                                      <SelectValue placeholder="Role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                      <SelectItem value="member">Member</SelectItem>
-                                      <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              <Button 
-                                type="button" 
-                                className="bg-blue-600 hover:bg-blue-700 w-full"
-                                onClick={(e) => inviteUser(e)}
-                                disabled={isInviting || !inviteEmail}
-                              >
-                                {isInviting ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Inviting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="mr-2 h-4 w-4" />
-                                    Add Team Member
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Example Team Cards - All three team examples */}
                     <div className="grid grid-cols-1 gap-8 mb-8">
@@ -1583,9 +1441,6 @@ export default function TenantOnboardingWizard() {
                                     title: "Team added",
                                     description: `${teamName} has been added to your organization`,
                                   });
-
-                                  // Show the manual team member form
-                                  addTeamMember(new Event('click'));
                                 }
                               }}
                             >
@@ -1795,9 +1650,6 @@ export default function TenantOnboardingWizard() {
                                     title: "Team added",
                                     description: `${teamName} has been added to your organization`,
                                   });
-
-                                  // Show the manual team member form
-                                  addTeamMember(new Event('click'));
                                 }
                               }}
                             >
@@ -2006,9 +1858,6 @@ export default function TenantOnboardingWizard() {
                                     title: "Team added",
                                     description: `${teamName} has been added to your organization`,
                                   });
-
-                                  // Show the manual team member form
-                                  addTeamMember(new Event('click'));
                                 }
                               }}
                             >
@@ -2198,6 +2047,7 @@ export default function TenantOnboardingWizard() {
             </Tabs>
 
             {/* Navigation buttons */}
+            <span>Test {JSON.stringify(form.formState.errors)}</span>
             <div className="flex justify-between mt-8">
               <Button
                 type="button"

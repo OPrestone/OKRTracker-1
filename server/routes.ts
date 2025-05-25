@@ -492,6 +492,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail the entire request if just the user setup fails
         }
       }
+
+      //Add Teams of Provided
+      console.log(`Processing teams for tenant ${tenant.id}`);
+      console.log(`Teams data:`, JSON.stringify(restData.teams));
+        try {
+          if (restData.teams && Array.isArray(restData.teams) && restData.teams.length > 0) {
+            restData.teams.forEach(async (okrTeam) => {
+            const validatedTeamData = insertTeamSchema.parse({
+                  ...okrTeam,
+                  ownerId: user.id, // This links the team to a user in this tenant
+                  tenantId: tenant.id, // Critical: Associate team with current tenant
+                });
+
+            console.log(`Validated data:`, JSON.stringify(validatedData));
+
+            const team = await storage.createTeam(validatedTeamData);
+          }) 
+        }
+        } catch (teamError) {
+          console.error("Error processing initial teams setup:", teamError);
+          // Don't fail the entire request if just the OKR setup fails
+        }
       
       res.status(201).json({ tenant, userToTenant });
     } catch (error) {

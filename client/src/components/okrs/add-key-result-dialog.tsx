@@ -76,13 +76,13 @@ export default function AddKeyResultDialog({
       const formattedData = {
         title: data.title,
         description: data.description,
-        objectiveId: objectiveId,  // Use camelCase as required by the server-side validation
-        start_value: String(data.startValue),
-        target_value: String(data.targetValue),
-        current_value: String(data.currentValue || data.startValue),
+        objectiveId: objectiveId,
+        startValue: String(data.startValue),
+        targetValue: String(data.targetValue),
+        currentValue: String(data.currentValue || data.startValue),
         unit: data.unit,
         progress: calculatedProgress,
-        tenant_id: currentTenant?.id
+        tenantId: currentTenant?.id
       };
       
       console.log("Submitting key result with formatted data:", formattedData);
