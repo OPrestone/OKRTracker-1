@@ -541,26 +541,48 @@ export default function TeamDetailPage() {
     }).format(date);
   };
 
-  // Get calculated stats and data
-  const teamStats = calculateTeamStats(objectives);
-  const memberContributions = calculateMemberContribution(members, objectives);
+  // Log the state of data for debugging
+  console.log("Team detail data state:", {
+    teamId,
+    teamSlug,
+    hasTeam: !!team,
+    tenantId,
+    objectivesCount: Array.isArray(objectives) ? objectives.length : 'not array',
+    membersCount: Array.isArray(members) ? members.length : 'not array'
+  });
   
-  // Create performance stats using available data
+  // Safely get calculated stats and data
+  const teamStats = calculateTeamStats(Array.isArray(objectives) ? objectives : []);
+  const memberContributions = calculateMemberContribution(
+    Array.isArray(members) ? members : [], 
+    Array.isArray(objectives) ? objectives : []
+  );
+  
+  // Create performance stats using available data with null safety
   const fallbackStats = {
     completionRate: teamStats.totalObjectives > 0 ? (teamStats.completedObjectives / teamStats.totalObjectives) * 100 : 0,
     weeklyProgress: teamStats.averageProgress || 0,
-    teamEngagement: members?.length > 0 ? (memberContributions.filter(m => m.assignedCount > 0).length / members.length) * 100 : 0
+    teamEngagement: Array.isArray(members) && members.length > 0 
+      ? (memberContributions.filter(m => m.assignedCount > 0).length / members.length) * 100 
+      : 0
   };
   
   // Use team performance data if available, otherwise use calculated stats
   const performanceStats = teamPerformance && teamPerformance.stats ? teamPerformance.stats : fallbackStats;
   
-  // Status distribution data for pie chart
+  console.log("Rendering team detail page with data:", {
+    team: team ? team.name : "No team data",
+    objectives: Array.isArray(objectives) ? objectives.length : "No objectives data",
+    members: Array.isArray(members) ? members.length : "No members data",
+    stats: teamStats
+  });
+
+  // Status distribution data for pie chart with safety checks
   const statusDistribution = [
-    { name: 'On Track', value: teamStats.onTrackCount, color: '#16a34a' },
-    { name: 'At Risk', value: teamStats.atRiskCount, color: '#eab308' },
-    { name: 'Behind', value: teamStats.behindCount, color: '#dc2626' },
-    { name: 'Completed', value: teamStats.completedObjectives, color: '#3b82f6' },
+    { name: 'On Track', value: teamStats.onTrackCount || 0, color: '#16a34a' },
+    { name: 'At Risk', value: teamStats.atRiskCount || 0, color: '#eab308' },
+    { name: 'Behind', value: teamStats.behindCount || 0, color: '#dc2626' },
+    { name: 'Completed', value: teamStats.completedObjectives || 0, color: '#3b82f6' },
   ].filter(item => item.value > 0);
   
   // Get team color styling

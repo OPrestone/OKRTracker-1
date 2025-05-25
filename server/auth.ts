@@ -46,7 +46,8 @@ export function setupAuth(app: Express) {
       secure: false, // Disabled secure for dev environment - fix for localhost HTTPS issues
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // Extended to 30 days for persistent login
+      maxAge: 30 * 24 * 60 * 60 * 1000, // Extended to 30 days for persistent login
+      path: '/' // Ensure cookie is available for all paths
     }
   };
   
@@ -126,6 +127,18 @@ export function setupAuth(app: Express) {
         // Get user's tenants and roles
         const userTenants = await storage.getUserTenants(id);
         
+        if (!Array.isArray(userTenants)) {
+          console.error("Invalid tenants data format, expected array but got:", typeof userTenants);
+          // Create a basic enhanced user with empty tenants array
+          const basicUser = {
+            ...user,
+            tenants: [],
+            defaultTenant: null
+          };
+          console.log("User deserialized with empty tenants due to data format issue:", id);
+          return done(null, basicUser);
+        }
+        
         // Get default tenant if any
         const defaultTenant = userTenants.find(t => t.isDefault);
         const defaultTenantId = defaultTenant ? defaultTenant.id : userTenants[0]?.id;
@@ -141,8 +154,14 @@ export function setupAuth(app: Express) {
         done(null, enhancedUser);
       } catch (tenantError) {
         console.error("Error loading user tenants, continuing with basic user:", tenantError);
-        console.log("User deserialized successfully (without tenants):", id);
-        done(null, user);
+        // Create a basic enhanced user with empty tenants array
+        const fallbackUser = {
+          ...user,
+          tenants: [],
+          defaultTenant: null
+        };
+        console.log("User deserialized with fallback tenant data:", id);
+        done(null, fallbackUser);
       }
     } catch (error) {
       console.error("Error deserializing user:", error);
