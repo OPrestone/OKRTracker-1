@@ -116,47 +116,57 @@ export default function TeamDetailPage() {
   const [isCreateObjectiveModalOpen, setIsCreateObjectiveModalOpen] = useState(false);
   const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
   
-  // Query for teams data (either by ID or by finding team by slug)
-  const { data: team, isLoading: teamLoading, error: teamError } = useQuery({
-    queryKey: teamSlug ? ["/api/teams", tenantId, "slug", teamSlug] : ["/api/teams", teamId, tenantId],
-    queryFn: async () => {
-      if (teamSlug) {
-        // If we have a slug, we need to fetch all teams and find by slug
-        const res = await fetch(`/api/teams?tenantId=${tenantId}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-        const teams = await res.json();
-        // Find the team with matching slug (normalized team name)
-        const matchedTeam = teams.find((t: any) => 
+  // Use the centralized team context for instant data access
+  const { teams, isLoading: teamsContextLoading, error: teamsContextError } = useTeams();
+  
+  // Get team data from the team context, eliminating the need for a separate API call
+  const [team, setTeam] = useState<any>(null);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [teamError, setTeamError] = useState<Error | null>(null);
+  
+  // Find team from the centralized context data
+  useEffect(() => {
+    if (teamsContextLoading) {
+      setTeamLoading(true);
+      return;
+    }
+    
+    if (teamsContextError) {
+      setTeamError(teamsContextError);
+      setTeamLoading(false);
+      return;
+    }
+    
+    try {
+      let foundTeam;
+      
+      if (teamSlug && teams && teams.length > 0) {
+        // Find by slug
+        foundTeam = teams.find((t) => 
           t.name.toLowerCase().replace(/\s+/g, '-') === teamSlug
         );
-        
-        if (!matchedTeam) {
-          throw new Error("Team not found");
-        }
-        return matchedTeam;
-      } else {
-        // Direct ID lookup
-        const res = await fetch(`/api/teams/${teamId}?tenantId=${tenantId}`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            throw new Error("Team not found");
-          }
-          throw new Error("Failed to fetch team details");
-        }
-        return res.json();
+      } else if (teamId && teams && teams.length > 0) {
+        // Find by ID
+        foundTeam = teams.find((t) => t.id === teamId);
       }
-    },
-    retry: false,
-    onError: (err) => {
+      
+      if (!foundTeam) {
+        setTeamError(new Error("Team not found"));
+      } else {
+        setTeam(foundTeam);
+      }
+      
+      setTeamLoading(false);
+    } catch (error) {
+      setTeamError(error instanceof Error ? error : new Error("Failed to find team"));
+      setTeamLoading(false);
       toast({
         title: "Error loading team",
-        description: err instanceof Error ? err.message : String(err),
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive"
       });
     }
-  });
+  }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast]);
 
   // Query for team members data
   const { data: members = [], isLoading: membersLoading } = useQuery({
