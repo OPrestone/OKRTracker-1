@@ -1949,11 +1949,10 @@ export default function OKRSystemSetupWizard() {
                 </Button>
               ) : (
                 <Button
-                  type="submit"
-                  onClick={(e) => {
-                    e.preventDefault();
+                  type="button"
+                  onClick={() => {
                     console.log("Save Configuration button clicked");
-                    handleSubmit(e);
+                    form.handleSubmit(onSubmitForm)();
                   }}
                   disabled={isSubmitting || setupComplete}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
