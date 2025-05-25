@@ -2070,7 +2070,7 @@ export default function TenantOnboardingWizard() {
                             const saveResponse = await fetch('/api/teams/batch', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify(teamsToSave),
+                              body: JSON.stringify({ teams: teamsToSave }),
                               credentials: 'include'
                             });
                             
