@@ -26,22 +26,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
-// Schema that matches our database structure exactly
 const keyResultSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters"),
-  description: z.string().optional(),
-  startValue: z.string().min(1, "Start value is required"),
-  targetValue: z.string().min(1, "Target value is required"),
-  currentValue: z.string().optional(),
-  status: z.string().default("not_started")
+  title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title must be less than 100 characters"),
+  description: z.string().optional().or(z.string().min(10, "Description must be at least 10 characters")),
+  startValue: z.number().min(0, "Start value must be at least 0"),
+  targetValue: z.number().min(1, "Target value must be at least 1"),
+  unit: z.string().min(1, "Unit is required (e.g., %, tasks, revenue)"),
+  currentValue: z.number().optional()
 });
 
 type KeyResultFormValues = z.infer<typeof keyResultSchema>;
@@ -59,21 +52,25 @@ export default function AddKeyResultDialog({
 }: AddKeyResultDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentTenant } = useTenantContext();
+  const [progress, setProgress] = useState(0);
+
+  console.log("AddKeyResultDialog received objectiveId:", objectiveId);
 
   const form = useForm<KeyResultFormValues>({
     resolver: zodResolver(keyResultSchema),
     defaultValues: {
       title: "",
       description: "",
-      startValue: "0",
-      targetValue: "100",
-      currentValue: "0",
-      status: "not_started"
+      startValue: 0,
+      targetValue: 100,
+      unit: "%",
+      currentValue: 0
     },
-    mode: "onSubmit"
+    mode: "onSubmit" // Only validate when the form is submitted
   });
 
+  const { currentTenant } = useTenantContext();
+  
   const addKeyResultMutation = useMutation({
     mutationFn: async (data: KeyResultFormValues) => {
       // Validate that objectiveId is available
@@ -81,52 +78,60 @@ export default function AddKeyResultDialog({
         throw new Error("Objective ID is required to create a key result");
       }
       
-      // Calculate progress percentage
-      const start = parseFloat(data.startValue) || 0;
-      const target = parseFloat(data.targetValue) || 100;
-      const current = parseFloat(data.currentValue || data.startValue) || start;
-      const progress = target === start ? 100 : Math.round(((current - start) / (target - start)) * 100);
+      const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       
-      // Format data to match our database schema
+      // Convert to the exact format expected by the database
       const formattedData = {
         title: data.title,
-        description: data.description || null,
-        objectiveId: objectiveId,
-        startValue: data.startValue,
-        targetValue: data.targetValue,
-        currentValue: data.currentValue || data.startValue,
+        description: data.description,
+        objective_id: objectiveId, // Backend expects snake_case parameter name
+        start_value: data.startValue,
+        target_value: data.targetValue,
+        current_value: data.currentValue || data.startValue,
         progress: Math.max(0, Math.min(100, progress)),
         status: data.status,
-        tenantId: currentTenant?.id
+        tenant_id: currentTenant?.id
       };
       
-      console.log("Creating key result with data:", formattedData);
+      console.log("Submitting key result with formatted data:", formattedData);
       const response = await apiRequest("POST", "/api/key-results", formattedData);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId, "key-results"] });
       queryClient.invalidateQueries({ queryKey: ["/api/key-results"] });
       toast({
-        title: "Success",
-        description: "Key result has been created successfully.",
+        title: "Key Result Added",
+        description: "The key result has been successfully added to the objective.",
       });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: Error) => {
-      console.error("Error creating key result:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to create key result. Please try again.",
+        title: "Failed to add key result",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
+  const calculateProgress = (startValue: number, targetValue: number, currentValue: number) => {
+    if (targetValue === startValue) return 100;
+    return Math.round(((currentValue - startValue) / (targetValue - startValue)) * 100);
+  };
+
+  const handleCurrentValueChange = (value: number) => {
+    const startValue = form.getValues("startValue");
+    const targetValue = form.getValues("targetValue");
+    const newProgress = calculateProgress(startValue, targetValue, value);
+    setProgress(newProgress);
+    form.setValue("currentValue", value);
+  };
+
+  // Just let the mutation handle the formatting
   const onSubmit = (data: KeyResultFormValues) => {
-    console.log("Form submitted with data:", data);
+    console.log("Submitting key result with data:", data);
     addKeyResultMutation.mutate(data);
   };
 
@@ -136,7 +141,7 @@ export default function AddKeyResultDialog({
         <DialogHeader>
           <DialogTitle>Add Key Result</DialogTitle>
           <DialogDescription>
-            Create a new key result for this objective. Key results should be specific, measurable outcomes.
+            Create a new key result for your objective. Key results should be specific, measurable, and time-bound.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,12 +152,9 @@ export default function AddKeyResultDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title *</FormLabel>
+                  <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g., Increase monthly revenue to $50,000" 
-                      {...field} 
-                    />
+                    <Input placeholder="Increase revenue by 20%" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -167,7 +169,7 @@ export default function AddKeyResultDialog({
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Provide additional details about this key result..."
+                      placeholder="Provide more details about this key result..."
                       className="resize-none"
                       {...field}
                     />
@@ -177,29 +179,25 @@ export default function AddKeyResultDialog({
               )}
             />
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startValue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Value *</FormLabel>
+                    <FormLabel>Start Value</FormLabel>
                     <FormControl>
-                      <Input placeholder="0" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="currentValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Value</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0" {...field} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          field.onChange(value);
+                          if (form.getValues("currentValue") !== undefined) {
+                            handleCurrentValueChange(form.getValues("currentValue") || value);
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,9 +209,19 @@ export default function AddKeyResultDialog({
                 name="targetValue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Value *</FormLabel>
+                    <FormLabel>Target Value</FormLabel>
                     <FormControl>
-                      <Input placeholder="100" {...field} />
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          field.onChange(value);
+                          if (form.getValues("currentValue") !== undefined) {
+                            handleCurrentValueChange(form.getValues("currentValue") || form.getValues("startValue"));
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -223,23 +231,36 @@ export default function AddKeyResultDialog({
 
             <FormField
               control={form.control}
-              name="status"
+              name="unit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="not_started">Not Started</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="at_risk">At Risk</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Unit</FormLabel>
+                  <FormControl>
+                    <Input placeholder="%, $, users, etc." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="currentValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Value (Progress: {progress}%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        field.onChange(value);
+                        handleCurrentValueChange(value);
+                      }}
+                      value={field.value === undefined ? form.getValues("startValue") : field.value}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -257,7 +278,7 @@ export default function AddKeyResultDialog({
                 type="submit"
                 disabled={addKeyResultMutation.isPending}
               >
-                {addKeyResultMutation.isPending ? "Creating..." : "Create Key Result"}
+                {addKeyResultMutation.isPending ? "Adding..." : "Add Key Result"}
               </Button>
             </DialogFooter>
           </form>
