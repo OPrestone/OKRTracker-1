@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -180,6 +180,11 @@ import {
   Award,
   Zap,
   Sparkles,
+  Save,
+  Megaphone,
+  Briefcase,
+  Code,
+  Building
 } from "lucide-react";
 
 import { CSVImport } from "@/components/csv/csv-import";
@@ -371,15 +376,6 @@ const formSchema = z.object({
     description: z.string().optional(),
     industry: z.string().optional(),
   }),
-  team: z.object({
-    users: z.array(z.object({
-      email: z.string().email(),
-      role: z.enum(["admin", "member", "viewer"]),
-      selected: z.boolean(),
-      name: z.string().optional(),
-      department: z.string().optional(),
-    })).optional(),
-  }),
 });
 
 export default function TenantOnboardingWizard() {
@@ -387,12 +383,19 @@ export default function TenantOnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
+  const [addedTeams, setAddedTeams] = useState<Array<{
+    name: string;
+    description: string;
+    color: string;
+    icon: string;
+    members: any[];
+  }>>([]);
 
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Steps configuration
+  // Steps configuration - team step removed
   const steps = [
     { id: "organization", label: "Organization", icon: Building2 },
     { id: "plan", label: "Subscription", icon: CreditCard },
@@ -424,9 +427,6 @@ export default function TenantOnboardingWizard() {
         plan: "free",
         agreeToTerms: false,
       },
-      team: {
-        users: [],
-      },
       setup: {
         createInitialOKRs: false,
         template: "",
@@ -438,80 +438,260 @@ export default function TenantOnboardingWizard() {
   // Watch for values changes for conditional rendering
   const createInitialOKRs = form.watch("setup.createInitialOKRs");
   const selectedTemplate = form.watch("setup.template");
-  const teamMembers = form.watch("team.users") || [];
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
+
+  // Create default teams automatically
+  useEffect(() => {
+    // We'll automatically create default teams when setting up the organization
+    if (addedTeams.length === 0) {
+      // Create Marketing Team (blue, megaphone)
+      const marketingTeam = {
+        name: "Marketing Team",
+        description: "Team responsible for brand, communications and marketing campaigns",
+        color: "#3B82F6", // Blue
+        icon: "megaphone",
+        members: []
+      };
+
+      // Create Sales Team (green, chart)
+      const salesTeam = {
+        name: "Sales Team",
+        description: "Team responsible for sales and revenue growth",
+        color: "#10B981", // Green 
+        icon: "briefcase",
+        members: []
+      };
+
+      // Create Engineering Team (purple, code)
+      const engineeringTeam = {
+        name: "Engineering Team",
+        description: "Team responsible for product development and technical operations",
+        color: "#8B5CF6", // Purple
+        icon: "code",
+        members: []
+      };
+
+      setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
+    }
+  }, [addedTeams.length]);
 
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      console.log("Creating organization with form values:", values);
       setIsSubmitting(true);
 
       try {
-        // Extract users that were selected
-        const selectedUsers = values.team.users?.filter(user => user.selected) || [];
+        // Use teams from state or default if none added
+        const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
+          name: team.name,
+          description: team.description,
+          icon: team.icon,
+          color: team.color,
+          leaderId: null // Explicitly set team leader as null initially
+        })) : [
+          {
+            name: "Marketing Team",
+            description: "Team responsible for brand, communications and marketing campaigns",
+            color: "#3B82F6", // Blue
+            icon: "megaphone",
+            leaderId: null // Explicitly set team leader as null initially
+          },
+          {
+            name: "Sales Team",
+            description: "Team responsible for sales and revenue growth", 
+            color: "#10B981", // Green
+            icon: "briefcase",
+            leaderId: null // Explicitly set team leader as null initially
+          },
+          {
+            name: "Engineering Team",
+            description: "Team responsible for product development and technical operations",
+            color: "#8B5CF6", // Purple
+            icon: "code",
+            leaderId: null // Explicitly set team leader as null initially
+          }
+        ];
 
+        console.log("Teams to be created:", teams);
+
+        // Prepare the request data
         const requestData = {
           name: values.orgDetails.name,
           displayName: values.orgDetails.displayName,
           description: values.orgDetails.description,
           industry: values.orgDetails.industry,
           planType: values.plan.plan,
-          users: selectedUsers,
           setup: values.setup,
+          teams: teams,
+          role: "owner" // Set creator's role to owner
         };
 
-        // Make the API request with role explicitly set to "owner"
-        const requestDataWithRole = {
-          ...requestData,
-          role: "owner" // Set creator's role to owner (highest privilege level)
-        };
+        console.log("Submitting organization data:", requestData);
 
-        const response = await apiRequest('POST', '/api/tenants', requestDataWithRole);
-        const orgData = await response.json();
+        // Attempt API call first
+        try {
+          const response = await fetch('/api/tenants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData),
+            credentials: 'include'
+          });
 
-        return orgData;
+          if (response.ok) {
+            const orgData = await response.json();
+            console.log("Organization created successfully via API:", orgData);
+
+            // Create time cadences for the organization
+            const tenantId = orgData.tenant.id;
+            console.log("Creating time cadences for tenant:", tenantId);
+
+            // Annual cadence
+            const annualResponse = await fetch('/api/cadences', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: "Annual",
+                description: "12-month time period for long-term strategic planning",
+                startMonth: 1, // January
+                periodMonths: 12,
+                tenantId: tenantId,
+                isDefault: true
+              }),
+              credentials: 'include'
+            });
+
+            if (annualResponse.ok) {
+              console.log("Annual cadence created successfully");
+            } else {
+              console.error("Failed to create annual cadence:", await annualResponse.text());
+            }
+
+            // Quarterly cadence
+            const quarterlyResponse = await fetch('/api/cadences', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: "Quarterly",
+                description: "3-month time period for tactical execution",
+                startMonth: 1, // January
+                periodMonths: 3,
+                tenantId: tenantId,
+                isDefault: true
+              }),
+              credentials: 'include'
+            });
+
+            if (quarterlyResponse.ok) {
+              console.log("Quarterly cadence created successfully");
+            } else {
+              console.error("Failed to create quarterly cadence:", await quarterlyResponse.text());
+            }
+
+            // Create initial OKRs from template if requested
+            if (values.setup.createInitialOKRs && values.setup.template) {
+              console.log("Creating initial OKRs from template:", values.setup.template);
+              
+              const okrResponse = await fetch(`/api/tenants/${tenantId}/okr-templates/${values.setup.template}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              });
+
+              if (okrResponse.ok) {
+                console.log("Initial OKRs created successfully from template");
+              } else {
+                console.error("Failed to create initial OKRs:", await okrResponse.text());
+              }
+            }
+
+            // Process imported OKRs if provided
+            if (values.setup.createInitialOKRs && values.setup.importedOKRs && values.setup.importedOKRs.length > 0) {
+              console.log("Processing imported OKRs:", values.setup.importedOKRs);
+              
+              const importResponse = await fetch(`/api/tenants/${tenantId}/import-okrs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ okrs: values.setup.importedOKRs }),
+                credentials: 'include'
+              });
+
+              if (importResponse.ok) {
+                console.log("Imported OKRs processed successfully");
+              } else {
+                console.error("Failed to import OKRs:", await importResponse.text());
+              }
+            }
+
+            // Success state
+            setTenantCreated(true);
+            return orgData;
+            
+          } else {
+            const errorText = await response.text();
+            console.error("API request failed:", errorText);
+            throw new Error(errorText || "Failed to create organization. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error creating organization:", error);
+          throw error;
+        }
+      } catch (error) {
+        console.error("Mutation error:", error);
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
+
     onSuccess: (data) => {
+      // Invalidate cached data
+      queryClient.invalidateQueries({ queryKey: ['/api/tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
+      // Show success message
       toast({
         title: "Organization created!",
-        description: "Your new organization has been set up successfully.",
+        description: `${data.tenant.displayName} has been set up successfully.`,
       });
 
-      // Invalidate tenants query to refresh list
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-
-      setTenantCreated(true);
-
-      // Navigate to the new tenant's dashboard
+      // Add a slight delay to ensure cache is invalidated and UI update is perceived
       setTimeout(() => {
-        navigate("/");
-      }, 2000);
+        // Redirect to the new tenant dashboard
+        navigate(`/${data.tenant.id}/`);
+      }, 1000);
     },
+
     onError: (error: any) => {
       toast({
-        title: "Error creating organization",
-        description: error.message || "An unexpected error occurred",
+        title: "Failed to create organization",
+        description: error?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   });
 
-  const handleSubmit = form.handleSubmit((data) => {
-    createTenantMutation.mutate(data);
-  });
-
-  // Navigation handlers
-  const goToNextStep = () => {
-    const currentIndex = steps.findIndex(step => step.id === activePage);
-    if (currentIndex < steps.length - 1) {
-      setActivePage(steps[currentIndex + 1].id);
+  // Function to check if current step is valid
+  const isCurrentStepValid = () => {
+    const { errors } = form.formState;
+    
+    if (activePage === "organization") {
+      return !errors.orgDetails;
+    } else if (activePage === "plan") {
+      return !errors.plan && agreeToTerms;
+    } else if (activePage === "setup") {
+      // Setup validation is optional, but if createInitialOKRs is checked, then validation applies
+      if (createInitialOKRs) {
+        return !errors.setup;
+      }
+      return true;
     }
+    
+    return true;
   };
 
+  // Navigation functions
   const goToPreviousStep = () => {
     const currentIndex = steps.findIndex(step => step.id === activePage);
     if (currentIndex > 0) {
@@ -523,232 +703,104 @@ export default function TenantOnboardingWizard() {
     setActivePage(stepId);
   };
 
-  const addTeamMember = (e?: React.MouseEvent) => {
-    // Prevent form submission if event is provided
-    if (e) {
-      e.preventDefault();
+  // Form submission handler
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await createTenantMutation.mutateAsync(values);
+    } catch (error) {
+      console.error("Form submission error:", error);
     }
-
-    const currentUsers = form.getValues("team.users") || [];
-
-    form.setValue("team.users", [
-      ...currentUsers,
-      {
-        email: "",
-        role: "member",
-        selected: true,
-        name: "",
-        department: "",
-      }
-    ]);
   };
 
-  // Function to invite a user by email
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [isInviting, setIsInviting] = useState(false);
-
-  const inviteUser = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevent form submission
-    e.preventDefault();
-
-    if (!inviteEmail) return;
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(inviteEmail)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const currentUsers = form.getValues("team.users") || [];
-
-    // Check for duplicate email
-    if (currentUsers.some(user => user.email === inviteEmail)) {
-      toast({
-        title: "Duplicate email",
-        description: "This email address has already been added",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsInviting(true);
-
-    // Add to team members
-    form.setValue("team.users", [
-      ...currentUsers,
-      {
-        email: inviteEmail,
-        role: inviteRole,
-        selected: true,
-        name: "",
-        department: "",
-      }
-    ]);
-
-    // Show success toast
+  // Process CSV import for OKRs
+  const handleImportOKRs = (data: any[]) => {
+    // Update form with imported data
+    form.setValue("setup.importedOKRs", data);
+    
     toast({
-      title: "Invitation added",
-      description: `${inviteEmail} will be invited when you create the organization`,
-      variant: "default",
+      title: "OKRs Imported",
+      description: `${data.length} OKRs imported successfully.`,
     });
-
-    // Reset form
-    setInviteEmail("");
-    setIsInviting(false);
   };
 
-  // Check if current step is valid
-  const isCurrentStepValid = () => {
-    switch (activePage) {
-      case "organization":
-        const org = form.getValues().orgDetails;
-        return org.name && org.name.length >= 2 && org.displayName && org.displayName.length >= 2;
-      case "plan":
-        return form.getValues().plan.agreeToTerms;
-      case "team":
-        // Team members validation - email format check
-        const team = form.getValues().team.users || [];
-        // If there are team members, validate their emails
-        if (team.length > 0) {
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          const validEmails = team.every(member => emailRegex.test(member.email));
-          return validEmails;
-        }
-        // Team members are optional
-        return true;
-      case "setup":
-        // If createInitialOKRs is checked, a template or imported OKRs is required
-        const setup = form.getValues().setup;
-        if (setup.createInitialOKRs) {
-          return !!setup.template || (setup.importedOKRs && setup.importedOKRs.length > 0);
-        }
-        return true;
-    }
-    return false;
-  };
-
+  // Tenant created success screen
   if (tenantCreated) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-50 via-white to-cyan-50">
-        <div className="max-w-md mx-auto text-center py-16 px-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-8 animate-bounce">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <h1 className="text-3xl font-bold mb-4 text-gray-900">Organization Created Successfully!</h1>
-          <p className="text-gray-600 mb-8 text-lg">
-            Your new organization has been set up. You'll be redirected to your dashboard in a moment.
-          </p>
-          <div className="flex items-center justify-center text-primary">
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            <span>Redirecting to dashboard...</span>
-          </div>
-        </div>
+      <div className="container max-w-5xl mx-auto py-12">
+        <Card className="border-green-100 bg-green-50/50">
+          <CardContent className="pt-6 pb-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-green-100 text-green-700 p-4 rounded-full mb-4">
+                <CheckCircle className="h-12 w-12" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Organization Created Successfully!</h2>
+              <p className="text-gray-600 mb-6 max-w-md">
+                Your organization has been set up and you will be redirected to your dashboard shortly.
+              </p>
+              <div className="animate-pulse">
+                <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Left sidebar/cover area */}
-      <div className="w-full lg:w-1/3 bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-8 flex flex-col relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.05] [mask-image:linear-gradient(0deg,transparent,transparent)]" />
-
-        <div className="relative">
-          <div className="flex items-center mb-10">
-            <div className="mr-3 bg-white/10 rounded-lg p-2">
-              <Target className="h-6 w-6" />
-            </div>
-            <h1 className="text-2xl font-bold">OKR Platform</h1>
-          </div>
-
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold mb-4">Create Your Organization</h2>
-            <p className="text-white/80 text-lg">
-              Set up your organization and start tracking your objectives and key results in a few simple steps.
-            </p>
-          </div>
-
-          <div className="space-y-8 mb-12">
-            <div className="relative">
-              <div className="h-1 bg-white/20 rounded-full mb-6 overflow-hidden">
-                <div 
-                  className="h-full bg-white transition-all duration-500 ease-in-out rounded-full"
-                  style={{ width: `${animateProgress}%` }}
-                />
+    <div className="container max-w-5xl mx-auto py-12">
+      <div className="mb-8">
+        {/* Progress indicator */}
+        <div className="flex justify-between mb-2">
+          {steps.map((step, index) => (
+            <div 
+              key={step.id}
+              className={cn(
+                "flex-1 flex flex-col items-center",
+                {
+                  "text-primary": activeIndex >= index,
+                  "text-gray-400": activeIndex < index
+                }
+              )}
+              onClick={() => {
+                // Allow clicking on completed steps or current step
+                if (index <= activeIndex) {
+                  goToStep(step.id);
+                }
+              }}
+            >
+              <div 
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors",
+                  {
+                    "bg-primary text-white": activeIndex >= index,
+                    "bg-gray-100 text-gray-400": activeIndex < index,
+                    "cursor-pointer hover:bg-primary/90 hover:text-white": index <= activeIndex
+                  }
+                )}
+              >
+                {activeIndex > index ? <Check className="h-5 w-5" /> : <step.icon className="h-5 w-5" />}
               </div>
-              <div className="space-y-5">
-                {steps.map((step, index) => {
-                  const StepIcon = step.icon;
-                  const isActive = step.id === activePage;
-                  const isPast = steps.findIndex(s => s.id === activePage) > index;
-
-                  return (
-                    <div 
-                      key={step.id}
-                      className={`flex items-center space-x-4 cursor-pointer transition-all ${
-                        isActive ? 'opacity-100' : isPast ? 'opacity-70' : 'opacity-50'
-                      }`}
-                      onClick={() => goToStep(step.id)}
-                    >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isActive 
-                          ? 'bg-white text-blue-900 shadow-lg shadow-white/10'
-                          : isPast 
-                            ? 'bg-white/30 text-white' 
-                            : 'bg-white/10 text-white/70'
-                      }`}>
-                        {isPast ? (
-                          <Check className="h-6 w-6" />
-                        ) : (
-                          <StepIcon className="h-6 w-6" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className={`font-semibold text-lg ${isActive ? 'text-white' : ''}`}>
-                          {step.label}
-                        </h3>
-                        <p className="text-white/60 text-sm">
-                          {index === 0 && "Enter your organization details"}
-                          {index === 1 && "Choose a subscription plan"}
-                          {index === 2 && "Add your team members"}
-                          {index === 3 && "Set up initial OKRs"}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <span className="text-sm font-medium">{step.label}</span>
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-auto relative">
-          <div className="p-6 bg-white/5 rounded-xl border border-white/10">
-            <h3 className="font-medium mb-2 flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 text-amber-300" /> 
-              Pro Tip
-            </h3>
-            <p className="text-white/80 text-sm">
-              {activePage === "organization" && "Choose a descriptive name that reflects your organization's identity and mission."}
-              {activePage === "plan" && "Consider your team size and growth plans when selecting a subscription tier."}
-              {activePage === "team" && "Import team members from CSV to quickly add multiple users at once."}
-              {activePage === "setup" && "Start with a template to save time and follow best practices for your OKRs."}
-            </p>
-          </div>
-        </div>
+        <Progress value={animateProgress} className="h-2" />
       </div>
-
-      {/* Main content area */}
-      <div className="w-full lg:w-2/3 overflow-y-auto p-8">
+      
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <Tabs value={activePage} onValueChange={goToStep} className="w-full">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs value={activePage} onValueChange={setActivePage} className="w-full">
+              <TabsList className="hidden">
+                {steps.map(step => (
+                  <TabsTrigger key={step.id} value={step.id}>
+                    {step.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
               {/* Organization Details */}
               <TabsContent value="organization" className="mt-0 space-y-6">
                 <div className="mb-6">
@@ -757,128 +809,164 @@ export default function TenantOnboardingWizard() {
                 </div>
 
                 <Card>
-                  <CardContent className="pt-6 space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organization Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme Inc." {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            This will be used for your organization's identifier
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.displayName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Display Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Acme" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            A shorter name for your organization
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="A brief description of your organization" 
-                              className="resize-none min-h-[100px]"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="orgDetails.industry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Industry</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
+                    <CardTitle>Basic Information</CardTitle>
+                    <CardDescription>
+                      Enter the basic details of your organization
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Organization Name (Slug) *</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an industry" />
-                              </SelectTrigger>
+                              <Input 
+                                placeholder="acme-co" 
+                                {...field} 
+                                className="bg-gray-50"
+                                onChange={(e) => {
+                                  // Auto-generate kebab-case slug
+                                  const slug = e.target.value
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9]+/g, '-')
+                                    .replace(/(^-|-$)/g, '');
+                                  field.onChange(slug);
+
+                                  // Auto-fill display name if empty (and name has some content)
+                                  if (e.target.value && !form.getValues("orgDetails.displayName")) {
+                                    const displayName = e.target.value
+                                      .replace(/-/g, ' ')
+                                      .replace(/\b\w/g, l => l.toUpperCase());
+                                    form.setValue("orgDetails.displayName", displayName);
+                                  }
+                                }}
+                              />
                             </FormControl>
-                            <SelectContent className="max-h-[300px] overflow-y-auto">
-                              <div className="p-2 sticky top-0 bg-background z-10">
-                                <Input 
-                                  placeholder="Search industry..." 
-                                  className="border-input mb-1" 
-                                  onClick={(e) => e.stopPropagation()}
-                                  onKeyDown={(e) => e.stopPropagation()}
-                                  onFocus={(e) => e.stopPropagation()}
-                                  onChange={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
+                            <FormDescription>
+                              This will be used in URLs and cannot be changed later
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                                    const value = e.target.value.toLowerCase();
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.displayName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Display Name *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="ACME Corporation" 
+                                {...field}
+                                className="bg-gray-50"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              This is how your organization will appear to users
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                                    // Find all SelectItems and hide/show based on search
-                                    const selectItems = document.querySelectorAll('.industry-item');
-                                    let visibleCount = 0;
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Tell us about your organization" 
+                                {...field}
+                                className="bg-gray-50"
+                                rows={4}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              A brief description of your organization and its mission
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                                    selectItems.forEach((item) => {
-                                      const text = item.textContent?.toLowerCase() || '';
-                                      if (text.includes(value)) {
-                                        (item as HTMLElement).style.display = 'flex';
-                                        visibleCount++;
-                                      } else {
-                                        (item as HTMLElement).style.display = 'none';
-                                      }
-                                    });
-                                  }}
-                                />
-                              </div>
-                              {industryOptions.map((industry) => (
-                                <SelectItem 
-                                  key={industry} 
-                                  value={industry.toLowerCase()}
-                                  className="industry-item"
-                                >
-                                  {industry}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.industry"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Industry</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-50">
+                                  <SelectValue placeholder="Select an industry" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <div className="sticky top-0 p-2">
+                                  <Input 
+                                    placeholder="Search industries..." 
+                                    className="border-gray-200"
+                                    onChange={(e) => {
+                                      const query = e.target.value.toLowerCase();
+                                      let visibleCount = 0;
+                                      document.querySelectorAll('.industry-item').forEach(item => {
+                                        if ((item.textContent || '').toLowerCase().includes(query)) {
+                                          (item as HTMLElement).style.display = 'flex';
+                                          visibleCount++;
+                                        } else {
+                                          (item as HTMLElement).style.display = 'none';
+                                        }
+                                      });
+                                    }}
+                                  />
+                                </div>
+                                {industryOptions.map((industry) => (
+                                  <SelectItem 
+                                    key={industry} 
+                                    value={industry.toLowerCase()}
+                                    className="industry-item"
+                                  >
+                                    {industry}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </CardContent>
+                  <CardFooter className="flex justify-end pt-4">
+                    <Button 
+                      type="button"
+                      onClick={() => setActivePage("plan")}
+                      disabled={!isCurrentStepValid()}
+                      className="w-full md:w-auto"
+                    >
+                      Continue to Subscription
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
 
               {/* Subscription Plan */}
               <TabsContent value="plan" className="mt-0 space-y-6">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Choose a Plan</h2>
-                  <p className="text-gray-500">Select the right subscription for your organization</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Choose Your Plan</h2>
+                  <p className="text-gray-500">Select the subscription plan that fits your needs</p>
                 </div>
 
                 <Card>
@@ -888,82 +976,88 @@ export default function TenantOnboardingWizard() {
                       name="plan.plan"
                       render={({ field }) => (
                         <FormItem className="space-y-6">
-                          <FormLabel className="sr-only">Subscription Plan</FormLabel>
-                          <FormControl>
-                            <RadioGroup 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="grid grid-cols-1 gap-6"
-                            >
-                              {priceTiers.map((tier) => (
-                                <div key={tier.id} className="relative">
-                                  <RadioGroupItem
-                                    value={tier.id}
-                                    id={tier.id}
-                                    className="sr-only"
-                                  />
-                                  <Label
-                                    htmlFor={tier.id}
-                                    className={`flex flex-col md:flex-row border rounded-xl p-4 cursor-pointer transition-all ${
-                                      field.value === tier.id
-                                        ? "border-primary shadow-md bg-primary/5" 
-                                        : "border-gray-200 hover:border-gray-300"
-                                    } ${tier.popular ? "ring-2 ring-primary/20" : ""}`}
+                          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                            {priceTiers.map((tier) => (
+                              <FormItem
+                                key={tier.id}
+                                className="flex"
+                              >
+                                <FormControl>
+                                  <RadioGroup 
+                                    onValueChange={field.onChange} 
+                                    defaultValue={field.value}
+                                    className="flex"
                                   >
-                                    {tier.popular && (
-                                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                                        Most Popular
-                                      </div>
-                                    )}
-
-                                    <div className="w-full md:w-1/3 pr-0 md:pr-6 mb-4 md:mb-0 flex flex-col">
-                                      <div className="mb-2">
-                                        <div className="flex justify-between items-center mb-1">
-                                          <h3 className="font-semibold text-lg">{tier.name}</h3>
-                                          {field.value === tier.id && (
-                                            <Check className="h-5 w-5 text-primary" />
-                                          )}
-                                        </div>
-                                        <p className="text-sm text-gray-500">{tier.description}</p>
-                                      </div>
-                                      <div className="mb-4">
-                                        <span className="text-3xl font-bold">
-                                          {tier.price === 0 ? "Free" : `$${tier.price}`}
-                                        </span>
-                                        {tier.price > 0 && (
-                                          <span className="text-gray-500 text-sm">/month</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="w-full md:w-2/3 border-t md:border-t-0 md:border-l border-gray-200 md:pl-6 pt-4 md:pt-0">
-                                      <div className="text-sm font-medium text-gray-700 mb-3">
-                                        Top features:
-                                      </div>
-                                      <ul className="text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                                        {tier.features.slice(0, 6).map((feature, index) => (
-                                          <li key={index} className="flex items-center">
-                                            <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                            <span>{feature}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                      {tier.features.length > 6 && (
-                                        <div className="text-sm text-primary font-medium mt-3">
-                                          + {tier.features.length - 6} more features
+                                    <div 
+                                      className={cn(
+                                        "relative h-full rounded-xl border-2 p-0 overflow-hidden transition-all flex-1 cursor-pointer",
+                                        field.value === tier.id 
+                                          ? "border-primary shadow-md" 
+                                          : "border-gray-200 hover:border-gray-300",
+                                        tier.popular && "md:scale-105 md:-translate-y-1"
+                                      )}
+                                      onClick={() => field.onChange(tier.id)}
+                                    >
+                                      {tier.popular && (
+                                        <div className="absolute top-0 right-0 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-bl-xl">
+                                          Popular
                                         </div>
                                       )}
+                                      
+                                      <div className="bg-gradient-to-b from-gray-50 to-white px-4 py-5 text-center">
+                                        <h3 className="text-lg font-semibold">{tier.name}</h3>
+                                        <p className="text-sm text-gray-500 h-10 flex items-center justify-center">
+                                          {tier.description}
+                                        </p>
+                                        <div className="mt-2">
+                                          <span className="text-3xl font-bold">
+                                            {tier.price === 0 ? 'Free' : `$${tier.price}`}
+                                          </span>
+                                          {tier.price > 0 && <span className="text-gray-500">/month</span>}
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="px-4 py-5">
+                                        <ul className="space-y-3 text-sm">
+                                          {tier.features.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start">
+                                              <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                              <span>{feature}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      <div className="border-t p-4 mt-auto">
+                                        <div className={cn(
+                                          "p-2 rounded-md text-center text-sm",
+                                          field.value === tier.id ? "bg-primary/10 text-primary" : "bg-gray-50 text-gray-500"
+                                        )}>
+                                          {field.value === tier.id ? (
+                                            <span className="flex items-center justify-center">
+                                              <Check className="h-4 w-4 mr-1" />
+                                              Selected
+                                            </span>
+                                          ) : tier.buttonText}
+                                        </div>
+                                      </div>
+                                      
+                                      <FormItem className="absolute top-2 left-2">
+                                        <FormControl>
+                                          <RadioGroupItem value={tier.id} className="sr-only" />
+                                        </FormControl>
+                                      </FormItem>
                                     </div>
-                                  </Label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
+                                  </RadioGroup>
+                                </FormControl>
+                              </FormItem>
+                            ))}
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
+                    
                     <FormField
                       control={form.control}
                       name="plan.agreeToTerms"
@@ -984,568 +1078,34 @@ export default function TenantOnboardingWizard() {
                       )}
                     />
                   </CardContent>
+                  <CardFooter className="flex justify-between pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActivePage("organization")}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={() => setActivePage("setup")}
+                      className="bg-primary hover:bg-primary/90 shadow-sm"
+                    >
+                      Continue to Setup
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardFooter>
                 </Card>
-              </TabsContent>
-
-              {/* Team */}
-              <TabsContent value="team" className="mt-0 space-y-6">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Build Your Team</h2>
-                  <p className="text-gray-500">Add key people who will collaborate in your organization</p>
-                </div>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
-                        <Users className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <CardTitle>Team Members</CardTitle>
-                        <CardDescription>Invite collaborators to get started with your OKRs</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-6 pb-8 relative">
-                    {/* Role descriptions for guidance */}
-                    <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-green-50 border border-green-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-green-100 p-1.5 rounded-full mr-2">
-                            <Landmark className="h-4 w-4 text-green-600" />
-                          </div>
-                          <h4 className="font-semibold text-green-800">Admin</h4>
-                        </div>
-                        <p className="text-sm text-green-700">
-                          Can manage all aspects of the organization, including users, teams, and OKRs
-                        </p>
-                      </div>
-
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-blue-100 p-1.5 rounded-full mr-2">
-                            <Target className="h-4 w-4 text-blue-600" />
-                          </div>
-                          <h4 className="font-semibold text-blue-800">Member</h4>
-                        </div>
-                        <p className="text-sm text-blue-700">
-                          Can create and manage their own OKRs and contribute to team objectives
-                        </p>
-                      </div>
-
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center mb-2">
-                          <div className="bg-amber-100 p-1.5 rounded-full mr-2">
-                            <BarChart3 className="h-4 w-4 text-amber-600" />
-                          </div>
-                          <h4 className="font-semibold text-amber-800">Viewer</h4>
-                        </div>
-                        <p className="text-sm text-amber-700">
-                          Can view objectives and progress but cannot create or edit OKRs
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Quick add methods */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                      {/* Bulk import */}
-                      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start mb-4">
-                          <div className="flex-shrink-0 bg-indigo-600 rounded-full p-2.5 mr-4 shadow-sm">
-                            <FileUp className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-lg text-indigo-900 mb-1">Bulk Import</h3>
-                            <p className="text-indigo-700 text-sm mb-4">
-                              Import your entire team from a CSV file with email, name, department, and role
-                            </p>
-                            <CSVImport 
-                              templateFields={["name", "email", "department", "role"]}
-                              templateName="Team Members"
-                              onImport={(data) => {
-                                // Convert imported data to the required format
-                                const formattedData = data.map(user => ({
-                                  name: user.name || "",
-                                  email: user.email || "",
-                                  department: user.department || "",
-                                  role: (user.role || "member").toLowerCase(),
-                                  selected: true
-                                }));
-
-                                // Set the imported data to the form
-                                form.setValue("team.users", formattedData);
-
-                                // Show success toast
-                                toast({
-                                  title: "Team imported successfully!",
-                                  description: `Added ${data.length} team members to your organization.`,
-                                  variant: "default"
-                                });
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick invite */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start mb-4">
-                          <div className="flex-shrink-0 bg-blue-600 rounded-full p-2.5 mr-4 shadow-sm">
-                            <Mail className="h-5 w-5 text-white" />
-                          </div>
-                          <div className="flex-grow">
-                            <h3 className="font-semibold text-lg text-blue-900 mb-1">Quick Invite</h3>
-                            <p className="text-blue-700 text-sm mb-4">
-                              Send invitations to individual team members to join your organization
-                            </p>
-
-                            <div className="flex flex-col space-y-3">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div className="md:col-span-2">
-                                  <Input 
-                                    value={inviteEmail}
-                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                    placeholder="Email address"
-                                    className="border-blue-200 focus-visible:ring-blue-500 h-10"
-                                  />
-                                </div>
-                                <div>
-                                  <Select
-                                    value={inviteRole}
-                                    onValueChange={setInviteRole}
-                                  >
-                                    <SelectTrigger className="border-blue-200 focus-visible:ring-blue-500 h-10">
-                                      <SelectValue placeholder="Role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                      <SelectItem value="member">Member</SelectItem>
-                                      <SelectItem value="viewer">Viewer</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              <Button 
-                                type="button" 
-                                className="bg-blue-600 hover:bg-blue-700 w-full"
-                                onClick={(e) => inviteUser(e)}
-                                disabled={isInviting || !inviteEmail}
-                              >
-                                {isInviting ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Inviting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="mr-2 h-4 w-4" />
-                                    Add Team Member
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Team Members List */}
-                    <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
-                      <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-800">
-                          Your Team ({teamMembers.length})
-                        </h3>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => addTeamMember(e)}
-                          className="shadow-sm hover:bg-gray-50"
-                        >
-                          <Plus className="h-3.5 w-3.5 mr-1.5" />
-                          Add Manually
-                        </Button>
-                      </div>
-
-                      {teamMembers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50/50">
-                          {/* Example Team Card */}
-                          <div className="w-full max-w-lg bg-white border border-blue-100 rounded-xl shadow-sm mb-8 overflow-hidden">
-                            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                              <div className="flex items-center">
-                                <div className="bg-white/20 rounded-full p-2 mr-3">
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-white">
-                                    <rect width="8" height="16" x="8" y="4" rx="2" /><line x1="12" x2="12" y1="4" y2="20" /><rect width="16" height="8" x="4" y="8" rx="2" /><line x1="20" x2="4" y1="12" y2="12" />
-                                  </svg>
-                                </div>
-                                <h3 className="text-white font-medium text-lg">Example Team: Marketing</h3>
-                              </div>
-                            </div>
-                            <div className="px-6 py-5">
-                              <p className="text-gray-600 mb-4">Team responsible for all marketing activities</p>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-gray-500">Add this team?</span>
-                                <Button 
-                                  type="button" 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                                  onClick={() => {
-                                    // Add the Marketing Team
-                                    const marketingTeam = {
-                                      name: "Marketing Team",
-                                      description: "Team responsible for all marketing activities",
-                                      color: "#3B82F6",
-                                      icon: "building",
-                                      members: []
-                                    };
-
-                                    // Show success message
-                                    toast({
-                                      title: "Team added",
-                                      description: "Marketing Team has been added to your organization",
-                                    });
-
-                                    // Show the manual team member form
-                                    addTeamMember(new Event('click'));
-                                  }}
-                                >
-                                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                                  Add Team
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-100 rounded-full p-4 mb-4">
-                            <Users className="h-8 w-8 text-gray-400" />
-                          </div>
-                          <h4 className="text-lg font-medium text-gray-800 mb-2">Your team is empty</h4>
-                          <p className="text-gray-500 text-center max-w-md mb-6">
-                            Add team members using one of the methods above or manually add them one by one.
-                          </p>
-                          <Button 
-                            type="button" 
-                            variant="default" 
-                            onClick={(e) => addTeamMember(e)}
-                            className="shadow-sm"
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Start Adding Team Members
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-gray-100">
-                          <div className="bg-gray-50 px-6 py-3 text-sm font-medium text-gray-600 grid grid-cols-12 gap-4 hidden md:grid">
-                            <div className="col-span-5">User</div>
-                            <div className="col-span-4">Department</div>
-                            <div className="col-span-2">Role</div>
-                            <div className="col-span-1 text-right">Actions</div>
-                          </div>
-                          <div>
-                            {teamMembers.map((member, index) => (
-                              <div key={index} className="px-6 py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center hover:bg-gray-50/50 transition-colors">
-                                <div className="md:col-span-5 flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center">
-                                  <div className="flex items-center mb-2 md:mb-0 md:mr-3">
-                                    <Avatar className="h-8 w-8 mr-3">
-                                      <AvatarFallback className="bg-primary/10 text-primary">
-                                        {member.name ? member.name.charAt(0).toUpperCase() : (member.email ? member.email.charAt(0).toUpperCase() : 'U')}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="md:hidden font-medium text-gray-800">User</div>
-                                  </div>
-                                  <div className="flex flex-col md:flex-col space-y-2">
-                                    <FormField
-                                      control={form.control}
-                                      name={`team.users.${index}.email`}
-                                      render={({ field }) => (
-                                        <FormItem className="mb-0">
-                                          <FormControl>
-                                            <Input 
-                                              placeholder="Email address" 
-                                              {...field}
-                                              onBlur={(e) => {
-                                                field.onBlur();
-                                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                                if (e.target.value && !emailRegex.test(e.target.value)) {
-                                                  toast({
-                                                    title: "Invalid email",
-                                                    description: "Please enter a valid email address",
-                                                    variant: "destructive",
-                                                  });
-                                                }
-                                              }}
-                                              className={
-                                                field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)
-                                                  ? "border-red-300 focus-visible:ring-red-500"
-                                                  : ""
-                                              }/>
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
-                                    />
-                                    <FormField
-                                      control={form.control}
-                                      name={`team.users.${index}.name`}
-                                      render={({ field }) => (
-                                        <FormItem className="mb-0">
-                                          <FormControl>
-                                            <Input placeholder="Full name (optional)" {...field} />
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="md:col-span-4 flex items-center">
-                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Department</div>
-                                  <FormField
-                                    control={form.control}
-                                    name={`team.users.${index}.department`}
-                                    render={({ field }) => (
-                                      <FormItem className="mb-0 w-full">
-                                        <FormControl>
-                                          <Input placeholder="Department (optional)" {...field} />
-                                        </FormControl>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="md:col-span-2 flex items-center">
-                                  <div className="md:hidden font-medium text-gray-800 mb-2 md:mb-0 mr-3">Role</div>
-                                  <FormField
-                                    control={form.control}
-                                    name={`team.users.${index}.role`}
-                                    render={({ field }) => (
-                                      <FormItem className="mb-0">
-                                        <Select 
-                                          onValueChange={field.onChange} 
-                                          defaultValue={field.value}
-                                        >
-                                          <FormControl>
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select role" />
-                                            </SelectTrigger>
-                                          </FormControl>
-                                          <SelectContent>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="member">Member</SelectItem>
-                                            <SelectItem value="viewer">Viewer</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="md:col-span-1 flex md:justify-end">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50"
-                                    onClick={() => {
-                                      const currentUsers = form.getValues("team.users") || [];
-                                      const newUsers = [
-                                        ...currentUsers.slice(0, index),
-                                        ...currentUsers.slice(index + 1)
-                                      ];
-                                      form.setValue("team.users", newUsers);
-
-                                      toast({
-                                        title: "Team member removed",
-                                        variant: "default",
-                                      });
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {teamMembers.length > 0 && (
-                        <div className="bg-gray-50 px-6 py-3 text-sm text-gray-500 border-t">
-                          {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''} added to your organization
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Helpful tip */}
-                    {teamMembers.length > 0 && (
-                      <div className="mt-6 text-center text-gray-500 text-sm">
-                        <p>You can always add more team members later from your organization settings</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Bottom navigation */}
-                <div className="flex justify-between mt-8">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setActivePage("plan")}
-                    className="shadow-sm"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Subscription
-                  </Button>
-
-                  <Button
-                    type="button"
-                    onClick={() => setActivePage("setup")}
-                    className="bg-primary hover:bg-primary/90 shadow-sm"
-                  >
-                    Continue to Setup
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
               </TabsContent>
 
               {/* Initial Setup */}
               <TabsContent value="setup" className="mt-0 space-y-6">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Initial Setup</h2>
-                  <p className="text-gray-500">Configure initial OKR settings for your organization</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Final Step</h2>
+                  <p className="text-gray-500">You are almost done</p>
                 </div>
-
-                <Card>
-                  <CardContent className="pt-6 space-y-6">
-                    <div>
-                      <FormField
-                        control={form.control}
-                        name="setup.createInitialOKRs"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-gray-700 font-medium">
-                                Create initial OKRs from a template
-                              </FormLabel>
-                              <FormDescription className="text-gray-500">
-                                Jump-start your OKR process with a pre-configured template
-                              </FormDescription>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {createInitialOKRs && (
-                      <FormField
-                        control={form.control}
-                        name="setup.template"
-                        render={({ field }) => (
-                          <FormItem className="ml-7">
-                            <FormLabel>Select a Template</FormLabel>
-                            <FormControl>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {okrTemplates.map((template) => {
-                                  let icon;
-                                  switch(template.id) {
-                                    case 'startup':
-                                      icon = <Rocket className="h-10 w-10 text-blue-600 mb-2" />;
-                                      break;
-                                    case 'sales':
-                                      icon = <BarChart3 className="h-10 w-10 text-green-600 mb-2" />;
-                                      break;
-                                    case 'product':
-                                      icon = <Landmark className="h-10 w-10 text-purple-600 mb-2" />;
-                                      break;
-                                    default:
-                                      icon = <Target className="h-10 w-10 text-blue-600 mb-2" />;
-                                  }
-
-                                  return (
-                                    <div 
-                                      key={template.id}
-                                      className={`border rounded-lg p-4 cursor-pointer transition-all hover:bg-gray-50 ${
-                                        field.value === template.id 
-                                          ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                          : "border-gray-200"
-                                      }`}
-                                      onClick={() => field.onChange(template.id)}
-                                    >
-                                      <div className="flex justify-end">
-                                        {field.value === template.id && (
-                                          <div className="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center">
-                                            <Check className="h-4 w-4" />
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className="text-center mb-3">
-                                        {icon}
-                                      </div>
-                                      <div className="text-center">
-                                        <div className="font-medium mb-1">{template.name}</div>
-                                        <div className="text-sm text-gray-500">
-                                          {template.description}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
-                    <div className="pt-4">
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
-                        <div className="flex gap-3 items-start">
-                          <div className="rounded-full bg-amber-100 p-2 text-amber-600 mt-0.5">
-                            <FileUp className="h-4 w-4" />
-                          </div>
-                          <div className="w-full">
-                            <h4 className="font-medium text-amber-800 mb-1">Import OKRs from CSV</h4>
-                            <p className="text-sm text-amber-700 mb-3">
-                              Import your existing objectives and key results from a CSV file
-                            </p>
-
-                            <CSVImport 
-                              templateFields={[
-                                "objective_title", 
-                                "objective_description", 
-                                "key_result_title", 
-                                "key_result_description", 
-                                "key_result_start_value", 
-                                "key_result_target_value"
-                              ]}
-                              templateName="OKRs"
-                              onImport={(data) => {
-                                // Show success toast
-                                toast({
-                                  title: "OKRs imported",
-                                  description: `Successfully imported ${data.length} OKR entries. These will be processed when you finish creating your organization.`,
-                                  variant: "default"
-                                });
-
-                                // Set createInitialOKRs to true since we're importing OKRs
-                                form.setValue("setup.createInitialOKRs", true);
-                                form.setValue("setup.importedOKRs", data);
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
                 <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
                   <CardContent className="pt-6">
@@ -1554,7 +1114,7 @@ export default function TenantOnboardingWizard() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform</h3>
+                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform!</h3>
                         <p className="text-gray-600 mb-3">
                           You're all set to create your organization. Click the button below to finish setup and start tracking your objectives and key results.
                         </p>
@@ -1565,10 +1125,108 @@ export default function TenantOnboardingWizard() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
+                        <Target className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <CardTitle>Initial OKRs</CardTitle>
+                        <CardDescription>Start with a template or import your existing OKRs</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-6 pb-8">
+                    <FormField
+                      control={form.control}
+                      name="setup.createInitialOKRs"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-base font-medium">Create initial OKRs</FormLabel>
+                            <FormDescription>
+                              Start with pre-defined OKRs based on a template or import your existing objectives
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {createInitialOKRs && (
+                      <div className="space-y-6 mt-6">
+                        <FormField
+                          control={form.control}
+                          name="setup.template"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>OKR Template</FormLabel>
+                              <FormDescription className="mb-3">
+                                Choose a template that matches your organization's focus
+                              </FormDescription>
+                              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+                                {okrTemplates.map((template) => (
+                                  <FormItem
+                                    key={template.id}
+                                    className="flex"
+                                  >
+                                    <FormControl>
+                                      <RadioGroup 
+                                        onValueChange={field.onChange} 
+                                        defaultValue={field.value}
+                                        className="flex"
+                                      >
+                                        <div 
+                                          className={cn(
+                                            "border-2 rounded-lg p-4 cursor-pointer flex-1 transition-all",
+                                            field.value === template.id 
+                                              ? "border-primary bg-primary/5" 
+                                              : "border-gray-200 hover:border-gray-300 bg-white"
+                                          )}
+                                          onClick={() => field.onChange(template.id)}
+                                        >
+                                          <div className="mb-2 flex justify-between">
+                                            <div>
+                                              <h4 className="font-medium">{template.name}</h4>
+                                              <p className="text-sm text-gray-500">{template.description}</p>
+                                            </div>
+                                            <RadioGroupItem value={template.id} className="mt-1" />
+                                          </div>
+                                        </div>
+                                      </RadioGroup>
+                                    </FormControl>
+                                  </FormItem>
+                                ))}
+                              </div>
+                              <Separator className="my-6" />
+                              <div className="mb-4">
+                                <h4 className="text-base font-medium mb-1">Import Your OKRs</h4>
+                                <p className="text-sm text-gray-500 mb-4">
+                                  Already have OKRs? Import them from a CSV file
+                                </p>
+                                <CSVImport onDataImported={handleImportOKRs} />
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
 
             {/* Navigation buttons */}
+            <span>Test {JSON.stringify(form.formState.errors)}</span>
             <div className="flex justify-between mt-8">
               <Button
                 type="button"
@@ -1583,7 +1241,12 @@ export default function TenantOnboardingWizard() {
               {activeIndex < steps.length - 1 ? (
                 <Button
                   type="button"
-                  onClick={goToNextStep}
+                  onClick={() => {
+                    const nextIndex = activeIndex + 1;
+                    if (nextIndex < steps.length) {
+                      setActivePage(steps[nextIndex].id);
+                    }
+                  }}
                   disabled={!isCurrentStepValid()}
                 >
                   Next
