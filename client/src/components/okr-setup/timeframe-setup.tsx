@@ -234,13 +234,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         }
       }
       
-      // Clear the timeframes list since they're now in the database
+      // After saving, refresh the existing timeframes list
+      await refetchTimeframes();
+      
+      // Clear the local draft timeframes list since they're now in the database
       setTimeframes([]);
       
       toast({
         title: "Success!",
         description: `${saveCount} timeframes have been saved to the database.`
       });
+      
+      // Switch to the "view" tab to show the saved timeframes
+      setActiveTab("view");
     } catch (error) {
       toast({
         title: "Error",
