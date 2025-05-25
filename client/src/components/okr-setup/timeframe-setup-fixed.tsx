@@ -116,6 +116,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     const monthNum = getMonthNumber(startMonth);
     const duration = getCadenceDuration(primaryCadence);
     
+    // Get the cadence ID for the primary cadence
+    const primaryCadenceId = findCadenceId(primaryCadence);
+    
     // Create timeframes for the current year
     const defaultTimeframes = [];
     
@@ -191,8 +194,75 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     return defaultTimeframes;
   };
   
+  // Create default cadences if none exist
+  const createDefaultCadences = async () => {
+    if (tenantCadences.length === 0) {
+      try {
+        const defaultCadences = [
+          {
+            name: "Annual",
+            description: "Yearly planning cycle",
+            period: "annual",
+            tenantId
+          },
+          {
+            name: "Half-Yearly",
+            description: "6-month planning cycle",
+            period: "halfYearly",
+            tenantId
+          },
+          {
+            name: "Quarterly",
+            description: "3-month planning cycle",
+            period: "quarterly",
+            tenantId
+          },
+          {
+            name: "Trimester",
+            description: "4-month planning cycle",
+            period: "trimester",
+            tenantId
+          }
+        ];
+        
+        // Save default cadences to database
+        for (const cadence of defaultCadences) {
+          await apiRequest("POST", "/api/cadences", cadence);
+        }
+        
+        // Refresh cadences
+        queryClient.invalidateQueries({ queryKey: [`/api/cadences?tenantId=${tenantId}`] });
+        
+        toast({
+          title: "Default cadences created",
+          description: "Created standard planning cadences for your organization."
+        });
+        
+        // Return true to indicate cadences were created
+        return true;
+      } catch (error) {
+        console.error("Failed to create default cadences:", error);
+        return false;
+      }
+    }
+    return false;
+  };
+
   // When Apply Default Timeframes button is clicked
-  const handleApplyDefaultTimeframes = () => {
+  const handleApplyDefaultTimeframes = async () => {
+    // First ensure we have cadences available for the timeframes
+    if (tenantCadences.length === 0) {
+      const cadencesCreated = await createDefaultCadences();
+      if (!cadencesCreated) {
+        toast({
+          title: "Couldn't create cadences",
+          description: "Please try again or create timeframes manually.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     const defaultFrames = createDefaultTimeframes();
     setTimeframes(defaultFrames);
     
