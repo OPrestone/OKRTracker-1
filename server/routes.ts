@@ -2644,7 +2644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/objectives/:id", withTenant, async (req, res, next) => {
+  app.get("/api/objectives/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
       const objective = await storage.getObjective(id);
@@ -2990,7 +2990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Key Results API
-  app.get("/api/objectives/:objectiveId/key-results", async (req, res, next) => {
+  app.get("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const objectiveId = req.params.objectiveId;
       const keyResults = await storage.getKeyResultsByObjective(objectiveId);
