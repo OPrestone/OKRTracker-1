@@ -228,7 +228,7 @@ export default function MyOKRs() {
                 <Card 
                   key={okr.id} 
                   className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/objective/${okr.id}`)}
+                  onClick={() => navigate(`/objectives/${okr.id}`)}
                 >
                   <CardHeader>
                     <div className="flex justify-between items-start">
