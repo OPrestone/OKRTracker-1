@@ -43,11 +43,14 @@ import {
   Activity,
   ThumbsUp,
   CalendarDays,
-  UserPlus
+  UserPlus,
+  Plus,
+  ListPlus
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
+import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTenantContext } from "@/hooks/use-tenant-context";
@@ -115,6 +118,14 @@ export default function TeamDetailPage() {
   // State for modal controls
   const [isCreateObjectiveModalOpen, setIsCreateObjectiveModalOpen] = useState(false);
   const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
+  const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string | null>(null);
+  
+  // Function to handle opening the Add Key Result modal
+  const handleAddKeyResult = (objectiveId: string) => {
+    setSelectedObjectiveId(objectiveId);
+    setIsAddKeyResultModalOpen(true);
+  };
   
   // Use the centralized team context for instant data access
   const { teams, isLoading: teamsContextLoading, error: teamsContextError, refetchTeams, setTeamLeader } = useTeams();
@@ -1065,9 +1076,20 @@ export default function TeamDetailPage() {
                                     </div>
                                   </div>
                                   
-                                  {objective.assignee && (
-                                    <Avatar className="h-8 w-8">
-                                      {objective.assignee.avatarUrl ? (
+                                  <div className="flex items-center space-x-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 px-2 text-xs"
+                                      onClick={() => handleAddKeyResult(objective.id)}
+                                    >
+                                      <ListPlus className="h-3.5 w-3.5 mr-1" />
+                                      Add KR
+                                    </Button>
+                                    
+                                    {objective.assignee && (
+                                      <Avatar className="h-8 w-8">
+                                        {objective.assignee.avatarUrl ? (
                                         <AvatarImage 
                                           src={objective.assignee.avatarUrl} 
                                           alt={`${objective.assignee.firstName} ${objective.assignee.lastName}`} 
@@ -1469,6 +1491,15 @@ export default function TeamDetailPage() {
         teamId={team?.id || ""}
         currentMembers={members || []}
       />
+
+      {/* Add Key Result Dialog */}
+      {selectedObjectiveId && (
+        <AddKeyResultDialog
+          objectiveId={parseInt(selectedObjectiveId)}
+          open={isAddKeyResultModalOpen}
+          onOpenChange={setIsAddKeyResultModalOpen}
+        />
+      )}
     </DashboardLayout>
   );
 }
