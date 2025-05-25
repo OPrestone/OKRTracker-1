@@ -231,9 +231,14 @@ export function setupConfigRoutes(router: Router) {
                 ? userData.role.toLowerCase() 
                 : 'member';
               
+              // Make sure the user-tenant relationship ID is unique
+              const relationshipId = ulid();
+              
+              // Use proper SQL with all needed fields
               await db.execute(
-                `INSERT INTO users_to_tenants (user_id, tenant_id, role) VALUES (?, ?, ?)`,
-                [newUser[0].id, tenantId, userRole]
+                `INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [relationshipId, newUser[0].id, tenantId, userRole, true, new Date()]
               );
               
               console.log(`Added user ${newUserData.username} to tenant with role: ${userRole}`);
