@@ -50,8 +50,21 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     isLoading: isLoadingTimeframes,
     refetch: refetchTimeframes 
   } = useQuery<Timeframe[]>({
-    queryKey: [`/api/timeframes/${tenantId}`],
+    queryKey: [`/api/timeframes?tenantId=${tenantId}`],
     enabled: !!tenantId,
+  });
+  
+  // Fetch cadences for this tenant
+  const { 
+    data: tenantCadences = [], 
+    isLoading: isLoadingCadences 
+  } = useQuery({
+    queryKey: [`/api/cadences?tenantId=${tenantId}`],
+    enabled: !!tenantId,
+    select: (data) => {
+      console.log("Fetched tenant cadences:", data);
+      return Array.isArray(data) ? data : [];
+    }
   });
   
   // New timeframe form state
@@ -60,6 +73,7 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     description: "",
     startDate: new Date(),
     endDate: addMonths(new Date(), 3), // Default to 3 months for quarterly
+    cadenceId: "", // Added cadence ID field
   });
 
   // Helper to get month number from name
@@ -82,6 +96,19 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     }
   };
 
+  // Find corresponding cadence from the tenant's cadences
+  const findCadenceId = (cadenceType: string) => {
+    if (!tenantCadences || tenantCadences.length === 0) return null;
+    
+    // Try to find by period or name
+    const cadence = tenantCadences.find(c => 
+      c.period?.toLowerCase() === cadenceType.toLowerCase() || 
+      c.name?.toLowerCase() === cadenceType.toLowerCase()
+    );
+    
+    return cadence?.id || null;
+  };
+
   // Create default timeframes based on primary cadence and start month
   const createDefaultTimeframes = () => {
     const now = new Date();
@@ -93,6 +120,9 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
     const defaultTimeframes = [];
     
     if (primaryCadence === "quarterly") {
+      // Find quarterly cadence ID
+      const quarterlyCadenceId = findCadenceId("quarterly");
+      
       // Create 4 quarters
       for (let i = 0; i < 4; i++) {
         const startDate = new Date(year, monthNum + (i * 3), 1);
@@ -103,9 +133,13 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
+          cadenceId: quarterlyCadenceId
         });
       }
     } else if (primaryCadence === "annual") {
+      // Find annual cadence ID
+      const annualCadenceId = findCadenceId("annual");
+      
       // Create annual timeframe
       const startDate = new Date(year, monthNum, 1);
       const endDate = new Date(year + 1, monthNum, 0);
@@ -115,8 +149,12 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
         startDate,
         endDate,
         tenantId,
+        cadenceId: annualCadenceId
       });
     } else if (primaryCadence === "halfYearly") {
+      // Try to find half-yearly cadence ID
+      const halfYearlyCadenceId = findCadenceId("halfYearly") || findCadenceId("half-yearly");
+      
       // Create 2 half-year timeframes
       for (let i = 0; i < 2; i++) {
         const startDate = new Date(year, monthNum + (i * 6), 1);
@@ -127,9 +165,13 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
+          cadenceId: halfYearlyCadenceId
         });
       }
     } else if (primaryCadence === "trimester") {
+      // Try to find trimester cadence ID
+      const trimesterCadenceId = findCadenceId("trimester");
+      
       // Create 3 trimesters
       for (let i = 0; i < 3; i++) {
         const startDate = new Date(year, monthNum + (i * 4), 1);
@@ -140,10 +182,12 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
           startDate,
           endDate,
           tenantId,
+          cadenceId: trimesterCadenceId
         });
       }
     }
     
+    console.log("Created default timeframes with cadence connections:", defaultTimeframes);
     return defaultTimeframes;
   };
   
