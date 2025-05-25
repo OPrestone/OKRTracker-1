@@ -218,7 +218,33 @@ export function setupConfigRoutes(router: Router) {
               });
               
               if (existingUser) {
-                console.log(`User with email ${userData.email} already exists, skipping`);
+                console.log(`User with email ${userData.email} already exists, checking tenant relationship`);
+                
+                // Check if user is already in this tenant
+                const existingRelation = await db.execute(
+                  `SELECT * FROM users_to_tenants WHERE user_id = ? AND tenant_id = ?`,
+                  [existingUser.id, tenantId]
+                );
+                
+                // If relation doesn't exist, add user to this tenant
+                if (!existingRelation.rows || existingRelation.rows.length === 0) {
+                  const userRole = userData.role && ['admin', 'member', 'viewer'].includes(userData.role.toLowerCase()) 
+                    ? userData.role.toLowerCase() 
+                    : 'member';
+                  
+                  const relationshipId = ulid();
+                  
+                  await db.execute(
+                    `INSERT INTO users_to_tenants (id, user_id, tenant_id, role, is_default, created_at) 
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [relationshipId, existingUser.id, tenantId, userRole, false, new Date()]
+                  );
+                  
+                  console.log(`Added existing user ${existingUser.username} to tenant with role: ${userRole}`);
+                } else {
+                  console.log(`User ${existingUser.username} already belongs to this tenant, skipping`);
+                }
+                
                 continue;
               }
               
