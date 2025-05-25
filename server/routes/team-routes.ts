@@ -6,7 +6,41 @@ import { z } from "zod";
 
 export function setupTeamRoutes(router: Router) {
   // Update team leader
-  router.put("/teams/:id/leader", async (req: Request, res: Response, next: NextFunction) => {
+  router.put("/teams/:id/leader", 
+    // Add authentication and tenant middleware
+    (req: Request, res: Response, next: NextFunction) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      next();
+    },
+    // Add tenant context middleware
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ error: "User ID not found" });
+        }
+
+        // Get user's tenants
+        const userTenants = await db
+          .select()
+          .from(usersToTenants)
+          .where(eq(usersToTenants.userId, userId));
+
+        if (userTenants.length === 0) {
+          return res.status(403).json({ error: "User does not belong to any tenant" });
+        }
+
+        // Use the first (default) tenant for simplicity
+        req.tenantId = userTenants[0].tenantId;
+        next();
+      } catch (error) {
+        console.error("Error setting tenant context:", error);
+        res.status(500).json({ error: "Server error" });
+      }
+    },
+    async (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.params.id;
       const tenantId = req.tenantId!;
