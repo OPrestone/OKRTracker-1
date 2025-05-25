@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,8 @@ import {
   Megaphone, 
   Briefcase, 
   Code, 
-  Save 
+  Save,
+  Building
 } from "lucide-react";
 
 // Comprehensive industry list for organization selection
@@ -1684,8 +1685,8 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="salesTeamIcon" defaultValue="briefcase" disabled={addedTeams.some(team => team.name.includes("Sales"))}>
-                                  <SelectTrigger className="border-gray-200">
+                                <Select defaultValue="briefcase" disabled={addedTeams.some(team => team.name.includes("Sales"))}>
+                                  <SelectTrigger className="border-gray-200" id="salesTeamIcon">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -1895,8 +1896,8 @@ export default function TenantOnboardingWizard() {
                             <div className="flex items-center">
                               <span className="text-sm font-medium text-gray-500 w-24">Icon:</span>
                               <div className="flex-1">
-                                <Select id="engineeringTeamIcon" defaultValue="code" disabled={addedTeams.some(team => team.name.includes("Engineering"))}>
-                                  <SelectTrigger className="border-gray-200">
+                                <Select defaultValue="code" disabled={addedTeams.some(team => team.name.includes("Engineering"))}>
+                                  <SelectTrigger className="border-gray-200" id="engineeringTeamIcon">
                                     <SelectValue placeholder="Select an icon" />
                                   </SelectTrigger>
                                   <SelectContent>
