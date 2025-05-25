@@ -1255,9 +1255,9 @@ export default function TenantOnboardingWizard() {
                   <p className="text-gray-500">You are almost done</p>
                 </div>
 
-                <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
+                <Card className="overflow-hidden">
+                  <CardContent className="pt-6 pb-8 relative">
+                    {/* Setup content goes here */}
                       <div className="w-full bg-white border border-blue-100 rounded-xl shadow-sm overflow-hidden marketing-team-card">
                         <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                           <div className="flex items-center justify-between">
