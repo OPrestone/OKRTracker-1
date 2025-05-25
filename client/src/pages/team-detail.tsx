@@ -123,6 +123,7 @@ export default function TeamDetailPage() {
   
   // Function to handle opening the Add Key Result modal
   const handleAddKeyResult = (objectiveId: string) => {
+    console.log("Opening Add Key Result modal for objective:", objectiveId);
     setSelectedObjectiveId(objectiveId);
     setIsAddKeyResultModalOpen(true);
   };
