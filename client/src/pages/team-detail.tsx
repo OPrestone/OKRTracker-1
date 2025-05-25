@@ -264,6 +264,43 @@ export default function TeamDetailPage() {
     }
   ];
 
+  // Handle setting a user as team leader
+  const handleMakeTeamLead = async (userId: string) => {
+    if (!team?.id || !tenantId) return;
+    
+    try {
+      const response = await fetch(`/api/teams/${team.id}/leader`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        },
+        body: JSON.stringify({ leaderId: userId }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update team leader');
+      }
+      
+      // Show success message
+      toast({
+        title: "Team Leader Updated",
+        description: "The team leader has been successfully updated.",
+      });
+      
+      // Invalidate team query to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/teams", team.id, tenantId] });
+      
+    } catch (error) {
+      toast({
+        title: "Error Updating Team Leader",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleGoBack = () => {
     // If we have a tenant ID, navigate back to the tenant-specific teams page
     if (tenantId) {
@@ -1089,6 +1126,20 @@ export default function TeamDetailPage() {
                                   <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
                                     {member.role || "Member"}
                                   </Badge>
+                                  {member.id === team?.leaderId && (
+                                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                                      Team Lead
+                                    </Badge>
+                                  )}
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleMakeTeamLead(member.id)}
+                                    disabled={member.id === team?.leaderId}
+                                    className="ml-auto"
+                                  >
+                                    {member.id === team?.leaderId ? "Current Lead" : "Make Lead"}
+                                  </Button>
                                 </div>
                               </div>
                             </CardContent>
