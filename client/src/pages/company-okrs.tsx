@@ -74,12 +74,6 @@ export default function CompanyOKRs() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   
-  // Navigate to objective details page
-  const navigateToObjective = (objectiveId: number) => {
-    const tenantId = user?.defaultTenant || "";
-    navigate(`/${tenantId}/objectives/${objectiveId}`);
-  };
-  
   // State for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
@@ -87,8 +81,7 @@ export default function CompanyOKRs() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedTimeframes, setSelectedTimeframes] = useState<number[]>([]);
 
-  // Get auth context
-  const { user } = useAuth();
+  // Use the auth context from above
   const isAuthenticated = !!user;
 
 
