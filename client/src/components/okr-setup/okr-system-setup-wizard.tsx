@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,7 +13,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, Users2, Layers, Zap, Loader2, Check, User } from "lucide-react";
+import { 
+  ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
+  Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
+  AlertCircle, UserPlus, ChevronDown, X
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import TimeframeSetup from "./timeframe-setup";
 
 // Team interface
@@ -25,6 +40,86 @@ interface Team {
   color?: string;
   selected?: boolean;
 }
+
+// User interface for CSV upload
+interface UserImport {
+  email: string;
+  name?: string;
+  role: string;
+  department?: string;
+  team?: string;
+  isValid: boolean;
+  error?: string;
+}
+
+// Default team template interface
+interface TeamTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+// Default team templates for quick selection
+const defaultTeamTemplates: TeamTemplate[] = [
+  {
+    id: "marketing",
+    name: "Marketing Team",
+    description: "Team responsible for brand, communications and marketing campaigns",
+    icon: "megaphone",
+    color: "#3B82F6", // Blue
+  },
+  {
+    id: "sales",
+    name: "Sales Team",
+    description: "Team responsible for sales and revenue growth",
+    icon: "briefcase",
+    color: "#10B981", // Green
+  },
+  {
+    id: "engineering",
+    name: "Engineering Team",
+    description: "Team responsible for product development and technical operations",
+    icon: "code",
+    color: "#8B5CF6", // Purple
+  },
+  {
+    id: "product",
+    name: "Product Team",
+    description: "Team responsible for product strategy and roadmap",
+    icon: "layers",
+    color: "#F59E0B", // Amber
+  },
+  {
+    id: "operations",
+    name: "Operations Team",
+    description: "Team responsible for business operations and logistics",
+    icon: "settings",
+    color: "#6B7280", // Gray
+  },
+  {
+    id: "hr",
+    name: "Human Resources",
+    description: "Team responsible for talent acquisition and employee development",
+    icon: "users",
+    color: "#EC4899", // Pink
+  },
+  {
+    id: "finance",
+    name: "Finance Team",
+    description: "Team responsible for financial planning and analysis",
+    icon: "dollar-sign",
+    color: "#059669", // Emerald
+  },
+  {
+    id: "customer-success",
+    name: "Customer Success",
+    description: "Team responsible for customer satisfaction and retention",
+    icon: "heart",
+    color: "#EF4444", // Red
+  },
+];
 
 // Team Selection Component
 const TeamSelectionSection = ({ 
@@ -200,6 +295,9 @@ const formSchema = z.object({
     enableCrossTeamObjectives: z.boolean().default(true),
     defaultVisibility: z.enum(["public", "team", "private"]).default("public"),
     selectedTeams: z.array(z.string()).default([]),
+    defaultTeams: z.array(z.string()).default([]),
+    csvUsers: z.array(z.any()).default([]),
+    useDefaultTeams: z.boolean().default(false),
   }),
   integrations: z.object({
     enableSlackIntegration: z.boolean().default(false),
@@ -228,12 +326,172 @@ export default function OKRSystemSetupWizard() {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
+  const [csvData, setCsvData] = useState<UserImport[]>([]);
+  const [showCsvPreview, setShowCsvPreview] = useState(false);
+  const [isProcessingCsv, setIsProcessingCsv] = useState(false);
+  const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
+  
+  // Function to handle CSV file upload
+  const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setIsProcessingCsv(true);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text) {
+        setIsProcessingCsv(false);
+        return;
+      }
+      
+      // Process CSV data
+      processCsvData(text);
+    };
+    
+    reader.onerror = () => {
+      toast({
+        title: "Error",
+        description: "Failed to read the CSV file. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessingCsv(false);
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  // Function to process CSV data
+  const processCsvData = (csvText: string) => {
+    try {
+      // Split by newlines and handle different newline formats
+      const lines = csvText.split(/\r\n|\n|\r/).filter(line => line.trim() !== '');
+      
+      if (lines.length === 0) {
+        throw new Error("CSV file is empty");
+      }
+      
+      // Get headers from first line
+      const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+      
+      // Validate required headers
+      const requiredHeaders = ['email'];
+      const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+      
+      if (missingHeaders.length > 0) {
+        throw new Error(`Missing required headers: ${missingHeaders.join(', ')}`);
+      }
+      
+      // Process each line to extract user data
+      const users: UserImport[] = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(val => val.trim());
+        
+        // Skip empty lines
+        if (values.every(val => val === '')) continue;
+        
+        // Create user object
+        const user: UserImport = {
+          email: '',
+          role: 'member', // Default role
+          isValid: true,
+          error: undefined,
+        };
+        
+        // Map CSV values to user object
+        headers.forEach((header, index) => {
+          if (index < values.length) {
+            const value = values[index];
+            
+            switch (header) {
+              case 'email':
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                user.email = value;
+                if (!emailRegex.test(value)) {
+                  user.isValid = false;
+                  user.error = 'Invalid email format';
+                }
+                break;
+              case 'name':
+                user.name = value;
+                break;
+              case 'role':
+                // Normalize role values
+                const normalizedRole = value.toLowerCase();
+                if (['admin', 'member', 'viewer'].includes(normalizedRole)) {
+                  user.role = normalizedRole;
+                } else {
+                  user.role = 'member'; // Default to member for invalid roles
+                }
+                break;
+              case 'department':
+                user.department = value;
+                break;
+              case 'team':
+                user.team = value;
+                break;
+            }
+          }
+        });
+        
+        // Check if email is empty
+        if (!user.email) {
+          user.isValid = false;
+          user.error = 'Email is required';
+        }
+        
+        users.push(user);
+      }
+      
+      // Update state with processed data
+      setCsvData(users);
+      
+      // Update form state
+      form.setValue("teamConfiguration.csvUsers", users);
+      
+      // Show toast notification
+      toast({
+        title: "CSV Processed",
+        description: `Successfully processed ${users.length} users (${users.filter(u => u.isValid).length} valid)`,
+      });
+      
+      // Show preview
+      setShowCsvPreview(true);
+    } catch (error) {
+      console.error("CSV Processing Error:", error);
+      toast({
+        title: "CSV Processing Error",
+        description: error instanceof Error ? error.message : "Failed to process CSV file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingCsv(false);
+    }
+  };
+  
+  // Function to handle default team selection
+  const handleDefaultTeamSelection = (templateId: string) => {
+    setSelectedDefaultTeams(prev => {
+      // Toggle selection
+      const newSelection = prev.includes(templateId)
+        ? prev.filter(id => id !== templateId)
+        : [...prev, templateId];
+      
+      // Update form state
+      form.setValue("teamConfiguration.defaultTeams", newSelection);
+      return newSelection;
+    });
+  };
 
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -265,6 +523,9 @@ export default function OKRSystemSetupWizard() {
         enableCrossTeamObjectives: true,
         defaultVisibility: "public",
         selectedTeams: [] as string[],
+        defaultTeams: [] as string[],
+        csvUsers: [] as any[],
+        useDefaultTeams: false,
       },
       integrations: {
         enableSlackIntegration: false,
@@ -1254,7 +1515,210 @@ export default function OKRSystemSetupWizard() {
                           </label>
                         </div>
                         
-                        {/* Team Selection Section */}
+                        {/* Default Team Templates Section */}
+                        <div className="mt-6 border-t pt-6">
+                          <h3 className="text-lg font-medium mb-4">Quick Start with Default Teams</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Select pre-configured team templates to quickly set up your organization structure. 
+                            These teams will be created automatically when you save your OKR system setup.
+                          </p>
+                          
+                          <div className="flex items-center space-x-2 mb-6">
+                            <Checkbox
+                              id="useDefaultTeams"
+                              checked={form.getValues("teamConfiguration.useDefaultTeams")}
+                              onCheckedChange={(checked) => 
+                                form.setValue("teamConfiguration.useDefaultTeams", checked as boolean)
+                              }
+                            />
+                            <label 
+                              htmlFor="useDefaultTeams"
+                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Use default team templates
+                            </label>
+                          </div>
+                          
+                          {form.getValues("teamConfiguration.useDefaultTeams") && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                              {defaultTeamTemplates.map((template) => (
+                                <div 
+                                  key={template.id}
+                                  className={`border rounded-md p-4 cursor-pointer transition-all ${
+                                    selectedDefaultTeams.includes(template.id) 
+                                      ? 'border-primary bg-primary/5' 
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                  onClick={() => handleDefaultTeamSelection(template.id)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div 
+                                      className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                                      style={{ backgroundColor: template.color }}
+                                    >
+                                      <span className="text-lg">{template.icon === 'megaphone' ? '📣' : 
+                                                                 template.icon === 'code' ? '💻' :
+                                                                 template.icon === 'briefcase' ? '💼' :
+                                                                 template.icon === 'layers' ? '📚' :
+                                                                 template.icon === 'settings' ? '⚙️' :
+                                                                 template.icon === 'users' ? '👥' :
+                                                                 template.icon === 'dollar-sign' ? '💰' :
+                                                                 template.icon === 'heart' ? '❤️' : '📋'}</span>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                      <h4 className="font-medium">{template.name}</h4>
+                                      <p className="text-sm text-gray-500 truncate">{template.description}</p>
+                                    </div>
+                                    
+                                    <div className="flex-shrink-0">
+                                      {selectedDefaultTeams.includes(template.id) ? (
+                                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                          <Check className="h-4 w-4 text-white" />
+                                        </div>
+                                      ) : (
+                                        <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* CSV User Upload Section */}
+                        <div className="mt-6 border-t pt-6">
+                          <h3 className="text-lg font-medium mb-4">Upload Users via CSV</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Upload a CSV file with user information to add multiple users at once. 
+                            The CSV should have the following columns: email (required), name, role, department, team.
+                          </p>
+                          
+                          <div className="space-y-4">
+                            <div className="flex flex-col space-y-2">
+                              <label htmlFor="csv-upload" className="text-sm font-medium text-gray-700">
+                                Upload CSV File
+                              </label>
+                              <input
+                                ref={fileInputRef}
+                                id="csv-upload"
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={handleCsvUpload}
+                              />
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  disabled={isProcessingCsv}
+                                  className="w-full md:w-auto"
+                                >
+                                  {isProcessingCsv ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="mr-2 h-4 w-4" />
+                                      Choose CSV File
+                                    </>
+                                  )}
+                                </Button>
+                                
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Download sample CSV template
+                                    const sample = "email,name,role,department,team\njohn@example.com,John Doe,member,Marketing,Marketing Team\njane@example.com,Jane Smith,admin,Engineering,Engineering Team";
+                                    const blob = new Blob([sample], { type: 'text/csv' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = 'user_import_template.csv';
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(url);
+                                  }}
+                                  className="w-full md:w-auto"
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Download Template
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {/* CSV Data Preview */}
+                            {showCsvPreview && csvData.length > 0 && (
+                              <div className="mt-4 border rounded-md overflow-hidden">
+                                <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
+                                  <h4 className="font-medium">CSV Preview - {csvData.length} users</h4>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setCsvData([]);
+                                      form.setValue("teamConfiguration.csvUsers", []);
+                                      setShowCsvPreview(false);
+                                      if (fileInputRef.current) fileInputRef.current.value = '';
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                      <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {csvData.map((user, index) => (
+                                        <tr key={index} className={!user.isValid ? 'bg-red-50' : ''}>
+                                          <td className="px-4 py-2 whitespace-nowrap">
+                                            {user.isValid ? (
+                                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                            ) : (
+                                              <TooltipProvider>
+                                                <Tooltip>
+                                                  <TooltipTrigger>
+                                                    <AlertCircle className="h-4 w-4 text-red-500" />
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p>{user.error}</p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                          </td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.email}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.name || '-'}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.role}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.department || '-'}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.team || '-'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Existing Teams Section */}
                         <div className="mt-6 border-t pt-6">
                           <h3 className="text-lg font-medium mb-4">Select Teams to Include in OKR System</h3>
                           <p className="text-sm text-gray-600 mb-4">
