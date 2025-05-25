@@ -395,11 +395,10 @@ export default function TenantOnboardingWizard() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Steps configuration - team step removed
+  // Steps configuration - team step and setup step removed
   const steps = [
     { id: "organization", label: "Organization", icon: Building2 },
-    { id: "plan", label: "Subscription", icon: CreditCard },
-    { id: "setup", label: "Initial Setup", icon: Rocket }
+    { id: "plan", label: "Subscription", icon: CreditCard }
   ];
 
   // Find active step index
@@ -680,12 +679,6 @@ export default function TenantOnboardingWizard() {
       return !errors.orgDetails;
     } else if (activePage === "plan") {
       return !errors.plan && agreeToTerms;
-    } else if (activePage === "setup") {
-      // Setup validation is optional, but if createInitialOKRs is checked, then validation applies
-      if (createInitialOKRs) {
-        return !errors.setup;
-      }
-      return true;
     }
     
     return true;
@@ -1100,129 +1093,7 @@ export default function TenantOnboardingWizard() {
                 </Card>
               </TabsContent>
 
-              {/* Initial Setup */}
-              <TabsContent value="setup" className="mt-0 space-y-6">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Final Step</h2>
-                  <p className="text-gray-500">You are almost done</p>
-                </div>
 
-                <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-emerald-100 text-emerald-700 rounded-full p-3 mt-1">
-                        <Zap className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform!</h3>
-                        <p className="text-gray-600 mb-3">
-                          You're all set to create your organization. Click the button below to finish setup and start tracking your objectives and key results.
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          You can always update these settings later from your organization's admin panel.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
-                        <Target className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <CardTitle>Initial OKRs</CardTitle>
-                        <CardDescription>Start with a template or import your existing OKRs</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-6 pb-8">
-                    <FormField
-                      control={form.control}
-                      name="setup.createInitialOKRs"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-6">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="text-base font-medium">Create initial OKRs</FormLabel>
-                            <FormDescription>
-                              Start with pre-defined OKRs based on a template or import your existing objectives
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-
-                    {createInitialOKRs && (
-                      <div className="space-y-6 mt-6">
-                        <FormField
-                          control={form.control}
-                          name="setup.template"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>OKR Template</FormLabel>
-                              <FormDescription className="mb-3">
-                                Choose a template that matches your organization's focus
-                              </FormDescription>
-                              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-                                {okrTemplates.map((template) => (
-                                  <FormItem
-                                    key={template.id}
-                                    className="flex"
-                                  >
-                                    <FormControl>
-                                      <RadioGroup 
-                                        onValueChange={field.onChange} 
-                                        defaultValue={field.value}
-                                        className="flex"
-                                      >
-                                        <div 
-                                          className={cn(
-                                            "border-2 rounded-lg p-4 cursor-pointer flex-1 transition-all",
-                                            field.value === template.id 
-                                              ? "border-primary bg-primary/5" 
-                                              : "border-gray-200 hover:border-gray-300 bg-white"
-                                          )}
-                                          onClick={() => field.onChange(template.id)}
-                                        >
-                                          <div className="mb-2 flex justify-between">
-                                            <div>
-                                              <h4 className="font-medium">{template.name}</h4>
-                                              <p className="text-sm text-gray-500">{template.description}</p>
-                                            </div>
-                                            <RadioGroupItem value={template.id} className="mt-1" />
-                                          </div>
-                                        </div>
-                                      </RadioGroup>
-                                    </FormControl>
-                                  </FormItem>
-                                ))}
-                              </div>
-                              <Separator className="my-6" />
-                              <div className="mb-4">
-                                <h4 className="text-base font-medium mb-1">Import Your OKRs</h4>
-                                <p className="text-sm text-gray-500 mb-4">
-                                  Already have OKRs? Import them from a CSV file
-                                </p>
-                                <CSVImport onDataImported={handleImportOKRs} />
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
             </Tabs>
 
             {/* Navigation buttons */}
