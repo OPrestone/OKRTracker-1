@@ -112,7 +112,17 @@ export default function AddKeyResultDialog({
   };
 
   const onSubmit = (data: KeyResultFormValues) => {
-    addKeyResultMutation.mutate(data);
+    // Convert number values to strings as required by the API
+    const formattedData = {
+      ...data,
+      objectiveId: objectiveId,
+      startValue: String(data.startValue),
+      targetValue: String(data.targetValue),
+      currentValue: String(data.currentValue || data.startValue)
+    };
+    
+    console.log("Submitting key result with data:", formattedData);
+    addKeyResultMutation.mutate(formattedData);
   };
 
   return (
