@@ -897,12 +897,18 @@ export default function OKRSystemSetupWizard() {
       }, 1500);
     },
     onError: (error: any) => {
+      console.error("Error in OKR system setup submission:", error);
       setIsSubmitting(false);
+      
+      // Show more detailed error information
       toast({
         title: "Error Saving OKR System",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+      
+      // Log the current form values for debugging
+      console.log("Current form values:", form.getValues());
     }
   });
 
