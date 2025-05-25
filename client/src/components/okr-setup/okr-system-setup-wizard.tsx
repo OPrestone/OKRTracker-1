@@ -1005,6 +1005,81 @@ export default function OKRSystemSetupWizard() {
       
       console.log("Saving mission data:", missionData);
       
+      // First, check if cadences exist for this tenant
+      console.log("Checking if cadences exist for tenant:", tenantId);
+      const cadenceCheckResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        },
+        credentials: 'include'
+      });
+      
+      const cadenceData = await cadenceCheckResponse.json();
+      console.log("Cadence check response:", cadenceData);
+      
+      // If no cadences exist, create default ones
+      if (!cadenceData.length || cadenceData.length === 0) {
+        console.log("No cadences found, creating default cadences");
+        
+        // Create default annual timeframe
+        const annualTimeframe = {
+          name: "Annual",
+          description: "Yearly objectives and key results",
+          type: "annual",
+          start_date: new Date().toISOString(),
+          end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          tenant_id: tenantId
+        };
+        
+        // Create default quarterly timeframe
+        const quarterlyTimeframe = {
+          name: "Quarterly",
+          description: "Quarterly objectives and key results",
+          type: "quarterly",
+          start_date: new Date().toISOString(),
+          end_date: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(),
+          tenant_id: tenantId
+        };
+        
+        // Create the timeframes
+        try {
+          const annualResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Tenant-ID': tenantId
+            },
+            body: JSON.stringify(annualTimeframe),
+            credentials: 'include'
+          });
+          
+          const quarterlyResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Tenant-ID': tenantId
+            },
+            body: JSON.stringify(quarterlyTimeframe),
+            credentials: 'include'
+          });
+          
+          if (annualResponse.ok && quarterlyResponse.ok) {
+            console.log("Default cadences created successfully");
+          } else {
+            console.error("Failed to create default cadences:", 
+              await annualResponse.text(), 
+              await quarterlyResponse.text()
+            );
+          }
+        } catch (cadenceError) {
+          console.error("Error creating default cadences:", cadenceError);
+        }
+      } else {
+        console.log("Cadences already exist for this tenant:", cadenceData.length);
+      }
+      
       // Send the request to the mission API
       const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, {
         method: 'POST',
