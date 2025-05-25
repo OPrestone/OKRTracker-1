@@ -39,7 +39,7 @@ const keyResultSchema = z.object({
 type KeyResultFormValues = z.infer<typeof keyResultSchema>;
 
 interface AddKeyResultDialogProps {
-  objectiveId: number;
+  objectiveId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -70,7 +70,7 @@ export default function AddKeyResultDialog({
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       const response = await apiRequest("POST", "/api/key-results", {
         ...data,
-        objectiveId,
+        objective_id: objectiveId,
         progress: calculatedProgress
       });
       return response.json();

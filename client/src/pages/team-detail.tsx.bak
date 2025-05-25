@@ -1495,7 +1495,7 @@ export default function TeamDetailPage() {
       {/* Add Key Result Dialog */}
       {selectedObjectiveId && (
         <AddKeyResultDialog
-          objectiveId={selectedObjectiveId}
+          objectiveId={parseInt(selectedObjectiveId)}
           open={isAddKeyResultModalOpen}
           onOpenChange={setIsAddKeyResultModalOpen}
         />
