@@ -596,17 +596,61 @@ export default function TenantOnboardingWizard() {
               credentials: 'include'
             });
 
-              // Try API requests first
-              try {
-
-                if (annualResponse.ok && quarterlyResponse.ok) {
-                  console.log("Time cadences created successfully via API");
-                } else {
-                  throw new Error("API request for cadences failed");
-                }
-              } catch (apiError) {
-                console.log("Failed to create time cadences via API:", apiError);
+            // Try API requests first
+            try {
+              if (annualResponse.ok && quarterlyResponse.ok) {
+                console.log("Time cadences created successfully via API");
+              } else {
+                throw new Error("API request for cadences failed");
               }
+            } catch (apiError) {
+              console.log("Failed to create time cadences via API:", apiError);
+            }
+            
+            // Now create teams using the batch endpoint
+            try {
+              console.log("Creating teams for tenant:", tenantId);
+              console.log("Teams to create:", teams);
+              
+              // Use the batch endpoint to create all teams at once
+              const teamsResponse = await fetch('/api/teams/batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  teams: teams.map(team => ({
+                    name: team.name,
+                    description: team.description,
+                    icon: team.icon,
+                    color: team.color,
+                    leaderId: team.leaderId || null
+                  }))
+                }),
+                credentials: 'include'
+              });
+              
+              if (teamsResponse.ok) {
+                const teamsResult = await teamsResponse.json();
+                console.log("Teams created successfully:", teamsResult);
+                toast({
+                  title: "Teams Created",
+                  description: `Successfully created ${teamsResult.teams?.length || 0} teams`,
+                });
+              } else {
+                console.error("Failed to create teams:", await teamsResponse.text());
+                toast({
+                  title: "Warning",
+                  description: "Organization created but teams could not be created. You can add teams later.",
+                  variant: "destructive"
+                });
+              }
+            } catch (teamsError) {
+              console.error("Error creating teams:", teamsError);
+              toast({
+                title: "Warning",
+                description: "Organization created but teams could not be created. You can add teams later.",
+                variant: "destructive"
+              });
+            }
             return orgData;
           } else {
             console.warn(`API request failed: ${response.status} ${response.statusText}`);
