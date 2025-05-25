@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+
 // Comprehensive industry list for organization selection
 const industryOptions = [
   "Accounting",

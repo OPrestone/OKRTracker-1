@@ -925,6 +925,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create multiple teams at once
+  app.post("/api/teams/batch", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      console.log(`Creating multiple teams for tenant: ${req.tenantId}, owner: ${req.user.id}`);
+      console.log(`Request body:`, JSON.stringify(req.body));
+      
+      // Make sure we have the teams array
+      if (!req.body.teams || !Array.isArray(req.body.teams) || req.body.teams.length === 0) {
+        console.log('Teams array is required');
+        return res.status(400).json({ error: "Teams array is required and must not be empty" });
+      }
+      
+      // Additional validation for required fields
+      if (!req.tenantId) {
+        console.log('Tenant ID is missing');
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
+      const createdTeams = [];
+      
+      // Create each team
+      for (const teamData of req.body.teams) {
+        if (!teamData.name) {
+          console.log('Team name is required');
+          continue; // Skip this team but continue processing others
+        }
+        
+        try {
+          // Use the owner ID from the authenticated user and add the tenant ID
+          const validatedData = insertTeamSchema.parse({
+            ...teamData,
+            ownerId: req.user.id, // This links the team to a user in this tenant
+            tenantId: req.tenantId // Critical: Associate team with current tenant
+          });
+          
+          const team = await storage.createTeam(validatedData);
+          createdTeams.push(team);
+          console.log(`Created team: ${team.name} with ID: ${team.id}`);
+        } catch (validationError) {
+          console.error(`Validation error for team ${teamData.name}:`, validationError);
+          // Continue with other teams even if one fails
+        }
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        message: `Successfully created ${createdTeams.length} teams`,
+        teams: createdTeams 
+      });
+    } catch (error) {
+      console.error('Error in batch team creation:', error);
+      next(error);
+    }
+  });
+
   app.post("/api/teams", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       console.log(`Creating team for tenant: ${req.tenantId}, owner: ${req.user.id}`);
