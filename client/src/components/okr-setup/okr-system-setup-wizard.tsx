@@ -849,6 +849,9 @@ export default function OKRSystemSetupWizard() {
       
       console.log("Sending OKR system config with tenant ID:", tenantId);
       
+      // Format the data properly to avoid JSON parsing errors
+      const safeFormData = JSON.parse(JSON.stringify(formDataWithTenant));
+      
       // Use our new simplified endpoint which has more flexible validation
       const response = await fetch(`/api/okr-system-setup-simple?tenantId=${tenantId}`, {
         method: 'POST',
@@ -856,7 +859,7 @@ export default function OKRSystemSetupWizard() {
           'Content-Type': 'application/json',
           'X-Tenant-ID': tenantId // Add tenant ID in header for middleware
         },
-        body: JSON.stringify(formDataWithTenant),
+        body: JSON.stringify(safeFormData),
         credentials: 'include'
       });
       
