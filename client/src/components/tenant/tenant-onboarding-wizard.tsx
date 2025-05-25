@@ -395,9 +395,11 @@ export default function TenantOnboardingWizard() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Steps configuration - streamlined to one step for simplicity
+  // Steps configuration - team step removed
   const steps = [
-    { id: "organization", label: "Organization Details", icon: Building2 },
+    { id: "organization", label: "Organization", icon: Building2 },
+    { id: "plan", label: "Subscription", icon: CreditCard },
+    { id: "setup", label: "Initial Setup", icon: Rocket }
   ];
 
   // Find active step index
