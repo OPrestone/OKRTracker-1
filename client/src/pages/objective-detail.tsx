@@ -847,50 +847,52 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {objective.keyResults.map((keyResult) => (
-                    <div key={keyResult.id} className="border rounded-md p-4">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{keyResult.title}</h3>
-                            <Badge className={getStatusColor(keyResult.status)}>
-                              {getStatusText(keyResult.status)}
-                            </Badge>
+                  {objective?.keyResults?.length > 0 ? (
+                    objective.keyResults.map((keyResult) => (
+                      <div key={keyResult.id} className="border rounded-md p-4">
+                        <div className="flex justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{keyResult.title || 'Untitled Key Result'}</h3>
+                              <Badge className={getStatusColor(keyResult.status || 'not_started')}>
+                                {getStatusText(keyResult.status || 'not_started')}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3">{keyResult.description || 'No description provided'}</p>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{keyResult.description}</p>
-                        </div>
-                        <div className={`text-xl font-bold ${getProgressColorClass(keyResult.progress)}`}>
-                          {keyResult.progress}%
-                        </div>
-                      </div>
-                      
-                      <Progress value={keyResult.progress} className="h-2 mb-3" />
-                      
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            {keyResult.owner.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Due: {keyResult.dueDate}
+                          <div className={`text-xl font-bold ${getProgressColorClass(keyResult.progress || 0)}`}>
+                            {keyResult.progress || 0}%
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <BarChart3 className="h-4 w-4 mr-1" />
-                            Update Progress
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
+                        <Progress value={keyResult.progress || 0} className="h-2 mb-3" />
+                        
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1" />
+                              {keyResult.assignedTo?.name || 'Unassigned'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <BarChart3 className="h-4 w-4 mr-1" />
+                              Update Progress
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No key results found for this objective
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -911,43 +913,40 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {objective.initiatives.map((initiative) => (
-                    <div key={initiative.id} className="border rounded-md p-4">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{initiative.title}</h3>
-                            <Badge className={getInitiativeStatusColor(initiative.status)}>
-                              {getInitiativeStatusText(initiative.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{initiative.description}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            {initiative.owner.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Due: {initiative.dueDate}
+                  {objective?.initiatives?.length > 0 ? (
+                    objective.initiatives.map((initiative) => (
+                      <div key={initiative.id} className="border rounded-md p-4">
+                        <div className="flex justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{initiative.title || 'Untitled Initiative'}</h3>
+                              <Badge className={getInitiativeStatusColor(initiative.status || 'not_started')}>
+                                {getInitiativeStatusText(initiative.status || 'not_started')}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{initiative.description || 'No description provided'}</p>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1" />
+                              {initiative.owner?.name || 'Unassigned'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-red-500">
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
-                      </div>
                     </div>
                   ))}
                 </CardContent>
@@ -1127,19 +1126,19 @@ export default function ObjectiveDetail() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.keyResults.length}</p>
+                  <p className="text-2xl font-bold">{objective?.keyResults?.length || 0}</p>
                   <p className="text-xs text-gray-500">Key Results</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.initiatives.length}</p>
+                  <p className="text-2xl font-bold">{objective?.initiatives?.length || 0}</p>
                   <p className="text-xs text-gray-500">Initiatives</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.checkIns.length}</p>
+                  <p className="text-2xl font-bold">{objective?.checkIns?.length || 0}</p>
                   <p className="text-xs text-gray-500">Check-ins</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.todos.filter(t => t.completed).length}/{objective.todos.length}</p>
+                  <p className="text-2xl font-bold">0/0</p>
                   <p className="text-xs text-gray-500">To-Dos Completed</p>
                 </div>
               </div>
