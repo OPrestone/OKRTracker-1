@@ -189,57 +189,48 @@ export default function TeamDetailPage() {
     }
   };
   
-  // Find team from the centralized context data
+  // Find team from the centralized context data with better error handling
   useEffect(() => {
-    console.log("Teams data loaded:", { 
-      teams: Array.isArray(teams) ? teams.map(t => ({ id: t.id, name: t.name })) : 'not array', 
-      teamId, 
-      teamSlug, 
-      loading: teamsContextLoading,
-      teamsCount: Array.isArray(teams) ? teams.length : 0
-    });
-    
-    if (teamsContextLoading) {
+    const loadTeamData = async () => {
       setTeamLoading(true);
-      return;
-    }
-    
-    if (teamsContextError) {
-      console.error("Team context error:", teamsContextError);
-      setTeamError(teamsContextError);
-      setTeamLoading(false);
-      return;
-    }
-    
-    try {
-      let foundTeam;
+      setTeamError(null);
       
-      // Ensure teams is an array before attempting to find
-      if (!Array.isArray(teams)) {
-        console.warn("Teams data is not an array, forcing refetch");
-        refetchTeams();
-        return;
-      }
-      
-      if (teams.length === 0) {
-        console.warn("Teams array is empty, forcing refetch");
-        refetchTeams();
-        return;
-      }
-      
-      if (teamSlug && teams.length > 0) {
-        console.log("Looking for team by slug:", teamSlug);
-        // Find by slug, with normalization for comparison
-        foundTeam = teams.find((t) => {
-          if (!t || !t.name) return false;
-          const normalizedName = t.name.toLowerCase().replace(/\s+/g, '-');
-          return normalizedName === teamSlug;
-        });
-      } else if (teamId && teams.length > 0) {
-        console.log("Looking for team by ID:", teamId);
-        // Find by ID with null safety
-        foundTeam = teams.find((t) => t && t.id === teamId);
-      }
+      try {
+        // If teams context is loading, wait for it
+        if (teamsContextLoading) {
+          return;
+        }
+        
+        // If there's an error in teams context, handle it
+        if (teamsContextError) {
+          setTeamError(teamsContextError);
+          setTeamLoading(false);
+          return;
+        }
+        
+        // Ensure teams is an array and has data
+        if (!Array.isArray(teams) || teams.length === 0) {
+          console.log("No teams data available, refreshing...");
+          await refetchTeams();
+          return;
+        }
+        
+        let foundTeam;
+        
+        // Try to find team by different methods
+        if (teamSlug && teams.length > 0) {
+          console.log("Looking for team by slug:", teamSlug);
+          // Find by slug, with normalization for comparison
+          foundTeam = teams.find((t) => {
+            if (!t || !t.name) return false;
+            const normalizedName = t.name.toLowerCase().replace(/\s+/g, '-');
+            return normalizedName === teamSlug;
+          });
+        } else if (teamId && teams.length > 0) {
+          console.log("Looking for team by ID:", teamId);
+          // Find by ID with null safety
+          foundTeam = teams.find((t) => t && t.id === teamId);
+        }
       
       console.log("Found team:", foundTeam ? { id: foundTeam.id, name: foundTeam.name } : 'not found');
       
@@ -261,6 +252,9 @@ export default function TeamDetailPage() {
         variant: "destructive"
       });
     }
+    };
+
+    loadTeamData();
   }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast, refetchTeams]);
 
   // Query for team members data
