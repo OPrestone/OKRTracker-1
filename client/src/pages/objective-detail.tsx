@@ -37,11 +37,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   Target, 
-  Calendar, 
+  Calendar,
   User, 
   Building,
   MessageSquare, 
-  CheckCircle, 
+  CheckCircle,
   PlusCircle, 
   Clock, 
   Edit, 
@@ -52,6 +52,7 @@ import {
   CheckSquare,
   AlertCircle
 } from "lucide-react";
+import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
 
 // Types for the Objective Detail based on the database schema
 interface User {
@@ -367,6 +368,7 @@ export default function ObjectiveDetail() {
   const objectiveId = simpleParams?.id || pluralParams?.id || tenantParams?.objectiveId || orgParams?.id;
   const [progressValue, setProgressValue] = useState<string>("0");
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
   const [, navigate] = useLocation();
