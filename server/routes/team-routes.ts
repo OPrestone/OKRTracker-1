@@ -55,9 +55,17 @@ export function setupTeamRoutes(router: Router) {
       }
       
       // Update the team leader
-      await db.update(teams)
+      console.log(`Updating team ${teamId} with leader ${leaderId}`);
+      const updateResult = await db.update(teams)
         .set({ leaderId: leaderId })
-        .where(eq(teams.id, teamId));
+        .where(eq(teams.id, teamId))
+        .returning();
+      
+      console.log("Team update result:", updateResult);
+      
+      if (!updateResult || updateResult.length === 0) {
+        return res.status(500).json({ error: "Failed to update team leader" });
+      }
       
       // Return the updated team with leader information
       const updatedTeam = await db.query.teams.findFirst({
@@ -67,9 +75,11 @@ export function setupTeamRoutes(router: Router) {
         }
       });
       
+      console.log("Updated team with leader:", updatedTeam);
       res.json(updatedTeam);
     } catch (error) {
-      next(error);
+      console.error("Error updating team leader:", error);
+      res.status(500).json({ error: `Failed to update team leader: ${error.message}` });
     }
   });
 }
