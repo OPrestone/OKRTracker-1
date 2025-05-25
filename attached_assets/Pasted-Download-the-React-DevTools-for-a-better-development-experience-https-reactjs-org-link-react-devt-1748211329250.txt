@@ -1,0 +1,31 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+use-auth.tsx:84 Attempting to fetch user authentication status
+queryClient.ts:104 Making API request with queryKey: ['/api/user']
+queryClient.ts:145 Constructed URL from array path: /api/user
+queryClient.ts:160 Adding tenant ID to request: 01JW4M58BY9MX9W9NXJ63BKPDV for /api/user
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p….dev/api/user?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV', hasCredentials: true, hasTenant: true}hasCredentials: truehasTenant: trueurl: "https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/user?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV"[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
+queryClient.ts:104 Making API request with queryKey: ['/api/tenants']
+queryClient.ts:145 Constructed URL from array path: /api/tenants
+queryClient.ts:160 Adding tenant ID to request: 01JW4M58BY9MX9W9NXJ63BKPDV for /api/tenants
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…v/api/tenants?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV', hasCredentials: true, hasTenant: true}
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW4M58BY9MX9W9NXJ63BKPDV
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW4M58BY9MX9W9NXJ63BKPDV
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/user?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/user?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV
+use-auth.tsx:88 User authenticated successfully: 01JW49490RPD9YFVXPX9N0FXAS
+use-auth.tsx:111 Set default tenant from user data: momoshoes
+use-auth.tsx:111 Set default tenant from user data: momoshoes
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/tenants?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/tenants?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV
+objective-detail.tsx:376 Route params: {simpleParams: null, tenantParams: null, orgParams: null}orgParams: nullsimpleParams: nulltenantParams: null[[Prototype]]: Object
+objective-detail.tsx:377 Objective ID from URL: undefined
+queryClient.ts:104 Making API request with queryKey: (2) ['/api/teams', '01JW4M58BY9MX9W9NXJ63BKPDV']
+queryClient.ts:113 Teams list URL constructed: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW4M58BY9MX9W9NXJ63BKPDV for /api/teams
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV', hasCredentials: true, hasTenant: true}
+objective-detail.tsx:376 Route params: {simpleParams: null, tenantParams: null, orgParams: null}
+objective-detail.tsx:377 Objective ID from URL: undefined
+objective-detail.tsx:376 Route params: {simpleParams: null, tenantParams: null, orgParams: null}
+objective-detail.tsx:377 Objective ID from URL: undefined
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW4M58BY9MX9W9NXJ63BKPDV

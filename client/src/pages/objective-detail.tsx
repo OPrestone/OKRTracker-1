@@ -359,11 +359,12 @@ const objectiveData: DbObjective = {
 export default function ObjectiveDetail() {
   // Get the route parameters and extract the objective ID from different possible routes
   const [matchesSimpleRoute, simpleParams] = useRoute("/objective/:id");
+  const [matchesPluralRoute, pluralParams] = useRoute("/objectives/:id");
   const [matchesTenantRoute, tenantParams] = useRoute("/:tenantId/objective/:objectiveId");
   const [matchesOrgRoute, orgParams] = useRoute("/organization/:organisation/objective/:id");
   
   // Use the first matching route's parameters
-  const objectiveId = simpleParams?.id || tenantParams?.objectiveId || orgParams?.id;
+  const objectiveId = simpleParams?.id || pluralParams?.id || tenantParams?.objectiveId || orgParams?.id;
   const [progressValue, setProgressValue] = useState<string>("0");
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
