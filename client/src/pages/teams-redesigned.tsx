@@ -719,9 +719,11 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
   const [teamParent, setTeamParent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch all teams for parent selection
+  // Use team context for operations
+  const { updateTeam } = useTeams();
+  // For legacy compatibility
   const { currentTenant } = useTenantContext();
-  const { data: teams } = useQuery<Team[]>({
+  const { data: teamsData } = useQuery<Team[]>({
     queryKey: ["/api/teams", currentTenant?.id],
     enabled: !!currentTenant?.id && isOpen,
   });
@@ -762,19 +764,15 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
     
     try {
       const updatedTeam = {
-        id: team.id,
         name: teamName,
         description: teamDescription,
         color: teamColor,
         icon: teamIcon,
         parentId: teamParent === "none" ? null : teamParent,
-        tenantId: currentTenant?.id,  // Include tenant ID to preserve multi-tenancy
       };
 
-      await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
-      
-      // Invalidate and refetch teams with the correct tenant context
-      await queryClient.invalidateQueries({ queryKey: ["/api/teams", currentTenant?.id] });
+      // Use the centralized team context for updating teams
+      await updateTeam(team.id, updatedTeam);
       
       toast({
         title: "Team updated",
@@ -894,7 +892,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None (Top-level team)</SelectItem>
-                {teams?.filter(t => t.id !== team?.id).map((t) => (
+                {teamsData?.filter(t => t.id !== team?.id).map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
                   </SelectItem>
