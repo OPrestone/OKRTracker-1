@@ -154,7 +154,7 @@ interface DbObjective {
 }
 
 // Sample data for the objective
-const objectiveData: Objective = {
+const objectiveData: DbObjective = {
   id: 101,
   title: "Launch mobile app redesign",
   description: "Complete redesign and release of our mobile application with improved user experience and new features based on customer feedback. Focus on performance optimization and better onboarding flow to increase user activation.",
@@ -367,6 +367,7 @@ export default function ObjectiveDetail() {
   const { tenant } = useTenantContext();
   
   // Fetch the objective data from API with tenant context
+  // Fetch the objective data from API with tenant context
   const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
     queryKey: ['/api/objectives', objectiveId],
     queryFn: async () => {
@@ -374,9 +375,12 @@ export default function ObjectiveDetail() {
         throw new Error("Missing objectiveId or tenant");
       }
       
+      // Explicitly add tenantId to ensure proper authorization
       const response = await apiRequest(
         'GET', 
-        `/api/objectives/${objectiveId}?tenantId=${tenant.id}`
+        `/api/objectives/${objectiveId}`,
+        null,
+        { tenantId: tenant.id }
       );
       
       if (!response.ok) {
@@ -398,7 +402,9 @@ export default function ObjectiveDetail() {
       
       const response = await apiRequest(
         'GET', 
-        `/api/key-results?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+        `/api/key-results`,
+        null,
+        { objectiveId, tenantId: tenant.id }
       );
       
       if (!response.ok) {
