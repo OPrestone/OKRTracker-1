@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export function setupTeamRoutes(router: Router) {
   // Update team leader
-  router.put("/:id/leader", async (req: Request, res: Response, next: NextFunction) => {
+  router.put("/teams/:id/leader", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.params.id;
       const tenantId = req.tenantId!;
