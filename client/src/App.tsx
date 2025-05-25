@@ -132,6 +132,7 @@ function AppRoutes() {
       <ProtectedRoute path="/draft-okrs" component={DraftOKRs} />
       <ProtectedRoute path="/approved-okrs" component={ApprovedOKRs} />
       <ProtectedRoute path="/company-okrs" component={CompanyOKRs} />
+      <ProtectedRoute path="/objective/:id" component={ObjectiveDetail} />
       <ProtectedRoute path="/objectives/:id" component={ObjectiveDetail} />
       <ProtectedRoute
         path="/:tenantId/approved-okrs"
