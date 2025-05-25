@@ -179,12 +179,15 @@ export default function TeamDetailPage() {
   
   // Find team from the centralized context data
   useEffect(() => {
+    console.log("Teams data loaded:", { teams, teamId, teamSlug, loading: teamsContextLoading });
+    
     if (teamsContextLoading) {
       setTeamLoading(true);
       return;
     }
     
     if (teamsContextError) {
+      console.error("Team context error:", teamsContextError);
       setTeamError(teamsContextError);
       setTeamLoading(false);
       return;
@@ -193,17 +196,22 @@ export default function TeamDetailPage() {
     try {
       let foundTeam;
       
-      if (teamSlug && teams && teams.length > 0) {
+      if (teamSlug && teams && Array.isArray(teams) && teams.length > 0) {
+        console.log("Looking for team by slug:", teamSlug);
         // Find by slug
         foundTeam = teams.find((t) => 
           t.name.toLowerCase().replace(/\s+/g, '-') === teamSlug
         );
-      } else if (teamId && teams && teams.length > 0) {
+      } else if (teamId && teams && Array.isArray(teams) && teams.length > 0) {
+        console.log("Looking for team by ID:", teamId);
         // Find by ID
         foundTeam = teams.find((t) => t.id === teamId);
       }
       
+      console.log("Found team:", foundTeam);
+      
       if (!foundTeam) {
+        console.warn("Team not found in context data");
         setTeamError(new Error("Team not found"));
       } else {
         setTeam(foundTeam);
@@ -211,6 +219,7 @@ export default function TeamDetailPage() {
       
       setTeamLoading(false);
     } catch (error) {
+      console.error("Error finding team:", error);
       setTeamError(error instanceof Error ? error : new Error("Failed to find team"));
       setTeamLoading(false);
       toast({
@@ -227,12 +236,27 @@ export default function TeamDetailPage() {
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/users?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team members");
-      return res.json();
+      console.log("Fetching members for team:", resolvedTeamId);
+      
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing required data for members query");
+        return [];
+      }
+      
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/users?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.error("Failed to fetch members, status:", res.status);
+          return [];
+        }
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        return [];
+      }
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId && tenantId),
+    enabled: !!(team?.id || teamId) && !!tenantId,
     onError: (err) => {
       toast({
         title: "Error loading team members",
@@ -248,12 +272,27 @@ export default function TeamDetailPage() {
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/objectives?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team objectives");
-      return res.json();
+      console.log("Fetching objectives for team:", resolvedTeamId);
+      
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing required data for objectives query");
+        return [];
+      }
+      
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/objectives?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.error("Failed to fetch objectives, status:", res.status);
+          return [];
+        }
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching objectives:", error);
+        return [];
+      }
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId && tenantId),
+    enabled: !!(team?.id || teamId) && !!tenantId,
     onError: (err) => {
       toast({
         title: "Error loading objectives",
