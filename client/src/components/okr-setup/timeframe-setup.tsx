@@ -52,6 +52,12 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth }:
   } = useQuery<Timeframe[]>({
     queryKey: [`/api/timeframes?tenantId=${tenantId}`],
     enabled: !!tenantId,
+    // Add a function to handle the query response
+    select: (data) => {
+      console.log("Fetched timeframes:", data);
+      // Filter to only include timeframes for this tenant
+      return Array.isArray(data) ? data.filter(tf => tf.tenantId === tenantId) : [];
+    }
   });
   
   // New timeframe form state
