@@ -72,17 +72,17 @@ export default function AddKeyResultDialog({
     mutationFn: async (data: KeyResultFormValues) => {
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       
-      // The database is expecting objective_id in snake_case
+      // Convert to the exact format expected by the database
       const formattedData = {
         title: data.title,
         description: data.description,
         objective_id: objectiveId,  // Use snake_case as required by the database
-        startValue: String(data.startValue),
-        targetValue: String(data.targetValue),
-        currentValue: String(data.currentValue || data.startValue),
+        start_value: String(data.startValue),
+        target_value: String(data.targetValue),
+        current_value: String(data.currentValue || data.startValue),
         unit: data.unit,
         progress: calculatedProgress,
-        tenantId: currentTenant?.id
+        tenant_id: currentTenant?.id
       };
       
       console.log("Submitting key result with formatted data:", formattedData);
