@@ -1,40 +1,80 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { storage } from '../storage';
-import { User } from '@shared/schema';
+import { Express, Request, Response, NextFunction, Router } from 'express';
+import { db } from '../db';
+import { objectives, keyResults } from '@shared/schema';
+import { eq, and } from 'drizzle-orm';
 
 export function setupApprovedOkrsRoutes(router: Router) {
-  // Endpoint to get approved OKRs for a specific tenant ID
+  // Get approved OKRs for a specific tenant
   router.get('/:tenantId/approved-okrs', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
+      const { tenantId } = req.params;
+      
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
       }
       
-      const tenantId = req.params.tenantId;
-      console.log(`Processing request for approved OKRs from specific tenant path: ${tenantId}/approved-okrs`);
-      
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
+      // Check if user has access to the requested tenant
+      const userTenants = (req.user as any).tenants?.map((t: any) => t.id) || [];
+      if (!userTenants.includes(tenantId)) {
+        return res.status(403).json({ error: 'Access denied to this tenant' });
       }
       
-      // Check user's access to this tenant
-      const user = req.user as User;
-      const userTenants = await storage.getUserTenants(user.id);
-      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      // Get all approved objectives for the tenant
+      const approvedObjectives = await db.query.objectives.findMany({
+        where: and(
+          eq(objectives.tenant_id, tenantId),
+          eq(objectives.status, 'approved')
+        ),
+      });
       
-      if (!hasTenantAccess) {
-        return res.status(403).json({ error: "Access to tenant denied" });
-      }
+      // Get key results for each objective
+      const objectivesWithKeyResults = await Promise.all(
+        approvedObjectives.map(async (objective) => {
+          const objectiveKeyResults = await db.query.keyResults.findMany({
+            where: eq(keyResults.objective_id, objective.id),
+          });
+          
+          // Calculate overall progress based on key results
+          let totalProgress = 0;
+          if (objectiveKeyResults.length > 0) {
+            totalProgress = objectiveKeyResults.reduce(
+              (sum, kr) => sum + (kr.progress || 0), 
+              0
+            ) / objectiveKeyResults.length;
+          } else {
+            totalProgress = objective.progress || 0;
+          }
+          
+          // Format the data for the frontend
+          return {
+            id: objective.id,
+            title: objective.title,
+            description: objective.description,
+            status: objective.status,
+            level: objective.level,
+            progress: Math.round(totalProgress),
+            timeframeId: objective.timeframe_id,
+            teamId: objective.team_id,
+            ownerId: objective.owner_id,
+            keyResults: objectiveKeyResults.map(kr => ({
+              id: kr.id,
+              title: kr.title,
+              description: kr.description,
+              current_value: kr.current_value,
+              target_value: kr.target_value,
+              start_value: kr.start_value,
+              progress: kr.progress,
+              status: kr.status,
+              objective_id: kr.objective_id
+            }))
+          };
+        })
+      );
       
-      // Get approved objectives with key results for this tenant
-      const approvedObjectives = await storage.getApprovedObjectives(tenantId);
-      
-      console.log(`Found ${approvedObjectives.length} approved objectives for tenant: ${tenantId}`);
-      
-      res.json(approvedObjectives);
+      return res.status(200).json(objectivesWithKeyResults);
     } catch (error) {
-      console.error(`Error getting approved OKRs for tenant ${req.params.tenantId}:`, error);
-      next(error);
+      console.error('Error fetching approved OKRs:', error);
+      return next(error);
     }
   });
 }
