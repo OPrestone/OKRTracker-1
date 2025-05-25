@@ -548,7 +548,14 @@ export default function TimeframeSetup({ tenantId, primaryCadence, startMonth, o
           
           {timeframes.length > 0 && (
             <div className="flex justify-end mt-4">
-              <Button onClick={saveAllTimeframes} disabled={createTimeframeMutation.isPending}>
+              <Button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  saveAllTimeframes();
+                }} 
+                disabled={createTimeframeMutation.isPending}
+              >
                 {createTimeframeMutation.isPending ? "Saving..." : "Save All Timeframes"}
               </Button>
             </div>
