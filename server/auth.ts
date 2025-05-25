@@ -133,7 +133,7 @@ export function setupAuth(app: Express) {
           const basicUser = {
             ...user,
             tenants: [],
-            defaultTenant: null
+            defaultTenant: undefined
           };
           console.log("User deserialized with empty tenants due to data format issue:", id);
           return done(null, basicUser);
@@ -158,7 +158,7 @@ export function setupAuth(app: Express) {
         const fallbackUser = {
           ...user,
           tenants: [],
-          defaultTenant: null
+          defaultTenant: undefined
         };
         console.log("User deserialized with fallback tenant data:", id);
         done(null, fallbackUser);

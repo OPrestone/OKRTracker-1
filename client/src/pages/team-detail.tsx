@@ -179,7 +179,13 @@ export default function TeamDetailPage() {
   
   // Find team from the centralized context data
   useEffect(() => {
-    console.log("Teams data loaded:", { teams, teamId, teamSlug, loading: teamsContextLoading });
+    console.log("Teams data loaded:", { 
+      teams: Array.isArray(teams) ? teams.map(t => ({ id: t.id, name: t.name })) : 'not array', 
+      teamId, 
+      teamSlug, 
+      loading: teamsContextLoading,
+      teamsCount: Array.isArray(teams) ? teams.length : 0
+    });
     
     if (teamsContextLoading) {
       setTeamLoading(true);
@@ -196,28 +202,43 @@ export default function TeamDetailPage() {
     try {
       let foundTeam;
       
-      if (teamSlug && teams && Array.isArray(teams) && teams.length > 0) {
-        console.log("Looking for team by slug:", teamSlug);
-        // Find by slug
-        foundTeam = teams.find((t) => 
-          t.name.toLowerCase().replace(/\s+/g, '-') === teamSlug
-        );
-      } else if (teamId && teams && Array.isArray(teams) && teams.length > 0) {
-        console.log("Looking for team by ID:", teamId);
-        // Find by ID
-        foundTeam = teams.find((t) => t.id === teamId);
+      // Ensure teams is an array before attempting to find
+      if (!Array.isArray(teams)) {
+        console.warn("Teams data is not an array, forcing refetch");
+        refetchTeams();
+        return;
       }
       
-      console.log("Found team:", foundTeam);
+      if (teams.length === 0) {
+        console.warn("Teams array is empty, forcing refetch");
+        refetchTeams();
+        return;
+      }
+      
+      if (teamSlug && teams.length > 0) {
+        console.log("Looking for team by slug:", teamSlug);
+        // Find by slug, with normalization for comparison
+        foundTeam = teams.find((t) => {
+          if (!t || !t.name) return false;
+          const normalizedName = t.name.toLowerCase().replace(/\s+/g, '-');
+          return normalizedName === teamSlug;
+        });
+      } else if (teamId && teams.length > 0) {
+        console.log("Looking for team by ID:", teamId);
+        // Find by ID with null safety
+        foundTeam = teams.find((t) => t && t.id === teamId);
+      }
+      
+      console.log("Found team:", foundTeam ? { id: foundTeam.id, name: foundTeam.name } : 'not found');
       
       if (!foundTeam) {
         console.warn("Team not found in context data");
         setTeamError(new Error("Team not found"));
+        setTeamLoading(false);
       } else {
         setTeam(foundTeam);
+        setTeamLoading(false);
       }
-      
-      setTeamLoading(false);
     } catch (error) {
       console.error("Error finding team:", error);
       setTeamError(error instanceof Error ? error : new Error("Failed to find team"));
@@ -228,7 +249,7 @@ export default function TeamDetailPage() {
         variant: "destructive"
       });
     }
-  }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast]);
+  }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast, refetchTeams]);
 
   // Query for team members data
   const { data: members = [], isLoading: membersLoading } = useQuery({
@@ -400,11 +421,17 @@ export default function TeamDetailPage() {
     }
     
     // If we have performance data from API, use that instead
-    if (teamPerformance && 
-        teamPerformance.activity && 
-        Array.isArray(teamPerformance.activity) && 
-        teamPerformance.activity.length > 0) {
-      setActivityData(teamPerformance.activity);
+    try {
+      if (teamPerformance && 
+          typeof teamPerformance === 'object' &&
+          'activity' in teamPerformance &&
+          teamPerformance.activity && 
+          Array.isArray(teamPerformance.activity) && 
+          teamPerformance.activity.length > 0) {
+        setActivityData(teamPerformance.activity);
+      }
+    } catch (error) {
+      console.error("Error processing team performance activity data:", error);
     }
   }, [teamPerformance, objectives]);
 
@@ -568,7 +595,15 @@ export default function TeamDetailPage() {
   };
   
   // Use team performance data if available, otherwise use calculated stats
-  const performanceStats = teamPerformance && teamPerformance.stats ? teamPerformance.stats : fallbackStats;
+  // Handle the case where teamPerformance might not have the expected structure
+  let performanceStats = fallbackStats;
+  try {
+    if (teamPerformance && typeof teamPerformance === 'object' && 'stats' in teamPerformance && teamPerformance.stats) {
+      performanceStats = teamPerformance.stats;
+    }
+  } catch (error) {
+    console.error("Error accessing team performance stats:", error);
+  }
   
   console.log("Rendering team detail page with data:", {
     team: team ? team.name : "No team data",
