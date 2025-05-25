@@ -124,6 +124,17 @@ export default function TeamDetailPage() {
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<Error | null>(null);
   
+  // Trigger team data refresh when the page loads
+  const { refetchTeams } = useTeams();
+  
+  // Auto-refresh team data when page is accessed
+  useEffect(() => {
+    // Refresh team data from the server when component mounts
+    refetchTeams().catch(error => {
+      console.error("Error refreshing teams data:", error);
+    });
+  }, [refetchTeams]);
+  
   // Find team from the centralized context data
   useEffect(() => {
     if (teamsContextLoading) {
