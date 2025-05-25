@@ -657,8 +657,8 @@ export default function TenantOnboardingWizard() {
 
       // Add a slight delay to ensure cache is invalidated and UI update is perceived
       setTimeout(() => {
-        // Redirect to the new tenant dashboard
-        navigate(`/${data.tenant.id}/`);
+        // Redirect to the OKR system setup page
+        navigate(`/${data.tenant.id}/okr-system-setup`);
       }, 1000);
     },
 
