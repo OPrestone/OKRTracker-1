@@ -71,12 +71,22 @@ export default function AddKeyResultDialog({
   const addKeyResultMutation = useMutation({
     mutationFn: async (data: KeyResultFormValues) => {
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
-      const response = await apiRequest("POST", "/api/key-results", {
-        ...data,
+      
+      // Convert number values to strings and use snake_case for objective_id as required by the API
+      const formattedData = {
+        title: data.title,
+        description: data.description,
         objective_id: objectiveId,
+        startValue: String(data.startValue),
+        targetValue: String(data.targetValue),
+        currentValue: String(data.currentValue || data.startValue),
+        unit: data.unit,
         progress: calculatedProgress,
         tenantId: currentTenant?.id
-      });
+      };
+      
+      console.log("Submitting key result with formatted data:", formattedData);
+      const response = await apiRequest("POST", "/api/key-results", formattedData);
       return response.json();
     },
     onSuccess: () => {
@@ -111,18 +121,10 @@ export default function AddKeyResultDialog({
     form.setValue("currentValue", value);
   };
 
+  // Just let the mutation handle the formatting
   const onSubmit = (data: KeyResultFormValues) => {
-    // Convert number values to strings as required by the API
-    const formattedData = {
-      ...data,
-      objectiveId: objectiveId,
-      startValue: String(data.startValue),
-      targetValue: String(data.targetValue),
-      currentValue: String(data.currentValue || data.startValue)
-    };
-    
-    console.log("Submitting key result with data:", formattedData);
-    addKeyResultMutation.mutate(formattedData);
+    console.log("Submitting key result with data:", data);
+    addKeyResultMutation.mutate(data);
   };
 
   return (
