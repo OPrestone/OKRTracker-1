@@ -151,7 +151,6 @@ export default function CreateCompanyObjective() {
   const [activeTab, setActiveTab] = useState<string>("details");
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [objectiveType, setObjectiveType] = useState<string>("financial");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   // Set of objective types (matching the filtering options in company-okrs.tsx)
   const objectiveTypes = [
@@ -219,7 +218,6 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: () => {
-      setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       toast({
         title: "Company objective created",
@@ -229,7 +227,6 @@ export default function CreateCompanyObjective() {
       setLocation("/company-okrs");
     },
     onError: (error: Error) => {
-      setIsSubmitting(false);
       toast({
         title: "Failed to create company objective",
         description: error.message,
@@ -284,9 +281,6 @@ export default function CreateCompanyObjective() {
   };
 
   const onSubmit = (values: ObjectiveFormValues) => {
-    // Set submitting state to true to show validation errors
-    setIsSubmitting(true);
-    
     // Log the form values and key results for debugging
     console.log("Form values:", values);
     console.log("Key results:", keyResults);
@@ -303,7 +297,6 @@ export default function CreateCompanyObjective() {
           description: "Please create a timeframe before creating objectives.",
           variant: "destructive",
         });
-        setIsSubmitting(false);
         return;
       }
     }
@@ -320,7 +313,6 @@ export default function CreateCompanyObjective() {
           variant: "destructive",
         });
         setCurrentStep(3); // Ensure we're on the key results step
-        setIsSubmitting(false);
         return;
       }
       
@@ -359,7 +351,6 @@ export default function CreateCompanyObjective() {
           // Create the objective with the default key result
           createObjectiveMutation.mutate(payload);
         }, 100);
-        setIsSubmitting(false);
         return;
       }
     }
@@ -977,9 +968,9 @@ export default function CreateCompanyObjective() {
                                           value={keyResult.title}
                                           onChange={(e) => handleKeyResultChange(index, 'title', e.target.value)}
                                           placeholder="e.g., Increase revenue by 20%"
-                                          className={(isSubmitting && (!keyResult.title || keyResult.title.length < 3)) ? "border-destructive" : ""}
+                                          className={!keyResult.title || keyResult.title.length < 3 ? "border-destructive" : ""}
                                         />
-                                        {(isSubmitting && (!keyResult.title || keyResult.title.length < 3)) && (
+                                        {(!keyResult.title || keyResult.title.length < 3) && (
                                           <p className="text-xs text-destructive">Title must be at least 3 characters</p>
                                         )}
                                       </div>
