@@ -1645,21 +1645,22 @@ export class DatabaseStorage implements IStorage {
 
   // Key Results
   async createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult> {
-    // Check if objective_id is provided since it's required by the database
-    if (!keyResult.objective_id) {
-      throw new Error("objective_id is required to create a key result");
+    // Check if objectiveId is provided since it's required by the database
+    if (!keyResult.objectiveId) {
+      throw new Error("objectiveId is required to create a key result");
     }
     
-    // Fix column names to match the database schema
+    // Map camelCase input to snake_case database columns
     const values = {
-      ...keyResult,
-      // Make sure required fields are set with proper fallbacks
-      current_value: keyResult.current_value || keyResult.start_value || "0",
-      start_value: keyResult.start_value || "0",
+      title: keyResult.title,
+      description: keyResult.description,
+      objective_id: keyResult.objectiveId,
+      start_value: keyResult.startValue || "0",
+      target_value: keyResult.targetValue || "100",
+      current_value: keyResult.currentValue || keyResult.startValue || "0",
       progress: keyResult.progress || 0,
       status: keyResult.status || "not_started",
-      // Map schema columns to database columns if needed
-      objectiveId: keyResult.objective_id
+      tenant_id: keyResult.tenantId
     };
     
     // Add error handling and logging
