@@ -424,20 +424,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as DbKeyResult[];
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
   });
 
   // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['/api/teams'],
     queryFn: async () => {
-      if (!tenant?.id) {
+      if (!currentTenant?.id) {
         throw new Error("Missing tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/teams?tenantId=${tenant.id}`
+        `/api/teams?tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -446,20 +446,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as Team[];
     },
-    enabled: !!tenant?.id,
+    enabled: !!currentTenant?.id,
   });
 
   // Fetch users
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      if (!tenant?.id) {
+      if (!currentTenant?.id) {
         throw new Error("Missing tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/users?tenantId=${tenant.id}`
+        `/api/users?tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -468,20 +468,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as User[];
     },
-    enabled: !!tenant?.id,
+    enabled: !!currentTenant?.id,
   });
 
   // Fetch check-ins
   const { data: checkIns, isLoading: checkInsLoading } = useQuery({
     queryKey: ['/api/check-ins', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
+      if (!objectiveId || !currentTenant?.id) {
         throw new Error("Missing objectiveId or tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/check-ins?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+        `/api/check-ins?objectiveId=${objectiveId}&tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -490,7 +490,7 @@ export default function ObjectiveDetail() {
       
       return await response.json() as DbCheckIn[];
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
   });
 
   // Update progress value when objective data changes
@@ -562,7 +562,7 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    if (!objective || !tenant?.id) {
+    if (!objective || !currentTenant?.id) {
       toast({
         title: "Cannot Update Progress",
         description: "Missing objective data or tenant information.",
@@ -575,13 +575,13 @@ export default function ObjectiveDetail() {
       // Prepare the update data
       const updateData = {
         progress: newProgress,
-        tenantId: tenant.id
+        tenantId: currentTenant.id
       };
 
       // Make API request to update objective
       const response = await apiRequest(
         'PATCH',
-        `/api/objectives/${objective.id}?tenantId=${tenant.id}`,
+        `/api/objectives/${objective.id}?tenantId=${currentTenant.id}`,
         updateData
       );
 
@@ -619,7 +619,7 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    if (!objective || !tenant?.id) {
+    if (!objective || !currentTenant?.id) {
       toast({
         title: "Cannot Add Check-in",
         description: "Missing objective data or tenant information.",
@@ -635,13 +635,13 @@ export default function ObjectiveDetail() {
         objectiveId: objective.id,
         progress: objective.progress,
         notes: newCheckInNotes,
-        tenantId: tenant.id
+        tenantId: currentTenant.id
       };
 
       // Make API request to create check-in
       const response = await apiRequest(
         'POST',
-        `/api/check-ins?tenantId=${tenant.id}`,
+        `/api/check-ins?tenantId=${currentTenant.id}`,
         checkInData
       );
 
