@@ -3029,12 +3029,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/key-results", withTenant, async (req, res, next) => {
     try {
-      const validatedData = insertKeyResultSchema.parse({
-        ...req.body,
+      const { title, description, objectiveId, startValue, targetValue, currentValue, status } = req.body;
+      
+      // Validate required fields
+      if (!title || !objectiveId) {
+        return res.status(400).json({ message: "Title and objectiveId are required" });
+      }
+      
+      // Direct database insertion using Drizzle
+      const newKeyResult = await db.insert(keyResults).values({
+        title,
+        description: description || null,
+        objectiveId, // Use camelCase as expected by schema
+        startValue: startValue || "0",
+        targetValue: targetValue || "100", 
+        currentValue: currentValue || startValue || "0",
+        progress: Math.round(((parseFloat(currentValue || startValue || "0") - parseFloat(startValue || "0")) / (parseFloat(targetValue || "100") - parseFloat(startValue || "0"))) * 100) || 0,
+        status: status || "not_started",
         tenantId: req.tenantId
-      });
-      const keyResult = await storage.createKeyResult(validatedData);
-      res.status(201).json(keyResult);
+      }).returning();
+      
+      res.status(201).json(newKeyResult[0]);
     } catch (error) {
       next(error);
     }
