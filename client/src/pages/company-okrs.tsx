@@ -72,6 +72,13 @@ const OBJECTIVE_TYPES = [
 export default function CompanyOKRs() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { user } = useAuth();
+  
+  // Navigate to objective details page
+  const navigateToObjective = (objectiveId: number) => {
+    const tenantId = user?.defaultTenant || "";
+    navigate(`/${tenantId}/objectives/${objectiveId}`);
+  };
   
   // State for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
@@ -256,10 +263,7 @@ export default function CompanyOKRs() {
     );
   };
 
-  // Navigate to objective detail page
-  const navigateToObjective = (id: number) => {
-    navigate(`/objective-detail/${id}`);
-  };
+  // Navigation handled by the main function at the top
 
   // Get all unique objective types from data
   const availableTypes = objectives.length 
@@ -538,7 +542,11 @@ export default function CompanyOKRs() {
                   
                   <div className="mt-5 text-sm text-gray-500 flex justify-between items-center">
                     <span>Assigned: {getTeamName(objective.teamId)}</span>
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => navigateToObjective(objective.id)}
+                    >
                       Details <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
