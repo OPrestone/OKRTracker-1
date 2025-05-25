@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import {
@@ -79,6 +79,7 @@ interface TaskActivity {
 export default function TeamDetailPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   // Get parameters from the URL, supporting both ID and slug-based routes
   const params = useParams<{ id?: string; teamId?: string; teamSlug?: string }>();
   
