@@ -50,61 +50,70 @@ export default function TenantOnboardingPage() {
     return null;
   }
 
-  // Show onboarding wizard with beautiful cover design
+  // Show onboarding wizard with sleek, modern design
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Cover Design - Left Side */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 text-white w-full md:w-1/3 p-8 flex flex-col justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-6">Welcome to OKR Master</h1>
-          <p className="text-white/90 mb-8">
-            Set up your organization and start achieving your objectives with our powerful OKR management platform.
-          </p>
-        </div>
-        
-        <div className="space-y-8">
-          <div className="flex items-start space-x-4">
-            <div className="bg-white/20 p-3 rounded-lg">
-              <Target className="h-6 w-6" />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row items-stretch gap-8 max-w-7xl">
+        {/* Cover Design - Left Side */}
+        <div className="hidden md:flex flex-col rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white md:w-5/12 p-10 shadow-xl">
+          <div className="mb-auto">
+            <h1 className="text-4xl font-bold mb-4">Get Started with OKR Master</h1>
+            <div className="w-20 h-1.5 bg-white/60 rounded-full mb-6"></div>
+            <p className="text-white/90 text-lg mb-12 leading-relaxed">
+              The most intuitive platform for tracking objectives and key results that drive your business forward.
+            </p>
+          </div>
+          
+          <div className="space-y-10">
+            <div className="flex items-start space-x-5">
+              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
+                <Target className="h-7 w-7" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Set Clear Objectives</h3>
+                <p className="text-white/80">Define measurable goals that align with your organization's mission</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold">Set Clear Objectives</h3>
-              <p className="text-white/80 text-sm">Define measurable goals that align with your organization's mission</p>
+            
+            <div className="flex items-start space-x-5">
+              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
+                <Layers className="h-7 w-7" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Track Key Results</h3>
+                <p className="text-white/80">Monitor progress with quantifiable metrics that drive success</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-5">
+              <div className="bg-white/20 p-3.5 rounded-lg shadow-inner">
+                <BarChart3 className="h-7 w-7" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Real-time Analytics</h3>
+                <p className="text-white/80">Get powerful insights with customizable dashboards and reports</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex items-start space-x-4">
-            <div className="bg-white/20 p-3 rounded-lg">
-              <Layers className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold">Track Key Results</h3>
-              <p className="text-white/80 text-sm">Monitor progress with quantifiable metrics that drive success</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-4">
-            <div className="bg-white/20 p-3 rounded-lg">
-              <BarChart3 className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold">Visualize Progress</h3>
-              <p className="text-white/80 text-sm">Get insights with real-time dashboards and performance analytics</p>
+          <div className="mt-auto pt-12">
+            <div className="flex items-center space-x-3 bg-white/10 p-4 rounded-lg border border-white/20">
+              <Rocket className="h-6 w-6 text-white" />
+              <p className="font-medium">Let's set up your organization in just a few simple steps</p>
             </div>
           </div>
         </div>
         
-        <div className="mt-12">
-          <div className="flex items-center space-x-2">
-            <Rocket className="h-5 w-5 text-white/90" />
-            <p className="text-sm font-medium">Let's get started with your organization setup</p>
-          </div>
+        {/* Mobile header - visible only on smaller screens */}
+        <div className="md:hidden bg-primary text-white p-6 rounded-xl mb-4 shadow-md">
+          <h1 className="text-2xl font-bold mb-2">OKR Master Onboarding</h1>
+          <p className="text-white/90">Let's set up your organization to get started</p>
         </div>
-      </div>
-      
-      {/* Onboarding Wizard - Right Side */}
-      <div className="flex-1 p-4 md:p-0">
-        <TenantOnboardingWizard />
+        
+        {/* Onboarding Wizard - Right Side */}
+        <div className="flex-1 bg-white rounded-xl shadow-md p-6 md:p-8">
+          <TenantOnboardingWizard />
+        </div>
       </div>
     </div>
   );
