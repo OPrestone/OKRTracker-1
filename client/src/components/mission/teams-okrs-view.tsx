@@ -95,23 +95,34 @@ export function TeamsOkrsView() {
 
   // Transform database data into OKR format
   const transformedOkrs: OKRItem[] = React.useMemo(() => {
-    if (!objectives.length || !teams.length || !users.length) return [];
+    if (!Array.isArray(objectives) || !Array.isArray(teams) || !Array.isArray(users)) return [];
+    if (!objectives.length) return [];
 
     return objectives.map((objective: any) => {
+      // Ensure objective has required properties
+      if (!objective || !objective.id || !objective.title) return null;
+
       // Find the owner user
-      const ownerUser = users.find((user: any) => user.id === objective.ownerId);
-      const ownerName = ownerUser ? `${ownerUser.firstName || ''} ${ownerUser.lastName || ''}`.trim() || ownerUser.username || 'Unknown' : 'Unknown';
-      const ownerInitials = ownerUser ? 
-        (ownerUser.firstName && ownerUser.lastName ? 
-          `${ownerUser.firstName[0]}${ownerUser.lastName[0]}`.toUpperCase() : 
-          ownerUser.username?.[0]?.toUpperCase() || 'U') : 'U';
+      const ownerUser = users.find((user: any) => user && user.id === objective.ownerId);
+      const firstName = ownerUser?.firstName || '';
+      const lastName = ownerUser?.lastName || '';
+      const username = ownerUser?.username || '';
+      
+      const ownerName = firstName && lastName ? 
+        `${firstName} ${lastName}`.trim() : 
+        username || 'Unknown';
+      
+      const ownerInitials = firstName && lastName ? 
+        `${firstName[0]}${lastName[0]}`.toUpperCase() : 
+        (username ? username[0].toUpperCase() : 'U');
 
       // Find the team
-      const team = teams.find((team: any) => team.id === objective.teamId);
-      const teamNames = team ? [team.name] : ['Unknown Team'];
+      const team = teams.find((team: any) => team && team.id === objective.teamId);
+      const teamNames = team?.name ? [team.name] : ['Unknown Team'];
 
       // Calculate progress from key results
-      const objectiveKeyResults = keyResults.filter((kr: any) => kr.objectiveId === objective.id);
+      const objectiveKeyResults = Array.isArray(keyResults) ? 
+        keyResults.filter((kr: any) => kr && kr.objectiveId === objective.id) : [];
       const averageProgress = objectiveKeyResults.length > 0 ? 
         Math.round(objectiveKeyResults.reduce((sum: number, kr: any) => sum + (kr.progress || 0), 0) / objectiveKeyResults.length) : 0;
 
@@ -120,12 +131,20 @@ export function TeamsOkrsView() {
 
       // Transform key results into children
       const children: OKRItem[] = objectiveKeyResults.map((kr: any) => {
-        const krOwnerUser = users.find((user: any) => user.id === kr.assignedToId);
-        const krOwnerName = krOwnerUser ? `${krOwnerUser.firstName || ''} ${krOwnerUser.lastName || ''}`.trim() || krOwnerUser.username || 'Unknown' : 'Unknown';
-        const krOwnerInitials = krOwnerUser ? 
-          (krOwnerUser.firstName && krOwnerUser.lastName ? 
-            `${krOwnerUser.firstName[0]}${krOwnerUser.lastName[0]}`.toUpperCase() : 
-            krOwnerUser.username?.[0]?.toUpperCase() || 'U') : 'U';
+        if (!kr || !kr.id || !kr.title) return null;
+
+        const krOwnerUser = users.find((user: any) => user && user.id === kr.assignedToId);
+        const krFirstName = krOwnerUser?.firstName || '';
+        const krLastName = krOwnerUser?.lastName || '';
+        const krUsername = krOwnerUser?.username || '';
+        
+        const krOwnerName = krFirstName && krLastName ? 
+          `${krFirstName} ${krLastName}`.trim() : 
+          krUsername || 'Unknown';
+        
+        const krOwnerInitials = krFirstName && krLastName ? 
+          `${krFirstName[0]}${krLastName[0]}`.toUpperCase() : 
+          (krUsername ? krUsername[0].toUpperCase() : 'U');
 
         const krProgress = kr.progress || 0;
         const krStatus = krProgress >= 70 ? 'on-track' : krProgress >= 40 ? 'at-risk' : 'behind';
@@ -142,7 +161,7 @@ export function TeamsOkrsView() {
           status: krStatus,
           isExpanded: expandedItems.has(kr.id)
         };
-      });
+      }).filter(Boolean);
 
       return {
         id: objective.id,
@@ -157,7 +176,7 @@ export function TeamsOkrsView() {
         isExpanded: expandedItems.has(objective.id),
         children: children.length > 0 ? children : undefined
       };
-    });
+    }).filter(Boolean);
   }, [objectives, teams, users, keyResults, expandedItems]);
 
   const toggleExpand = (id: string) => {
