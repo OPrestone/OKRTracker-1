@@ -336,6 +336,40 @@ export default function OKRSystemSetupWizard() {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
+
+  // Fetch existing teams to preselect corresponding default templates
+  const { data: existingTeams = [] } = useQuery({
+    queryKey: ['/api/teams', tenantId],
+    enabled: !!tenantId,
+    meta: { requiresTenant: true },
+  });
+
+  // Effect to preselect teams that already exist in the tenant's organization
+  useEffect(() => {
+    if (existingTeams.length > 0) {
+      const matchingTemplates: string[] = [];
+      
+      existingTeams.forEach((team: any) => {
+        const teamName = team.name.toLowerCase();
+        
+        // Find matching default template based on team name
+        const matchingTemplate = defaultTeamTemplates.find(template => {
+          const templateName = template.name.toLowerCase();
+          return teamName.includes(template.id) || 
+                 templateName.includes(teamName) ||
+                 (template.id === 'engineering' && (teamName.includes('dev') || teamName.includes('tech'))) ||
+                 (template.id === 'customer-success' && teamName.includes('customer')) ||
+                 (template.id === 'hr' && (teamName.includes('human') || teamName.includes('people')));
+        });
+        
+        if (matchingTemplate && !matchingTemplates.includes(matchingTemplate.id)) {
+          matchingTemplates.push(matchingTemplate.id);
+        }
+      });
+      
+      setSelectedDefaultTeams(matchingTemplates);
+    }
+  }, [existingTeams]);
   
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
