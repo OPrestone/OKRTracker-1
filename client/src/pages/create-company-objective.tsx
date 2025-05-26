@@ -1094,12 +1094,36 @@ export default function CreateCompanyObjective() {
                             Next
                             <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
                           </Button>
-                        ) : (
+                        ) : !isObjectiveCreated ? (
                           <Button
                             type="submit"
                             className="w-full sm:w-auto bg-primary"
+                            disabled={createObjectiveMutation.isPending}
                           >
-                            Create Company Objective
+                            {createObjectiveMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Creating Objective...
+                              </>
+                            ) : (
+                              "Create Objective"
+                            )}
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            onClick={handleAddKeyResults}
+                            className="w-full sm:w-auto bg-primary"
+                            disabled={addKeyResultsMutation.isPending}
+                          >
+                            {addKeyResultsMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Adding Key Results...
+                              </>
+                            ) : (
+                              "Add Key Results & Complete"
+                            )}
                           </Button>
                         )}
                       </div>
