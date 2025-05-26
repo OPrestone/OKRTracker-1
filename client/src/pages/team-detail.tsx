@@ -46,7 +46,8 @@ import {
   UserPlus,
   Plus,
   ListPlus,
-  Crown
+  Crown,
+  Edit2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -127,7 +128,9 @@ export default function TeamDetailPage() {
   const [isCreateObjectiveModalOpen, setIsCreateObjectiveModalOpen] = useState(false);
   const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
   const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
+  const [isEditObjectiveModalOpen, setIsEditObjectiveModalOpen] = useState(false);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string | null>(null);
+  const [editingObjective, setEditingObjective] = useState<any>(null);
   
   // Function to handle opening the Add Key Result modal
   const handleAddKeyResult = (objectiveId: string) => {
@@ -1275,8 +1278,29 @@ export default function TeamDetailPage() {
                                     </div>
                                     
                                     <div className="flex gap-4">
-                                      <Button size="sm" variant="outline">Edit</Button>
-                                      <Button size="sm" variant="outline">Add Key Result</Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingObjective(objective);
+                                          setIsEditObjectiveModalOpen(true);
+                                        }}
+                                      >
+                                        <Edit2 className="h-3.5 w-3.5 mr-1" />
+                                        Edit
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleAddKeyResult(objective.id);
+                                        }}
+                                      >
+                                        <ListPlus className="h-3.5 w-3.5 mr-1" />
+                                        Add Key Result
+                                      </Button>
                                     </div>
                                   </div>
                                 </motion.div>
