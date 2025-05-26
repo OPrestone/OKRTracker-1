@@ -1645,10 +1645,15 @@ export class DatabaseStorage implements IStorage {
 
   // Key Results
   async createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult> {
+    console.log("createKeyResult called with:", JSON.stringify(keyResult, null, 2));
+    
     // Check if objectiveId is provided since it's required by the database
     if (!keyResult.objectiveId) {
+      console.log("ERROR: objectiveId is missing from keyResult:", keyResult);
       throw new Error("objectiveId is required to create a key result");
     }
+    
+    console.log("objectiveId found:", keyResult.objectiveId);
     
     // Map camelCase input to snake_case database columns
     const values = {
