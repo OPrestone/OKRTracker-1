@@ -715,8 +715,10 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : (
+                  ) : averageProgress !== null ? (
                     `${averageProgress}%`
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
                   )}
                 </p>
               </div>
