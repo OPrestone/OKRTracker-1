@@ -5929,7 +5929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Company objectives progress endpoint
+  // Company objectives progress endpoint with aggregated progress from linked OKRs
   app.get("/api/objectives/company", withTenant, async (req, res, next) => {
     try {
       // Get real company objectives from the database
@@ -5941,10 +5941,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter objectives where level is "company"
       const companyObjectives = allObjectives.filter(obj => obj.level === "company");
       
+      // For each company objective, calculate aggregated progress from linked OKRs
+      const companyObjectivesWithAggregatedProgress = await Promise.all(
+        companyObjectives.map(async (companyObjective) => {
+          // Find all objectives that are aligned to this company objective
+          const linkedObjectives = allObjectives.filter(obj => 
+            obj.alignmentType === 'company-objective' && 
+            obj.alignmentTargetId === companyObjective.id &&
+            obj.id !== companyObjective.id // Don't include the company objective itself
+          );
+          
+          let aggregatedProgress = 0;
+          let totalObjectives = linkedObjectives.length;
+          
+          if (totalObjectives > 0) {
+            // Calculate average progress from all linked objectives
+            const totalProgress = linkedObjectives.reduce((sum, obj) => {
+              // Use the objective's progress if available, otherwise calculate from key results
+              const objectiveProgress = obj.progress || 0;
+              return sum + objectiveProgress;
+            }, 0);
+            
+            aggregatedProgress = Math.round(totalProgress / totalObjectives);
+          } else {
+            // If no linked objectives, use the company objective's own progress
+            aggregatedProgress = companyObjective.progress || 0;
+          }
+          
+          // Get key results for the company objective itself (if any)
+          const keyResults = await storage.getKeyResultsByObjective(companyObjective.id);
+          
+          return {
+            ...companyObjective,
+            progress: aggregatedProgress,
+            linkedObjectivesCount: totalObjectives,
+            linkedObjectives: linkedObjectives.map(obj => ({
+              id: obj.id,
+              title: obj.title,
+              progress: obj.progress || 0,
+              teamId: obj.teamId,
+              ownerId: obj.ownerId
+            })),
+            keyResults: keyResults
+          };
+        })
+      );
+      
       // Log for debugging purposes
       console.log(`Found ${companyObjectives.length} company objectives for tenant ${tenantId}`);
+      console.log('Company objectives with aggregated progress:', companyObjectivesWithAggregatedProgress.map(obj => ({
+        id: obj.id,
+        title: obj.title,
+        progress: obj.progress,
+        linkedCount: obj.linkedObjectivesCount
+      })));
       
-      res.json(companyObjectives);
+      res.json(companyObjectivesWithAggregatedProgress);
     } catch (error) {
       next(error);
     }
