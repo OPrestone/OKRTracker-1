@@ -26,15 +26,66 @@ const StrategyMap = () => {
   
   // Company objectives
   const { data: objectives = [] } = useQuery({
-    queryKey: ['/api/objectives/company', organizationId],
+    queryKey: ['/api/objectives'],
     enabled: !!organizationId,
   }) as { data: any[] };
   
-  // Teams
+  // Teams with performance data
   const { data: teams = [] } = useQuery({
-    queryKey: ['/api/teams', organizationId],
+    queryKey: ['/api/teams'],
     enabled: !!organizationId,
   }) as { data: any[] };
+
+  // Organization/tenant data for mission
+  const { data: organizationData } = useQuery({
+    queryKey: ['/api/tenants'],
+    enabled: !!organizationId,
+  });
+
+  // Key results for progress calculations
+  const { data: keyResults = [] } = useQuery({
+    queryKey: ['/api/key-results'],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+
+  // Calculate progress for objectives based on key results
+  const objectivesWithProgress = objectives.map(objective => {
+    const relatedKeyResults = keyResults.filter(kr => kr.objectiveId === objective.id);
+    if (relatedKeyResults.length === 0) return { ...objective, progress: 0 };
+    
+    const totalProgress = relatedKeyResults.reduce((sum, kr) => {
+      if (kr.targetValue && kr.currentValue) {
+        return sum + (parseFloat(kr.currentValue) / parseFloat(kr.targetValue)) * 100;
+      }
+      return sum;
+    }, 0);
+    
+    return {
+      ...objective,
+      progress: Math.min(100, Math.round(totalProgress / relatedKeyResults.length))
+    };
+  });
+
+  // Calculate team performance based on their objectives
+  const teamsWithPerformance = teams.map(team => {
+    const teamObjectives = objectives.filter(obj => obj.teamId === team.id);
+    if (teamObjectives.length === 0) return { ...team, performance: 0 };
+    
+    const completedObjectives = teamObjectives.filter(obj => obj.status === 'completed').length;
+    const performance = Math.round((completedObjectives / teamObjectives.length) * 100);
+    
+    return {
+      ...team,
+      performance,
+      objectiveCount: teamObjectives.length,
+      completedObjectives
+    };
+  });
+
+  // Get current organization mission
+  const currentOrganization = organizationData?.find(org => org.id === organizationId);
+  const companyMission = currentOrganization?.mission || 
+    "To empower teams with tools and methodologies for achieving measurable success";
   
   return (
     <div className="relative">
@@ -54,13 +105,13 @@ const StrategyMap = () => {
         className="bg-white rounded-lg border border-neutral-200 p-8 min-h-[600px] overflow-auto"
         style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
       >
-        {objectives && teams ? (
+        {objectivesWithProgress && teamsWithPerformance ? (
           <div className="flex flex-col items-center">
             {/* Company Mission */}
             <div className="w-full max-w-md p-4 bg-neutral-100 rounded-lg text-center mb-8">
               <h3 className="font-medium text-lg text-neutral-900 mb-2">Company Mission</h3>
               <p className="text-sm text-neutral-700">
-                To empower teams with tools and methodologies for achieving measurable success
+                {companyMission}
               </p>
             </div>
             
@@ -82,7 +133,7 @@ const StrategyMap = () => {
             
             {/* Company Objectives */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 w-full max-w-5xl">
-              {objectives.map((objective: any) => (
+              {objectivesWithProgress.length > 0 ? objectivesWithProgress.map((objective: any) => (
                 <div key={objective.id} className="bg-white p-4 rounded-lg border border-primary-300 shadow-sm">
                   <h4 className="font-medium text-neutral-900 mb-1">{objective.title}</h4>
                   <div className="w-full bg-neutral-200 rounded-full h-1.5 mb-1">
@@ -92,8 +143,13 @@ const StrategyMap = () => {
                     ></div>
                   </div>
                   <p className="text-xs text-neutral-500">{objective.progress}% complete</p>
+                  <p className="text-xs text-neutral-400 mt-1">{objective.status}</p>
                 </div>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-neutral-500">No company objectives found. Create objectives to see them in the strategy map.</p>
+                </div>
+              )}
             </div>
             
             {/* Team Objectives Connection Lines */}
@@ -105,10 +161,12 @@ const StrategyMap = () => {
             
             {/* Teams Layer */}
             <div className="grid grid-cols-2 gap-6 mb-8 w-full max-w-4xl">
-              {teams.slice(0, 4).map((team: any) => (
+              {teamsWithPerformance.length > 0 ? teamsWithPerformance.slice(0, 4).map((team: any) => (
                 <div key={team.id} className="bg-white p-4 rounded-lg border border-neutral-300 shadow-sm">
                   <h4 className="font-medium text-neutral-900 mb-1">{team.name}</h4>
-                  <p className="text-xs text-neutral-600 mb-2">{team.memberCount} members</p>
+                  <p className="text-xs text-neutral-600 mb-2">
+                    {team.objectiveCount || 0} objectives • {team.completedObjectives || 0} completed
+                  </p>
                   <div className="w-full bg-neutral-200 rounded-full h-1.5 mb-1">
                     <div 
                       className="bg-accent-500 h-1.5 rounded-full" 
@@ -116,8 +174,15 @@ const StrategyMap = () => {
                     ></div>
                   </div>
                   <p className="text-xs text-neutral-500">{team.performance}% performance</p>
+                  {team.leaderId && (
+                    <p className="text-xs text-neutral-400 mt-1">Leader assigned</p>
+                  )}
                 </div>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-neutral-500">No teams found. Create teams to see them in the strategy map.</p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
