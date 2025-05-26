@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
+import { useTenantContext } from '@/hooks/use-tenant-context';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export function SetupWorkflow() {
   const [_, navigate] = useLocation();
   const { canCreateObjectives } = useUserPermissions();
   const { toast } = useToast();
+  const { currentTenant } = useTenantContext();
   
   // State for mission and vision inputs
   const [missionStatement, setMissionStatement] = useState("");
@@ -564,26 +566,16 @@ export function SetupWorkflow() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Button
-        onClick={() => setOpen(true)}
-        variant="default"
-        className="text-white flex items-center gap-2"
-      >
+    <Button
+      asChild
+      variant="default"
+      className="text-white flex items-center gap-2"
+    >
+      <Link href={`/${currentTenant?.id}/okr-system-setup`}>
         <Settings className="h-4 w-4" />
         <span>Set Up OKR System</span>
-      </Button>
-      
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <span>OKR System Setup</span>
-          </DialogTitle>
-          <DialogDescription>
-            Follow this guided workflow to set up your complete OKR system
-          </DialogDescription>
-        </DialogHeader>
+      </Link>
+    </Button>
         
         {/* Step Navigation */}
         <div className="px-6">
