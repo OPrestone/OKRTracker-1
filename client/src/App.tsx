@@ -86,6 +86,8 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { AuthGuard } from "@/lib/auth-guard";
 import { saveRedirectPath } from "@/lib/redirect-service";
 import { useAuth } from "@/hooks/use-auth";
+import { NotificationProvider } from "@/components/notifications/notification-provider";
+import { NotificationToastContainer } from "@/components/notifications/notification-toast";
 
 // Location tracker component to monitor navigation for proper redirects
 function LocationTracker() {
@@ -581,12 +583,15 @@ function App() {
         <AuthProvider>
           <TeamProvider>
             <HelpProvider>
-              <OnboardingProvider>
-                <LocationTracker />
-                <FeatureTour />
-                <OnboardingController />
-                <AppRoutes />
-              </OnboardingProvider>
+              <NotificationProvider>
+                <OnboardingProvider>
+                  <LocationTracker />
+                  <FeatureTour />
+                  <OnboardingController />
+                  <AppRoutes />
+                  <NotificationToastContainer />
+                </OnboardingProvider>
+              </NotificationProvider>
             </HelpProvider>
           </TeamProvider>
         </AuthProvider>
