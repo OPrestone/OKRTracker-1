@@ -336,6 +336,40 @@ export default function OKRSystemSetupWizard() {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
+
+  // Fetch existing teams to preselect corresponding default templates
+  const { data: existingTeams = [] } = useQuery({
+    queryKey: ['/api/teams', tenantId],
+    enabled: !!tenantId,
+    meta: { requiresTenant: true },
+  });
+
+  // Effect to preselect teams that already exist in the tenant's organization
+  useEffect(() => {
+    if (existingTeams.length > 0) {
+      const matchingTemplates: string[] = [];
+      
+      existingTeams.forEach((team: any) => {
+        const teamName = team.name.toLowerCase();
+        
+        // Find matching default template based on team name
+        const matchingTemplate = defaultTeamTemplates.find(template => {
+          const templateName = template.name.toLowerCase();
+          return teamName.includes(template.id) || 
+                 templateName.includes(teamName) ||
+                 (template.id === 'engineering' && (teamName.includes('dev') || teamName.includes('tech'))) ||
+                 (template.id === 'customer-success' && teamName.includes('customer')) ||
+                 (template.id === 'hr' && (teamName.includes('human') || teamName.includes('people')));
+        });
+        
+        if (matchingTemplate && !matchingTemplates.includes(matchingTemplate.id)) {
+          matchingTemplates.push(matchingTemplate.id);
+        }
+      });
+      
+      setSelectedDefaultTeams(matchingTemplates);
+    }
+  }, [existingTeams]);
   
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
@@ -1870,7 +1904,12 @@ export default function OKRSystemSetupWizard() {
                           <h3 className="text-lg font-medium mb-4">Upload Users via CSV</h3>
                           <p className="text-sm text-gray-600 mb-4">
                             Upload a CSV file with user information to add multiple users at once. 
-                            The CSV should have the following columns: email (required), name, role, department, team.
+                            <br />
+                            <strong>Required columns:</strong> email (must be unique)
+                            <br />
+                            <strong>Optional columns:</strong> name, role (admin/member/viewer), department, team
+                            <br />
+                            <em>Users will be created with secure temporary passwords and added to your organization automatically.</em>
                           </p>
                           
                           <div className="space-y-4">
@@ -1911,8 +1950,13 @@ export default function OKRSystemSetupWizard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => {
-                                    // Download sample CSV template
-                                    const sample = "email,name,role,department,team\njohn@example.com,John Doe,member,Marketing,Marketing Team\njane@example.com,Jane Smith,admin,Engineering,Engineering Team";
+                                    // Download comprehensive CSV template with all required fields
+                                    const sample = `email,name,role,department,team
+john.doe@company.com,John Doe,member,Marketing,Marketing Team
+jane.smith@company.com,Jane Smith,admin,Engineering,Engineering Team
+mike.johnson@company.com,Mike Johnson,member,Sales,Sales Team
+sarah.williams@company.com,Sarah Williams,viewer,HR,Human Resources
+david.brown@company.com,David Brown,admin,Finance,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');
@@ -1996,7 +2040,8 @@ export default function OKRSystemSetupWizard() {
                           </div>
                         </div>
 
-                        {/* Existing Teams Section */}
+                        {/* Existing Teams Section - Hidden per user request */}
+                        {/* 
                         <div className="mt-6 border-t pt-6">
                           <h3 className="text-lg font-medium mb-4">Select Teams to Include in OKR System</h3>
                           <p className="text-sm text-gray-600 mb-4">
@@ -2011,6 +2056,7 @@ export default function OKRSystemSetupWizard() {
                             }}
                           />
                         </div>
+                        */}
                       </div>
                     </div>
                   </CardContent>

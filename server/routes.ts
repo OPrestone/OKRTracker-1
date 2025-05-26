@@ -892,9 +892,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Batch creating teams:", teamsData);
       
+      // Get existing teams for this tenant to check for duplicates
+      const existingTeams = await db
+        .select({ name: teams.name })
+        .from(teams)
+        .where(eq(teams.tenantId, tenantId));
+      
+      const existingTeamNames = new Set(existingTeams.map(team => team.name.toLowerCase()));
+      console.log("Existing team names:", Array.from(existingTeamNames));
+      
       // Process each team
       const createdTeams = [];
+      const skippedTeams = [];
+      
       for (const teamData of teamsData) {
+        // Check if team with this name already exists (case-insensitive)
+        if (existingTeamNames.has(teamData.name?.toLowerCase())) {
+          console.log(`Skipping duplicate team: ${teamData.name}`);
+          skippedTeams.push(teamData.name);
+          continue;
+        }
+        
         // Parse and validate team data using the team schema
         try {
           const validTeamData = insertTeamSchema.parse({
@@ -908,6 +926,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (insertResult && insertResult.length > 0) {
             createdTeams.push(insertResult[0]);
+            // Add to existing names set to prevent duplicates within this batch
+            existingTeamNames.add(teamData.name.toLowerCase());
+            console.log(`Created team: ${teamData.name}`);
           }
         } catch (error) {
           console.error("Error creating team:", error);
@@ -916,9 +937,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Successfully created ${createdTeams.length} teams`);
+      if (skippedTeams.length > 0) {
+        console.log(`Skipped ${skippedTeams.length} duplicate teams:`, skippedTeams);
+      }
       
-      // Return the created teams
-      res.status(201).json(createdTeams);
+      // Return the created teams with information about skipped duplicates
+      res.status(201).json({
+        success: true,
+        createdTeams,
+        skippedDuplicates: skippedTeams,
+        message: `Created ${createdTeams.length} teams${skippedTeams.length > 0 ? `, skipped ${skippedTeams.length} duplicates` : ''}`
+      });
     } catch (error) {
       console.error("Error in batch team creation:", error);
       next(error);
@@ -969,13 +998,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Tenant ID is required" });
       }
       
+      // Get existing teams for this tenant to check for duplicates
+      const existingTeams = await db
+        .select({ name: teams.name })
+        .from(teams)
+        .where(eq(teams.tenantId, req.tenantId));
+      
+      const existingTeamNames = new Set(existingTeams.map(team => team.name.toLowerCase()));
+      console.log("Existing team names:", Array.from(existingTeamNames));
+
       const createdTeams = [];
+      const skippedTeams = [];
       
       // Create each team
       for (const teamData of req.body.teams) {
         if (!teamData.name) {
           console.log('Team name is required');
           continue; // Skip this team but continue processing others
+        }
+
+        // Check if team with this name already exists (case-insensitive)
+        if (existingTeamNames.has(teamData.name?.toLowerCase())) {
+          console.log(`Skipping duplicate team: ${teamData.name}`);
+          skippedTeams.push(teamData.name);
+          continue;
         }
         
         try {
@@ -989,6 +1035,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const team = await storage.createTeam(validatedData);
           createdTeams.push(team);
+          // Add to existing names set to prevent duplicates within this batch
+          existingTeamNames.add(teamData.name.toLowerCase());
           console.log(`Created team: ${team.name} with ID: ${team.id}`);
         } catch (validationError) {
           console.error(`Validation error for team ${teamData.name}:`, validationError);
@@ -996,10 +1044,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log(`Successfully created ${createdTeams.length} teams`);
+      if (skippedTeams.length > 0) {
+        console.log(`Skipped ${skippedTeams.length} duplicate teams:`, skippedTeams);
+      }
+
       res.status(201).json({ 
         success: true, 
-        message: `Successfully created ${createdTeams.length} teams`,
-        teams: createdTeams 
+        message: `Successfully created ${createdTeams.length} teams${skippedTeams.length > 0 ? `, skipped ${skippedTeams.length} duplicates` : ''}`,
+        teams: createdTeams,
+        skippedDuplicates: skippedTeams
       });
     } catch (error) {
       console.error('Error in batch team creation:', error);
