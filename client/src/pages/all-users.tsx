@@ -69,6 +69,8 @@ export default function AllUsers() {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isUpdateUserDialogOpen, setIsUpdateUserDialogOpen] = useState(false);
   const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserSchema | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -641,6 +643,56 @@ export default function AllUsers() {
       });
     }
   });
+
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/users/${userId}/reset-password`);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setIsResetPasswordDialogOpen(false);
+      setSelectedUser(null);
+      toast({
+        title: "Password reset successful",
+        description: `New password: ${data.newPassword}. The user should change this password on their next login.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error resetting password",
+        description: `There was a problem: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update permissions mutation
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async (data: { userId: string; tenantRole: string }) => {
+      const res = await apiRequest("PUT", `/api/users/${data.userId}/permissions`, {
+        tenantRole: data.tenantRole
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      // Invalidate user-related queries to refresh permissions
+      invalidateUserQueries();
+      setIsPermissionsDialogOpen(false);
+      setSelectedUser(null);
+      toast({
+        title: "Permissions updated",
+        description: "User permissions have been successfully updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error updating permissions",
+        description: `There was a problem: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
   
   const openDeleteDialog = (user: UserSchema) => {
     setSelectedUser(user);
@@ -650,6 +702,19 @@ export default function AllUsers() {
   const handleDeleteUser = () => {
     if (!selectedUser) return;
     deleteUserMutation.mutate(selectedUser.id);
+  };
+
+  const handleResetPassword = () => {
+    if (!selectedUser) return;
+    resetPasswordMutation.mutate(selectedUser.id);
+  };
+
+  const handleUpdatePermissions = (tenantRole: string) => {
+    if (!selectedUser) return;
+    updatePermissionsMutation.mutate({
+      userId: selectedUser.id,
+      tenantRole
+    });
   };
 
   const openUpdateUserDialog = (user: UserSchema) => {
@@ -677,6 +742,16 @@ export default function AllUsers() {
     
     setUpdateUserData(userData);
     setIsUpdateUserDialogOpen(true);
+  };
+
+  const openPermissionsDialog = (user: UserSchema) => {
+    setSelectedUser(user);
+    setIsPermissionsDialogOpen(true);
+  };
+
+  const openResetPasswordDialog = (user: UserSchema) => {
+    setSelectedUser(user);
+    setIsResetPasswordDialogOpen(true);
   };
 
   const handleUpdateUser = () => {
@@ -940,11 +1015,11 @@ export default function AllUsers() {
                   Add to Organization
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openPermissionsDialog(user)}>
                   <ShieldCheck className="h-4 w-4 mr-2" />
                   Manage Permissions
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openResetPasswordDialog(user)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Reset Password
                 </DropdownMenuItem>
@@ -1740,6 +1815,121 @@ export default function AllUsers() {
                   Updating...
                 </>
               ) : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permissions Management Dialog */}
+      <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage User Permissions</DialogTitle>
+            <DialogDescription>
+              Update the role and permissions for {selectedUser?.firstName} {selectedUser?.lastName} in this organization.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Organization Role</label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-member"
+                    name="tenantRole"
+                    value="member"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'member'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('member')}
+                  />
+                  <label htmlFor="role-member" className="text-sm">
+                    <span className="font-medium">Member</span> - Can view and participate in OKRs
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-admin"
+                    name="tenantRole"
+                    value="admin"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'admin'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('admin')}
+                  />
+                  <label htmlFor="role-admin" className="text-sm">
+                    <span className="font-medium">Admin</span> - Can manage users and organizational settings
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-owner"
+                    name="tenantRole"
+                    value="owner"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'owner'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('owner')}
+                  />
+                  <label htmlFor="role-owner" className="text-sm">
+                    <span className="font-medium">Owner</span> - Full organizational control and management
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsPermissionsDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              Generate a new password for {selectedUser?.firstName} {selectedUser?.lastName}. They will need to change this password on their next login.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Security Notice</p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    The new password will be displayed once. Make sure to securely share it with the user.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsResetPasswordDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleResetPassword}
+              disabled={resetPasswordMutation.isPending}
+              className="bg-yellow-600 hover:bg-yellow-700"
+            >
+              {resetPasswordMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resetting...
+                </>
+              ) : "Reset Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
