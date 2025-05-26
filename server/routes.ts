@@ -2636,6 +2636,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/objectives", withTenant, async (req, res, next) => {
     try {
+      console.log("=== OBJECTIVE CREATION STARTED ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("Tenant ID:", req.tenantId);
+      console.log("User ID:", req.user?.id);
+      
       // Make a copy of the request body to potentially modify date fields
       const requestData = { ...req.body };
       
