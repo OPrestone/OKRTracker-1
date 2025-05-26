@@ -1044,10 +1044,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log(`Successfully created ${createdTeams.length} teams`);
+      if (skippedTeams.length > 0) {
+        console.log(`Skipped ${skippedTeams.length} duplicate teams:`, skippedTeams);
+      }
+
       res.status(201).json({ 
         success: true, 
-        message: `Successfully created ${createdTeams.length} teams`,
-        teams: createdTeams 
+        message: `Successfully created ${createdTeams.length} teams${skippedTeams.length > 0 ? `, skipped ${skippedTeams.length} duplicates` : ''}`,
+        teams: createdTeams,
+        skippedDuplicates: skippedTeams
       });
     } catch (error) {
       console.error('Error in batch team creation:', error);
