@@ -33,6 +33,8 @@ import {
   Calendar,
   Award,
   Activity,
+  Crown,
+  Briefcase,
   /* Buildings, */
   CreditCard,
 } from "lucide-react";
@@ -43,6 +45,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserRole } from "@/hooks/use-user-role";
+import { useTeamLeader } from "@/hooks/use-team-leader";
 import { Separator } from "@/components/ui/separator";
 import TenantSwitcher from "@/components/tenant/tenant-switcher";
 import { Tenant } from "@/hooks/use-tenant-context";
@@ -54,6 +58,35 @@ interface SidebarProps {
 
 const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const { userRole } = useUserRole();
+  const { isTeamLeader } = useTeamLeader();
+
+  // Determine which dashboard to show based on user role
+  const getDashboardInfo = () => {
+    if (userRole === 'ceo') {
+      return {
+        path: '/ceo-dashboard',
+        label: 'CEO Dashboard',
+        icon: Crown
+      };
+    } else if (userRole === 'management') {
+      return {
+        path: '/management-dashboard',
+        label: 'Management Dashboard',
+        icon: Briefcase
+      };
+    } else if (isTeamLeader) {
+      return {
+        path: '/team-leader-dashboard',
+        label: 'Team Leader Dashboard',
+        icon: LayoutDashboard
+      };
+    }
+    return null;
+  };
+
+  const dashboardInfo = getDashboardInfo();
 
   // Check if any submenu paths are currently active to auto-expand parent menus
   // Use regex patterns to match both direct paths and organization-prefixed paths
@@ -124,7 +157,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   ]);
 
   // Get authenticated user and logout mutation from useAuth hook
-  const { user, logoutMutation } = useAuth();
+  const { logoutMutation } = useAuth();
 
   // Calculate initials for avatar
   const initials =
@@ -302,22 +335,25 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
-        <div
-          className={cn(
-            "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-            location === "/team-leader-dashboard"
-              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
-              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
-          )}
-        >
-          <Link
-            href={getLink("/team-leader-dashboard")}
-            className="flex items-center w-full"
+        {/* Role-based Dashboard Link */}
+        {dashboardInfo && (
+          <div
+            className={cn(
+              "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+              location === dashboardInfo.path
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
+            )}
           >
-            <LayoutDashboard className="h-4 w-4 mr-3" />
-            <span>Team Leader Dashboard</span>
-          </Link>
-        </div>
+            <Link
+              href={getLink(dashboardInfo.path)}
+              className="flex items-center w-full"
+            >
+              <dashboardInfo.icon className="h-4 w-4 mr-3" />
+              <span>{dashboardInfo.label}</span>
+            </Link>
+          </div>
+        )}
 
         {/* Strategy & Mission */}
         <div
