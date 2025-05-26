@@ -60,13 +60,8 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
 
   // Query for timeframes
   const { data: timeframes = [] } = useQuery({
-    queryKey: ["/api/timeframes", tenantId],
-    queryFn: async () => {
-      const res = await fetch(`/api/timeframes?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch timeframes");
-      return res.json();
-    },
-    enabled: !!tenantId && isOpen
+    queryKey: ["/api/timeframes"],
+    enabled: isOpen
   });
 
   const form = useForm<ObjectiveFormValues>({
@@ -83,26 +78,35 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
   // Create objective mutation
   const createObjectiveMutation = useMutation({
     mutationFn: async (data: ObjectiveFormValues) => {
-      return apiRequest("POST", `/api/objectives`, {
+      console.log("Creating objective with data:", { ...data, tenantId });
+      const response = await apiRequest("POST", `/api/objectives`, {
         ...data,
-        tenantId
+        tenantId,
+        level: "team", // Set default level for team objectives
+        ownerId: null // Will be set on the server
       });
+      console.log("Objective creation response:", response);
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Objective created successfully:", response);
       toast({
-        title: "Objective Created",
-        description: "The objective has been successfully created.",
+        title: "Success!",
+        description: "Team objective has been created successfully.",
       });
+      // Invalidate multiple related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "performance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       form.reset();
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Failed to create objective:", error);
       toast({
-        title: "Error",
-        description: `Failed to create objective: ${error.message}`,
+        title: "Failed to Create Objective",
+        description: error?.message || "There was an error creating the objective. Please try again.",
         variant: "destructive"
       });
     }
