@@ -151,6 +151,7 @@ export default function CreateCompanyObjective() {
   const [activeTab, setActiveTab] = useState<string>("details");
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [objectiveType, setObjectiveType] = useState<string>("financial");
+  const [createdObjectiveId, setCreatedObjectiveId] = useState<string | null>(null);
   
   // Set of objective types (matching the filtering options in company-okrs.tsx)
   const objectiveTypes = [
@@ -200,11 +201,11 @@ export default function CreateCompanyObjective() {
     }
   });
 
-  // Create objective mutation
+  // Create objective mutation (without key results)
   const createObjectiveMutation = useMutation({
     mutationFn: async (payload: any) => {
       // Log the payload for debugging
-      console.log("Sending payload to API:", payload);
+      console.log("Sending objective payload to API:", payload);
 
       const response = await apiRequest("POST", "/api/objectives", payload);
       if (!response.ok) {
@@ -217,18 +218,41 @@ export default function CreateCompanyObjective() {
       }
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Store the created objective ID for use in key results step
+      setCreatedObjectiveId(data.id);
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       toast({
-        title: "Company objective created",
-        description: "Your company objective has been successfully created",
+        title: "Objective saved",
+        description: "Your objective has been saved. Now let's add key results.",
       });
-      // Navigate to the company objectives list
-      setLocation("/company-okrs");
+      // Move to the next step (key results)
+      setCurrentStep(3);
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create company objective",
+        title: "Failed to save objective",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create key result mutation
+  const createKeyResultMutation = useMutation({
+    mutationFn: async (keyResultData: any) => {
+      console.log("Creating key result with data:", keyResultData);
+      
+      const response = await apiRequest("POST", "/api/simple-key-results", keyResultData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create key result");
+      }
+      return await response.json();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create key result",
         description: error.message,
         variant: "destructive",
       });
@@ -280,25 +304,18 @@ export default function CreateCompanyObjective() {
     setLocation("/company-okrs");
   };
 
-  const onSubmit = (values: ObjectiveFormValues) => {
-    // Log the form values and key results for debugging
-    console.log("Form values:", values);
+  const onSubmit = async (values: ObjectiveFormValues) => {
+    // This function now only handles key results creation since objective is already saved
+    console.log("Creating key results for objective ID:", createdObjectiveId);
     console.log("Key results:", keyResults);
     
-    // Check if timeframeId is missing or empty, and provide a fallback if needed
-    if (!values.timeframeId) {
-      // Check if we have any timeframes available
-      if (timeframes && timeframes.length > 0) {
-        values.timeframeId = timeframes[0].id;
-        console.log("Using default timeframe ID:", values.timeframeId);
-      } else {
-        toast({
-          title: "Timeframe Required",
-          description: "Please create a timeframe before creating objectives.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!createdObjectiveId) {
+      toast({
+        title: "Error",
+        description: "Objective must be saved before creating key results. Please go back to step 2.",
+        variant: "destructive",
+      });
+      return;
     }
     
     // Validate key results before submission
@@ -312,72 +329,68 @@ export default function CreateCompanyObjective() {
           description: "Each key result must have a title of at least 3 characters",
           variant: "destructive",
         });
-        setCurrentStep(3); // Ensure we're on the key results step
         return;
       }
       
-      // If there are no key results defined, add a default one
-      if (keyResults.length === 0) {
-        const defaultKeyResult = { 
-          title: "Achieve target goal", 
-          description: "Default key result", 
-          start_value: "0", 
-          current_value: "0", 
-          target_value: "100",
-          format: "number"
+      // Create key results one by one
+      let createdCount = 0;
+      const totalKeyResults = keyResults.length;
+      
+      for (const keyResult of keyResults) {
+        const keyResultPayload = {
+          title: keyResult.title,
+          description: keyResult.description || "",
+          start_value: keyResult.start_value || "0",
+          current_value: keyResult.current_value || keyResult.start_value || "0",
+          target_value: keyResult.target_value || "100",
+          status: "not_started",
+          objective_id: createdObjectiveId, // Use the saved objective ID
+          assigned_to_id: keyResult.assignedToId || null,
         };
-        setKeyResults([defaultKeyResult]);
         
-        // If we added a default key result, wait a moment to ensure state update before submission
-        setTimeout(() => {
-          // Create a payload with the default key result
-          const payload = {
-            ...values,
-            level: "company", // Set level to company for company objectives
-            type: objectiveType, // Include the objective type
-            keyResults: [{
-              title: "Achieve target goal", 
-              description: "Default key result", 
-              start_value: "0", 
-              current_value: "0", 
-              target_value: "100",
-              progress: 0,
-              status: "not_started"
-            }],
-            tags: selectedTags,
-            contributors: selectedContributors
-          };
-          console.log("Submitting payload with default key result:", payload);
-          // Create the objective with the default key result
-          createObjectiveMutation.mutate(payload);
-        }, 100);
-        return;
+        try {
+          await new Promise((resolve, reject) => {
+            createKeyResultMutation.mutate(keyResultPayload, {
+              onSuccess: () => {
+                createdCount++;
+                resolve(true);
+              },
+              onError: (error) => {
+                reject(error);
+              }
+            });
+          });
+        } catch (error) {
+          console.error("Failed to create key result:", error);
+          return; // Stop if any key result creation fails
+        }
       }
+      
+      // If all key results were created successfully
+      if (createdCount === totalKeyResults) {
+        queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/key-results"] });
+        
+        toast({
+          title: "Company objective created successfully",
+          description: `Created objective with ${createdCount} key result${createdCount > 1 ? 's' : ''}`,
+        });
+        
+        // Navigate to the company objectives list
+        setLocation("/company-okrs");
+      }
+    } else {
+      // If no key results are needed, just finish
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      
+      toast({
+        title: "Company objective created successfully",
+        description: "Your objective has been created without key results",
+      });
+      
+      // Navigate to the company objectives list
+      setLocation("/company-okrs");
     }
-
-    // Create combined payload with form values and key results
-    const payload = {
-      ...values,
-      level: "company", // Set level to company for company objectives
-      type: objectiveType, // Include the objective type
-      keyResults: keyResults.map(kr => ({
-        title: kr.title,
-        description: kr.description || "",
-        start_value: kr.start_value || "0",
-        current_value: kr.current_value || kr.start_value || "0",
-        target_value: kr.target_value || "100",
-        progress: kr.progress || 0,
-        status: "not_started",
-        assigned_to_id: kr.assignedToId
-      })),
-      tags: selectedTags,
-      contributors: selectedContributors
-    };
-    
-    console.log("Submitting payload:", payload);
-    
-    // Submit the payload directly through the mutation
-    createObjectiveMutation.mutate(payload);
   };
 
   const handleTeamChange = (teamId: string) => {
@@ -448,7 +461,7 @@ export default function CreateCompanyObjective() {
       if (!result) return;
     }
     
-    // If on alignment step, validate timeframe selection
+    // If on alignment step, validate timeframe selection and save objective
     if (currentStep === 2) {
       const result = await form.trigger(["timeframeId"]);
       if (!result) {
@@ -459,8 +472,43 @@ export default function CreateCompanyObjective() {
         });
         return;
       }
+      
+      // Save the objective after "Alignment & Ownership" step
+      const formValues = form.getValues();
+      
+      // Check if timeframeId is missing or empty, and provide a fallback if needed
+      if (!formValues.timeframeId) {
+        if (timeframes && timeframes.length > 0) {
+          formValues.timeframeId = timeframes[0].id;
+        } else {
+          toast({
+            title: "Timeframe Required",
+            description: "Please create a timeframe before creating objectives.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
+      // Create objective payload (without key results)
+      const objectivePayload = {
+        ...formValues,
+        level: "company",
+        status: "draft",
+        teamId: selectedTeam,
+        ownerId: selectedContributors.length > 0 ? selectedContributors[0] : undefined,
+        tags: selectedTags,
+        // Don't include key results in this step
+      };
+      
+      console.log("Saving objective after Alignment & Ownership step:", objectivePayload);
+      
+      // Save the objective
+      createObjectiveMutation.mutate(objectivePayload);
+      return; // Exit early, the mutation success handler will move to next step
     }
     
+    // For other steps, just move to next step normally
     setCurrentStep(Math.min(currentStep + 1, 3));
     if (currentStep === 1) setActiveTab("alignment");
     if (currentStep === 2) setActiveTab("key-results");
