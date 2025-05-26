@@ -297,43 +297,7 @@ export default function CreateCompanyObjective() {
     }
   };
 
-  const handleAddKeyResult = () => {
-    setKeyResults([...keyResults, { 
-      title: "", 
-      description: "", 
-      start_value: "0", 
-      current_value: "0", 
-      target_value: "100",
-      format: "number"
-    }]);
-  };
 
-  const handleRemoveKeyResult = (index: number) => {
-    const newKeyResults = [...keyResults];
-    newKeyResults.splice(index, 1);
-    setKeyResults(newKeyResults);
-  };
-
-  const handleKeyResultChange = (index: number, field: keyof KeyResult, value: string | number) => {
-    const newKeyResults = [...keyResults];
-    newKeyResults[index] = { ...newKeyResults[index], [field]: value };
-    
-    // Calculate progress based on values if it's a numeric field
-    if (field === 'current_value' || field === 'target_value' || field === 'start_value') {
-      const kr = newKeyResults[index];
-      const start = parseFloat(kr.start_value) || 0;
-      const current = parseFloat(kr.current_value) || 0;
-      const target = parseFloat(kr.target_value) || 100;
-      
-      // Only calculate if target is different from start to avoid division by zero
-      if (target !== start) {
-        const progress = ((current - start) / (target - start)) * 100;
-        newKeyResults[index].progress = Math.max(0, Math.min(100, progress));
-      }
-    }
-    
-    setKeyResults(newKeyResults);
-  };
 
   const nextStep = async () => {
     // Validate current step
@@ -342,27 +306,12 @@ export default function CreateCompanyObjective() {
       if (!result) return;
     }
     
-    // If on alignment step, validate timeframe selection
-    if (currentStep === 2) {
-      const result = await form.trigger(["timeframeId"]);
-      if (!result) {
-        toast({
-          title: "Timeframe Required",
-          description: "Please select a timeframe before proceeding.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
-    setCurrentStep(Math.min(currentStep + 1, 3));
+    setCurrentStep(Math.min(currentStep + 1, 2));
     if (currentStep === 1) setActiveTab("alignment");
-    if (currentStep === 2) setActiveTab("key-results");
   };
 
   const prevStep = () => {
     setCurrentStep(Math.max(currentStep - 1, 1));
-    if (currentStep === 3) setActiveTab("alignment");
     if (currentStep === 2) setActiveTab("details");
   };
 
@@ -370,7 +319,6 @@ export default function CreateCompanyObjective() {
     switch (step) {
       case 1: return "Company Objective Details";
       case 2: return "Alignment & Ownership";
-      case 3: return "Key Results";
       default: return "Create Company Objective";
     }
   };
