@@ -103,7 +103,7 @@ export default function CreateObjective() {
   
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
-    objectiveData.teamId && user.teamId?.toString() === objectiveData.teamId
+    objectiveData.teamId && user.teamId && user.teamId.toString() === objectiveData.teamId
   ) || [];
 
   const handleCancel = () => {
@@ -138,8 +138,8 @@ export default function CreateObjective() {
   const handleChange = (field: string, value: any) => {
     // If changing team, also reset selected contributors and auto-select team leader
     if (field === 'teamId') {
-      const selectedTeam = teams?.find(team => team.id.toString() === value);
-      const teamLeaderId = selectedTeam?.leaderId?.toString() || '';
+      const selectedTeam = teams?.find(team => team.id === value);
+      const teamLeaderId = selectedTeam?.leaderId || '';
       
       setObjectiveData(prev => ({
         ...prev,
