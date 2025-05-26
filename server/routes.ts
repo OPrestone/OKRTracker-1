@@ -12,7 +12,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
          projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema } from "@shared/schema";
 import { z } from "zod";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
 import { ulid } from "ulid";
 import { openAIService } from "./services/openai-service";
