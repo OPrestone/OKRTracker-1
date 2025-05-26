@@ -41,7 +41,7 @@ import { MessageSquare, ThumbsUp, AlertTriangle, HelpCircle, Eye, EyeOff } from 
 // Form schema
 const feedbackFormSchema = z.object({
   receiverId: z.string().min(1, "Please select a recipient"),
-  type: z.enum(["praise", "suggestion", "criticism", "question"], {
+  type: z.enum(["positive", "constructive", "recognition", "general"], {
     required_error: "Please select a feedback type",
   }),
   title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
@@ -63,30 +63,30 @@ function getUserInitials(firstName: string, lastName: string): string {
 // Feedback type options
 const feedbackTypes = [
   {
-    value: "praise" as const,
-    label: "Praise",
+    value: "positive" as const,
+    label: "Positive",
     description: "Recognize great work and achievements",
     icon: ThumbsUp,
     color: "text-green-600",
   },
   {
-    value: "suggestion" as const,
-    label: "Suggestion",
+    value: "constructive" as const,
+    label: "Constructive",
     description: "Offer ideas for improvement in a constructive way",
     icon: MessageSquare,
     color: "text-blue-600",
   },
   {
-    value: "criticism" as const,
-    label: "Constructive Feedback",
-    description: "Provide actionable feedback for growth",
+    value: "recognition" as const,
+    label: "Recognition",
+    description: "Highlight exceptional performance and contributions",
     icon: AlertTriangle,
     color: "text-orange-600",
   },
   {
-    value: "question" as const,
-    label: "Question",
-    description: "Ask for clarification or more information",
+    value: "general" as const,
+    label: "General",
+    description: "General feedback or observations",
     icon: HelpCircle,
     color: "text-purple-600",
   },
@@ -137,7 +137,8 @@ export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
         receiverId: data.receiverId,
         type: data.type,
         title: data.title,
-        content: data.message, // Backend expects 'content' not 'message'
+        content: data.message,
+        message: data.message, // Schema has both content and message fields
         visibility: data.visibility,
         objectiveId: data.objectiveId,
         keyResultId: data.keyResultId,

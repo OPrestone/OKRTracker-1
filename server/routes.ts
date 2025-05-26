@@ -4652,7 +4652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const feedbackData = {
         ...req.body,
-        senderId: req.user.id,
+        userId: req.user.id, // Schema expects userId, not senderId
         tenantId: tenantId // Add tenant ID to the feedback
       };
       
