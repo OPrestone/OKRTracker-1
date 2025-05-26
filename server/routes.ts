@@ -1556,6 +1556,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route has been moved to avoid duplication - see implementation at line ~1760
   // app.get("/api/teams/:teamId/users" ...
 
+  // Team Leader API Routes
+  app.get("/api/user/is-team-leader", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as User;
+      const tenantId = req.tenantId;
+
+      // Check if user is a leader of any team in current tenant
+      const leaderTeams = await db
+        .select()
+        .from(teams)
+        .where(and(
+          eq(teams.leaderId, user.id),
+          eq(teams.tenantId, tenantId)
+        ));
+
+      res.json(leaderTeams.length > 0);
+    } catch (error) {
+      console.error('Error checking team leader status:', error);
+      res.status(500).json({ error: "Failed to check team leader status" });
+    }
+  });
+
+  app.get("/api/teams/leader", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as User;
+      const tenantId = req.tenantId;
+
+      // Get teams where user is leader
+      const leaderTeams = await db
+        .select()
+        .from(teams)
+        .where(and(
+          eq(teams.leaderId, user.id),
+          eq(teams.tenantId, tenantId)
+        ));
+
+      // Get team members and performance data for each team
+      const teamsWithData = await Promise.all(
+        leaderTeams.map(async (team) => {
+          // Get team members
+          const members = await db
+            .select({
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              username: users.username,
+              email: users.email,
+              title: users.title,
+              avatarUrl: users.avatarUrl,
+            })
+            .from(usersToTeams)
+            .innerJoin(users, eq(usersToTeams.userId, users.id))
+            .where(eq(usersToTeams.teamId, team.id));
+
+          // Get team objectives
+          const objectives = await db
+            .select()
+            .from(objectivesTable)
+            .where(and(
+              eq(objectivesTable.teamId, team.id),
+              eq(objectivesTable.tenantId, tenantId)
+            ));
+
+          // Get key results for team objectives
+          const keyResults = await db
+            .select()
+            .from(keyResultsTable)
+            .where(and(
+              inArray(keyResultsTable.objectiveId, objectives.map(obj => obj.id)),
+              eq(keyResultsTable.tenantId, tenantId)
+            ));
+
+          return {
+            ...team,
+            members: members.map(member => ({
+              ...member,
+              name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || member.username || member.email
+            })),
+            objectives,
+            keyResults,
+            memberCount: members.length,
+            objectiveCount: objectives.length,
+            completedObjectives: objectives.filter(obj => obj.status === 'completed').length,
+            inProgressObjectives: objectives.filter(obj => obj.status === 'active').length,
+            keyResultCount: keyResults.length,
+            completedKeyResults: keyResults.filter(kr => (kr.currentValue || 0) >= (kr.targetValue || 1)).length
+          };
+        })
+      );
+
+      res.json(teamsWithData);
+    } catch (error) {
+      console.error('Error getting leader teams:', error);
+      res.status(500).json({ error: "Failed to get leader teams" });
+    }
+  });
+
   // Access Groups API
   app.get("/api/access-groups", withTenant, async (req, res, next) => {
     try {
