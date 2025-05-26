@@ -78,23 +78,24 @@ export default function AddKeyResultDialog({
         throw new Error("Objective ID is required to create a key result");
       }
       
-      const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
-      
-      // Convert to the exact format expected by the backend validation
+      // Use the same reliable approach as the create-company-objective page
       const formattedData = {
         title: data.title,
         description: data.description,
-        objectiveId: objectiveId, // Backend validation expects camelCase
+        objectiveId: objectiveId,
         startValue: String(data.startValue),
         targetValue: String(data.targetValue),
         currentValue: String(data.currentValue || data.startValue),
-        progress: Math.max(0, Math.min(100, progress)),
-        status: "not_started", // Default status
+        status: "not_started",
         tenantId: currentTenant?.id
       };
       
       console.log("Submitting key result with formatted data:", formattedData);
-      const response = await apiRequest("POST", "/api/key-results", formattedData);
+      const response = await apiRequest("POST", "/api/simple-key-results", formattedData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create key result");
+      }
       return response.json();
     },
     onSuccess: () => {
