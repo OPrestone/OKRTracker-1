@@ -490,31 +490,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               </Link>
             </div>
 
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/approved-okrs"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/approved-okrs")} className="w-full">
-                Approved OKRs
-              </Link>
-            </div>
 
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/progress-dashboard"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/progress-dashboard")} className="w-full">
-                Progress Tracker
-              </Link>
-            </div>
           </div>
         )}
 

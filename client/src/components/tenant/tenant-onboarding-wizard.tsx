@@ -659,6 +659,7 @@ export default function TenantOnboardingWizard() {
       setTimeout(() => {
         // Redirect to the OKR system setup page
         navigate(`/${data.tenant.id}/okr-system-setup`);
+        window.location.reload();
       }, 1000);
     },
 
@@ -796,7 +797,7 @@ export default function TenantOnboardingWizard() {
 
               {/* Organization Details */}
               <TabsContent value="organization" className="mt-0 space-y-6">
-                <div className="mb-6">
+                <div className="m-6">
                   <h2 className="text-2xl font-bold text-gray-900">Organization Details</h2>
                   <p className="text-gray-500">Tell us about your organization</p>
                 </div>
@@ -957,7 +958,7 @@ export default function TenantOnboardingWizard() {
 
               {/* Subscription Plan */}
               <TabsContent value="plan" className="mt-0 space-y-6">
-                <div className="mb-6">
+                <div className="m-6">
                   <h2 className="text-2xl font-bold text-gray-900">Choose Your Plan</h2>
                   <p className="text-gray-500">Select the subscription plan that fits your needs</p>
                 </div>
@@ -1102,57 +1103,7 @@ export default function TenantOnboardingWizard() {
                   </CardFooter>
                 </Card>
               </TabsContent>
-
-
             </Tabs>
-
-            {/* Navigation buttons */}
-            <span>Test {JSON.stringify(form.formState.errors)}</span>
-            <div className="flex justify-between mt-8">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={goToPreviousStep}
-                disabled={activeIndex === 0}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Previous
-              </Button>
-
-              {activeIndex < steps.length - 1 ? (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const nextIndex = activeIndex + 1;
-                    if (nextIndex < steps.length) {
-                      setActivePage(steps[nextIndex].id);
-                    }
-                  }}
-                  disabled={!isCurrentStepValid()}
-                >
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !isCurrentStepValid()}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Organization...
-                    </>
-                  ) : (
-                    <>
-                      Create Organization
-                      <Rocket className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
           </form>
         </Form>
       </div>

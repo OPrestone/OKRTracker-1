@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
+import { useTenantContext } from '@/hooks/use-tenant-context';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export function SetupWorkflow() {
   const [_, navigate] = useLocation();
   const { canCreateObjectives } = useUserPermissions();
   const { toast } = useToast();
+  const { currentTenant } = useTenantContext();
   
   // State for mission and vision inputs
   const [missionStatement, setMissionStatement] = useState("");
@@ -564,118 +566,15 @@ export function SetupWorkflow() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Button
-        onClick={() => setOpen(true)}
-        variant="default"
-        className="text-white flex items-center gap-2"
-      >
+    <Button
+      asChild
+      variant="default"
+      className="text-white flex items-center gap-2"
+    >
+      <Link href={`/${currentTenant?.id}/okr-system-setup`}>
         <Settings className="h-4 w-4" />
         <span>Set Up OKR System</span>
-      </Button>
-      
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <span>OKR System Setup</span>
-          </DialogTitle>
-          <DialogDescription>
-            Follow this guided workflow to set up your complete OKR system
-          </DialogDescription>
-        </DialogHeader>
-        
-        {/* Step Navigation */}
-        <div className="px-6">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-muted-foreground">
-              Step {currentStep + 1} of {setupSteps.length}
-            </span>
-            <span className="text-sm font-medium text-neutral-900">
-              {setupSteps[currentStep].title}
-            </span>
-          </div>
-          
-          <div className="flex space-x-1 mb-4">
-            {setupSteps.map((_, index) => (
-              <button
-                key={index}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full transition-colors",
-                  currentStep === index
-                    ? "bg-primary"
-                    : index < currentStep
-                    ? "bg-primary/40"
-                    : "bg-neutral-200"
-                )}
-                onClick={() => handleSkipToStep(index)}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Steps List */}
-        <div className="grid grid-cols-5 border-y">
-          <div className="col-span-1 bg-neutral-50 border-r min-h-[500px]">
-            <ScrollArea className="h-[500px]">
-              <div className="p-2">
-                {setupSteps.map((step, index) => (
-                  <button
-                    key={step.id}
-                    className={cn(
-                      "w-full text-left px-3 py-2.5 rounded-md transition-colors mb-1 flex items-center text-sm",
-                      currentStep === index
-                        ? "bg-primary text-primary-foreground font-medium"
-                        : index < currentStep
-                        ? "text-neutral-900 hover:bg-neutral-100"
-                        : "text-neutral-500 hover:bg-neutral-100"
-                    )}
-                    onClick={() => handleSkipToStep(index)}
-                  >
-                    <div className={cn(
-                      "mr-3 rounded-full p-1.5",
-                      currentStep === index 
-                        ? "bg-white/20" 
-                        : index < currentStep
-                        ? "bg-primary/10 text-primary"
-                        : "bg-neutral-200"
-                    )}>
-                      {currentStep > index ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        step.icon
-                      )}
-                    </div>
-                    {step.title}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-          
-          {/* Step Content */}
-          <div className="col-span-4 p-6">
-            <ScrollArea className="h-[500px] pr-4">
-              {setupSteps[currentStep].component}
-            </ScrollArea>
-          </div>
-        </div>
-        
-        {/* Navigation Footer */}
-        <DialogFooter className="p-4 flex justify-between border-t bg-neutral-50">
-          <Button 
-            variant="outline" 
-            onClick={handlePreviousStep}
-            disabled={currentStep === 0}
-          >
-            Previous Step
-          </Button>
-          
-          <Button onClick={handleNextStep}>
-            {currentStep < setupSteps.length - 1 ? 'Next Step' : 'Finish Setup'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </Link>
+    </Button>
   );
 }

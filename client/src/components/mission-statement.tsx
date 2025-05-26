@@ -52,22 +52,24 @@ export function MissionStatement({ className, tenantId: propTenantId }: MissionS
     queryFn: async () => {
       if (!tenantId) return null;
       
-      // Note: The server uses withTenant middleware which extracts tenantId from URL params,
-      // but we need to explicitly include it in the header for the API to use it correctly
-      const response = await fetch('/api/organization-mission', { 
+      // Use the query parameter approach that the backend expects
+      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, { 
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId
+          'Content-Type': 'application/json'
         }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch mission data');
+        if (response.status === 404) {
+          // Return null for 404, meaning no mission data exists yet
+          return null;
+        }
+        throw new Error(`Failed to fetch mission data: ${response.status}`);
       }
       
-      const text = await response.text();
-      return text ? JSON.parse(text) : null;
+      const data = await response.json();
+      return data;
     },
     enabled: !!tenantId // Only run query when tenantId is available
   });

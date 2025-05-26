@@ -263,10 +263,13 @@ export default function TeamDetailPage() {
   }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast, refetchTeams]);
 
   // Query for team members data
-  const { data: members = [], isLoading: membersLoading } = useQuery({
+  const { data: membersData, isLoading: membersLoading } = useQuery({
     queryKey: ["/api/teams", team?.id || teamId, "users", tenantId],
     enabled: !!(team?.id || teamId) && !!tenantId,
   });
+
+  // Ensure members is always an array
+  const members = Array.isArray(membersData) ? membersData : [];
 
   // Query for team objectives data
   const { data: objectives = [], isLoading: objectivesLoading } = useQuery({
