@@ -2797,6 +2797,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestData.level = requestData.teamId ? 'team' : 'company';
       }
       
+      // Set the ownerId if not provided (use current user as owner)
+      if (!requestData.ownerId) {
+        requestData.ownerId = req.user?.id;
+      }
+      
       // Check if the user is an admin or owner of the tenant
       const userId = req.user.id;
       const tenantId = req.tenantId;
