@@ -146,7 +146,13 @@ export default function AllUsers() {
       }
     },
     onSuccess: (data) => {
+      // Comprehensive data refresh to display current information
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      // Force immediate refetch to show updated data
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
       
       // If the user is assigned to a team, also invalidate team members
       if (data.teamId) {
@@ -185,7 +191,7 @@ export default function AllUsers() {
   
   const openTeamAssignDialog = (user: UserSchema) => {
     setSelectedUser(user);
-    setTeamAssignment({ teamId: user.teamId?.toString() || "0" });
+    setTeamAssignment({ teamId: user.teamId?.toString() || "" });
     setIsTeamAssignDialogOpen(true);
   };
 
@@ -196,8 +202,13 @@ export default function AllUsers() {
       return await res.json();
     },
     onSuccess: () => {
+      // Comprehensive data refresh to display current information
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      // Force immediate refetch to show updated data
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
       
       setIsOrgAssignDialogOpen(false);
       setSelectedUser(null);
@@ -312,7 +323,13 @@ export default function AllUsers() {
       }
     },
     onSuccess: (data) => {
+      // Comprehensive data refresh to display current information
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      // Force immediate refetch to show updated data
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
       
       // If a team was assigned, also invalidate team members
       if (data.teamId) {
@@ -398,7 +415,14 @@ export default function AllUsers() {
     onSuccess: (results) => {
       setUploadResults(results);
       setIsUploading(false);
+      
+      // Comprehensive data refresh to display current information
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      
+      // Force immediate refetch to show updated data
+      queryClient.refetchQueries({ queryKey: ["/api/users"] });
       
       toast({
         title: "Bulk Upload Complete",
@@ -1264,7 +1288,7 @@ export default function AllUsers() {
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">
+                  <SelectItem value="">
                     <div className="flex items-center">
                       <UserX className="h-4 w-4 mr-2 text-muted-foreground" />
                       No Team
