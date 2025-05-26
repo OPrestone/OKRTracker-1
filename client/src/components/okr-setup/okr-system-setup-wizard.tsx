@@ -1904,7 +1904,12 @@ export default function OKRSystemSetupWizard() {
                           <h3 className="text-lg font-medium mb-4">Upload Users via CSV</h3>
                           <p className="text-sm text-gray-600 mb-4">
                             Upload a CSV file with user information to add multiple users at once. 
-                            The CSV should have the following columns: email (required), name, role, department, team.
+                            <br />
+                            <strong>Required columns:</strong> email (must be unique)
+                            <br />
+                            <strong>Optional columns:</strong> name, role (admin/member/viewer), department, team
+                            <br />
+                            <em>Users will be created with secure temporary passwords and added to your organization automatically.</em>
                           </p>
                           
                           <div className="space-y-4">
@@ -1945,8 +1950,13 @@ export default function OKRSystemSetupWizard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => {
-                                    // Download sample CSV template
-                                    const sample = "email,name,role,department,team\njohn@example.com,John Doe,member,Marketing,Marketing Team\njane@example.com,Jane Smith,admin,Engineering,Engineering Team";
+                                    // Download comprehensive CSV template with all required fields
+                                    const sample = `email,name,role,department,team
+john.doe@company.com,John Doe,member,Marketing,Marketing Team
+jane.smith@company.com,Jane Smith,admin,Engineering,Engineering Team
+mike.johnson@company.com,Mike Johnson,member,Sales,Sales Team
+sarah.williams@company.com,Sarah Williams,viewer,HR,Human Resources
+david.brown@company.com,David Brown,admin,Finance,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');
