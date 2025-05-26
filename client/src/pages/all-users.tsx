@@ -46,7 +46,10 @@ import {
   User as UserIcon,
   UserX,
   ChevronDown,
-  Loader2
+  Loader2,
+  Upload,
+  Download,
+  FileText
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -65,7 +68,16 @@ export default function AllUsers() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isUpdateUserDialogOpen, setIsUpdateUserDialogOpen] = useState(false);
+  const [isBulkUploadDialogOpen, setIsBulkUploadDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserSchema | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResults, setUploadResults] = useState<{
+    total: number;
+    successful: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
   const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
     tenantId: "", 
@@ -331,6 +343,175 @@ export default function AllUsers() {
       });
     }
   });
+
+  // Bulk upload mutation
+  const bulkUploadMutation = useMutation({
+    mutationFn: async (users: any[]) => {
+      const results = {
+        total: users.length,
+        successful: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        setUploadProgress(((i + 1) / users.length) * 100);
+
+        try {
+          const res = await apiRequest("POST", `/api/users`, {
+            email: user.email,
+            firstName: user.firstName || user.first_name,
+            lastName: user.lastName || user.last_name,
+            username: user.username || user.email,
+            password: user.password || undefined, // Will be auto-generated if not provided
+            department: user.department,
+            title: user.title,
+            role: user.role || 'member',
+            teamId: user.teamId || null,
+            tenantId: tenantId,
+          });
+
+          if (res.ok) {
+            results.successful++;
+          } else {
+            const errorData = await res.json();
+            results.failed++;
+            results.errors.push(`Row ${i + 1}: ${errorData.message || 'Failed to create user'}`);
+          }
+        } catch (error: any) {
+          results.failed++;
+          results.errors.push(`Row ${i + 1}: ${error.message || 'Network error'}`);
+        }
+      }
+
+      return results;
+    },
+    onSuccess: (results) => {
+      setUploadResults(results);
+      setIsUploading(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      toast({
+        title: "Bulk Upload Complete",
+        description: `${results.successful} users created successfully, ${results.failed} failed`,
+        variant: results.failed > 0 ? "destructive" : "default",
+      });
+    },
+    onError: (error: any) => {
+      setIsUploading(false);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to process bulk upload",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // CSV processing function
+  const processCSV = (csvText: string) => {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) {
+      throw new Error('CSV must have at least a header row and one data row');
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    const users = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+      const user: any = {};
+
+      headers.forEach((header, index) => {
+        if (values[index]) {
+          // Map common header variations
+          switch (header) {
+            case 'email':
+            case 'email address':
+              user.email = values[index];
+              break;
+            case 'firstname':
+            case 'first name':
+            case 'first_name':
+              user.firstName = values[index];
+              break;
+            case 'lastname':
+            case 'last name':
+            case 'last_name':
+              user.lastName = values[index];
+              break;
+            case 'username':
+            case 'user name':
+              user.username = values[index];
+              break;
+            case 'department':
+              user.department = values[index];
+              break;
+            case 'title':
+            case 'job title':
+              user.title = values[index];
+              break;
+            case 'role':
+              user.role = values[index];
+              break;
+            case 'password':
+              user.password = values[index];
+              break;
+            case 'teamid':
+            case 'team id':
+            case 'team_id':
+              user.teamId = values[index];
+              break;
+          }
+        }
+      });
+
+      if (user.email) {
+        users.push(user);
+      }
+    }
+
+    return users;
+  };
+
+  // Handle bulk upload
+  const handleBulkUpload = async (file: File) => {
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+      setUploadResults(null);
+
+      const text = await file.text();
+      const users = processCSV(text);
+
+      if (users.length === 0) {
+        throw new Error('No valid users found in CSV file');
+      }
+
+      bulkUploadMutation.mutate(users);
+    } catch (error: any) {
+      setIsUploading(false);
+      toast({
+        title: "Error Processing CSV",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Generate CSV template
+  const downloadCSVTemplate = () => {
+    const csvContent = "email,firstName,lastName,username,department,title,role,password\njohn.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,member,tempPassword123\njane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,member,tempPassword456";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'user_upload_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
 
   // Update user mutation
   const updateUserMutation = useMutation({
@@ -817,6 +998,10 @@ export default function AllUsers() {
             <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/users"] })}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsBulkUploadDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Bulk Upload
             </Button>
             <Button onClick={openAddUserDialog} size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -1555,6 +1740,111 @@ export default function AllUsers() {
                   Updating...
                 </>
               ) : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Upload Dialog */}
+      <Dialog open={isBulkUploadDialogOpen} onOpenChange={setIsBulkUploadDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Users</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file to add multiple users at once. Users will be saved directly to your database.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Download Template */}
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div className="flex items-center space-x-3">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">CSV Template</p>
+                  <p className="text-xs text-muted-foreground">Download the template to see required format</p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={downloadCSVTemplate}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Upload CSV File</label>
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleBulkUpload(file);
+                  }
+                }}
+                disabled={isUploading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Required columns: email, firstName, lastName. Optional: username, department, title, role, password
+              </p>
+            </div>
+
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Uploading users...</span>
+                  <span className="text-sm text-muted-foreground">{Math.round(uploadProgress)}%</span>
+                </div>
+                <Progress value={uploadProgress} className="w-full" />
+              </div>
+            )}
+
+            {/* Upload Results */}
+            {uploadResults && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{uploadResults.successful}</div>
+                    <div className="text-sm text-green-600">Successful</div>
+                  </div>
+                  <div className="text-center p-3 bg-red-50 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{uploadResults.failed}</div>
+                    <div className="text-sm text-red-600">Failed</div>
+                  </div>
+                </div>
+
+                {uploadResults.errors.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-red-600">Errors:</p>
+                    <div className="max-h-32 overflow-y-auto space-y-1">
+                      {uploadResults.errors.map((error, index) => (
+                        <p key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                          {error}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsBulkUploadDialogOpen(false);
+                setUploadResults(null);
+                setUploadProgress(0);
+              }}
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
