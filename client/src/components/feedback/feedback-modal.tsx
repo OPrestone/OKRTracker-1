@@ -132,18 +132,34 @@ export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
   const feedbackMutation = useMutation({
     mutationFn: async (data: FeedbackFormValues) => {
       console.log("Submitting feedback with data:", data);
-      return apiRequest("/api/feedback", {
+      
+      const requestBody = {
+        receiverId: data.receiverId,
+        type: data.type,
+        title: data.title,
+        content: data.message, // Backend expects 'content' not 'message'
+        visibility: data.visibility,
+        objectiveId: data.objectiveId,
+        keyResultId: data.keyResultId,
+      };
+      
+      console.log("Request body:", requestBody);
+      
+      const response = await fetch("/api/feedback", {
         method: "POST",
-        body: JSON.stringify({
-          receiverId: data.receiverId,
-          type: data.type,
-          title: data.title,
-          content: data.message, // Backend expects 'content' not 'message'
-          visibility: data.visibility,
-          objectiveId: data.objectiveId,
-          keyResultId: data.keyResultId,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Important for session cookies
+        body: JSON.stringify(requestBody),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
