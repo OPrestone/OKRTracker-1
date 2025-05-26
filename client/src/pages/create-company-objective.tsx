@@ -66,6 +66,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { InsertObjective } from "@shared/schema";
 import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
+import { invalidateObjectiveQueries } from "@/lib/query-invalidation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -181,11 +182,8 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalidate all related queries to refresh data across the app
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
+      // Use centralized invalidation to refresh all related queries across the app
+      invalidateObjectiveQueries(queryClient);
       toast({
         title: "Company objective created successfully!",
         description: "Your objective has been added to the company OKRs.",
@@ -217,11 +215,8 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: (data) => {
-      // Invalidate all related queries to refresh data across the app
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
+      // Use centralized invalidation to refresh all related queries across the app
+      invalidateObjectiveQueries(queryClient);
       toast({
         title: "Company objective created successfully!",
         description: "Ready to create another objective.",
