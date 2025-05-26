@@ -17,9 +17,13 @@ import {
   Users, 
   User, 
   Search,
-  Filter
+  Filter,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface OKRItem {
   id: string;
@@ -34,56 +38,6 @@ interface OKRItem {
   isExpanded: boolean;
   children?: OKRItem[];
 }
-
-const MOCK_OKRS: OKRItem[] = [
-  {
-    id: '1',
-    title: 'Market Expansion & Growth',
-    team: ['ICT Team'],
-    owner: { name: 'Team Lead', initials: 'TL' },
-    progress: 45,
-    status: 'on-track',
-    isExpanded: true,
-    children: [
-      {
-        id: '1-1',
-        title: 'Enhance technical website performance to improve UX and search rankings',
-        team: ['ICT Team', 'Operations'],
-        owner: { name: 'Bryan Little', initials: 'BL' },
-        progress: 39,
-        status: 'on-track',
-        isExpanded: false
-      },
-      {
-        id: '1-2',
-        title: 'Drive new customer acquisition and revenue growth from inbound channels',
-        team: ['ICT Team', 'Operations', 'Sales'],
-        owner: { name: 'Sophia Hansen', initials: 'SH' },
-        progress: 37,
-        status: 'on-track',
-        isExpanded: false
-      },
-      {
-        id: '1-3',
-        title: 'Build a powerful Outbound engine that drives significant revenue',
-        team: ['ICT Team', 'Operations'],
-        owner: { name: 'Sophia Hansen', initials: 'SH' },
-        progress: 69,
-        status: 'on-track',
-        isExpanded: false
-      }
-    ]
-  },
-  {
-    id: '2',
-    title: 'Fill the Sales pipeline with tons of qualified organic leads',
-    team: ['ICT Team', 'Operations'],
-    owner: { name: 'Bryan Little', initials: 'BL' },
-    progress: 36,
-    status: 'on-track',
-    isExpanded: false
-  }
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -113,32 +67,112 @@ function CustomProgress({ value, color }: { value: number; color: string }) {
 
 export function TeamsOkrsView() {
   const [activeTab, setActiveTab] = useState<'okrs' | 'check-ins' | 'dashboard'>('okrs');
-  const [okrs, setOkrs] = useState<OKRItem[]>(MOCK_OKRS);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Fetch teams data
+  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery({
+    queryKey: ['/api/teams'],
+  });
+
+  // Fetch objectives data
+  const { data: objectives = [], isLoading: objectivesLoading, error: objectivesError } = useQuery({
+    queryKey: ['/api/objectives'],
+  });
+
+  // Fetch key results data
+  const { data: keyResults = [], isLoading: keyResultsLoading, error: keyResultsError } = useQuery({
+    queryKey: ['/api/key-results'],
+  });
+
+  // Fetch users data for owner information
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
+    queryKey: ['/api/users'],
+  });
+
+  const isLoading = teamsLoading || objectivesLoading || keyResultsLoading || usersLoading;
+  const hasError = teamsError || objectivesError || keyResultsError || usersError;
+
+  // Transform database data into OKR format
+  const transformedOkrs: OKRItem[] = React.useMemo(() => {
+    if (!objectives.length || !teams.length || !users.length) return [];
+
+    return objectives.map((objective: any) => {
+      // Find the owner user
+      const ownerUser = users.find((user: any) => user.id === objective.ownerId);
+      const ownerName = ownerUser ? `${ownerUser.firstName || ''} ${ownerUser.lastName || ''}`.trim() || ownerUser.username || 'Unknown' : 'Unknown';
+      const ownerInitials = ownerUser ? 
+        (ownerUser.firstName && ownerUser.lastName ? 
+          `${ownerUser.firstName[0]}${ownerUser.lastName[0]}`.toUpperCase() : 
+          ownerUser.username?.[0]?.toUpperCase() || 'U') : 'U';
+
+      // Find the team
+      const team = teams.find((team: any) => team.id === objective.teamId);
+      const teamNames = team ? [team.name] : ['Unknown Team'];
+
+      // Calculate progress from key results
+      const objectiveKeyResults = keyResults.filter((kr: any) => kr.objectiveId === objective.id);
+      const averageProgress = objectiveKeyResults.length > 0 ? 
+        Math.round(objectiveKeyResults.reduce((sum: number, kr: any) => sum + (kr.progress || 0), 0) / objectiveKeyResults.length) : 0;
+
+      // Determine status based on progress
+      const status = averageProgress >= 70 ? 'on-track' : averageProgress >= 40 ? 'at-risk' : 'behind';
+
+      // Transform key results into children
+      const children: OKRItem[] = objectiveKeyResults.map((kr: any) => {
+        const krOwnerUser = users.find((user: any) => user.id === kr.assignedToId);
+        const krOwnerName = krOwnerUser ? `${krOwnerUser.firstName || ''} ${krOwnerUser.lastName || ''}`.trim() || krOwnerUser.username || 'Unknown' : 'Unknown';
+        const krOwnerInitials = krOwnerUser ? 
+          (krOwnerUser.firstName && krOwnerUser.lastName ? 
+            `${krOwnerUser.firstName[0]}${krOwnerUser.lastName[0]}`.toUpperCase() : 
+            krOwnerUser.username?.[0]?.toUpperCase() || 'U') : 'U';
+
+        const krProgress = kr.progress || 0;
+        const krStatus = krProgress >= 70 ? 'on-track' : krProgress >= 40 ? 'at-risk' : 'behind';
+
+        return {
+          id: kr.id,
+          title: kr.title,
+          team: teamNames,
+          owner: {
+            name: krOwnerName,
+            initials: krOwnerInitials
+          },
+          progress: krProgress,
+          status: krStatus,
+          isExpanded: expandedItems.has(kr.id)
+        };
+      });
+
+      return {
+        id: objective.id,
+        title: objective.title,
+        team: teamNames,
+        owner: {
+          name: ownerName,
+          initials: ownerInitials
+        },
+        progress: averageProgress,
+        status: status,
+        isExpanded: expandedItems.has(objective.id),
+        children: children.length > 0 ? children : undefined
+      };
+    });
+  }, [objectives, teams, users, keyResults, expandedItems]);
 
   const toggleExpand = (id: string) => {
-    setOkrs(prevOkrs => 
-      prevOkrs.map(okr => {
-        if (okr.id === id) {
-          return { ...okr, isExpanded: !okr.isExpanded };
-        }
-        
-        if (okr.children) {
-          const updatedChildren = okr.children.map(child => {
-            if (child.id === id) {
-              return { ...child, isExpanded: !child.isExpanded };
-            }
-            return child;
-          });
-          return { ...okr, children: updatedChildren };
-        }
-        
-        return okr;
-      })
-    );
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
-  const filteredOkrs = okrs.filter(okr => {
+  const filteredOkrs = transformedOkrs.filter(okr => {
     const matchesQuery = okr.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       okr.owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       okr.team.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -213,6 +247,45 @@ export function TeamsOkrsView() {
     </div>
   );
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className="border-t-4 border-t-indigo-600">
+        <CardHeader>
+          <CardTitle>Teams OKRs</CardTitle>
+          <CardDescription>Track team objectives and key results progress</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading Teams OKRs...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (hasError) {
+    return (
+      <Card className="border-t-4 border-t-indigo-600">
+        <CardHeader>
+          <CardTitle>Teams OKRs</CardTitle>
+          <CardDescription>Track team objectives and key results progress</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error loading Teams OKRs</AlertTitle>
+            <AlertDescription>
+              There was a problem fetching team objectives data. Please try refreshing the page or contact support if the issue persists.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-t-4 border-t-indigo-600">
       <CardHeader>
@@ -266,7 +339,7 @@ export function TeamsOkrsView() {
                   filteredOkrs.map(okr => renderOkrItem(okr))
                 ) : (
                   <div className="py-8 text-center text-gray-500">
-                    No OKRs match your search criteria
+                    {searchQuery ? "No OKRs match your search criteria" : "No team objectives found. Create your first objective to get started."}
                   </div>
                 )}
               </div>
