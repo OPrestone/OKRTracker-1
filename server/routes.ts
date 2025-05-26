@@ -1770,6 +1770,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (team.tenantId !== req.tenantId) {
           return res.status(403).json({ error: "Team does not belong to current tenant" });
         }
+        
+        // Check if this is the first user being added to the team (excluding the owner)
+        const existingMembers = await db
+          .select()
+          .from(users)
+          .where(and(
+            eq(users.teamId, teamId),
+            eq(users.tenantId, req.tenantId)
+          ));
+        
+        // If team has no members yet (only owner), make this user the team leader
+        const shouldBecomeLeader = existingMembers.length === 0;
+        
+        if (shouldBecomeLeader) {
+          // Update the team's leader_id to this user
+          await storage.updateTeam(teamId, { leaderId: userId });
+          console.log(`Making user ${userId} the team leader of team ${teamId} as they are the first member added`);
+        }
       }
       
       // Update the user's team
