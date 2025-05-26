@@ -296,9 +296,13 @@ export default function TeamLeaderDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Link href="meetings">
-                    <Button className="w-full" variant="outline">Schedule Meeting</Button>
-                  </Link>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => setLocation('/one-on-one-meetings')}
+                  >
+                    Schedule Meeting
+                  </Button>
                 </CardContent>
               </Card>
 

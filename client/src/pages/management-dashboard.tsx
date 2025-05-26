@@ -459,9 +459,13 @@ export default function ManagementDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Link href="one-on-one-meetings">
-                    <Button className="w-full" variant="outline">Schedule Meetings</Button>
-                  </Link>
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => setLocation('/one-on-one-meetings')}
+                  >
+                    Schedule Meetings
+                  </Button>
                 </CardContent>
               </Card>
 
