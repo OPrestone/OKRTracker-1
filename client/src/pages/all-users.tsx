@@ -196,7 +196,7 @@ export default function AllUsers() {
   const handleAssignTeam = () => {
     if (!selectedUser) return;
     
-    const teamId = teamAssignment.teamId === "" || teamAssignment.teamId === "0" ? null : Number(teamAssignment.teamId);
+    const teamId = teamAssignment.teamId === "no-team" || teamAssignment.teamId === "" ? null : Number(teamAssignment.teamId);
     assignTeamMutation.mutate({ id: selectedUser.id, teamId });
   };
   
@@ -1299,7 +1299,7 @@ export default function AllUsers() {
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="no-team">
                     <div className="flex items-center">
                       <UserX className="h-4 w-4 mr-2 text-muted-foreground" />
                       No Team
