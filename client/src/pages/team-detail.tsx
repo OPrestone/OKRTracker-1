@@ -45,7 +45,8 @@ import {
   CalendarDays,
   UserPlus,
   Plus,
-  ListPlus
+  ListPlus,
+  Crown
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,13 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
