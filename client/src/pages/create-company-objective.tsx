@@ -137,6 +137,7 @@ export default function CreateCompanyObjective() {
     { value: 'people', label: 'People', icon: <Users className="h-4 w-4" /> },
     { value: 'process', label: 'Process', icon: <Goal className="h-4 w-4" /> },
     { value: 'technology', label: 'Technology', icon: <Code className="h-4 w-4" /> },
+    { value: 'other', label: 'Other', icon: <Circle className="h-4 w-4" /> },
   ];
   
   // Set of tags based on request
@@ -217,7 +218,14 @@ export default function CreateCompanyObjective() {
         title: "Company objective created successfully!",
         description: "Ready to create another objective.",
       });
-      setLocation("/");
+      // Reset form and go back to step 1
+      form.reset();
+      setCurrentStep(1);
+      setActiveTab("details");
+      setSelectedTags([]);
+      setSelectedContributors([]);
+      setSelectedTeam("");
+      setObjectiveType("performance");
     },
     onError: (error: Error) => {
       toast({
