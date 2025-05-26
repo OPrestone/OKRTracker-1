@@ -21,6 +21,7 @@ import {
   Building,
   Calendar,
   ChevronDown,
+  Circle,
   CircleUser,
   Code,
   Edit,
