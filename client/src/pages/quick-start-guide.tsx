@@ -111,7 +111,7 @@ export default function QuickStartGuide() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90">
-                  <Link href="/create-objective">
+                  <Link href="/okr-system-setup">
                     <Rocket className="mr-2 h-5 w-5" />
                     Create First Objective
                   </Link>

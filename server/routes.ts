@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, insertCheckInSchema,
          insertTeamSchema, insertCadenceSchema, insertTimeframeSchema, insertAccessGroupSchema,
          insertChatRoomSchema, insertChatRoomMemberSchema, insertMessageSchema, 
@@ -23,7 +23,7 @@ import { configService } from "./services/config-service";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupTestAuthRoutes } from "./test-auth";
 import Stripe from "stripe";
-import { registerConfigRoutes } from "./routes/config-routes";
+import { setupConfigRoutes } from "./routes/config-routes";
 import { setupTeamLeaderRoutes } from "./routes/team-leader";
 import { Router } from "express";
 import { createTestTeamLeader } from "./routes/test-team-leader";
@@ -45,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTestAuthRoutes(app);
   
   // Register configuration routes
-  registerConfigRoutes(app);
+  setupConfigRoutes(app);
   
   // Test endpoint to create a team leader account for testing
   app.post('/api/create-test-team-leader', createTestTeamLeader);
@@ -119,16 +119,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Unauthorized" });
     }
     
-    // Get tenantId from query param, body, or use default from user
-    // Check all possible places the tenant ID could be provided
-    const requestedTenantId = req.query.tenantId || 
+    // Get tenantId from all possible sources: headers, query params, body, or use default from user
+    // Added support for custom X-Tenant-ID header that we use in our fetch requests
+    const requestedTenantId = req.headers['x-tenant-id'] ||
+                            req.query.tenantId || 
                             req.query.tenant_id ||
                             req.body?.tenantId || 
                             req.body?.tenant_id || 
-                            (req.user as any).defaultTenantId;
+                            (req.user as any).defaultTenant;
     
     // If no tenantId provided or found, return error
     if (!requestedTenantId) {
+      console.log("Missing tenantId from all sources:", {
+        headers: req.headers['x-tenant-id'],
+        query: req.query.tenantId || req.query.tenant_id,
+        body: req.body?.tenantId || req.body?.tenant_id,
+        defaultTenant: (req.user as any).defaultTenant
+      });
       return res.status(400).json({ error: "Missing tenantId parameter" });
     }
     
@@ -179,6 +186,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Just keeping the test endpoint for troubleshooting
   // The actual API endpoints for approved objectives are defined later in this file
+  
+  // Test route to create a test user and tenant
+  app.get("/api/create-test-user", async (req, res) => {
+    try {
+      // Create test user
+      const testUser = {
+        email: "test@example.com",
+        name: "Test User",
+        password: await hashPassword("password123")
+      };
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(testUser.email);
+      
+      let userId;
+      if (existingUser) {
+        userId = existingUser.id;
+        console.log("Test user already exists:", userId);
+      } else {
+        const createdUser = await storage.createUser(testUser);
+        userId = createdUser.id;
+        console.log("Created test user:", userId);
+      }
+      
+      // Create test tenant if needed
+      const tenantName = "Test Organization";
+      const userTenants = await storage.getUserTenants(userId);
+      
+      let testTenant;
+      if (userTenants.length > 0) {
+        testTenant = userTenants[0];
+        console.log("User already has tenant:", testTenant.id);
+      } else {
+        testTenant = await storage.createTenant({ 
+          name: tenantName,
+          description: "A test organization",
+          owner_id: userId
+        });
+        
+        // Associate user with tenant
+        await storage.addUserToTenant({
+          userId,
+          tenantId: testTenant.id,
+          role: "admin"
+        });
+        
+        console.log("Created new tenant for test user:", testTenant.id);
+      }
+      
+      res.json({
+        success: true,
+        message: "Test user and tenant created successfully",
+        login: {
+          email: testUser.email,
+          password: "password123"
+        },
+        userId,
+        tenantId: testTenant.id
+      });
+    } catch (error) {
+      console.error("Error creating test user:", error);
+      res.status(500).json({ error: "Failed to create test user and tenant" });
+    }
+  });
 
   // Initialize data
   initializeData();
@@ -189,7 +260,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Organization Mission API Endpoints
   app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const tenantId = req.tenantId;
+      // Get tenant ID from middleware or query parameter
+      const tenantId = req.tenantId || req.query.tenantId as string;
+      
+      console.log("GET /api/organization-mission - Tenant ID from multiple sources:", {
+        fromMiddleware: req.tenantId,
+        fromQuery: req.query.tenantId,
+        resolved: tenantId
+      });
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });
@@ -214,8 +292,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
-      const tenantId = req.tenantId;
+      // Get tenant ID from middleware, query parameter, or request body
+      const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
       const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
+      
+      console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
+        fromMiddleware: req.tenantId,
+        fromQuery: req.query.tenantId,
+        fromBody: req.body.tenantId,
+        resolved: tenantId
+      });
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });

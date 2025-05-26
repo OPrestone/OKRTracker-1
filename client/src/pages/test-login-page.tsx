@@ -1,49 +1,147 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 export default function TestLoginPage() {
+  const { toast } = useToast();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [tenantsInfo, setTenantsInfo] = useState<any>(null);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
-  const { toast } = useToast();
-
-  // Test the regular login
-  const handleLogin = async () => {
-    setLoading(true);
-    try {
-      const response = await apiRequest("POST", "/api/login", { username, password });
-      const userData = await response.json();
-      
+  
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { username: string; password: string }) => {
+      const res = await apiRequest("POST", "/api/login", credentials);
+      return await res.json();
+    },
+    onSuccess: (user) => {
       toast({
-        title: "Login Successful",
-        description: `Logged in as ${userData.username || userData.id}`,
+        title: "Login successful",
+        description: `Welcome back, ${user.name || user.username}!`,
       });
       
-      setSessionInfo({
-        type: "Regular Login",
-        user: userData,
-        timestamp: new Date().toISOString()
-      });
+      // Update user data in the query cache
+      queryClient.setQueryData(["/api/user"], user);
       
-      // Fetch session info
+      // Fetch session info after successful login
       checkSession();
-    } catch (error: any) {
-      console.error("Login failed:", error);
+      getUserInfo();
+      getTenantsInfo();
+    },
+    onError: (error: Error) => {
       toast({
-        title: "Login Failed",
-        description: error.message || "Authentication failed",
+        title: "Login failed",
+        description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+  
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/logout");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      
+      // Clear user data
+      queryClient.setQueryData(["/api/user"], null);
+      setUserInfo(null);
+      setTenantsInfo(null);
+      setSessionInfo(null);
+      
+      // Check session after logout
+      checkSession();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Check session
+  const checkSessionMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/test-session', { 
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Session check failed: ${res.status}`);
+      }
+      
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setSessionStatus(data);
+    },
+    onError: (error: Error) => {
+      setSessionStatus({ error: error.message });
+      toast({
+        title: "Session check failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Get user info
+  const userInfoMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/user', { 
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        throw new Error(`User info failed: ${res.status}`);
+      }
+      
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setUserInfo(data);
+    },
+    onError: (error: Error) => {
+      setUserInfo({ error: error.message });
+    },
+  });
+  
+  // Get tenants info
+  const tenantsInfoMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/tenants', { 
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Tenants info failed: ${res.status}`);
+      }
+      
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setTenantsInfo(data);
+    },
+    onError: (error: Error) => {
+      setTenantsInfo({ error: error.message });
+    },
+  });
   
   // Test the test login endpoint
   const handleTestLogin = async () => {
@@ -84,39 +182,6 @@ export default function TestLoginPage() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-  
-  // Check session status
-  const checkSession = async () => {
-    try {
-      const response = await fetch("/api/test-session", {
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Session check failed: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      setSessionInfo(prev => ({
-        ...prev,
-        session: data,
-        timestamp: new Date().toISOString()
-      }));
-      
-      toast({
-        title: "Session Check",
-        description: `Session ID: ${data.sessionId}, Counter: ${data.counter}`,
-      });
-    } catch (error: any) {
-      console.error("Session check failed:", error);
-      toast({
-        title: "Session Check Failed",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   };
   
@@ -185,85 +250,149 @@ export default function TestLoginPage() {
       });
     }
   };
+  
+  const handleLoginClick = () => {
+    loginMutation.mutate({ username, password });
+  };
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+  
+  const checkSession = () => {
+    checkSessionMutation.mutate();
+  };
+  
+  const getUserInfo = () => {
+    userInfoMutation.mutate();
+  };
+  
+  const getTenantsInfo = () => {
+    tenantsInfoMutation.mutate();
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Authentication Test</CardTitle>
-          <CardDescription>Test the authentication system</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-            />
-          </div>
-          
-          <div className="pt-4 flex space-x-2">
-            <Button 
-              onClick={handleLogin} 
-              disabled={loading}
-              className="flex-1"
-            >
-              {loading ? "Logging in..." : "Regular Login"}
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold mb-6">Authentication Test Page</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Login Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Login Test</CardTitle>
+            <CardDescription>Test authentication functionality</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input 
+                id="username" 
+                placeholder="Enter username" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="Enter password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between flex-wrap gap-2">
+            <Button onClick={handleLoginClick} disabled={loginMutation.isPending || loading}>
+              {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
-            
-            <Button 
-              onClick={handleTestLogin} 
-              disabled={loading}
-              variant="outline"
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={handleLogout} disabled={logoutMutation.isPending || loading}>
+              {logoutMutation.isPending ? "Logging out..." : "Logout"}
+            </Button>
+            <Button variant="secondary" onClick={handleTestLogin} disabled={loading}>
               Test Login
             </Button>
-          </div>
-          
-          <div className="flex space-x-2 pt-2">
-            <Button 
-              onClick={checkSession}
-              variant="secondary"
-              className="flex-1"
-            >
-              Check Session
+          </CardFooter>
+        </Card>
+        
+        {/* Session Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Status</CardTitle>
+            <CardDescription>Current session information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
+              {sessionStatus ? JSON.stringify(sessionStatus, null, 2) : "No session information"}
+            </pre>
+          </CardContent>
+          <CardFooter className="flex gap-2">
+            <Button onClick={checkSession} disabled={checkSessionMutation.isPending}>
+              {checkSessionMutation.isPending ? "Checking..." : "Check Session"}
             </Button>
-            
-            <Button 
-              onClick={checkUser}
-              variant="secondary"
-              className="flex-1"
-            >
+            <Button onClick={checkUser} variant="secondary">
               Check User
             </Button>
-          </div>
-        </CardContent>
+          </CardFooter>
+        </Card>
         
+        {/* User Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Information</CardTitle>
+            <CardDescription>Current user data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
+              {userInfo ? JSON.stringify(userInfo, null, 2) : "No user information"}
+            </pre>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={getUserInfo} disabled={userInfoMutation.isPending}>
+              {userInfoMutation.isPending ? "Loading..." : "Get User Info"}
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Tenants Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tenants Information</CardTitle>
+            <CardDescription>User's organizations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
+              {tenantsInfo ? JSON.stringify(tenantsInfo, null, 2) : "No tenants information"}
+            </pre>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={getTenantsInfo} disabled={tenantsInfoMutation.isPending}>
+              {tenantsInfoMutation.isPending ? "Loading..." : "Get Tenants Info"}
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Test Auth Information */}
         {sessionInfo && (
-          <CardFooter className="flex flex-col items-start">
-            <div className="w-full">
-              <h3 className="text-sm font-semibold">Session Information:</h3>
-              <pre className="text-xs mt-2 p-2 bg-slate-100 rounded overflow-auto max-h-40 w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Test Auth Info</CardTitle>
+              <CardDescription>Test auth session data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
                 {JSON.stringify(sessionInfo, null, 2)}
               </pre>
-            </div>
-          </CardFooter>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={checkTestAuth} variant="secondary">
+                Check Test Auth
+              </Button>
+            </CardFooter>
+          </Card>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

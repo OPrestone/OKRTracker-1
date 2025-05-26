@@ -1,6 +1,6 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
+import { boolean, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { integer, pgEnum, pgTable, text, timestamp, boolean, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { pgTableWithUlid } from "./utils/schema";
 
@@ -64,7 +64,7 @@ export const users = pgTableWithUlid("users", {
   timezone: text("timezone").default("UTC"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  tenantId: text("tenant_id").references(() => tenants.id),
   defaultTenantId: text("default_tenant_id").references(() => tenants.id),
   isEnabled: boolean("is_enabled").default(true).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
@@ -324,6 +324,8 @@ export const tenants = pgTableWithUlid("tenants", {
   logoUrl: text("logo_url"),
   settings: jsonb("settings").default({}).notNull(),
   plan: text("plan").default("free").notNull(),
+  status: text("status").default("active").notNull(),
+  max_users: integer("max_users").default(5).notNull(),
   domain: text("domain"),
   enabledFeatures: jsonb("enabled_features").default([]).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1203,11 +1205,35 @@ export type MeetingToKeyResult = typeof meetingsToKeyResults.$inferSelect;
 export type InsertMeetingToKeyResult = z.infer<typeof insertMeetingToKeyResultSchema>;
 
 export const insertActionItemSchema = createInsertSchema(actionItems)
-  .omit({ id: true })
-  .extend({
-    // Override timestamp fields to accept ISO strings when provided
-    dueDate: z.string().transform((str) => new Date(str)).optional(),
-    completedAt: z.string().transform((str) => new Date(str)).optional(),
-  });
+
+// OKR System Configurations
+export const okrSystemConfigs = pgTableWithUlid("okr_system_configs", {
+  tenant_id: text("tenant_id").references(() => tenants.id).notNull(),
+  tracking_frequency: text("tracking_frequency").default("weekly").notNull(), // weekly, biweekly, monthly
+  primary_cadence: text("primary_cadence").default("quarterly").notNull(), // quarterly, trimester, halfYearly, annual
+  start_month: text("start_month").default("january").notNull(),
+  max_objectives_per_team: integer("max_objectives_per_team").default(5).notNull(),
+  max_key_results_per_objective: integer("max_key_results_per_objective").default(3).notNull(),
+  org_structure_type: text("org_structure_type").default("functional").notNull(), // functional, divisional, matrix, flat, hierarchical
+  default_visibility: text("default_visibility").default("public").notNull(), // public, team, private
+  selected_teams: text("selected_teams").array(), // IDs of teams participating in OKR program
+  company_mission: text("company_mission"),
+  company_vision: text("company_vision"),
+  company_values: text("company_values"),
+  enable_notifications: boolean("enable_notifications").default(true).notNull(),
+  enable_quarterly_cadence: boolean("enable_quarterly_cadence").default(true).notNull(),
+  enable_annual_cadence: boolean("enable_annual_cadence").default(true).notNull(),
+  custom_cadence: text("custom_cadence"),
+  default_objective_category: text("default_objective_category").default("growth").notNull(), // growth, product, customer, people, financial, operations, other
+  require_objective_approval: boolean("require_objective_approval").default(true).notNull(),
+  enable_objective_alignment: boolean("enable_objective_alignment").default(true).notNull(),
+  enable_cross_team_objectives: boolean("enable_cross_team_objectives").default(true).notNull(),
+  enable_slack_integration: boolean("enable_slack_integration").default(false).notNull(),
+  enable_email_notifications: boolean("enable_email_notifications").default(true).notNull(),
+  enable_calendar_sync: boolean("enable_calendar_sync").default(false).notNull(),
+  enable_analytics_reporting: boolean("enable_analytics_reporting").default(true).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
 export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;

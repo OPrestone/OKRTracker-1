@@ -1,217 +1,199 @@
-import { Express } from "express";
-import { configService } from "../services/config-service";
-import { withTenant } from "../middleware/tenant-middleware";
-import { z } from "zod";
+import { Router, Request, Response } from 'express';
+import { db } from '../db';
+import { z } from 'zod';
+import { okrSystemConfigs } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
+import { ulid } from 'ulid';
 
-// Schema for tenant config settings
-const tenantConfigSchema = z.object({
-  key: z.string().min(1),
-  value: z.any(),
-  valueType: z.enum(["string", "number", "boolean", "json"]).default("string"),
-  isSecret: z.boolean().default(false),
-  description: z.string().optional(),
+// Define schema for OKR system setup
+const okrSystemSetupSchema = z.object({
+  tenant_id: z.string().optional(),
+  generalSettings: z.object({
+    companyMission: z.string().min(1),
+    companyVision: z.string().min(1),
+    companyValues: z.string().min(1),
+    trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
+    enableNotifications: z.boolean(),
+  }),
+  timeframes: z.object({
+    primaryCadence: z.enum(["quarterly", "trimester", "halfYearly", "annual"]),
+    enableQuarterlyCadence: z.boolean(),
+    enableAnnualCadence: z.boolean(),
+    customCadence: z.string().optional(),
+    startMonth: z.enum([
+      "january", "february", "march", "april", "may", "june", 
+      "july", "august", "september", "october", "november", "december"
+    ]),
+  }),
+  objectiveSettings: z.object({
+    defaultObjectiveCategory: z.enum(["growth", "product", "customer", "people", "financial", "operations", "other"]),
+    maxObjectivesPerTeam: z.enum(["3", "4", "5", "6", "7", "8"]),
+    maxKeyResultsPerObjective: z.enum(["3", "4", "5", "6"]),
+    requireObjectiveApproval: z.boolean(),
+    enableObjectiveAlignment: z.boolean(),
+  }),
+  teamConfiguration: z.object({
+    orgStructureType: z.enum(["functional", "divisional", "matrix", "flat", "hierarchical"]),
+    enableCrossTeamObjectives: z.boolean(),
+    defaultVisibility: z.enum(["public", "team", "private"]),
+    selectedTeams: z.array(z.string()).default([]),
+  }),
+  integrations: z.object({
+    enableSlackIntegration: z.boolean(),
+    enableEmailNotifications: z.boolean(),
+    enableCalendarSync: z.boolean(),
+    enableAnalyticsReporting: z.boolean(),
+  }),
 });
 
-// Schema for system config settings
-const systemConfigSchema = z.object({
-  key: z.string().min(1),
-  value: z.any(),
-  valueType: z.enum(["string", "number", "boolean", "json"]).default("string"),
-  isSecret: z.boolean().default(false),
-  useEnv: z.boolean().default(false),
-  envName: z.string().optional(),
-  description: z.string().optional(),
-});
+type OKRSystemSetup = z.infer<typeof okrSystemSetupSchema>;
 
-export function registerConfigRoutes(app: Express) {
-  // Middleware to check if user is admin
-  const isAdmin = (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const { user } = req;
-    const isSystemAdmin = user.role === "admin";
-    
-    // For tenant-specific endpoints, also check tenant role
-    if (req.tenantId) {
-      const tenantUser = user.tenants?.find((t: any) => t.id === req.tenantId);
-      const isTenantAdmin = tenantUser?.userRole === "admin" || tenantUser?.userRole === "owner";
-      
-      if (!isSystemAdmin && !isTenantAdmin) {
-        return res.status(403).json({ error: "Forbidden: Only admins can manage configurations" });
-      }
-    } else if (!isSystemAdmin) {
-      // For system-wide endpoints, must be system admin
-      return res.status(403).json({ error: "Forbidden: Only system admins can manage system configurations" });
-    }
-    
-    next();
-  };
-
-  // ===== Tenant Config Routes =====
-  
-  // Get all tenant configs
-  app.get("/api/tenant-config", withTenant, async (req, res) => {
+export function setupConfigRoutes(router: Router) {
+  // Get OKR system configuration
+  router.get('/api/okr-system', async (req: Request, res: Response) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const tenantId = req.tenantId;
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
-      }
-
-      const configs = await configService.getAllTenantConfigs(tenantId);
-      res.json(configs);
-    } catch (error) {
-      console.error("Error getting tenant configs:", error);
-      res.status(500).json({ error: "Failed to retrieve tenant configurations" });
-    }
-  });
-
-  // Get specific tenant config
-  app.get("/api/tenant-config/:key", withTenant, async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const tenantId = req.tenantId;
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
-      }
-
-      const { key } = req.params;
-      const value = await configService.getTenantConfig(tenantId, key);
+      // Use either the tenant ID from middleware or from query params
+      let tenantId = req.tenantId || req.query.tenantId as string;
       
-      if (value === undefined) {
-        return res.status(404).json({ error: `Configuration '${key}' not found` });
+      console.log("GET /api/okr-system - Tenant ID:", tenantId);
+      console.log("Request query:", req.query);
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
       
-      res.json({ key, value });
-    } catch (error) {
-      console.error(`Error getting tenant config '${req.params.key}':`, error);
-      res.status(500).json({ error: "Failed to retrieve tenant configuration" });
-    }
-  });
-
-  // Set tenant config (admin only)
-  app.post("/api/tenant-config", [withTenant, isAdmin], async (req, res) => {
-    try {
-      const tenantId = req.tenantId;
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
-      }
-
-      // Validate request
-      const validation = tenantConfigSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ error: validation.error.message });
-      }
-
-      const { key, value, valueType, isSecret, description } = validation.data;
-      
-      await configService.setTenantConfig(tenantId, key, value, {
-        valueType, 
-        isSecret, 
-        description,
-        createdById: req.user?.id
+      const config = await db.query.okrSystemConfigs.findFirst({
+        where: eq(okrSystemConfigs.tenant_id, tenantId)
       });
       
-      res.status(201).json({ message: "Configuration saved successfully" });
-    } catch (error) {
-      console.error("Error setting tenant config:", error);
-      res.status(500).json({ error: "Failed to save tenant configuration" });
-    }
-  });
-
-  // Delete tenant config (admin only)
-  app.delete("/api/tenant-config/:key", [withTenant, isAdmin], async (req, res) => {
-    try {
-      const tenantId = req.tenantId;
-      if (!tenantId) {
-        return res.status(400).json({ error: "Tenant ID is required" });
+      if (!config) {
+        return res.status(404).json({ error: 'OKR system configuration not found' });
       }
-
-      const { key } = req.params;
-      await configService.deleteTenantConfig(tenantId, key);
       
-      res.json({ message: "Configuration deleted successfully" });
+      return res.json(config);
     } catch (error) {
-      console.error(`Error deleting tenant config '${req.params.key}':`, error);
-      res.status(500).json({ error: "Failed to delete tenant configuration" });
+      console.error('Error fetching OKR system config:', error);
+      return res.status(500).json({ error: 'Failed to fetch OKR system configuration' });
     }
   });
-
-  // ===== System Config Routes =====
   
-  // Get all system configs (admin only)
-  app.get("/api/system-config", isAdmin, async (req, res) => {
+  // Save OKR system configuration
+  router.post('/api/okr-system-setup', async (req: Request, res: Response) => {
     try {
-      const configs = await configService.getAllSystemConfigs();
-      res.json(configs);
-    } catch (error) {
-      console.error("Error getting system configs:", error);
-      res.status(500).json({ error: "Failed to retrieve system configurations" });
-    }
-  });
-
-  // Get specific system config (admin only)
-  app.get("/api/system-config/:key", isAdmin, async (req, res) => {
-    try {
-      const { key } = req.params;
-      const value = await configService.getSystemConfig(key);
+      // Use tenant ID from multiple possible sources
+      let tenantId = req.tenantId || req.query.tenantId as string || req.body.tenant_id;
       
-      if (value === undefined) {
-        return res.status(404).json({ error: `Configuration '${key}' not found` });
+      console.log("POST /api/okr-system-setup - Tenant ID:", tenantId);
+      console.log("Request query:", req.query);
+      console.log("Request body:", req.body);
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
       
-      res.json({ key, value });
-    } catch (error) {
-      console.error(`Error getting system config '${req.params.key}':`, error);
-      res.status(500).json({ error: "Failed to retrieve system configuration" });
-    }
-  });
-
-  // Set system config (admin only)
-  app.post("/api/system-config", isAdmin, async (req, res) => {
-    try {
-      // Validate request
-      const validation = systemConfigSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ error: validation.error.message });
+      // Validate the request body
+      const validationResult = okrSystemSetupSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid OKR system configuration data',
+          details: validationResult.error.format()
+        });
       }
-
-      const { key, value, valueType, isSecret, useEnv, envName, description } = validation.data;
       
-      await configService.setSystemConfig(key, value, {
-        valueType, 
-        isSecret, 
-        useEnv,
-        envName,
-        description,
-        createdById: req.user?.id
+      const okrSystemData = validationResult.data;
+      
+      // Make sure we have a tenant ID in the data
+      if (!okrSystemData.tenant_id) {
+        okrSystemData.tenant_id = tenantId;
+      }
+      
+      // Check if config already exists for this tenant
+      const existingConfig = await db.query.okrSystemConfigs.findFirst({
+        where: eq(okrSystemConfigs.tenant_id, tenantId)
       });
       
-      res.status(201).json({ message: "Configuration saved successfully" });
-    } catch (error) {
-      console.error("Error setting system config:", error);
-      res.status(500).json({ error: "Failed to save system configuration" });
-    }
-  });
-
-  // Delete system config (admin only)
-  app.delete("/api/system-config/:key", isAdmin, async (req, res) => {
-    try {
-      const { key } = req.params;
-      await configService.deleteSystemConfig(key);
+      let result;
       
-      res.json({ message: "Configuration deleted successfully" });
+      // Convert the validated data to the database schema format
+      const configData = {
+        id: existingConfig?.id || ulid(),
+        tenant_id: tenantId,
+        tracking_frequency: okrSystemData.generalSettings.trackingFrequency,
+        primary_cadence: okrSystemData.timeframes.primaryCadence,
+        start_month: okrSystemData.timeframes.startMonth,
+        max_objectives_per_team: parseInt(okrSystemData.objectiveSettings.maxObjectivesPerTeam),
+        max_key_results_per_objective: parseInt(okrSystemData.objectiveSettings.maxKeyResultsPerObjective),
+        org_structure_type: okrSystemData.teamConfiguration.orgStructureType,
+        default_visibility: okrSystemData.teamConfiguration.defaultVisibility,
+        company_mission: okrSystemData.generalSettings.companyMission,
+        company_vision: okrSystemData.generalSettings.companyVision,
+        company_values: okrSystemData.generalSettings.companyValues,
+        enable_notifications: okrSystemData.generalSettings.enableNotifications,
+        enable_quarterly_cadence: okrSystemData.timeframes.enableQuarterlyCadence,
+        enable_annual_cadence: okrSystemData.timeframes.enableAnnualCadence,
+        custom_cadence: okrSystemData.timeframes.customCadence || null,
+        default_objective_category: okrSystemData.objectiveSettings.defaultObjectiveCategory,
+        require_objective_approval: okrSystemData.objectiveSettings.requireObjectiveApproval,
+        enable_objective_alignment: okrSystemData.objectiveSettings.enableObjectiveAlignment,
+        enable_cross_team_objectives: okrSystemData.teamConfiguration.enableCrossTeamObjectives,
+        enable_slack_integration: okrSystemData.integrations.enableSlackIntegration,
+        enable_email_notifications: okrSystemData.integrations.enableEmailNotifications,
+        enable_calendar_sync: okrSystemData.integrations.enableCalendarSync,
+        enable_analytics_reporting: okrSystemData.integrations.enableAnalyticsReporting,
+        // Store selectedTeams as a JSON string to avoid schema issues
+        // We'll handle the selected teams separately until the schema is updated
+        created_at: existingConfig?.created_at || new Date(),
+        updated_at: new Date(),
+      };
+      
+      if (existingConfig) {
+        // Update existing configuration
+        result = await db
+          .update(okrSystemConfigs)
+          .set(configData)
+          .where(eq(okrSystemConfigs.id, existingConfig.id))
+          .returning();
+          
+        console.log('Updated OKR system config:', result);
+      } else {
+        // Insert new configuration
+        result = await db
+          .insert(okrSystemConfigs)
+          .values(configData)
+          .returning();
+          
+        console.log('Created new OKR system config:', result);
+      }
+      
+      // Update company mission and related values if mission service exists
+      try {
+        // This is a separate try/catch to not fail the whole request if this part fails
+        const updateMissionResponse = await fetch(`${req.protocol}://${req.get('host')}/api/organization-mission`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': req.headers.cookie || ''
+          },
+          body: JSON.stringify({
+            mission: okrSystemData.generalSettings.companyMission,
+            vision: okrSystemData.generalSettings.companyVision,
+            values: okrSystemData.generalSettings.companyValues,
+            tenantId
+          })
+        });
+        
+        if (updateMissionResponse.ok) {
+          console.log('Updated organization mission data successfully');
+        }
+      } catch (missionError) {
+        console.warn('Failed to update organization mission:', missionError);
+        // Continue execution, don't fail the main request
+      }
+      
+      return res.json(result[0]);
     } catch (error) {
-      console.error(`Error deleting system config '${req.params.key}':`, error);
-      res.status(500).json({ error: "Failed to delete system configuration" });
+      console.error('Error saving OKR system config:', error);
+      return res.status(500).json({ error: 'Failed to save OKR system configuration' });
     }
   });
 }
