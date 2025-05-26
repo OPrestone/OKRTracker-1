@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getRelativeMeetingDate, formatTime } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 interface MeetingItemProps {
   userName: string;
@@ -49,7 +49,7 @@ function MeetingItem({ userName, userRole, userAvatar, date, time }: MeetingItem
 }
 
 export function UpcomingMeetings() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/meetings/upcoming'],
@@ -128,7 +128,7 @@ export function UpcomingMeetings() {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            navigate('/one-on-one-meetings');
+            setLocation('/one-on-one-meetings');
           }}
         >
           Schedule meeting
