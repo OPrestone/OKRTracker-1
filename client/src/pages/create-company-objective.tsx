@@ -196,6 +196,38 @@ export default function CreateCompanyObjective() {
     },
   });
 
+  // Create objective and add another mutation
+  const createObjectiveAndAddAnotherMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      console.log("Creating company objective and adding another:", payload);
+
+      const response = await apiRequest("POST", "/api/objectives", payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 403) {
+          throw new Error(errorData.error || "Unauthorized. Only organization owners and admins can create company objectives.");
+        }
+        throw new Error(errorData.message || errorData.error || "Failed to create objective");
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      toast({
+        title: "Company objective created successfully!",
+        description: "Ready to create another objective.",
+      });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create objective",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
 
 
   // Fetch teams from API
@@ -272,7 +304,40 @@ export default function CreateCompanyObjective() {
     createObjectiveMutation.mutate(objectivePayload);
   };
 
+  const handleSaveAndAddAnother = async () => {
+    // Validate the form first
+    const isValid = await form.trigger();
+    if (!isValid) return;
 
+    const values = form.getValues();
+    
+    // Check if timeframeId is missing or empty
+    if (!values.timeframeId) {
+      if (timeframes && timeframes.length > 0) {
+        values.timeframeId = timeframes[0].id;
+        console.log("Using default timeframe ID:", values.timeframeId);
+      } else {
+        toast({
+          title: "Timeframe Required",
+          description: "Please create a timeframe before creating objectives.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Create objective payload
+    const objectivePayload = {
+      ...values,
+      level: "company",
+      type: objectiveType,
+      tags: selectedTags,
+      contributors: selectedContributors
+    };
+    
+    console.log("Save and add another: Creating objective:", objectivePayload);
+    createObjectiveAndAddAnotherMutation.mutate(objectivePayload);
+  };
 
   const handleTeamChange = (teamId: string) => {
     setSelectedTeam(teamId);
@@ -935,7 +1000,7 @@ export default function CreateCompanyObjective() {
                         >
                           Cancel
                         </Button>
-                        {currentStep < 3 ? (
+                        {currentStep === 1 ? (
                           <Button
                             type="button"
                             onClick={nextStep}
@@ -944,37 +1009,39 @@ export default function CreateCompanyObjective() {
                             Next
                             <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
                           </Button>
-                        ) : !isObjectiveCreated ? (
-                          <Button
-                            type="submit"
-                            className="w-full sm:w-auto bg-primary"
-                            disabled={createObjectiveMutation.isPending}
-                          >
-                            {createObjectiveMutation.isPending ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Creating Objective...
-                              </>
-                            ) : (
-                              "Create Objective"
-                            )}
-                          </Button>
                         ) : (
-                          <Button
-                            type="button"
-                            onClick={handleAddKeyResults}
-                            className="w-full sm:w-auto bg-primary"
-                            disabled={addKeyResultsMutation.isPending}
-                          >
-                            {addKeyResultsMutation.isPending ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Adding Key Results...
-                              </>
-                            ) : (
-                              "Add Key Results & Complete"
-                            )}
-                          </Button>
+                          <>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleSaveAndAddAnother}
+                              className="w-full sm:w-auto"
+                              disabled={createObjectiveAndAddAnotherMutation.isPending || createObjectiveMutation.isPending}
+                            >
+                              {createObjectiveAndAddAnotherMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save and Add Another"
+                              )}
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="w-full sm:w-auto bg-primary"
+                              disabled={createObjectiveMutation.isPending || createObjectiveAndAddAnotherMutation.isPending}
+                            >
+                              {createObjectiveMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save Objective"
+                              )}
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
