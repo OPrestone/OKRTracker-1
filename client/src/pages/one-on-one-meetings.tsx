@@ -151,7 +151,7 @@ export default function OneOnOneMeetings() {
     queryKey: ['/api/meetings'],
     enabled: !!currentTenant?.id,
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
     refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
   

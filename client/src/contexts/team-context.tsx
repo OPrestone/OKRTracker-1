@@ -36,7 +36,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const { data: teams = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/teams', currentTenant?.id],
     staleTime: 0, // Always fetch fresh data - no caching for real-time updates
-    cacheTime: 0, // Don't cache data in memory
+    gcTime: 0, // Don't cache data in memory
     refetchOnWindowFocus: true, // Enable refetch on window focus to keep data fresh
     refetchOnMount: true, // Always refetch when component mounts
     refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time data

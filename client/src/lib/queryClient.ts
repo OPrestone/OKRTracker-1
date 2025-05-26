@@ -225,7 +225,7 @@ export const queryClient = new QueryClient({
       refetchOnMount: true, // Always refetch when component mounts
       refetchOnReconnect: true, // Refetch when network reconnects
       staleTime: 0, // Always fetch fresh data - no caching for instant load
-      cacheTime: 0, // Don't cache data in memory for real-time updates
+      gcTime: 0, // Don't cache data in memory for real-time updates
       retry: 2, // Allow retries for reliability
       retryDelay: attemptIndex => Math.min(500 * 2 ** attemptIndex, 2000), // Fast retry
     },

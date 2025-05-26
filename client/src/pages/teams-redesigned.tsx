@@ -190,7 +190,7 @@ const TeamCard = ({
     queryKey: ["/api/teams", team.id, "objectives", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
     refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
 
@@ -199,7 +199,7 @@ const TeamCard = ({
     queryKey: ["/api/teams", team.id, "performance", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
     refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
 
