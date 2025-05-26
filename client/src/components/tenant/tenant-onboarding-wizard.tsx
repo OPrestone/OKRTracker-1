@@ -659,6 +659,7 @@ export default function TenantOnboardingWizard() {
       setTimeout(() => {
         // Redirect to the OKR system setup page
         navigate(`/${data.tenant.id}/okr-system-setup`);
+        window.location.reload();
       }, 1000);
     },
 

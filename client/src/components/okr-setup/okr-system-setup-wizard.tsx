@@ -297,7 +297,7 @@ const formSchema = z.object({
     selectedTeams: z.array(z.string()).default([]),
     defaultTeams: z.array(z.string()).default([]),
     csvUsers: z.array(z.any()).default([]),
-    useDefaultTeams: z.boolean().default(false),
+    useDefaultTeams: z.boolean().default(true),
   }),
   integrations: z.object({
     enableSlackIntegration: z.boolean().default(false),
