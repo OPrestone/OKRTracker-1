@@ -3105,6 +3105,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit objective for approval
+  app.patch("/api/objectives/:id/submit-for-approval", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const objectiveId = req.params.id;
+      
+      // Check if objective exists and belongs to the current user and tenant
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Ensure the objective belongs to the current tenant
+      if (objective.tenantId !== req.tenantId) {
+        return res.status(403).json({ 
+          error: "You do not have access to this objective" 
+        });
+      }
+      
+      // Ensure the objective belongs to the current user (they can only submit their own objectives)
+      if (objective.ownerId !== req.user.id) {
+        return res.status(403).json({ 
+          error: "You can only submit your own objectives for approval" 
+        });
+      }
+      
+      // Check if objective is in draft status
+      if (objective.status !== 'draft') {
+        return res.status(400).json({ 
+          error: "Only draft objectives can be submitted for approval" 
+        });
+      }
+      
+      // Update the objective status to pending_approval
+      const updatedObjective = await storage.updateObjective(objectiveId, {
+        status: 'pending_approval'
+      });
+      
+      console.log(`Objective ${objectiveId} submitted for approval by user ${req.user.id}`);
+      
+      res.json({
+        success: true,
+        message: "Objective submitted for approval successfully",
+        objective: updatedObjective
+      });
+    } catch (error) {
+      console.error('Error submitting objective for approval:', error);
+      next(error);
+    }
+  });
+
   app.get("/api/users/:userId/objectives", withTenant, async (req, res, next) => {
     try {
       const userId = req.params.userId;
