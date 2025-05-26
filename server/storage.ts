@@ -522,6 +522,7 @@ export class DatabaseStorage implements IStorage {
         icon: teams.icon,
         parentId: teams.parentId,
         ownerId: teams.ownerId,
+        leaderId: teams.leaderId,
         tenantId: teams.tenantId,
         createdAt: teams.createdAt
       }).from(teams).where(eq(teams.id, id));
@@ -578,6 +579,7 @@ export class DatabaseStorage implements IStorage {
         icon: teams.icon,
         parentId: teams.parentId,
         ownerId: teams.ownerId,
+        leaderId: teams.leaderId,
         tenantId: teams.tenantId,
         createdAt: teams.createdAt
       })
