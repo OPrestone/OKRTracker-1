@@ -178,7 +178,7 @@ export default function CreateObjective() {
     });
   };
   
-  const handleContributorToggle = (userId: number) => {
+  const handleContributorToggle = (userId: string) => {
     setObjectiveData(prev => {
       const contributors = prev.contributors.includes(userId) 
         ? prev.contributors.filter(id => id !== userId) 
@@ -207,16 +207,16 @@ export default function CreateObjective() {
       const apiData = {
         title: objectiveData.name,
         description: objectiveData.description,
-        team_id: objectiveData.teamId,
-        owner_id: objectiveData.ownerId,
-        timeframe_id: objectiveData.timeframeId,
-        update_frequency: objectiveData.updateFrequency,
-        progress_type: objectiveData.progressDriver,
+        teamId: objectiveData.teamId,
+        ownerId: objectiveData.ownerId,
+        timeframeId: objectiveData.timeframeId,
+        updateFrequency: objectiveData.updateFrequency,
+        progressType: objectiveData.progressDriver,
         tags: objectiveData.tags,
         contributors: objectiveData.contributors,
         visibility: objectiveData.visibility,
-        alignment_type: objectiveData.alignmentType,
-        alignment_target_id: objectiveData.alignmentTarget,
+        alignmentType: objectiveData.alignmentType,
+        alignmentTargetId: objectiveData.alignmentTarget,
         status: 'active',
         level: 'team' // Required field in the schema
       };
