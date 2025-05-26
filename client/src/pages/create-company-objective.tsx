@@ -21,6 +21,7 @@ import {
   Building,
   Calendar,
   ChevronDown,
+  Circle,
   CircleUser,
   Code,
   Edit,
@@ -66,6 +67,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { InsertObjective } from "@shared/schema";
 import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
+import { invalidateObjectiveQueries } from "@/lib/query-invalidation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -99,17 +101,7 @@ interface Timeframe {
   tenantId: string;
 }
 
-interface KeyResult {
-  id?: string;
-  title: string;
-  description?: string;
-  start_value: string;
-  current_value: string;
-  target_value: string;
-  format?: string;
-  progress?: number;
-  assignedToId?: string;
-}
+
 
 // Form schema for creating objectives
 const objectiveFormSchema = z.object({
@@ -123,35 +115,18 @@ const objectiveFormSchema = z.object({
   // Tags and contributors will be handled separately
 });
 
-// Form schema for key result
-const keyResultSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  description: z.string().optional(),
-  start_value: z.string().default("0"),
-  current_value: z.string().default("0"),
-  target_value: z.string().default("100"),
-  assignedToId: z.string().optional(),
-  format: z.enum(["number", "percentage", "currency", "boolean"]).default("number"),
-});
-
 type ObjectiveFormValues = z.infer<typeof objectiveFormSchema>;
-type KeyResultFormValues = z.infer<typeof keyResultSchema>;
 
 export default function CreateCompanyObjective() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [alignmentOption, setAlignmentOption] = useState<string>("strategic-pillar");
-  const [progressDriver, setProgressDriver] = useState<string>("key-results");
+  const [progressDriver, setProgressDriver] = useState<string>("manual");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedContributors, setSelectedContributors] = useState<string[]>([]);
-  const [keyResults, setKeyResults] = useState<KeyResult[]>([
-    { title: "", description: "", start_value: "0", current_value: "0", target_value: "100", format: "number" }
-  ]);
   const [activeTab, setActiveTab] = useState<string>("details");
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [createdObjective, setCreatedObjective] = useState<any>(null);
-  const [isObjectiveCreated, setIsObjectiveCreated] = useState(false);
   const [objectiveType, setObjectiveType] = useState<string>("financial");
   
   // Set of objective types (matching the filtering options in company-okrs.tsx)
@@ -164,6 +139,7 @@ export default function CreateCompanyObjective() {
     { value: 'people', label: 'People', icon: <Users className="h-4 w-4" /> },
     { value: 'process', label: 'Process', icon: <Goal className="h-4 w-4" /> },
     { value: 'technology', label: 'Technology', icon: <Code className="h-4 w-4" /> },
+    { value: 'other', label: 'Other', icon: <Circle className="h-4 w-4" /> },
   ];
   
   // Set of tags based on request
@@ -189,27 +165,14 @@ export default function CreateCompanyObjective() {
     }
   });
 
-  // Key results form setup
-  const keyResultForm = useForm<KeyResultFormValues>({
-    resolver: zodResolver(keyResultSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      start_value: '0',
-      current_value: '0',
-      target_value: '100',
-      format: 'number',
-    }
-  });
 
-  // Create objective mutation (Step 1: Objective only)
+
+  // Create objective mutation
   const createObjectiveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      // Remove key results from payload for Step 1
-      const { keyResults, ...objectiveData } = payload;
-      console.log("Step 1: Creating objective only:", objectiveData);
+      console.log("Creating company objective:", payload);
 
-      const response = await apiRequest("POST", "/api/objectives", objectiveData);
+      const response = await apiRequest("POST", "/api/objectives", payload);
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 403) {
@@ -220,13 +183,13 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      setCreatedObjective(data);
-      setIsObjectiveCreated(true);
+      // Use centralized invalidation to refresh all related queries across the app
+      invalidateObjectiveQueries(queryClient);
       toast({
-        title: "Objective created successfully!",
-        description: "Now you can add key results to your objective",
+        title: "Company objective created successfully!",
+        description: "Your objective has been added to the company OKRs.",
       });
+      setLocation("/company-okrs");
     },
     onError: (error: Error) => {
       toast({
@@ -237,49 +200,47 @@ export default function CreateCompanyObjective() {
     },
   });
 
-  // Add key results mutation (Step 2: Key results to existing objective)
-  const addKeyResultsMutation = useMutation({
-    mutationFn: async (keyResultsData: any[]) => {
-      console.log("Step 2: Adding key results to objective:", createdObjective?.id);
-      
-      const results = [];
-      for (const kr of keyResultsData) {
-        // Use the existing /api/simple-key-results route that's working
-        const payload = {
-          title: kr.title,
-          description: kr.description,
-          objectiveId: createdObjective?.id,
-          startValue: kr.start_value,
-          targetValue: kr.target_value,
-          currentValue: kr.current_value,
-          status: kr.status
-        };
-        
-        const response = await apiRequest("POST", "/api/simple-key-results", payload);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create key result");
+  // Create objective and add another mutation
+  const createObjectiveAndAddAnotherMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      console.log("Creating company objective and adding another:", payload);
+
+      const response = await apiRequest("POST", "/api/objectives", payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 403) {
+          throw new Error(errorData.error || "Unauthorized. Only organization owners and admins can create company objectives.");
         }
-        results.push(await response.json());
+        throw new Error(errorData.message || errorData.error || "Failed to create objective");
       }
-      return results;
+      return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+    onSuccess: (data) => {
+      // Use centralized invalidation to refresh all related queries across the app
+      invalidateObjectiveQueries(queryClient);
       toast({
-        title: "Key results added successfully!",
-        description: "Your company objective is now complete",
+        title: "Company objective created successfully!",
+        description: "Ready to create another objective.",
       });
-      setLocation("/company-okrs");
+      // Reset form and go back to step 1
+      form.reset();
+      setCurrentStep(1);
+      setActiveTab("details");
+      setSelectedTags([]);
+      setSelectedContributors([]);
+      setSelectedTeam("");
+      setObjectiveType("financial");
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to add key results",
+        title: "Failed to create objective",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+
 
   // Fetch teams from API
   const { data: teams = [], isError: teamsError, error: teamsErrorData } = useQuery<Team[]>({
@@ -355,32 +316,39 @@ export default function CreateCompanyObjective() {
     createObjectiveMutation.mutate(objectivePayload);
   };
 
-  const handleAddKeyResults = () => {
-    // Validate key results before adding them
-    const validKeyResults = keyResults.filter(kr => kr.title && kr.title.trim().length >= 3);
+  const handleSaveAndAddAnother = async () => {
+    // Validate the form first
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
+    const values = form.getValues();
     
-    if (validKeyResults.length === 0) {
-      toast({
-        title: "No valid key results",
-        description: "Please add at least one key result with a title of at least 3 characters",
-        variant: "destructive",
-      });
-      return;
+    // Check if timeframeId is missing or empty
+    if (!values.timeframeId) {
+      if (timeframes && timeframes.length > 0) {
+        values.timeframeId = timeframes[0].id;
+        console.log("Using default timeframe ID:", values.timeframeId);
+      } else {
+        toast({
+          title: "Timeframe Required",
+          description: "Please create a timeframe before creating objectives.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
-    // Step 2: Add key results to the created objective
-    const keyResultsData = validKeyResults.map(kr => ({
-      title: kr.title,
-      description: kr.description || "",
-      start_value: kr.start_value || "0",
-      current_value: kr.current_value || kr.start_value || "0",
-      target_value: kr.target_value || "100",
-      status: "not_started",
-      assigned_to_id: kr.assignedToId
-    }));
+    // Create objective payload
+    const objectivePayload = {
+      ...values,
+      level: "company",
+      type: objectiveType,
+      tags: selectedTags,
+      contributors: selectedContributors
+    };
     
-    console.log("Step 2: Adding key results:", keyResultsData);
-    addKeyResultsMutation.mutate(keyResultsData);
+    console.log("Save and add another: Creating objective:", objectivePayload);
+    createObjectiveAndAddAnotherMutation.mutate(objectivePayload);
   };
 
   const handleTeamChange = (teamId: string) => {
@@ -406,43 +374,7 @@ export default function CreateCompanyObjective() {
     }
   };
 
-  const handleAddKeyResult = () => {
-    setKeyResults([...keyResults, { 
-      title: "", 
-      description: "", 
-      start_value: "0", 
-      current_value: "0", 
-      target_value: "100",
-      format: "number"
-    }]);
-  };
 
-  const handleRemoveKeyResult = (index: number) => {
-    const newKeyResults = [...keyResults];
-    newKeyResults.splice(index, 1);
-    setKeyResults(newKeyResults);
-  };
-
-  const handleKeyResultChange = (index: number, field: keyof KeyResult, value: string | number) => {
-    const newKeyResults = [...keyResults];
-    newKeyResults[index] = { ...newKeyResults[index], [field]: value };
-    
-    // Calculate progress based on values if it's a numeric field
-    if (field === 'current_value' || field === 'target_value' || field === 'start_value') {
-      const kr = newKeyResults[index];
-      const start = parseFloat(kr.start_value) || 0;
-      const current = parseFloat(kr.current_value) || 0;
-      const target = parseFloat(kr.target_value) || 100;
-      
-      // Only calculate if target is different from start to avoid division by zero
-      if (target !== start) {
-        const progress = ((current - start) / (target - start)) * 100;
-        newKeyResults[index].progress = Math.max(0, Math.min(100, progress));
-      }
-    }
-    
-    setKeyResults(newKeyResults);
-  };
 
   const nextStep = async () => {
     // Validate current step
@@ -451,27 +383,12 @@ export default function CreateCompanyObjective() {
       if (!result) return;
     }
     
-    // If on alignment step, validate timeframe selection
-    if (currentStep === 2) {
-      const result = await form.trigger(["timeframeId"]);
-      if (!result) {
-        toast({
-          title: "Timeframe Required",
-          description: "Please select a timeframe before proceeding.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
-    setCurrentStep(Math.min(currentStep + 1, 3));
+    setCurrentStep(Math.min(currentStep + 1, 2));
     if (currentStep === 1) setActiveTab("alignment");
-    if (currentStep === 2) setActiveTab("key-results");
   };
 
   const prevStep = () => {
     setCurrentStep(Math.max(currentStep - 1, 1));
-    if (currentStep === 3) setActiveTab("alignment");
     if (currentStep === 2) setActiveTab("details");
   };
 
@@ -479,7 +396,6 @@ export default function CreateCompanyObjective() {
     switch (step) {
       case 1: return "Company Objective Details";
       case 2: return "Alignment & Ownership";
-      case 3: return "Key Results";
       default: return "Create Company Objective";
     }
   };
@@ -1096,7 +1012,7 @@ export default function CreateCompanyObjective() {
                         >
                           Cancel
                         </Button>
-                        {currentStep < 3 ? (
+                        {currentStep === 1 ? (
                           <Button
                             type="button"
                             onClick={nextStep}
@@ -1105,37 +1021,39 @@ export default function CreateCompanyObjective() {
                             Next
                             <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
                           </Button>
-                        ) : !isObjectiveCreated ? (
-                          <Button
-                            type="submit"
-                            className="w-full sm:w-auto bg-primary"
-                            disabled={createObjectiveMutation.isPending}
-                          >
-                            {createObjectiveMutation.isPending ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Creating Objective...
-                              </>
-                            ) : (
-                              "Create Objective"
-                            )}
-                          </Button>
                         ) : (
-                          <Button
-                            type="button"
-                            onClick={handleAddKeyResults}
-                            className="w-full sm:w-auto bg-primary"
-                            disabled={addKeyResultsMutation.isPending}
-                          >
-                            {addKeyResultsMutation.isPending ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Adding Key Results...
-                              </>
-                            ) : (
-                              "Add Key Results & Complete"
-                            )}
-                          </Button>
+                          <>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleSaveAndAddAnother}
+                              className="w-full sm:w-auto"
+                              disabled={createObjectiveAndAddAnotherMutation.isPending || createObjectiveMutation.isPending}
+                            >
+                              {createObjectiveAndAddAnotherMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save and Add Another"
+                              )}
+                            </Button>
+                            <Button
+                              type="submit"
+                              className="w-full sm:w-auto bg-primary"
+                              disabled={createObjectiveMutation.isPending || createObjectiveAndAddAnotherMutation.isPending}
+                            >
+                              {createObjectiveMutation.isPending ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                "Save Objective"
+                              )}
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>

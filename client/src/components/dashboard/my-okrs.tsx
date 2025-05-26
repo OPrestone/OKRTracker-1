@@ -6,12 +6,13 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, TrendingUp, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface DbKeyResult {
   id: string;
@@ -67,6 +68,8 @@ export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
   const { currentTenant } = useTenantContext();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: timeframes } = useQuery({
     queryKey: ["/api/timeframes", currentTenant?.id],
@@ -82,6 +85,45 @@ export default function MyOKRs() {
       console.error("Error fetching objectives:", err);
     }
   });
+
+  // Submit for approval mutation
+  const submitForApprovalMutation = useMutation({
+    mutationFn: async (objectiveId: string) => {
+      const response = await fetch(`/api/objectives/${objectiveId}/submit-for-approval`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit objective for approval');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "Your OKR has been submitted for approval and will be reviewed by your manager.",
+      });
+      
+      // Invalidate and refetch objectives
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives", currentTenant?.id] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to submit OKR for approval. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error submitting objective for approval:", error);
+    }
+  });
+
+  const handleSubmitForApproval = (objectiveId: string) => {
+    submitForApprovalMutation.mutate(objectiveId);
+  };
 
   // Function to map DB objectives to UI format
   const mapDbObjectivesToUiFormat = (dbObjectives: DbObjective[] = []): OKR[] => {
@@ -390,8 +432,12 @@ export default function MyOKRs() {
                     <Button variant="outline" size="sm">
                       Edit Draft
                     </Button>
-                    <Button size="sm">
-                      Submit for Approval
+                    <Button 
+                      size="sm"
+                      onClick={() => handleSubmitForApproval(draft.id)}
+                      disabled={submitForApprovalMutation.isPending}
+                    >
+                      {submitForApprovalMutation.isPending ? "Submitting..." : "Submit for Approval"}
                     </Button>
                   </div>
                 </CardContent>
