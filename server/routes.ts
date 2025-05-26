@@ -4612,6 +4612,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.receiverId) {
         console.log(`Checking if receiver ${req.body.receiverId} belongs to tenant ${tenantId}`);
         
+        // First, let's check if the receiver exists as a user
+        const receiverExists = await db.select()
+          .from(users)
+          .where(eq(users.id, req.body.receiverId))
+          .limit(1);
+        
+        console.log(`Receiver exists check:`, receiverExists.length > 0 ? 'Yes' : 'No');
+        
+        if (receiverExists.length === 0) {
+          console.log(`Feedback validation failed: receiver ${req.body.receiverId} does not exist`);
+          return res.status(403).json({ 
+            message: "The feedback recipient doesn't exist" 
+          });
+        }
+        
+        // Now check if they belong to the current tenant
         const receiverTenantCheck = await db.select()
           .from(usersToTenants)
           .where(
