@@ -1996,7 +1996,8 @@ export default function OKRSystemSetupWizard() {
                           </div>
                         </div>
 
-                        {/* Existing Teams Section */}
+                        {/* Existing Teams Section - Hidden per user request */}
+                        {/* 
                         <div className="mt-6 border-t pt-6">
                           <h3 className="text-lg font-medium mb-4">Select Teams to Include in OKR System</h3>
                           <p className="text-sm text-gray-600 mb-4">
@@ -2011,6 +2012,7 @@ export default function OKRSystemSetupWizard() {
                             }}
                           />
                         </div>
+                        */}
                       </div>
                     </div>
                   </CardContent>
