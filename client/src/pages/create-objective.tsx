@@ -37,10 +37,10 @@ interface User {
 }
 
 interface Team {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
-  leaderId: number | null;
+  leaderId: string | null;
   memberCount: number | null;
 }
 
@@ -103,7 +103,7 @@ export default function CreateObjective() {
   
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
-    objectiveData.teamId && user.teamId === Number(objectiveData.teamId)
+    objectiveData.teamId && user.teamId?.toString() === objectiveData.teamId
   ) || [];
 
   const handleCancel = () => {
