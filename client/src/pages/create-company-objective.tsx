@@ -244,7 +244,18 @@ export default function CreateCompanyObjective() {
       
       const results = [];
       for (const kr of keyResultsData) {
-        const response = await apiRequest("POST", `/api/objectives/${createdObjective?.id}/key-results`, kr);
+        // Use the existing /api/simple-key-results route that's working
+        const payload = {
+          title: kr.title,
+          description: kr.description,
+          objectiveId: createdObjective?.id,
+          startValue: kr.start_value,
+          targetValue: kr.target_value,
+          currentValue: kr.current_value,
+          status: kr.status
+        };
+        
+        const response = await apiRequest("POST", "/api/simple-key-results", payload);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Failed to create key result");
