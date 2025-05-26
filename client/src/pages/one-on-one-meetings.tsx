@@ -435,7 +435,15 @@ export default function OneOnOneMeetings() {
           </div>
           <Dialog open={newMeetingOpen} onOpenChange={setNewMeetingOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary" disabled={createMeetingMutation.isPending}>
+              <Button 
+                className="bg-primary" 
+                disabled={createMeetingMutation.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setNewMeetingOpen(true);
+                }}
+              >
                 {createMeetingMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
