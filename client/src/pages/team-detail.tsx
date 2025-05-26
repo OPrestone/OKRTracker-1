@@ -765,6 +765,25 @@ export default function TeamDetailPage() {
                         {members?.length || 0} members
                       </span>
                     </h1>
+                    
+                    {/* Team Leader Display */}
+                    {team.leaderId && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Team Leader: 
+                        </span>
+                        <span className="text-sm font-semibold">
+                          {(() => {
+                            const leader = members?.find(m => m.id === team.leaderId);
+                            return leader ? 
+                              (leader.name || `${leader.firstName || ''} ${leader.lastName || ''}`.trim() || leader.username || leader.email || 'Unknown') : 
+                              'Unknown Leader';
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                    
                     <p className="text-muted-foreground mt-1 max-w-3xl">
                       {team.description || "No description provided for this team."}
                     </p>
