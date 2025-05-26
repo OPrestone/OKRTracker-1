@@ -1,0 +1,21 @@
+The above error occurred in the <Context.Provider> component:
+
+Route@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=414b3942:280:13
+ProtectedRoute@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/lib/protected-route.tsx:24:31
+Switch@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=414b3942:336:14
+AppRoutes
+OnboardingProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-onboarding.tsx:53:35
+NotificationProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/components/notifications/notification-provider.tsx:30:37
+HelpProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-help-context.tsx:41:29
+TeamProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/contexts/team-context.tsx:22:29
+AuthProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx:28:29
+TenantProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx:23:31
+ThemeProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-theme.tsx:24:30
+App
+TenantProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx?v=lH9gwnIYU6qL49Xyq82IP:23:31
+AuthProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx?v=lH9gwnIYU6qL49Xyq82IP:28:29
+QueryClientProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=414b3942:2874:27
+ThemeProvider@https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/components/ui/theme-provider.tsx?v=lH9gwnIYU6qL49Xyq82IP:24:30
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. react-dom.development.js:18704:14
