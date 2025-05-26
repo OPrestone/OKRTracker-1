@@ -2030,6 +2030,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get timeframes by tenant ID - used by My OKRs component
+  app.get("/api/timeframes/:tenantId", ensureAuthenticated, async (req, res, next) => {
+    try {
+      const tenantId = req.params.tenantId;
+      
+      // Verify the user has access to this tenant
+      const userTenants = await storage.getUserTenants(req.user.id);
+      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "Access to tenant denied" });
+      }
+      
+      // Fetch timeframes for the current tenant
+      const timeframesList = await storage.getTimeframesByTenant(tenantId);
+      
+      res.json(timeframesList);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Get timeframes with objectives for timeline editor
   app.get("/api/timeframes/with-objectives/:tenantId", ensureAuthenticated, async (req, res, next) => {
     try {
