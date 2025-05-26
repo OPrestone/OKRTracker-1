@@ -146,21 +146,10 @@ export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
       
       console.log("Request body:", requestBody);
       
-      const response = await fetch("/api/feedback", {
+      return await apiRequest("/api/feedback", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Important for session cookies
-        body: JSON.stringify(requestBody),
+        body: requestBody,
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({
