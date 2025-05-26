@@ -84,13 +84,13 @@ export default function AddKeyResultDialog({
       const formattedData = {
         title: data.title,
         description: data.description,
-        objectiveId: objectiveId, // Validation schema expects camelCase
-        startValue: String(data.startValue),
-        targetValue: String(data.targetValue),
-        currentValue: String(data.currentValue || data.startValue),
+        objective_id: objectiveId, // Backend expects snake_case
+        start_value: String(data.startValue),
+        target_value: String(data.targetValue),
+        current_value: String(data.currentValue || data.startValue),
         progress: Math.max(0, Math.min(100, progress)),
-        status: data.status,
-        tenantId: currentTenant?.id
+        status: "not_started", // Default status
+        tenant_id: currentTenant?.id
       };
       
       console.log("Submitting key result with formatted data:", formattedData);
