@@ -94,6 +94,7 @@ import { saveRedirectPath } from "@/lib/redirect-service";
 import { useAuth } from "@/hooks/use-auth";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { NotificationToastContainer } from "@/components/notifications/notification-toast";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 // Location tracker component to monitor navigation for proper redirects
 function LocationTracker() {
@@ -112,8 +113,14 @@ function LocationTracker() {
 
 function AppRoutes() {
   return (
-    <Switch>
-      <AuthGuard path="/auth" component={AuthPage} />
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground">Loading page...</span>
+      </div>
+    }>
+      <Switch>
+        <AuthGuard path="/auth" component={AuthPage} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/test-login" component={TestLoginPage} />
       <Route path="/login-test" component={LoginTest} />
@@ -574,6 +581,7 @@ function AppRoutes() {
       <ProtectedRoute path="/" component={Home} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
@@ -592,25 +600,34 @@ function OnboardingController() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
-      <TenantProvider>
-        <AuthProvider>
-          <TeamProvider>
-            <HelpProvider>
-              <NotificationProvider>
-                <OnboardingProvider>
-                  <LocationTracker />
-                  <FeatureTour />
-                  <OnboardingController />
-                  <AppRoutes />
-                  <NotificationToastContainer />
-                </OnboardingProvider>
-              </NotificationProvider>
-            </HelpProvider>
-          </TeamProvider>
-        </AuthProvider>
-      </TenantProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="system" storageKey="okr-app-theme">
+        <TenantProvider>
+          <AuthProvider>
+            <TeamProvider>
+              <HelpProvider>
+                <NotificationProvider>
+                  <OnboardingProvider>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="ml-3 text-muted-foreground">Loading...</span>
+                      </div>
+                    }>
+                      <LocationTracker />
+                      <FeatureTour />
+                      <OnboardingController />
+                      <AppRoutes />
+                      <NotificationToastContainer />
+                    </Suspense>
+                  </OnboardingProvider>
+                </NotificationProvider>
+              </HelpProvider>
+            </TeamProvider>
+          </AuthProvider>
+        </TenantProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

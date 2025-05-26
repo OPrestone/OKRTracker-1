@@ -11,7 +11,7 @@ export function ProtectedRoute({
   requireTenant = true,
 }: {
   path: string;
-  component: () => React.JSX.Element;
+  component: React.ComponentType<any>;
   requireTenant?: boolean;
 }) {
   const { user, isLoading, hasTenantsAccess } = useAuth();
