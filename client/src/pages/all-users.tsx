@@ -1288,7 +1288,7 @@ export default function AllUsers() {
                   <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">
+                  <SelectItem value="">
                     <div className="flex items-center">
                       <UserX className="h-4 w-4 mr-2 text-muted-foreground" />
                       No Team
