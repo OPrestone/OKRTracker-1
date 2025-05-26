@@ -40,6 +40,8 @@ import MissionCompanyPage from "@/pages/mission-company";
 import CompanyMission from "@/pages/company-mission";
 import OneOnOneMeetings from "@/pages/one-on-one-meetings";
 import TeamLeaderDashboard from "@/pages/team-leader-dashboard";
+import CEODashboard from "@/pages/ceo-dashboard";
+import ManagementDashboard from "@/pages/management-dashboard";
 import TestTeamLeader from "@/pages/test-team-leader";
 import UserProfile from "@/pages/user-profile";
 import ObjectiveDetail from "@/pages/objective-detail";
@@ -159,6 +161,14 @@ function AppRoutes() {
       <ProtectedRoute
         path="/team-leader-dashboard"
         component={TeamLeaderDashboard}
+      />
+      <ProtectedRoute
+        path="/ceo-dashboard"
+        component={CEODashboard}
+      />
+      <ProtectedRoute
+        path="/management-dashboard"
+        component={ManagementDashboard}
       />
       <ProtectedRoute path="/test-team-leader" component={TestTeamLeader} />
       <ProtectedRoute path="/checkins" component={Checkins} />

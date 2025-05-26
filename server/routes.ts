@@ -1653,6 +1653,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Role and Permissions API
+  app.get("/api/user/role", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const user = req.user as User;
+      const tenantId = req.tenantId;
+
+      // Get user's role in current tenant
+      const userTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, user.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+
+      const role = userTenant[0]?.role || 'member';
+
+      // Define permissions based on role
+      const permissions = [];
+      switch (role) {
+        case 'ceo':
+          permissions.push('edit_mission', 'edit_strategy', 'manage_users', 'view_analytics', 'manage_teams', 'manage_objectives');
+          break;
+        case 'management':
+          permissions.push('view_analytics', 'manage_teams', 'manage_objectives', 'view_reports');
+          break;
+        case 'team_leader':
+          permissions.push('manage_team_objectives', 'view_team_analytics');
+          break;
+        case 'owner':
+        case 'admin':
+          permissions.push('manage_users', 'view_analytics', 'manage_teams', 'manage_objectives');
+          break;
+        case 'member':
+        default:
+          permissions.push('view_objectives', 'create_checkins');
+          break;
+      }
+
+      res.json({ role, permissions });
+    } catch (error) {
+      console.error('Error getting user role:', error);
+      res.status(500).json({ error: "Failed to get user role" });
+    }
+  });
+
   // Access Groups API
   app.get("/api/access-groups", withTenant, async (req, res, next) => {
     try {

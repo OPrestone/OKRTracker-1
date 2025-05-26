@@ -5,7 +5,7 @@ import { z } from "zod";
 import { pgTableWithUlid } from "./utils/schema";
 
 // ENUMS
-export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "member"]);
+export const userRoleEnum = pgEnum("user_role", ["ceo", "management", "team_leader", "owner", "admin", "member"]);
 export const objectiveStatusEnum = pgEnum("objective_status", ["draft", "active", "completed", "archived"]);
 export const objectiveStatusReasonEnum = pgEnum("objective_status_reason", ["success", "failed", "changed", "other"]);
 export const keyResultTypeEnum = pgEnum("key_result_type", ["numeric", "percentage", "boolean", "currency", "milestone"]);
