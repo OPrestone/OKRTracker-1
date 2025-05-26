@@ -252,20 +252,13 @@ const Teams = () => {
     staleTime: 0 // Don't cache for this test
   });
 
-  // Fetch all users from the existing all-users endpoint
-  const { data: allUsers } = useQuery<User[]>({
-    queryKey: ["/api/all-users"],
-  });
-
-  // Fetch all objectives from the existing objectives endpoint  
-  const { data: allObjectives } = useQuery<TeamObjective[]>({
-    queryKey: ["/api/objectives"],
-  });
-
-  // Fetch team performance data for better metrics
-  const { data: teamsPerformance } = useQuery({
-    queryKey: ["/api/teams-performance"],
-  });
+  // Calculate stats by fetching member counts for all teams
+  const teamStatsQueries = teams?.map(team => 
+    useQuery<User[]>({
+      queryKey: ["/api/teams", team.id, "users"],
+      enabled: !!team.id,
+    })
+  ) || [];
 
   // Fetch team members when a team is selected
   const { data: teamMembers, isLoading: membersLoading } = useQuery<User[]>({
@@ -284,19 +277,13 @@ const Teams = () => {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate real stats from the data
+  // Calculate stats from available authentic data
   const totalTeams = teams?.length || 0;
-  const totalMembers = allUsers?.length || 0;
-  const activeObjectives = allObjectives?.filter(obj => obj.status !== 'completed').length || 0;
-  const averageProgress = allObjectives && allObjectives.length > 0 
-    ? Math.round(allObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / allObjectives.length)
-    : 0;
-
-  // Debug logging to see what data we're getting
-  console.log('Teams data:', teams);
-  console.log('Users data:', allUsers);
-  console.log('Objectives data:', allObjectives);
-  console.log('Calculated stats:', { totalTeams, totalMembers, activeObjectives, averageProgress });
+  
+  // These stats require additional API endpoints that need to be implemented
+  const totalMembers = null; // Requires working /api/users endpoint
+  const activeObjectives = null; // Requires working /api/objectives endpoint  
+  const averageProgress = null; // Requires team performance data
 
   const [, setLocation] = useLocation();
   
@@ -682,8 +669,10 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : (
+                  ) : totalMembers !== null ? (
                     totalMembers
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
                   )}
                 </p>
               </div>
@@ -702,8 +691,10 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : (
+                  ) : activeObjectives !== null ? (
                     activeObjectives
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
                   )}
                 </p>
               </div>
