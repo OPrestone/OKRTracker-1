@@ -607,11 +607,11 @@ export default function CreateObjective() {
                           objectiveData.contributors.map(userId => {
                             const user = users.find(u => u.id === userId);
                             if (!user) return null;
-                            const initials = user.fullName
-                              .split(' ')
-                              .map(name => name[0])
-                              .join('')
-                              .toUpperCase();
+                            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                            const displayName = fullName || user.username;
+                            const initials = fullName 
+                              ? fullName.split(' ').map(name => name[0]).join('').toUpperCase()
+                              : user.username?.substring(0, 2).toUpperCase() || 'U';
                             
                             return (
                               <Badge 
@@ -624,7 +624,7 @@ export default function CreateObjective() {
                                     {initials}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span>{user.fullName}</span>
+                                <span>{displayName}</span>
                                 <button 
                                   className="ml-1 text-gray-500 hover:text-gray-900"
                                   onClick={() => handleContributorToggle(user.id)}
