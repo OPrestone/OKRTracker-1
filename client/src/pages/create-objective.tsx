@@ -30,10 +30,11 @@ import { getQueryFn } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 
 interface User {
-  id: number;
-  fullName: string;
+  id: string;
+  firstName?: string;
+  lastName?: string;
   username: string;
-  teamId: number | null;
+  teamId?: string | null;
 }
 
 interface Team {
@@ -93,7 +94,7 @@ export default function CreateObjective() {
     updateFrequency: 'weekly',
     progressDriver: 'key-results',
     tags: [] as string[],
-    contributors: [] as number[],
+    contributors: [] as string[],
     visibility: 'all'
   });
 
@@ -103,7 +104,7 @@ export default function CreateObjective() {
   
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
-    objectiveData.teamId && user.teamId && user.teamId.toString() === objectiveData.teamId
+    objectiveData.teamId && user.teamId && user.teamId === objectiveData.teamId
   ) || [];
 
   const handleCancel = () => {
@@ -488,9 +489,9 @@ export default function CreateObjective() {
                       {objectiveData.teamId ? (
                         <div className="flex items-center">
                           <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm mr-2">
-                            {teams?.find(team => team.id.toString() === objectiveData.teamId)?.name?.substring(0, 2).toUpperCase() || 'TM'}
+                            {teams?.find(team => team.id === objectiveData.teamId)?.name?.substring(0, 2).toUpperCase() || 'TM'}
                           </div>
-                          <span>{teams?.find(team => team.id.toString() === objectiveData.teamId)?.name || 'Team'}</span>
+                          <span>{teams?.find(team => team.id === objectiveData.teamId)?.name || 'Team'}</span>
                         </div>
                       ) : (
                         <SelectValue placeholder="Select Team..." />
@@ -503,7 +504,7 @@ export default function CreateObjective() {
                         </div>
                       ) : teams?.length > 0 ? (
                         teams.map((team: Team) => (
-                          <SelectItem key={team.id} value={team.id.toString()}>
+                          <SelectItem key={team.id} value={team.id}>
                             <div className="flex items-center">
                               <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm mr-2">
                                 {team.name.substring(0, 2).toUpperCase()}
@@ -539,14 +540,19 @@ export default function CreateObjective() {
                         <div className="flex items-center">
                           <Avatar className="h-7 w-7 mr-2">
                             <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                              {users?.find(user => user.id.toString() === objectiveData.ownerId)?.fullName
-                                ?.split(' ')
-                                .map(name => name[0])
-                                .join('')
-                                .toUpperCase() || 'U'}
+                              {(() => {
+                                const user = users?.find(user => user.id === objectiveData.ownerId);
+                                const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+                                return fullName 
+                                  ? fullName.split(' ').map(name => name[0]).join('').toUpperCase()
+                                  : user?.username?.substring(0, 2).toUpperCase() || 'U';
+                              })()}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{users?.find(user => user.id.toString() === objectiveData.ownerId)?.fullName || 'User'}</span>
+                          <span>{(() => {
+                            const user = users?.find(user => user.id === objectiveData.ownerId);
+                            return user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : 'User';
+                          })()}</span>
                         </div>
                       ) : (
                         <SelectValue placeholder="Select Lead..." />
@@ -559,18 +565,19 @@ export default function CreateObjective() {
                         </div>
                       ) : teamMembers.length > 0 ? (
                         teamMembers.map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
+                          <SelectItem key={user.id} value={user.id}>
                             <div className="flex items-center">
                               <Avatar className="h-7 w-7 mr-2">
                                 <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                                  {user.fullName
-                                    .split(' ')
-                                    .map(name => name[0])
-                                    .join('')
-                                    .toUpperCase()}
+                                  {(() => {
+                                    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                                    return fullName 
+                                      ? fullName.split(' ').map(name => name[0]).join('').toUpperCase()
+                                      : user.username?.substring(0, 2).toUpperCase() || 'U';
+                                  })()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span>{user.fullName}</span>
+                              <span>{`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}</span>
                             </div>
                           </SelectItem>
                         ))
