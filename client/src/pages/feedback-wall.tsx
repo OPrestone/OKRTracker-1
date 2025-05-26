@@ -50,7 +50,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
 export default function FeedbackWall() {
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [openCombobox, setOpenCombobox] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -82,7 +82,7 @@ export default function FeedbackWall() {
   });
 
   // Handle selecting a user for details view
-  const handleUserSelect = (userId: number) => {
+  const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     setOpenCombobox(false);
   };

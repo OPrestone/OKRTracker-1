@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils";
 
 // Define the feedback form schema
 const feedbackFormSchema = z.object({
-  receiverId: z.number({
+  receiverId: z.string({
     required_error: "Please select a recipient",
   }),
   type: z.enum(["praise", "suggestion", "criticism", "question"], {
@@ -66,8 +66,8 @@ const feedbackFormSchema = z.object({
   visibility: z.enum(["public", "private"], {
     required_error: "Please select visibility",
   }),
-  objectiveId: z.number().optional().nullable(),
-  keyResultId: z.number().optional().nullable(),
+  objectiveId: z.string().optional().nullable(),
+  keyResultId: z.string().optional().nullable(),
 });
 
 type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
