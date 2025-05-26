@@ -252,6 +252,14 @@ const Teams = () => {
     staleTime: 0 // Don't cache for this test
   });
 
+  // Calculate stats by fetching member counts for all teams
+  const teamStatsQueries = teams?.map(team => 
+    useQuery<User[]>({
+      queryKey: ["/api/teams", team.id, "users"],
+      enabled: !!team.id,
+    })
+  ) || [];
+
   // Fetch team members when a team is selected
   const { data: teamMembers, isLoading: membersLoading } = useQuery<User[]>({
     queryKey: ["/api/teams", selectedTeam?.id, "users"],
@@ -268,6 +276,14 @@ const Teams = () => {
   const filteredTeams = teams?.filter(team => 
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Calculate stats from available authentic data
+  const totalTeams = teams?.length || 0;
+  
+  // These stats require additional API endpoints that need to be implemented
+  const totalMembers = null; // Requires working /api/users endpoint
+  const activeObjectives = null; // Requires working /api/objectives endpoint  
+  const averageProgress = null; // Requires team performance data
 
   const [, setLocation] = useLocation();
   
@@ -618,6 +634,97 @@ const Teams = () => {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      {/* Quick Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-md">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Total Teams</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teamsLoading ? (
+                    <Skeleton className="h-8 w-12" />
+                  ) : (
+                    totalTeams
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-md">
+                <Building className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Total Members</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teamsLoading ? (
+                    <Skeleton className="h-8 w-12" />
+                  ) : totalMembers !== null ? (
+                    totalMembers
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-md">
+                <Target className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Active Objectives</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teamsLoading ? (
+                    <Skeleton className="h-8 w-12" />
+                  ) : activeObjectives !== null ? (
+                    activeObjectives
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-md">
+                <div className="h-6 w-6 text-purple-600 flex items-center justify-center font-bold">
+                  %
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Avg Progress</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {teamsLoading ? (
+                    <Skeleton className="h-8 w-12" />
+                  ) : averageProgress !== null ? (
+                    `${averageProgress}%`
+                  ) : (
+                    <span className="text-sm text-gray-500">Data unavailable</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main content - Cards or Table view */}
