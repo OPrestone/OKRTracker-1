@@ -1112,19 +1112,7 @@ export default function CreateCompanyObjective() {
                         </span>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs
-                          ${currentStep === 3 
-                            ? "bg-primary text-white" 
-                            : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          3
-                        </div>
-                        <span className={`text-sm ${currentStep === 3 ? "font-medium" : ""}`}>
-                          Key Results
-                        </span>
-                      </div>
+
                     </div>
                   </div>
 
@@ -1148,14 +1136,7 @@ export default function CreateCompanyObjective() {
                         </>
                       )}
 
-                      {currentStep === 3 && (
-                        <>
-                          <p>• Key Results should be specific and measurable</p>
-                          <p>• Include 2-5 key results for each objective</p>
-                          <p>• Set realistic but ambitious target values</p>
-                          <p>• Assign owners to each key result if possible</p>
-                        </>
-                      )}
+
                     </div>
                   </div>
 
