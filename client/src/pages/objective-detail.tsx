@@ -853,8 +853,8 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {objective?.keyResults?.length > 0 ? (
-                    objective.keyResults.map((keyResult) => (
+                  {keyResults && keyResults.length > 0 ? (
+                    keyResults.map((keyResult) => (
                       <div key={keyResult.id} className="border rounded-md p-4">
                         <div className="flex justify-between mb-2">
                           <div>
