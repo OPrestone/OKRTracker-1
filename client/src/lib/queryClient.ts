@@ -29,36 +29,6 @@ export function getCurrentTenantFromUrl(): string | null {
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    
-    // Enhanced debugging for authentication and API errors
-    if (res.status === 401) {
-      console.error(`Authentication error: ${res.status} for ${res.url}`);
-      console.error('Authentication Context: ', {
-        cookies: document.cookie ? 'Present' : 'None',
-        url: res.url,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Try to check session status to debug authentication issues
-      try {
-        const sessionCheck = await fetch('/api/test-session', { 
-          credentials: 'include'
-        });
-        if (sessionCheck.ok) {
-          const sessionData = await sessionCheck.json();
-          console.log('Session status:', sessionData);
-        } else {
-          console.log('Session check failed:', sessionCheck.status);
-        }
-      } catch (sessionError) {
-        console.error('Error checking session:', sessionError);
-      }
-    } else if (res.status === 403) {
-      console.error(`Permission error: ${res.status} for ${res.url}`);
-    } else {
-      console.error(`API error: ${res.status} for ${res.url} - ${text}`);
-    }
-    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -100,9 +70,6 @@ export const getQueryFn: <T>(options: {
     // Check if this query explicitly requires tenant ID
     const requiresTenant = meta?.requiresTenant === true;
     try {
-      // Enhanced debugging: log the request attempt
-      console.log(`Making API request with queryKey:`, queryKey);
-      
       // Handle array-based path parameters
       let url = '';
       if (Array.isArray(queryKey)) {
@@ -110,27 +77,22 @@ export const getQueryFn: <T>(options: {
         if (queryKey[0] === '/api/teams' && queryKey.length === 2 && !queryKey[1].includes('users') && !queryKey[1].includes('objectives')) {
           // When the query is ['/api/teams', tenantId], we want to use '/api/teams' not '/api/teams/tenantId'
           url = queryKey[0];
-          console.log(`Teams list URL constructed: ${url}`);
         }
         // For team details or nested routes like teams with objectives or users
         else if (queryKey[0] === '/api/teams' && queryKey.length >= 2) {
           if (queryKey.length === 3) {
             if (queryKey[2] === 'objectives') {
               url = `/api/teams/${queryKey[1]}/objectives`;
-              console.log(`Constructed team objectives URL: ${url}`);
             } 
             else if (queryKey[2] === 'users') {
               url = `/api/teams/${queryKey[1]}/users`;
-              console.log(`Constructed team users URL: ${url}`);
             }
             else {
               url = `/api/teams/${queryKey[1]}/${queryKey[2]}`;
-              console.log(`Constructed nested team URL: ${url}`);
             }
           } else {
             // For single team details: ['/api/teams', teamId]
             url = `/api/teams/${queryKey[1]}`;
-            console.log(`Constructed team details URL: ${url}`);
           }
         }
         // For other nested routes (my-objectives, timeframes)
@@ -141,8 +103,6 @@ export const getQueryFn: <T>(options: {
           for (let i = 1; i < queryKey.length; i++) {
             url += `/${queryKey[i]}`;
           }
-          
-          console.log(`Constructed URL from array path: ${url}`);
         }
       } else {
         // Simple string query key
@@ -157,50 +117,27 @@ export const getQueryFn: <T>(options: {
       if (tenantId && (requiresTenant || !urlObj.searchParams.has('tenantId'))) {
         // Always add for requiresTenant queries or if not already present
         urlObj.searchParams.set('tenantId', tenantId);
-        console.log(`Adding tenant ID to request: ${tenantId} for ${url}`);
       }
       
-      // Show request context for debugging
-      const requestUrl = urlObj.toString();
-      console.log('Request context:', { 
-        url: requestUrl,
-        hasCredentials: true,
-        hasTenant: !!tenantId
-      });
-      
       // Prepare headers with tenant ID
-      const headers: HeadersInit = {
-        // Adding a client timestamp for debugging
-        'X-Client-Timestamp': new Date().toISOString()
-      };
+      const headers: HeadersInit = {};
       
       // Add X-Tenant-ID header if tenant ID is available
       if (tenantId) {
         headers['X-Tenant-ID'] = tenantId;
       }
       
-      const res = await fetch(requestUrl, {
+      const res = await fetch(urlObj.toString(), {
         credentials: "include", // Important for session cookies
         headers
       });
 
-      // Capture response status for better debugging
-      console.log(`Response received: ${res.status} for ${requestUrl}`);
-
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        console.log(`Handling 401 with returnNull for ${requestUrl}`);
         return null;
       }
 
       await throwIfResNotOk(res);
-      const data = await res.json();
-      
-      // Log successful data retrieval (without exposing sensitive data)
-      if (data) {
-        console.log(`Data successfully retrieved from ${requestUrl}`);
-      }
-      
-      return data;
+      return await res.json();
     } catch (error) {
       // If we get a 401 with the returnNull option, return null instead of throwing
       if (
@@ -220,18 +157,18 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: 3000, // Auto-refresh every 3 seconds for instant updates
-      refetchOnWindowFocus: true, // Enable to handle session expiration
-      refetchOnMount: true, // Always refetch when component mounts
-      refetchOnReconnect: true, // Refetch when network reconnects
-      staleTime: 0, // Always fetch fresh data - no caching for instant load
-      gcTime: 0, // Don't cache data in memory for real-time updates
-      retry: 2, // Allow retries for reliability
-      retryDelay: attemptIndex => Math.min(500 * 2 ** attemptIndex, 2000), // Fast retry
+      refetchInterval: false, // Disable auto-refresh for faster performance
+      refetchOnWindowFocus: false, // Disable for lighter load
+      refetchOnMount: false, // Use cached data when available
+      refetchOnReconnect: true, // Only refetch on network reconnect
+      staleTime: 5 * 60 * 1000, // 5 minutes cache for speed
+      gcTime: 10 * 60 * 1000, // 10 minutes memory cache
+      retry: 1, // Reduce retries for faster failure detection
+      retryDelay: 300, // Quick retry for speed
     },
     mutations: {
-      retry: 2, // Allow retries for mutations
-      retryDelay: attemptIndex => Math.min(500 * 2 ** attemptIndex, 2000), // Fast retry
+      retry: 1, // Quick fail for mutations
+      retryDelay: 300, // Fast retry
     },
   },
 });
