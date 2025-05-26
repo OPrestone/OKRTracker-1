@@ -111,7 +111,9 @@ export function AddTeamMemberModal({
 
   // Filter out users already in the team
   const availableUsers = users.filter(
-    (user: User) => !currentMembers.some(member => member.id === user.id)
+    (user: User) => Array.isArray(currentMembers)
+    ? !currentMembers.some(member => member.id === user.id)
+    : true
   );
   
   // Filter users based on search

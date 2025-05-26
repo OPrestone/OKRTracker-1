@@ -910,7 +910,7 @@ export default function TeamDetailPage() {
                             </div>
                           </div>
                           <div className="flex -space-x-2 mt-2">
-                            {members?.slice(0, 5).map((member: any) => (
+                            {members && members.length > 0 ? members?.slice(0, 5).map((member: any) => (
                               <Avatar key={member.id} className="border-2 border-background w-7 h-7">
                                 {member.avatarUrl ? (
                                   <AvatarImage src={member.avatarUrl} alt={`${member.firstName} ${member.lastName}`} />
@@ -920,7 +920,7 @@ export default function TeamDetailPage() {
                                   </AvatarFallback>
                                 )}
                               </Avatar>
-                            ))}
+                            )) : null}
                             
                             {members && members.length > 5 && (
                               <div className="flex items-center justify-center w-7 h-7 rounded-full bg-accent border-2 border-background text-xs font-medium">
