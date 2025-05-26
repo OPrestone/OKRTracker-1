@@ -1101,6 +1101,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update team leader
+  app.put("/api/teams/:id/leader", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const teamId = req.params.id;
+      const tenantId = req.tenantId;
+      const userId = req.user.id;
+      
+      // Validate input
+      const { leaderId } = req.body;
+      if (!leaderId) {
+        return res.status(400).json({ error: "Leader ID is required" });
+      }
+      
+      // Check if team exists and belongs to this tenant
+      const team = await db.select()
+        .from(teams)
+        .where(and(
+          eq(teams.id, teamId),
+          eq(teams.tenantId, tenantId)
+        ))
+        .then(results => results[0]);
+      
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      // Check authorization - user must be admin/owner in tenant or team owner
+      const userRole = await db.select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .then(results => results[0]);
+      
+      const isAuthorized = 
+        (userRole && ['admin', 'owner'].includes(userRole.role)) || 
+        team.ownerId === userId;
+      
+      if (!isAuthorized) {
+        return res.status(403).json({ error: "Not authorized to update team leader" });
+      }
+      
+      // Check if the new leader exists
+      const leaderExists = await db.select()
+        .from(users)
+        .where(eq(users.id, leaderId))
+        .then(results => results.length > 0);
+      
+      if (!leaderExists) {
+        return res.status(400).json({ error: "Leader user not found" });
+      }
+      
+      // Update the team leader
+      const updatedTeam = await db.update(teams)
+        .set({ leaderId: leaderId })
+        .where(eq(teams.id, teamId))
+        .returning()
+        .then(results => results[0]);
+      
+      console.log(`Updated team ${teamId} with leader ${leaderId}`);
+      res.json(updatedTeam);
+    } catch (error) {
+      console.error("Error updating team leader:", error);
+      next(error);
+    }
+  });
+
   // Users API
   app.get("/api/users", ensureAuthenticated, withTenant, async (req, res) => {
     try {
