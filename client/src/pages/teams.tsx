@@ -252,12 +252,12 @@ const Teams = () => {
     staleTime: 0 // Don't cache for this test
   });
 
-  // Fetch all users to calculate total members across teams
+  // Fetch all users from the existing all-users endpoint
   const { data: allUsers } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/all-users"],
   });
 
-  // Fetch all objectives to calculate active objectives and progress
+  // Fetch all objectives from the existing objectives endpoint  
   const { data: allObjectives } = useQuery<TeamObjective[]>({
     queryKey: ["/api/objectives"],
   });
@@ -291,6 +291,12 @@ const Teams = () => {
   const averageProgress = allObjectives && allObjectives.length > 0 
     ? Math.round(allObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / allObjectives.length)
     : 0;
+
+  // Debug logging to see what data we're getting
+  console.log('Teams data:', teams);
+  console.log('Users data:', allUsers);
+  console.log('Objectives data:', allObjectives);
+  console.log('Calculated stats:', { totalTeams, totalMembers, activeObjectives, averageProgress });
 
   const [, setLocation] = useLocation();
   
