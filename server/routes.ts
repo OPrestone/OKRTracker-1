@@ -2728,14 +2728,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createKeyResult({
             title: kr.title,
             description: kr.description,
-            objective_id: objective.id, // The ID of the objective we just created
-            target_value: kr.target_value,
-            current_value: kr.current_value || kr.start_value || "0",
-            start_value: kr.start_value || "0",
+            objectiveId: objective.id, // Use camelCase for the storage function
+            targetValue: kr.target_value,
+            currentValue: kr.current_value || kr.start_value || "0",
+            startValue: kr.start_value || "0",
             progress: kr.progress || 0,
             status: kr.status || "not_started",
-            assigned_to_id: kr.assigned_to_id,
-            tenant_id: requestData.tenantId,
+            assignedToId: kr.assigned_to_id,
+            tenantId: requestData.tenantId,
           });
         }
       }
