@@ -181,7 +181,11 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: (data) => {
+      // Invalidate all related queries to refresh data across the app
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
       toast({
         title: "Company objective created successfully!",
         description: "Your objective has been added to the company OKRs.",
@@ -213,7 +217,11 @@ export default function CreateCompanyObjective() {
       return await response.json();
     },
     onSuccess: (data) => {
+      // Invalidate all related queries to refresh data across the app
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
       toast({
         title: "Company objective created successfully!",
         description: "Ready to create another objective.",
@@ -225,7 +233,7 @@ export default function CreateCompanyObjective() {
       setSelectedTags([]);
       setSelectedContributors([]);
       setSelectedTeam("");
-      setObjectiveType("performance");
+      setObjectiveType("financial");
     },
     onError: (error: Error) => {
       toast({
