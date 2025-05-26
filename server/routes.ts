@@ -4610,21 +4610,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the receiver belongs to the current tenant
       if (req.body.receiverId) {
-        const isReceiverInTenant = await db.select()
+        console.log(`Checking if receiver ${req.body.receiverId} belongs to tenant ${tenantId}`);
+        
+        const receiverTenantCheck = await db.select()
           .from(usersToTenants)
           .where(
             and(
               eq(usersToTenants.tenantId, tenantId),
               eq(usersToTenants.userId, req.body.receiverId)
             )
-          )
-          .then(result => result.length > 0);
+          );
+        
+        console.log(`Receiver tenant check result:`, receiverTenantCheck);
+        const isReceiverInTenant = receiverTenantCheck.length > 0;
         
         if (!isReceiverInTenant) {
+          console.log(`Feedback validation failed: receiver ${req.body.receiverId} not found in tenant ${tenantId}`);
           return res.status(403).json({ 
             message: "The feedback recipient doesn't belong to the current organization" 
           });
         }
+        
+        console.log(`Feedback validation passed: receiver ${req.body.receiverId} belongs to tenant ${tenantId}`);
       }
       
       const feedbackData = {
