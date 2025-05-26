@@ -134,7 +134,7 @@ export default function AllUsers() {
   
   // Assign team mutation
   const assignTeamMutation = useMutation({
-    mutationFn: async ({ id, teamId }: { id: number, teamId: number | null }) => {
+    mutationFn: async ({ id, teamId }: { id: string, teamId: string | null }) => {
       if (teamId === null) {
         // Remove from team
         const res = await apiRequest("DELETE", `/api/users/${id}/team`);
@@ -196,7 +196,7 @@ export default function AllUsers() {
   const handleAssignTeam = () => {
     if (!selectedUser) return;
     
-    const teamId = teamAssignment.teamId === "no-team" || teamAssignment.teamId === "" ? null : Number(teamAssignment.teamId);
+    const teamId = teamAssignment.teamId === "no-team" || teamAssignment.teamId === "" ? null : teamAssignment.teamId;
     assignTeamMutation.mutate({ id: selectedUser.id, teamId });
   };
   
