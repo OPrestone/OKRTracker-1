@@ -83,32 +83,78 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
   // Create objective mutation
   const createObjectiveMutation = useMutation({
     mutationFn: async (data: ObjectiveFormValues) => {
-      return apiRequest("POST", `/api/objectives`, {
+      console.log('Submitting objective data:', data);
+      const response = await apiRequest("POST", `/api/objectives`, {
         ...data,
-        tenantId
+        tenantId,
+        level: "team", // Ensure level is set
+        ownerId: null // Let backend handle owner assignment
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'Failed to create objective');
+      }
+      
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Objective created successfully:', data);
       toast({
         title: "Objective Created",
         description: "The objective has been successfully created.",
       });
+      
+      // Invalidate all relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "performance"] });
-      form.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
+      
+      // Reset form and close modal
+      form.reset({
+        title: "",
+        description: "",
+        timeframeId: "",
+        teamId: teamId,
+        status: "draft"
+      });
       onClose();
     },
     onError: (error) => {
+      console.error('Error creating objective:', error);
       toast({
-        title: "Error",
-        description: `Failed to create objective: ${error.message}`,
+        title: "Error Creating Objective",
+        description: error.message || "Failed to create objective. Please try again.",
         variant: "destructive"
       });
     }
   });
 
-  const onSubmit = (data: ObjectiveFormValues) => {
+  const onSubmit = async (data: ObjectiveFormValues) => {
+    console.log('Form submitted with data:', data);
+    
+    // Additional validation
+    if (!data.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a title for the objective.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!data.timeframeId) {
+      toast({
+        title: "Validation Error", 
+        description: "Please select a timeframe for the objective.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Submit the form
     createObjectiveMutation.mutate(data);
   };
 
