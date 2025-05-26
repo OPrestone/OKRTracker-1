@@ -717,7 +717,11 @@ export default function OneOnOneMeetings() {
                 </p>
                 <Button 
                   className="mt-4" 
-                  onClick={() => setNewMeetingOpen(true)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setNewMeetingOpen(true);
+                  }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Schedule Meeting
