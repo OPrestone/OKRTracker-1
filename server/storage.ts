@@ -1655,17 +1655,18 @@ export class DatabaseStorage implements IStorage {
     
     console.log("objectiveId found:", keyResult.objectiveId);
     
-    // Map camelCase input to snake_case database columns
+    // Map camelCase input to snake_case database columns - ensuring all required fields are present
     const values = {
       title: keyResult.title,
-      description: keyResult.description,
-      objective_id: keyResult.objectiveId,
-      start_value: keyResult.startValue || "0",
-      target_value: keyResult.targetValue || "100",
-      current_value: keyResult.currentValue || keyResult.startValue || "0",
+      description: keyResult.description || "",
+      objectiveId: keyResult.objectiveId, // Use camelCase for Drizzle ORM
+      startValue: keyResult.startValue || "0",
+      targetValue: keyResult.targetValue || "100", 
+      currentValue: keyResult.currentValue || keyResult.startValue || "0",
       progress: keyResult.progress || 0,
       status: keyResult.status || "not_started",
-      tenant_id: keyResult.tenantId
+      tenantId: keyResult.tenantId,
+      assignedToId: keyResult.assignedToId
     };
     
     // Add error handling and logging

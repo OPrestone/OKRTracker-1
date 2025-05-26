@@ -2635,6 +2635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/objectives", withTenant, async (req, res, next) => {
+    console.log("ROUTE HIT: POST /api/objectives");
     try {
       console.log("=== OBJECTIVE CREATION STARTED ===");
       console.log("Request body:", JSON.stringify(req.body, null, 2));
