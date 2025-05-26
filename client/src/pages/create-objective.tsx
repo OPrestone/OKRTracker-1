@@ -75,6 +75,12 @@ export default function CreateObjective() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  // Fetch objectives for alignment options
+  const { data: objectives = [] } = useQuery({
+    queryKey: ['/api/objectives'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
   // States to track form data
   const [objectiveData, setObjectiveData] = useState({
     name: '',
@@ -403,18 +409,30 @@ export default function CreateObjective() {
                         </>
                       )}
                       {objectiveData.alignmentType === 'team-objective' && (
-                        <>
-                          <SelectItem value="team-obj-1">Improve Team Velocity</SelectItem>
-                          <SelectItem value="team-obj-2">Enhance Team Collaboration</SelectItem>
-                          <SelectItem value="team-obj-3">Reduce Technical Debt</SelectItem>
-                        </>
+                        objectives && objectives.length > 0 ? (
+                          objectives
+                            .filter((obj: any) => obj.level === "team" && obj.status !== "completed")
+                            .map((obj: any) => (
+                              <SelectItem key={obj.id} value={obj.id}>
+                                {obj.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <SelectItem value="no-team-objectives" disabled>No team objectives available</SelectItem>
+                        )
                       )}
                       {objectiveData.alignmentType === 'company-objective' && (
-                        <>
-                          <SelectItem value="company-obj-1">Increase Market Share</SelectItem>
-                          <SelectItem value="company-obj-2">Improve Customer Satisfaction</SelectItem>
-                          <SelectItem value="company-obj-3">Launch New Product Line</SelectItem>
-                        </>
+                        objectives && objectives.length > 0 ? (
+                          objectives
+                            .filter((obj: any) => obj.level === "company" && obj.status !== "completed")
+                            .map((obj: any) => (
+                              <SelectItem key={obj.id} value={obj.id}>
+                                {obj.title}
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <SelectItem value="no-company-objectives" disabled>No company objectives available</SelectItem>
+                        )
                       )}
                     </SelectContent>
                   </Select>
