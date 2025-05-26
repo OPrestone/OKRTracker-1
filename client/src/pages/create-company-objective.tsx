@@ -99,17 +99,7 @@ interface Timeframe {
   tenantId: string;
 }
 
-interface KeyResult {
-  id?: string;
-  title: string;
-  description?: string;
-  start_value: string;
-  current_value: string;
-  target_value: string;
-  format?: string;
-  progress?: number;
-  assignedToId?: string;
-}
+
 
 // Form schema for creating objectives
 const objectiveFormSchema = z.object({
@@ -123,35 +113,18 @@ const objectiveFormSchema = z.object({
   // Tags and contributors will be handled separately
 });
 
-// Form schema for key result
-const keyResultSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  description: z.string().optional(),
-  start_value: z.string().default("0"),
-  current_value: z.string().default("0"),
-  target_value: z.string().default("100"),
-  assignedToId: z.string().optional(),
-  format: z.enum(["number", "percentage", "currency", "boolean"]).default("number"),
-});
-
 type ObjectiveFormValues = z.infer<typeof objectiveFormSchema>;
-type KeyResultFormValues = z.infer<typeof keyResultSchema>;
 
 export default function CreateCompanyObjective() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [alignmentOption, setAlignmentOption] = useState<string>("strategic-pillar");
-  const [progressDriver, setProgressDriver] = useState<string>("key-results");
+  const [progressDriver, setProgressDriver] = useState<string>("manual");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedContributors, setSelectedContributors] = useState<string[]>([]);
-  const [keyResults, setKeyResults] = useState<KeyResult[]>([
-    { title: "", description: "", start_value: "0", current_value: "0", target_value: "100", format: "number" }
-  ]);
   const [activeTab, setActiveTab] = useState<string>("details");
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [createdObjective, setCreatedObjective] = useState<any>(null);
-  const [isObjectiveCreated, setIsObjectiveCreated] = useState(false);
   const [objectiveType, setObjectiveType] = useState<string>("financial");
   
   // Set of objective types (matching the filtering options in company-okrs.tsx)
@@ -189,27 +162,14 @@ export default function CreateCompanyObjective() {
     }
   });
 
-  // Key results form setup
-  const keyResultForm = useForm<KeyResultFormValues>({
-    resolver: zodResolver(keyResultSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      start_value: '0',
-      current_value: '0',
-      target_value: '100',
-      format: 'number',
-    }
-  });
 
-  // Create objective mutation (Step 1: Objective only)
+
+  // Create objective mutation
   const createObjectiveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      // Remove key results from payload for Step 1
-      const { keyResults, ...objectiveData } = payload;
-      console.log("Step 1: Creating objective only:", objectiveData);
+      console.log("Creating company objective:", payload);
 
-      const response = await apiRequest("POST", "/api/objectives", objectiveData);
+      const response = await apiRequest("POST", "/api/objectives", payload);
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 403) {
@@ -221,12 +181,11 @@ export default function CreateCompanyObjective() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      setCreatedObjective(data);
-      setIsObjectiveCreated(true);
       toast({
-        title: "Objective created successfully!",
-        description: "Now you can add key results to your objective",
+        title: "Company objective created successfully!",
+        description: "Your objective has been added to the company OKRs.",
       });
+      setLocation("/company-okrs");
     },
     onError: (error: Error) => {
       toast({
@@ -237,49 +196,7 @@ export default function CreateCompanyObjective() {
     },
   });
 
-  // Add key results mutation (Step 2: Key results to existing objective)
-  const addKeyResultsMutation = useMutation({
-    mutationFn: async (keyResultsData: any[]) => {
-      console.log("Step 2: Adding key results to objective:", createdObjective?.id);
-      
-      const results = [];
-      for (const kr of keyResultsData) {
-        // Use the existing /api/simple-key-results route that's working
-        const payload = {
-          title: kr.title,
-          description: kr.description,
-          objectiveId: createdObjective?.id,
-          startValue: kr.start_value,
-          targetValue: kr.target_value,
-          currentValue: kr.current_value,
-          status: kr.status
-        };
-        
-        const response = await apiRequest("POST", "/api/simple-key-results", payload);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create key result");
-        }
-        results.push(await response.json());
-      }
-      return results;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-      toast({
-        title: "Key results added successfully!",
-        description: "Your company objective is now complete",
-      });
-      setLocation("/company-okrs");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to add key results",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+
 
   // Fetch teams from API
   const { data: teams = [], isError: teamsError, error: teamsErrorData } = useQuery<Team[]>({
@@ -355,33 +272,7 @@ export default function CreateCompanyObjective() {
     createObjectiveMutation.mutate(objectivePayload);
   };
 
-  const handleAddKeyResults = () => {
-    // Validate key results before adding them
-    const validKeyResults = keyResults.filter(kr => kr.title && kr.title.trim().length >= 3);
-    
-    if (validKeyResults.length === 0) {
-      toast({
-        title: "No valid key results",
-        description: "Please add at least one key result with a title of at least 3 characters",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    // Step 2: Add key results to the created objective
-    const keyResultsData = validKeyResults.map(kr => ({
-      title: kr.title,
-      description: kr.description || "",
-      start_value: kr.start_value || "0",
-      current_value: kr.current_value || kr.start_value || "0",
-      target_value: kr.target_value || "100",
-      status: "not_started",
-      assigned_to_id: kr.assignedToId
-    }));
-    
-    console.log("Step 2: Adding key results:", keyResultsData);
-    addKeyResultsMutation.mutate(keyResultsData);
-  };
 
   const handleTeamChange = (teamId: string) => {
     setSelectedTeam(teamId);
