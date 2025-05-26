@@ -553,6 +553,9 @@ function AppRoutes() {
         path="/configuration/system-settings"
         component={SystemSettings}
       />
+      
+      {/* Root route handler */}
+      <ProtectedRoute path="/" component={Home} />
       <Route component={NotFound} />
     </Switch>
   );
