@@ -2723,8 +2723,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process key results if provided
       if (keyResultsData && Array.isArray(keyResultsData)) {
+        console.log("Processing key results for objective:", objective.id);
+        console.log("Key results data:", keyResultsData);
+        
         // Create each key result associated with the new objective
         for (const kr of keyResultsData) {
+          console.log("Creating key result with objective ID:", objective.id);
           await storage.createKeyResult({
             title: kr.title,
             description: kr.description,
