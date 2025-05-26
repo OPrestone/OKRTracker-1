@@ -753,39 +753,78 @@ export default function CreateCompanyObjective() {
                                 `}>
                                   <RadioGroupItem value="strategic-pillar" id="strategic-pillar" className="mt-1" />
                                   <div>
-                                    <Label htmlFor="strategic-pillar" className="font-medium">Strategic Pillar</Label>
+                                    <Label htmlFor="strategic-pillar" className="font-medium">Support a Strategic Pillar</Label>
                                     <p className="text-sm text-muted-foreground">
-                                      This objective is a top-level company strategy
+                                      This objective supports a top-level company strategy
                                     </p>
                                   </div>
                                 </div>
                                 <div className={`
                                   flex items-start space-x-3 border rounded-md p-3 cursor-pointer
-                                  ${alignmentOption === "parent-objective" ? "border-primary" : "border-border"}
+                                  ${alignmentOption === "company-objective" ? "border-primary" : "border-border"}
                                 `}>
-                                  <RadioGroupItem value="parent-objective" id="parent-objective" className="mt-1" />
+                                  <RadioGroupItem value="company-objective" id="company-objective" className="mt-1" />
                                   <div className="flex-1">
-                                    <Label htmlFor="parent-objective" className="font-medium">
-                                      Align with Parent Objective
+                                    <Label htmlFor="company-objective" className="font-medium">
+                                      Support a Company Objective
                                     </Label>
                                     <p className="text-sm text-muted-foreground mb-2">
                                       This objective supports another company objective
                                     </p>
                                     <Select
-                                      disabled={alignmentOption !== "parent-objective"}
+                                      disabled={alignmentOption !== "company-objective"}
                                       onValueChange={(value) => form.setValue('parentId', value)}
                                     >
-                                      <SelectTrigger className={alignmentOption !== "parent-objective" ? "opacity-50" : ""}>
-                                        <SelectValue placeholder="Select parent objective" />
+                                      <SelectTrigger className={alignmentOption !== "company-objective" ? "opacity-50" : ""}>
+                                        <SelectValue placeholder="Select company objective" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {objectives
-                                          .filter((obj: any) => obj.level === "company" && obj.status !== "completed")
-                                          .map((obj: any) => (
-                                            <SelectItem key={obj.id} value={obj.id}>
-                                              {obj.title}
-                                            </SelectItem>
-                                          ))}
+                                        {objectives && objectives.length > 0 ? (
+                                          objectives
+                                            .filter((obj: any) => obj.level === "company" && obj.status !== "completed")
+                                            .map((obj: any) => (
+                                              <SelectItem key={obj.id} value={obj.id}>
+                                                {obj.title}
+                                              </SelectItem>
+                                            ))
+                                        ) : (
+                                          <SelectItem value="no-objectives" disabled>No company objectives available</SelectItem>
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                <div className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${alignmentOption === "team-objective" ? "border-primary" : "border-border"}
+                                `}>
+                                  <RadioGroupItem value="team-objective" id="team-objective" className="mt-1" />
+                                  <div className="flex-1">
+                                    <Label htmlFor="team-objective" className="font-medium">
+                                      Support a Team Objective
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                      This objective supports a team-level objective
+                                    </p>
+                                    <Select
+                                      disabled={alignmentOption !== "team-objective"}
+                                      onValueChange={(value) => form.setValue('parentId', value)}
+                                    >
+                                      <SelectTrigger className={alignmentOption !== "team-objective" ? "opacity-50" : ""}>
+                                        <SelectValue placeholder="Select team objective" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {objectives && objectives.length > 0 ? (
+                                          objectives
+                                            .filter((obj: any) => obj.level === "team" && obj.status !== "completed")
+                                            .map((obj: any) => (
+                                              <SelectItem key={obj.id} value={obj.id}>
+                                                {obj.title}
+                                              </SelectItem>
+                                            ))
+                                        ) : (
+                                          <SelectItem value="no-team-objectives" disabled>No team objectives available</SelectItem>
+                                        )}
                                       </SelectContent>
                                     </Select>
                                   </div>
