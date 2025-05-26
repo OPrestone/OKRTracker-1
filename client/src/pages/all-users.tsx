@@ -140,9 +140,20 @@ export default function AllUsers() {
         const res = await apiRequest("DELETE", `/api/users/${id}/team`);
         return await res.json();
       } else {
+        // Check if team has any existing members
+        const teamRes = await apiRequest("GET", `/api/teams/${teamId}/users`);
+        const teamMembers = await teamRes.json();
+        
         // Assign to team
         const res = await apiRequest("POST", `/api/users/${id}/team`, { teamId });
-        return await res.json();
+        const result = await res.json();
+        
+        // If this is the first user in the team, make them the team leader
+        if (teamMembers.length === 0) {
+          await apiRequest("PUT", `/api/teams/${teamId}/leader`, { leaderId: id });
+        }
+        
+        return result;
       }
     },
     onSuccess: (data) => {
