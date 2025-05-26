@@ -150,6 +150,8 @@ export default function CreateCompanyObjective() {
   ]);
   const [activeTab, setActiveTab] = useState<string>("details");
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [createdObjective, setCreatedObjective] = useState<any>(null);
+  const [isObjectiveCreated, setIsObjectiveCreated] = useState(false);
   const [objectiveType, setObjectiveType] = useState<string>("financial");
   
   // Set of objective types (matching the filtering options in company-okrs.tsx)
@@ -200,16 +202,16 @@ export default function CreateCompanyObjective() {
     }
   });
 
-  // Create objective mutation
+  // Create objective mutation (Step 1: Objective only)
   const createObjectiveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      // Log the payload for debugging
-      console.log("Sending payload to API:", payload);
+      // Remove key results from payload for Step 1
+      const { keyResults, ...objectiveData } = payload;
+      console.log("Step 1: Creating objective only:", objectiveData);
 
-      const response = await apiRequest("POST", "/api/objectives", payload);
+      const response = await apiRequest("POST", "/api/objectives", objectiveData);
       if (!response.ok) {
         const errorData = await response.json();
-        // Check if it's a permissions error
         if (response.status === 403) {
           throw new Error(errorData.error || "Unauthorized. Only organization owners and admins can create company objectives.");
         }
@@ -217,18 +219,51 @@ export default function CreateCompanyObjective() {
       }
       return await response.json();
     },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      setCreatedObjective(data);
+      setIsObjectiveCreated(true);
+      toast({
+        title: "Objective created successfully!",
+        description: "Now you can add key results to your objective",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create objective",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add key results mutation (Step 2: Key results to existing objective)
+  const addKeyResultsMutation = useMutation({
+    mutationFn: async (keyResultsData: any[]) => {
+      console.log("Step 2: Adding key results to objective:", createdObjective?.id);
+      
+      const results = [];
+      for (const kr of keyResultsData) {
+        const response = await apiRequest("POST", `/api/objectives/${createdObjective?.id}/key-results`, kr);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create key result");
+        }
+        results.push(await response.json());
+      }
+      return results;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       toast({
-        title: "Company objective created",
-        description: "Your company objective has been successfully created",
+        title: "Key results added successfully!",
+        description: "Your company objective is now complete",
       });
-      // Navigate to the company objectives list
       setLocation("/company-okrs");
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to create company objective",
+        title: "Failed to add key results",
         description: error.message,
         variant: "destructive",
       });
@@ -281,13 +316,8 @@ export default function CreateCompanyObjective() {
   };
 
   const onSubmit = (values: ObjectiveFormValues) => {
-    // Log the form values and key results for debugging
-    console.log("Form values:", values);
-    console.log("Key results:", keyResults);
-    
-    // Check if timeframeId is missing or empty, and provide a fallback if needed
+    // Check if timeframeId is missing or empty
     if (!values.timeframeId) {
-      // Check if we have any timeframes available
       if (timeframes && timeframes.length > 0) {
         values.timeframeId = timeframes[0].id;
         console.log("Using default timeframe ID:", values.timeframeId);
@@ -300,84 +330,46 @@ export default function CreateCompanyObjective() {
         return;
       }
     }
-    
-    // Validate key results before submission
-    if (progressDriver === "key-results") {
-      // Check if any key result doesn't have a title or has a title shorter than 3 characters
-      const emptyKeyResults = keyResults.filter(kr => !kr.title || kr.title.trim().length < 3);
-      
-      if (emptyKeyResults.length > 0) {
-        toast({
-          title: "Validation Error",
-          description: "Each key result must have a title of at least 3 characters",
-          variant: "destructive",
-        });
-        setCurrentStep(3); // Ensure we're on the key results step
-        return;
-      }
-      
-      // If there are no key results defined, add a default one
-      if (keyResults.length === 0) {
-        const defaultKeyResult = { 
-          title: "Achieve target goal", 
-          description: "Default key result", 
-          start_value: "0", 
-          current_value: "0", 
-          target_value: "100",
-          format: "number"
-        };
-        setKeyResults([defaultKeyResult]);
-        
-        // If we added a default key result, wait a moment to ensure state update before submission
-        setTimeout(() => {
-          // Create a payload with the default key result
-          const payload = {
-            ...values,
-            level: "company", // Set level to company for company objectives
-            type: objectiveType, // Include the objective type
-            keyResults: [{
-              title: "Achieve target goal", 
-              description: "Default key result", 
-              start_value: "0", 
-              current_value: "0", 
-              target_value: "100",
-              progress: 0,
-              status: "not_started"
-            }],
-            tags: selectedTags,
-            contributors: selectedContributors
-          };
-          console.log("Submitting payload with default key result:", payload);
-          // Create the objective with the default key result
-          createObjectiveMutation.mutate(payload);
-        }, 100);
-        return;
-      }
-    }
 
-    // Create combined payload with form values and key results
-    const payload = {
+    // Step 1: Create the objective (without key results)
+    const objectivePayload = {
       ...values,
-      level: "company", // Set level to company for company objectives
-      type: objectiveType, // Include the objective type
-      keyResults: keyResults.map(kr => ({
-        title: kr.title,
-        description: kr.description || "",
-        start_value: kr.start_value || "0",
-        current_value: kr.current_value || kr.start_value || "0",
-        target_value: kr.target_value || "100",
-        progress: kr.progress || 0,
-        status: "not_started",
-        assigned_to_id: kr.assignedToId
-      })),
+      level: "company",
+      type: objectiveType,
       tags: selectedTags,
       contributors: selectedContributors
     };
     
-    console.log("Submitting payload:", payload);
+    console.log("Step 1: Creating objective:", objectivePayload);
+    createObjectiveMutation.mutate(objectivePayload);
+  };
+
+  const handleAddKeyResults = () => {
+    // Validate key results before adding them
+    const validKeyResults = keyResults.filter(kr => kr.title && kr.title.trim().length >= 3);
     
-    // Submit the payload directly through the mutation
-    createObjectiveMutation.mutate(payload);
+    if (validKeyResults.length === 0) {
+      toast({
+        title: "No valid key results",
+        description: "Please add at least one key result with a title of at least 3 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Step 2: Add key results to the created objective
+    const keyResultsData = validKeyResults.map(kr => ({
+      title: kr.title,
+      description: kr.description || "",
+      start_value: kr.start_value || "0",
+      current_value: kr.current_value || kr.start_value || "0",
+      target_value: kr.target_value || "100",
+      status: "not_started",
+      assigned_to_id: kr.assignedToId
+    }));
+    
+    console.log("Step 2: Adding key results:", keyResultsData);
+    addKeyResultsMutation.mutate(keyResultsData);
   };
 
   const handleTeamChange = (teamId: string) => {
