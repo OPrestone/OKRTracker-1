@@ -66,10 +66,10 @@ const OKRSystemSetupPage = lazy(() => import("@/pages/okr-system-setup-page"));
 // Lazy load tenant-related pages
 const TenantsPage = lazy(() => import("@/pages/tenants-page"));
 const TenantPage = lazy(() => import("@/pages/tenant-page"));
-import OrganizationPage from "@/pages/organization-page";
-import TenantOnboardingPage from "@/pages/tenant-onboarding-page";
-import TenantOnboardingDemoPage from "@/pages/tenant-onboarding-demo-page";
-import TenantDashboardRedirect from "@/components/tenant/tenant-dashboard-redirect";
+const OrganizationPage = lazy(() => import("@/pages/organization-page"));
+const TenantOnboardingPage = lazy(() => import("@/pages/tenant-onboarding-page"));
+const TenantOnboardingDemoPage = lazy(() => import("@/pages/tenant-onboarding-demo-page"));
+const TenantDashboardRedirect = lazy(() => import("@/components/tenant/tenant-dashboard-redirect"));
 
 // Import new drag-and-drop pages
 import ObjectivesOrganizer from "@/pages/objectives-organizer";
