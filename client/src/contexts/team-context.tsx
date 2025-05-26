@@ -62,17 +62,27 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   // Set team leader
   const setTeamLeader = async (teamId: string, userId: string) => {
     try {
+      console.log(`Setting team leader for team ${teamId} to user ${userId}`);
+      
       const response = await fetch(`/api/teams/${teamId}/leader`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ leaderId: userId }),
+        credentials: 'include', // Important for session authentication
       });
       
+      console.log('Team leader update response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to update team leader');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Team leader update failed:', errorData);
+        throw new Error(errorData.error || 'Failed to update team leader');
       }
+      
+      const updatedTeam = await response.json();
+      console.log('Team leader updated successfully:', updatedTeam);
       
       // Invalidate team queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
