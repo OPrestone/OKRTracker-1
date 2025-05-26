@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRole } from "@/hooks/use-user-role";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area, BarChart as RechartsBarChart, Bar
@@ -21,6 +21,7 @@ import {
 export default function ManagementDashboard() {
   const { user } = useAuth();
   const { userRole, canViewAnalytics, isLoading } = useUserRole();
+  const [, setLocation] = useLocation();
 
   // Get management-level data
   const { data: teams } = useQuery({

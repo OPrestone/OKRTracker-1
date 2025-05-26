@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Utility function to get initials from a name, safely handling null/undefined
 const getInitials = (name?: string): string => {
@@ -80,6 +84,18 @@ import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
 import { Meeting as DbMeeting } from "@shared/schema";
+
+// Form schema for meeting creation
+const meetingSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  date: z.string().min(1, "Date is required"),
+  time: z.string().min(1, "Time is required"),
+  duration: z.string().default("30"),
+  agenda: z.string().optional(),
+  attendeeId: z.string().optional(),
+  platform: z.string().optional(),
+  meetingLink: z.string().optional(),
+});
 
 // Types for frontend representation of meetings
 type MeetingStatus = "upcoming" | "completed" | "cancelled";
