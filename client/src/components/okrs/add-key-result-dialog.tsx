@@ -80,17 +80,17 @@ export default function AddKeyResultDialog({
       
       const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
       
-      // Convert to the exact format expected by the database
+      // Convert to the exact format expected by the backend validation
       const formattedData = {
         title: data.title,
         description: data.description,
-        objective_id: objectiveId, // Backend expects snake_case
-        start_value: String(data.startValue),
-        target_value: String(data.targetValue),
-        current_value: String(data.currentValue || data.startValue),
+        objectiveId: objectiveId, // Backend validation expects camelCase
+        startValue: String(data.startValue),
+        targetValue: String(data.targetValue),
+        currentValue: String(data.currentValue || data.startValue),
         progress: Math.max(0, Math.min(100, progress)),
         status: "not_started", // Default status
-        tenant_id: currentTenant?.id
+        tenantId: currentTenant?.id
       };
       
       console.log("Submitting key result with formatted data:", formattedData);
