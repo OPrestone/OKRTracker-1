@@ -148,8 +148,11 @@ export default function OneOnOneMeetings() {
     isLoading: isLoadingMeetings, 
     error: meetingsError 
   } = useQuery({
-    queryKey: ['/api/meetings', currentTenant?.id],
+    queryKey: ['/api/meetings'],
     enabled: !!currentTenant?.id,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
   
   // Fetch users to get attendee details
