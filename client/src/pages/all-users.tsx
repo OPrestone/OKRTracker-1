@@ -111,19 +111,25 @@ export default function AllUsers() {
   const { toast } = useToast();
   const { tenantId } = useTenantContext();
   
-  // Fetch users
+  // Fetch users with optimized caching
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<UserSchema[]>({
     queryKey: ["/api/users"],
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 300000, // Keep in cache for 5 minutes
   });
   
-  // Fetch teams
+  // Fetch teams with optimized caching
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<Team[]>({
     queryKey: ["/api/teams"],
+    staleTime: 60000, // Teams change less frequently
+    cacheTime: 300000,
   });
   
-  // Fetch tenants
+  // Fetch tenants with optimized caching
   const { data: tenants = [], isLoading: isLoadingTenants } = useQuery({
     queryKey: ["/api/tenants"],
+    staleTime: 60000,
+    cacheTime: 300000,
   });
   
   // Assign team mutation
@@ -789,6 +795,22 @@ export default function AllUsers() {
   };
   
   const isLoading = isLoadingUsers || isLoadingTeams || isLoadingTenants;
+  
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg animate-pulse">
+          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="w-20 h-8 bg-gray-200 rounded"></div>
+        </div>
+      ))}
+    </div>
+  );
   
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
