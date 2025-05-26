@@ -136,11 +136,15 @@ export default function CreateObjective() {
 
   // Update form data when fields change
   const handleChange = (field: string, value: any) => {
-    // If changing team, also reset selected contributors
+    // If changing team, also reset selected contributors and auto-select team leader
     if (field === 'teamId') {
+      const selectedTeam = teams?.find(team => team.id.toString() === value);
+      const teamLeaderId = selectedTeam?.leaderId?.toString() || '';
+      
       setObjectiveData(prev => ({
         ...prev,
         [field]: value,
+        ownerId: teamLeaderId, // Auto-select team leader
         contributors: [] // Reset contributors when team changes
       }));
     } else {
