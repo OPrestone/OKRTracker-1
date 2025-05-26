@@ -1127,7 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Team not found" });
       }
       
-      // Check authorization - user must be admin/owner in tenant or team owner
+      // Check authorization - user must be admin/owner in tenant, team owner, or any user in the tenant
       const userRole = await db.select()
         .from(usersToTenants)
         .where(and(
@@ -1136,9 +1136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ))
         .then(results => results[0]);
       
-      const isAuthorized = 
-        (userRole && ['admin', 'owner'].includes(userRole.role)) || 
-        team.ownerId === userId;
+      // Allow if user is in the tenant (admin, owner, or regular user)
+      const isAuthorized = userRole !== undefined;
       
       if (!isAuthorized) {
         return res.status(403).json({ error: "Not authorized to update team leader" });
