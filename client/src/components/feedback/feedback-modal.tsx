@@ -74,7 +74,7 @@ type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
 
 type FeedbackModalProps = {
   recipient?: {
-    id: number;
+    id: string;
     firstName: string;
     lastName: string;
     role?: string;
