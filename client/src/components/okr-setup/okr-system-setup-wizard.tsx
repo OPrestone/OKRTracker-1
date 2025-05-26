@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
   Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
-  AlertCircle, UserPlus, ChevronDown, X, Plus
+  AlertCircle, UserPlus, ChevronDown, X
 } from "lucide-react";
 import {
   AlertDialog,
@@ -332,10 +332,6 @@ export default function OKRSystemSetupWizard() {
   const [showCsvPreview, setShowCsvPreview] = useState(false);
   const [isProcessingCsv, setIsProcessingCsv] = useState(false);
   const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>([]);
-  const [manualTeams, setManualTeams] = useState<Array<{name: string, description: string, department: string}>>([]);
-  const [manualUsers, setManualUsers] = useState<Array<{email: string, name: string, role: string, team: string}>>([]);
-  const [newTeam, setNewTeam] = useState({name: '', description: '', department: ''});
-  const [newUser, setNewUser] = useState({email: '', name: '', role: 'member', team: ''});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -374,52 +370,6 @@ export default function OKRSystemSetupWizard() {
       setSelectedDefaultTeams(matchingTemplates);
     }
   }, [existingTeams]);
-
-  // Handler for adding a new team manually
-  const handleAddTeam = () => {
-    if (newTeam.name.trim()) {
-      setManualTeams([...manualTeams, { ...newTeam }]);
-      setNewTeam({ name: '', description: '', department: '' });
-      toast({
-        title: "Team Added",
-        description: `${newTeam.name} has been added to your setup.`,
-      });
-    }
-  };
-
-  // Handler for adding a new user manually
-  const handleAddUser = () => {
-    if (newUser.email.trim() && newUser.name.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newUser.email)) {
-        toast({
-          title: "Invalid Email",
-          description: "Please enter a valid email address.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setManualUsers([...manualUsers, { ...newUser }]);
-      setNewUser({ email: '', name: '', role: 'member', team: '' });
-      toast({
-        title: "User Added",
-        description: `${newUser.name} has been added to your setup.`,
-      });
-    }
-  };
-
-  // Handler for removing a team
-  const handleRemoveTeam = (index: number) => {
-    const updatedTeams = manualTeams.filter((_, i) => i !== index);
-    setManualTeams(updatedTeams);
-  };
-
-  // Handler for removing a user
-  const handleRemoveUser = (index: number) => {
-    const updatedUsers = manualUsers.filter((_, i) => i !== index);
-    setManualUsers(updatedUsers);
-  };
   
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
@@ -2077,174 +2027,6 @@ export default function OKRSystemSetupWizard() {
                                 </div>
                               </div>
                             )}
-                          </div>
-                        </div>
-
-                        {/* Manual User and Team Creation Section */}
-                        <div className="mt-6 border-t pt-6">
-                          <h3 className="text-lg font-medium mb-4">Manual User and Team Creation</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Create users and teams manually by filling out the forms below. This gives you full control over your organization setup.
-                          </p>
-                          
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Manual Team Creation */}
-                            <div className="space-y-4">
-                              <h4 className="font-medium text-gray-900">Create New Team</h4>
-                              <div className="space-y-3">
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Team Name</label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g., Product Development"
-                                    value={newTeam.name}
-                                    onChange={(e) => setNewTeam({...newTeam, name: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Description</label>
-                                  <textarea
-                                    placeholder="Brief description of the team's purpose"
-                                    value={newTeam.description}
-                                    onChange={(e) => setNewTeam({...newTeam, description: e.target.value})}
-                                    rows={2}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Department</label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g., Engineering"
-                                    value={newTeam.department}
-                                    onChange={(e) => setNewTeam({...newTeam, department: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <Button type="button" onClick={handleAddTeam} className="w-full">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Add Team
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Manual User Creation */}
-                            <div className="space-y-4">
-                              <h4 className="font-medium text-gray-900">Create New User</h4>
-                              <div className="space-y-3">
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Email Address</label>
-                                  <input
-                                    type="email"
-                                    placeholder="user@company.com"
-                                    value={newUser.email}
-                                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Full Name</label>
-                                  <input
-                                    type="text"
-                                    placeholder="John Doe"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Role</label>
-                                  <select 
-                                    value={newUser.role}
-                                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  >
-                                    <option value="member">Member</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="viewer">Viewer</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Team</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Team name (optional)"
-                                    value={newUser.team}
-                                    onChange={(e) => setNewUser({...newUser, team: e.target.value})}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                  />
-                                </div>
-                                <Button type="button" onClick={handleAddUser} className="w-full">
-                                  <Plus className="w-4 h-4 mr-2" />
-                                  Add User
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Created Items Preview */}
-                          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Created Teams Preview */}
-                            <div>
-                              <h4 className="font-medium text-gray-900 mb-3">Created Teams ({manualTeams.length})</h4>
-                              <div className="border border-gray-200 rounded-md p-4 min-h-[100px] bg-gray-50 max-h-[200px] overflow-y-auto">
-                                {manualTeams.length === 0 ? (
-                                  <p className="text-sm text-gray-500 text-center">No teams created yet</p>
-                                ) : (
-                                  <div className="space-y-2">
-                                    {manualTeams.map((team, index) => (
-                                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium text-gray-900 truncate">{team.name}</p>
-                                          <p className="text-xs text-gray-500 truncate">{team.department}</p>
-                                        </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleRemoveTeam(index)}
-                                          className="ml-2 h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Created Users Preview */}
-                            <div>
-                              <h4 className="font-medium text-gray-900 mb-3">Created Users ({manualUsers.length})</h4>
-                              <div className="border border-gray-200 rounded-md p-4 min-h-[100px] bg-gray-50 max-h-[200px] overflow-y-auto">
-                                {manualUsers.length === 0 ? (
-                                  <p className="text-sm text-gray-500 text-center">No users created yet</p>
-                                ) : (
-                                  <div className="space-y-2">
-                                    {manualUsers.map((user, index) => (
-                                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                                          <p className="text-xs text-gray-400">{user.role}{user.team && ` • ${user.team}`}</p>
-                                        </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleRemoveUser(index)}
-                                          className="ml-2 h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
                           </div>
                         </div>
 
