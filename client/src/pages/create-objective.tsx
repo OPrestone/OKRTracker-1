@@ -653,11 +653,16 @@ export default function CreateObjective() {
                               <AvatarFallback className={objectiveData.contributors.includes(user.id) 
                                 ? "bg-primary/20 text-primary" 
                                 : "bg-gray-100 text-gray-700"}>
-                                {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                {(() => {
+                                  const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                                  return fullName 
+                                    ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
+                                    : user.username?.substring(0, 2).toUpperCase() || 'U';
+                                })()}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-medium leading-none">{user.fullName}</p>
+                              <p className="text-sm font-medium leading-none">{`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username}</p>
                               <p className="text-xs text-gray-500">{user.username}</p>
                             </div>
                             {objectiveData.contributors.includes(user.id) && (
