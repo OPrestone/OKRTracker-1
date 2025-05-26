@@ -147,6 +147,10 @@ export default function TeamDetailPage() {
     });
   }, [refetchTeams]);
   
+  // State for team leader selection modal
+  const [isTeamLeaderModalOpen, setIsTeamLeaderModalOpen] = useState(false);
+  const [selectedLeaderId, setSelectedLeaderId] = useState<string | null>(null);
+
   // Handle making a user the team leader
   const handleMakeTeamLead = async (userId: string) => {
     try {
@@ -187,6 +191,21 @@ export default function TeamDetailPage() {
         variant: "destructive"
       });
     }
+  };
+
+  // Handle bulk team leader assignment
+  const handleBulkLeaderAssignment = async () => {
+    if (!selectedLeaderId) return;
+    
+    await handleMakeTeamLead(selectedLeaderId);
+    setIsTeamLeaderModalOpen(false);
+    setSelectedLeaderId(null);
+  };
+
+  // Handle quick leader assignment via dropdown
+  const handleQuickLeaderChange = async (newLeaderId: string) => {
+    if (newLeaderId === team?.leaderId) return;
+    await handleMakeTeamLead(newLeaderId);
   };
   
   // Find team from the centralized context data with better error handling
@@ -1284,16 +1303,50 @@ export default function TeamDetailPage() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-lg">Team Members</CardTitle>
-                    <Button 
-                      size="sm"
-                      onClick={() => setIsAddTeamMemberModalOpen(true)}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      <span>Add Member</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Quick Team Leader Selector */}
+                      {members && members.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Team Leader:
+                          </label>
+                          <Select
+                            value={team?.leaderId || ""}
+                            onValueChange={handleQuickLeaderChange}
+                          >
+                            <SelectTrigger className="w-[160px] h-8">
+                              <SelectValue placeholder="Select leader" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {members.map((member: any) => (
+                                <SelectItem key={member.id} value={member.id}>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarFallback className="text-xs">
+                                        {member.firstName?.[0]}{member.lastName?.[0]}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm">
+                                      {member.firstName} {member.lastName}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      <Button 
+                        size="sm"
+                        onClick={() => setIsAddTeamMemberModalOpen(true)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        <span>Add Member</span>
+                      </Button>
+                    </div>
                   </div>
                   <CardDescription>
-                    All members in {team.name}
+                    All members in {team.name}. Use the dropdown above for quick leader assignment or click individual "Promote" buttons below.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1350,19 +1403,30 @@ export default function TeamDetailPage() {
                                       Team Lead
                                     </Badge>
                                   )}
-                                  <Button 
-                                    variant={highlightedLeaderId === member.id ? "secondary" : "outline"}
-                                    size="sm"
-                                    onClick={() => handleMakeTeamLead(member.id)}
-                                    disabled={member.id === team?.leaderId}
-                                    className={cn(
-                                      "ml-auto flex items-center gap-1",
-                                      highlightedLeaderId === member.id && "animate-pulse"
-                                    )}
-                                  >
-                                    <Award className="h-3 w-3" />
-                                    {member.id === team?.leaderId ? "Current Lead" : "Make Lead"}
-                                  </Button>
+                                  {member.id !== team?.leaderId ? (
+                                    <Button 
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleMakeTeamLead(member.id)}
+                                      className="ml-auto flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      <Crown className="h-3 w-3" />
+                                      Promote
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      variant="outline"
+                                      size="sm"
+                                      disabled
+                                      className={cn(
+                                        "ml-auto flex items-center gap-1",
+                                        highlightedLeaderId === member.id && "animate-pulse"
+                                      )}
+                                    >
+                                      <Award className="h-3 w-3" />
+                                      Current Leader
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
                             </CardContent>
