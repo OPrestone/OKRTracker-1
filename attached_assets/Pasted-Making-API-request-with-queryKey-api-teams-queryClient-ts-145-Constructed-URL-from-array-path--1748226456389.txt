@@ -1,0 +1,198 @@
+Making API request with queryKey: ['/api/teams']
+queryClient.ts:145 Constructed URL from array path: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW54PNX1YFAAHRGC5ZS0J4J0 for /api/teams
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0', hasCredentials: true, hasTenant: true}hasCredentials: truehasTenant: trueurl: "https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0"[[Prototype]]: Object
+queryClient.ts:83 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives 500 (Internal Server Error)
+apiRequest @ queryClient.ts:83
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=414b3942:1197
+run @ @tanstack_react-query.js?v=414b3942:494
+start @ @tanstack_react-query.js?v=414b3942:536
+execute @ @tanstack_react-query.js?v=414b3942:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=414b3942:2655
+(anonymous) @ @tanstack_react-query.js?v=414b3942:3377
+onSubmit @ create-company-objective.tsx:380
+(anonymous) @ chunk-4BFJKWC4.js?v=414b3942:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+queryClient.ts:59 API error: 500 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives - {"message":"null value in column \"objective_id\" of relation \"key_results\" violates not-null constraint"}
+throwIfResNotOk @ queryClient.ts:59
+await in throwIfResNotOk
+apiRequest @ queryClient.ts:90
+await in apiRequest
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=414b3942:1197
+run @ @tanstack_react-query.js?v=414b3942:494
+start @ @tanstack_react-query.js?v=414b3942:536
+execute @ @tanstack_react-query.js?v=414b3942:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=414b3942:2655
+(anonymous) @ @tanstack_react-query.js?v=414b3942:3377
+onSubmit @ create-company-objective.tsx:380
+(anonymous) @ chunk-4BFJKWC4.js?v=414b3942:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+create-company-objective.tsx:207 Sending payload to API: {title: 'ihkj ihhihiu', description: 'jnkjnjkj ihiojoij', teamId: '01JW54PP02SV28STFQ8P2P83PB', ownerId: '01JW54NC41DQY94XBGRZ2BWFER', timeframeId: '01JW54WPQBQMD1T8BF838BBW5E', …}
+queryClient.ts:104 Making API request with queryKey: ['/api/objectives']
+queryClient.ts:145 Constructed URL from array path: /api/objectives
+queryClient.ts:160 Adding tenant ID to request: 01JW54PNX1YFAAHRGC5ZS0J4J0 for /api/objectives
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…pi/objectives?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0', hasCredentials: true, hasTenant: true}
+queryClient.ts:83 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives 500 (Internal Server Error)
+apiRequest @ queryClient.ts:83
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=414b3942:1197
+run @ @tanstack_react-query.js?v=414b3942:494
+(anonymous) @ @tanstack_react-query.js?v=414b3942:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=414b3942:515
+Promise.catch
+run @ @tanstack_react-query.js?v=414b3942:498
+start @ @tanstack_react-query.js?v=414b3942:536
+execute @ @tanstack_react-query.js?v=414b3942:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=414b3942:2655
+(anonymous) @ @tanstack_react-query.js?v=414b3942:3377
+onSubmit @ create-company-objective.tsx:380
+(anonymous) @ chunk-4BFJKWC4.js?v=414b3942:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+queryClient.ts:59 API error: 500 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives - {"message":"null value in column \"objective_id\" of relation \"key_results\" violates not-null constraint"}
+throwIfResNotOk @ queryClient.ts:59
+await in throwIfResNotOk
+apiRequest @ queryClient.ts:90
+await in apiRequest
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=414b3942:1197
+run @ @tanstack_react-query.js?v=414b3942:494
+(anonymous) @ @tanstack_react-query.js?v=414b3942:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=414b3942:515
+Promise.catch
+run @ @tanstack_react-query.js?v=414b3942:498
+start @ @tanstack_react-query.js?v=414b3942:536
+execute @ @tanstack_react-query.js?v=414b3942:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=414b3942:2655
+(anonymous) @ @tanstack_react-query.js?v=414b3942:3377
+onSubmit @ create-company-objective.tsx:380
+(anonymous) @ chunk-4BFJKWC4.js?v=414b3942:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:104 Making API request with queryKey: (2) ['/api/teams', '01JW54PNX1YFAAHRGC5ZS0J4J0']
+queryClient.ts:113 Teams list URL constructed: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW54PNX1YFAAHRGC5ZS0J4J0 for /api/teams
+queryClient.ts:165 Request context: {url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0', hasCredentials: true, hasTenant: true}
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW54PNX1YFAAHRGC5ZS0J4J0
+create-company-objective.tsx:207 Sending payload to API: {title: 'ihkj ihhihiu', description: 'jnkjnjkj ihiojoij', teamId: '01JW54PP02SV28STFQ8P2P83PB', ownerId: '01JW54NC41DQY94XBGRZ2BWFER', timeframeId: '01JW54WPQBQMD1T8BF838BBW5E', …}
+queryClient.ts:83 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives 500 (Internal Server Error)
+apiRequest @ queryClient.ts:83
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=414b3942:1197
+run @ @tanstack_react-query.js?v=414b3942:494
+(anonymous) @ @tanstack_react-query.js?v=414b3942:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=414b3942:515
+Promise.catch
+run @ @tanstack_react-query.js?v=414b3942:498
+(anonymous) @ @tanstack_react-query.js?v=414b3942:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=414b3942:515
+Promise.catch
+run @ @tanstack_react-query.js?v=414b3942:498
+start @ @tanstack_react-query.js?v=414b3942:536
+execute @ @tanstack_react-query.js?v=414b3942:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=414b3942:2655
+(anonymous) @ @tanstack_react-query.js?v=414b3942:3377
+onSubmit @ create-company-objective.tsx:380
+(anonymous) @ chunk-4BFJKWC4.js?v=414b3942:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+queryClient.ts:59 API error: 500 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives - {"message":"null value in column \"objective_id\" of relation \"key_results\" violates not-null constraint"}

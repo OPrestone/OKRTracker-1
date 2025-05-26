@@ -139,21 +139,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const hasOrganizations = user.tenants && user.tenants.length > 0;
       
       if (hasOrganizations) {
-        // User has organizations - set default tenant
-        // Find the user's default tenant
-        const defaultTenantId = user.defaultTenant;
-        const defaultTenant = defaultTenantId 
-          ? user.tenants.find(t => t.id === defaultTenantId)
-          : user.tenants[0];
+        // User has organizations
+        const tenants = user.tenants;
+        
+        if (tenants.length === 1) {
+          // User has exactly one organization - take them directly to it
+          const tenant = tenants[0];
           
-        if (defaultTenant) {
           // Make sure it has all the required Tenant fields
           const fullTenant: Tenant = {
-            id: defaultTenant.id,
-            name: defaultTenant.name || (defaultTenant as any).displayName || 'Organization',
-            displayName: (defaultTenant as any).displayName || defaultTenant.name || 'Organization',
-            slug: defaultTenant.slug || 'org',
-            userRole: defaultTenant.userRole
+            id: tenant.id,
+            name: tenant.name || (tenant as any).displayName || 'Organization',
+            displayName: (tenant as any).displayName || tenant.name || 'Organization',
+            slug: tenant.slug || 'org',
+            userRole: tenant.userRole
           };
           
           // Update tenant info in session storage
@@ -161,20 +160,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
           sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
           
-          // Also trigger tenant refresh in tenant context
+          // Update tenant context
           tenantContext.setCurrentTenant(fullTenant);
+          
+          toast({
+            title: "Login successful",
+            description: `Welcome back to ${fullTenant.displayName || fullTenant.name}!`,
+          });
+          
+          // Navigate directly to the tenant's dashboard
+          navigate(`/${fullTenant.id}`);
+          
+        } else if (tenants.length > 1) {
+          // User has multiple organizations - let them choose
+          // First check if they have a default tenant
+          const defaultTenantId = user.defaultTenant;
+          const defaultTenant = defaultTenantId 
+            ? tenants.find(t => t.id === defaultTenantId)
+            : null;
+            
+          if (defaultTenant) {
+            // They have a default tenant, take them there
+            const fullTenant: Tenant = {
+              id: defaultTenant.id,
+              name: defaultTenant.name || (defaultTenant as any).displayName || 'Organization',
+              displayName: (defaultTenant as any).displayName || defaultTenant.name || 'Organization',
+              slug: defaultTenant.slug || 'org',
+              userRole: defaultTenant.userRole
+            };
+            
+            // Update tenant info in session storage
+            sessionStorage.setItem('currentTenantId', fullTenant.id);
+            sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
+            sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
+            
+            // Update tenant context
+            tenantContext.setCurrentTenant(fullTenant);
+            
+            toast({
+              title: "Login successful",
+              description: `Welcome back to ${fullTenant.displayName || fullTenant.name}!`,
+            });
+            
+            // Navigate directly to the tenant's dashboard
+            navigate(`/${fullTenant.id}`);
+            
+          } else {
+            // No default tenant, take them to tenant selection page
+            toast({
+              title: "Login successful",
+              description: "Please select an organization to continue.",
+            });
+            
+            // Clear any existing redirect paths
+            clearRedirectPath();
+            
+            // Redirect to tenant selection
+            navigate("/tenants");
+          }
         }
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${user.name}!`,
-        });
-        
-        // Get the saved redirect path or default to homepage
-        const redirectPath = getRedirectPath("/");
-        
-        // Navigate to the intended destination or home page
-        navigate(redirectPath);
       } else {
         // User has no organizations - redirect to tenant onboarding
         toast({

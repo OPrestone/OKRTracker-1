@@ -72,6 +72,7 @@ const OBJECTIVE_TYPES = [
 export default function CompanyOKRs() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   
   // State for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,8 +81,7 @@ export default function CompanyOKRs() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedTimeframes, setSelectedTimeframes] = useState<number[]>([]);
 
-  // Get auth context
-  const { user } = useAuth();
+  // Use the auth context from above
   const isAuthenticated = !!user;
 
 
@@ -256,10 +256,7 @@ export default function CompanyOKRs() {
     );
   };
 
-  // Navigate to objective detail page
-  const navigateToObjective = (id: number) => {
-    navigate(`/objective-detail/${id}`);
-  };
+  // Navigation handled by the main function at the top
 
   // Get all unique objective types from data
   const availableTypes = objectives.length 
@@ -483,7 +480,7 @@ export default function CompanyOKRs() {
                 key={objective.id} 
                 className="border-t-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 style={{ borderTopColor: typeColor }}
-                onClick={() => navigateToObjective(objective.id)}
+                onClick={() => navigate(`/objectives/${objective.id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-1">
@@ -538,7 +535,14 @@ export default function CompanyOKRs() {
                   
                   <div className="mt-5 text-sm text-gray-500 flex justify-between items-center">
                     <span>Assigned: {getTeamName(objective.teamId)}</span>
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        const tenantId = user?.defaultTenant || "";
+                        navigate(`/organization/${tenantId}/objectives/${objective.id}`);
+                      }}
+                    >
                       Details <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>

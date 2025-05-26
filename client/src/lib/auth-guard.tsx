@@ -12,7 +12,7 @@ export function AuthGuard({
   component: Component,
 }: {
   path: string;
-  component: () => React.JSX.Element;
+  component: React.ComponentType<any>;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -39,5 +39,9 @@ export function AuthGuard({
   }
 
   // If not authenticated, render the component (like the login page)
-  return <Route path={path} component={Component} />;
+  return (
+    <Route path={path}>
+      <Component />
+    </Route>
+  );
 }

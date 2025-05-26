@@ -8,6 +8,7 @@ import { Plus, Edit, ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -93,6 +94,7 @@ const mockAIAnalysis: AIAnalysis = {
 export default function DraftOKRs() {
   const { toast } = useToast();
   const { currentTenant } = useTenantContext();
+  const [_, navigate] = useLocation();
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -604,7 +606,15 @@ export default function DraftOKRs() {
       ) : draftObjectives && draftObjectives.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {draftObjectives.map((objective) => (
-            <Card key={objective.id} className="shadow-sm hover:shadow-md transition-shadow">
+            <Card 
+              key={objective.id} 
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={(e) => {
+                // Prevent navigation if clicking on buttons inside the card
+                if ((e.target as HTMLElement).closest('button')) return;
+                navigate(`/objective/${objective.id}`);
+              }}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg font-semibold">{objective.title}</CardTitle>

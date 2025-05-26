@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 import {
   Dialog,
@@ -29,7 +30,7 @@ import { Slider } from "@/components/ui/slider";
 
 const keyResultSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title must be less than 100 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters").optional(),
+  description: z.string().optional().or(z.string().min(10, "Description must be at least 10 characters")),
   startValue: z.number().min(0, "Start value must be at least 0"),
   targetValue: z.number().min(1, "Target value must be at least 1"),
   unit: z.string().min(1, "Unit is required (e.g., %, tasks, revenue)"),
@@ -39,7 +40,7 @@ const keyResultSchema = z.object({
 type KeyResultFormValues = z.infer<typeof keyResultSchema>;
 
 interface AddKeyResultDialogProps {
-  objectiveId: number;
+  objectiveId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -53,6 +54,8 @@ export default function AddKeyResultDialog({
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState(0);
 
+  console.log("AddKeyResultDialog received objectiveId:", objectiveId);
+
   const form = useForm<KeyResultFormValues>({
     resolver: zodResolver(keyResultSchema),
     defaultValues: {
@@ -62,17 +65,37 @@ export default function AddKeyResultDialog({
       targetValue: 100,
       unit: "%",
       currentValue: 0
-    }
+    },
+    mode: "onSubmit" // Only validate when the form is submitted
   });
 
+  const { currentTenant } = useTenantContext();
+  
   const addKeyResultMutation = useMutation({
     mutationFn: async (data: KeyResultFormValues) => {
-      const calculatedProgress = calculateProgress(data.startValue, data.targetValue, data.currentValue || data.startValue);
-      const response = await apiRequest("POST", "/api/key-results", {
-        ...data,
-        objectiveId,
-        progress: calculatedProgress
-      });
+      // Validate that objectiveId is available
+      if (!objectiveId) {
+        throw new Error("Objective ID is required to create a key result");
+      }
+      
+      // Use the same reliable approach as the create-company-objective page
+      const formattedData = {
+        title: data.title,
+        description: data.description,
+        objectiveId: objectiveId,
+        startValue: String(data.startValue),
+        targetValue: String(data.targetValue),
+        currentValue: String(data.currentValue || data.startValue),
+        status: "not_started",
+        tenantId: currentTenant?.id
+      };
+      
+      console.log("Submitting key result with formatted data:", formattedData);
+      const response = await apiRequest("POST", "/api/simple-key-results", formattedData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create key result");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -107,7 +130,9 @@ export default function AddKeyResultDialog({
     form.setValue("currentValue", value);
   };
 
+  // Just let the mutation handle the formatting
   const onSubmit = (data: KeyResultFormValues) => {
+    console.log("Submitting key result with data:", data);
     addKeyResultMutation.mutate(data);
   };
 

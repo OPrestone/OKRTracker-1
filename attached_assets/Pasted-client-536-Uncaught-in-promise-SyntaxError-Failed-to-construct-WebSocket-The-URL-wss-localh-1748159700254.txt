@@ -1,0 +1,140 @@
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=xMGAW2CPM40a' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket	@	client:536
+fallback	@	client:509
+(anonymous)	@	client:555
+
+chunk-RPCDYKBN.js?v=8f915a0e:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+use-auth.tsx:84 Attempting to fetch user authentication status
+queryClient.ts:104 Making API request with queryKey: 
+['/api/user']
+queryClient.ts:145 Constructed URL from array path: /api/user
+queryClient.ts:160 Adding tenant ID to request: 01JW2Q5KTA8AW4KYXS3M4GK32T for /api/user
+queryClient.ts:165 Request context: 
+{url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p….dev/api/user?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T', hasCredentials: true, hasTenant: true}
+queryClient.ts:104 Making API request with queryKey: 
+['/api/tenants']
+queryClient.ts:145 Constructed URL from array path: /api/tenants
+queryClient.ts:160 Adding tenant ID to request: 01JW2Q5KTA8AW4KYXS3M4GK32T for /api/tenants
+queryClient.ts:165 Request context: 
+{url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…v/api/tenants?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T', hasCredentials: true, hasTenant: true}
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW2Q5KTA8AW4KYXS3M4GK32T
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/tenants?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/user?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/tenants?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/user?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+use-auth.tsx:88 User authenticated successfully: 01JW2ZFJQ8FZ219242DM7SGB1M
+use-auth.tsx:111 Set default tenant from user data: sawasawa
+use-auth.tsx:111 Set default tenant from user data: sawasawa
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: false, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'No team data', objectives: 0, members: 0, stats: {…}}
+queryClient.ts:104 Making API request with queryKey: 
+(2) ['/api/teams', undefined]
+queryClient.ts:214 Error in getQueryFn for /api/teams: TypeError: Cannot read properties of undefined (reading 'includes')
+    at queryClient.ts:110:83
+    at refetchTeams (team-context.tsx:52:13)
+    at team-detail.tsx:133:5
+team-detail.tsx:182 Teams data loaded: 
+{teams: Array(0), teamId: undefined, teamSlug: 'engineering-team', loading: true, teamsCount: 0}
+queryClient.ts:104 Making API request with queryKey: 
+(2) ['/api/teams', '01JW2Q5KTA8AW4KYXS3M4GK32T']
+queryClient.ts:113 Teams list URL constructed: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW2Q5KTA8AW4KYXS3M4GK32T for /api/teams
+queryClient.ts:165 Request context: 
+{url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T', hasCredentials: true, hasTenant: true}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: false, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'No team data', objectives: 0, members: 0, stats: {…}}
+team-detail.tsx:182 Teams data loaded: 
+{teams: Array(0), teamId: undefined, teamSlug: 'engineering-team', loading: true, teamsCount: 0}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: false, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'No team data', objectives: 0, members: 0, stats: {…}}
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: false, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'No team data', objectives: 0, members: 0, stats: {…}}
+queryClient.ts:104 Making API request with queryKey: 
+(2) ['/api/teams', '01JW2Q5KTA8AW4KYXS3M4GK32T']
+queryClient.ts:113 Teams list URL constructed: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW2Q5KTA8AW4KYXS3M4GK32T for /api/teams
+queryClient.ts:165 Request context: 
+{url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T', hasCredentials: true, hasTenant: true}
+team-detail.tsx:182 Teams data loaded: 
+{teams: Array(6), teamId: undefined, teamSlug: 'engineering-team', loading: false, teamsCount: 6}
+team-detail.tsx:219 Looking for team by slug: engineering-team
+team-detail.tsx:232 Found team: 
+{id: '01JW2X093FVE0B436BE6KXYRR2', name: 'Engineering Team'}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: false, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'No team data', objectives: 0, members: 0, stats: {…}}
+queryClient.ts:104 Making API request with queryKey: 
+(2) ['/api/teams', '01JW2Q5KTA8AW4KYXS3M4GK32T']
+queryClient.ts:113 Teams list URL constructed: /api/teams
+queryClient.ts:160 Adding tenant ID to request: 01JW2Q5KTA8AW4KYXS3M4GK32T for /api/teams
+queryClient.ts:165 Request context: 
+{url: 'https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1p…dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T', hasCredentials: true, hasTenant: true}
+team-detail.tsx:182 Teams data loaded: 
+{teams: Array(6), teamId: undefined, teamSlug: 'engineering-team', loading: false, teamsCount: 6}
+team-detail.tsx:219 Looking for team by slug: engineering-team
+team-detail.tsx:232 Found team: 
+{id: '01JW2X093FVE0B436BE6KXYRR2', name: 'Engineering Team'}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: true, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'Engineering Team', objectives: 0, members: 0, stats: {…}}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: true, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'Engineering Team', objectives: 0, members: 0, stats: {…}}
+team-detail.tsx:906 Uncaught ReferenceError: dynamicActivityData is not defined
+    at TeamDetailPage (team-detail.tsx:906:35)
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: true, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'Engineering Team', objectives: 0, members: 0, stats: {…}}
+team-detail.tsx:577 Team detail data state: 
+{teamId: undefined, teamSlug: 'engineering-team', hasTeam: true, tenantId: '01JW2Q5KTA8AW4KYXS3M4GK32T', objectivesCount: 0, …}
+team-detail.tsx:628 Rendering team detail page with data: 
+{team: 'Engineering Team', objectives: 0, members: 0, stats: {…}}
+team-detail.tsx:906 Uncaught ReferenceError: dynamicActivityData is not defined
+    at TeamDetailPage (team-detail.tsx:906:35)
+chunk-RPCDYKBN.js?v=8f915a0e:14032 The above error occurred in the <TeamDetailPage> component:
+
+    at TeamDetailPage (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/pages/team-detail.tsx?t=1748159589380:65:21)
+    at Route (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.d…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8f915a0e:280:16)
+    at ProtectedRoute (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/lib/protected-route.tsx:25:3)
+    at Switch (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.d…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=8f915a0e:336:17)
+    at AppRoutes
+    at OnboardingProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-onboarding.tsx:53:38)
+    at HelpProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-help-context.tsx:41:32)
+    at TeamProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/contexts/team-context.tsx?t=1748159574953:22:32)
+    at AuthProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx:28:32)
+    at TenantProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx:24:3)
+    at ThemeProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at App
+    at TenantProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-tenant-context.tsx?v=j8IRbK5p6lW1eVoLz_XMh:24:3)
+    at AuthProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/hooks/use-auth.tsx?v=j8IRbK5p6lW1eVoLz_XMh:28:32)
+    at QueryClientProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.d…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=8f915a0e:2875:3)
+    at ThemeProvider (https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/src/components/ui/theme-provider.tsx?v=j8IRbK5p6lW1eVoLz_XMh:25:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+chunk-RPCDYKBN.js?v=8f915a0e:19413 Uncaught ReferenceError: dynamicActivityData is not defined
+    at TeamDetailPage (team-detail.tsx:906:35)
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:188 Response received: 200 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+queryClient.ts:200 Data successfully retrieved from https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T
+﻿

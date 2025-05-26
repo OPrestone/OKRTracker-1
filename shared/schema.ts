@@ -5,7 +5,7 @@ import { z } from "zod";
 import { pgTableWithUlid } from "./utils/schema";
 
 // ENUMS
-export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "member"]);
+export const userRoleEnum = pgEnum("user_role", ["ceo", "management", "team_leader", "owner", "admin", "member"]);
 export const objectiveStatusEnum = pgEnum("objective_status", ["draft", "active", "completed", "archived"]);
 export const objectiveStatusReasonEnum = pgEnum("objective_status_reason", ["success", "failed", "changed", "other"]);
 export const keyResultTypeEnum = pgEnum("key_result_type", ["numeric", "percentage", "boolean", "currency", "milestone"]);
@@ -94,6 +94,7 @@ export const teams = pgTableWithUlid("teams", {
   icon: text("icon"),
   parentId: text("parent_id").references(() => teams.id),
   ownerId: text("owner_id").references(() => users.id),
+  leaderId: text("leader_id").references(() => users.id, { onDelete: 'set null' }),
   tenantId: text("tenant_id").references(() => tenants.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -501,6 +502,10 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
   }),
   owner: one(users, {
     fields: [teams.ownerId],
+    references: [users.id]
+  }),
+  leader: one(users, {
+    fields: [teams.leaderId],
     references: [users.id]
   }),
   members: many(users),

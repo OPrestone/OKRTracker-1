@@ -1,0 +1,37 @@
+Form values: {title: 'tester', description: 'jkgf', teamId: '01JVZH385B63J80A1KEDE08V8J', ownerId: '01JVZH9JWZ2H3HR1WR19YFRQGP', timeframeId: undefined, …}description: "jkgf"ownerId: "01JVZH9JWZ2H3HR1WR19YFRQGP"parentId: undefinedstatus: "draft"teamId: "01JVZH385B63J80A1KEDE08V8J"timeframeId: undefinedtitle: "tester"[[Prototype]]: Object
+create-company-objective.tsx:286 Key results: [{…}]
+create-company-objective.tsx:361 Submitting payload: {title: 'tester', description: 'jkgf', teamId: '01JVZH385B63J80A1KEDE08V8J', ownerId: '01JVZH9JWZ2H3HR1WR19YFRQGP', timeframeId: undefined, …}
+create-company-objective.tsx:207 Sending payload to API: {title: 'tester', description: 'jkgf', teamId: '01JVZH385B63J80A1KEDE08V8J', ownerId: '01JVZH9JWZ2H3HR1WR19YFRQGP', timeframeId: undefined, …}
+queryClient.ts:83 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives 502 (Bad Gateway)
+apiRequest @ queryClient.ts:83
+mutationFn @ create-company-objective.tsx:209
+fn @ @tanstack_react-query.js?v=8f915a0e:1197
+run @ @tanstack_react-query.js?v=8f915a0e:494
+start @ @tanstack_react-query.js?v=8f915a0e:536
+execute @ @tanstack_react-query.js?v=8f915a0e:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=8f915a0e:2655
+(anonymous) @ @tanstack_react-query.js?v=8f915a0e:3377
+onSubmit @ create-company-objective.tsx:364
+(anonymous) @ chunk-4BFJKWC4.js?v=8f915a0e:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=8f915a0e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8f915a0e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8f915a0e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8f915a0e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8f915a0e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8f915a0e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8f915a0e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8f915a0e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8f915a0e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8f915a0e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8f915a0e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8f915a0e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8f915a0e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5449Understand this error
+queryClient.ts:59 API error: 502 for https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives - <!DOCTYPE html>
+<html lang="en">

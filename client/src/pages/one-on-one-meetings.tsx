@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/layouts/dashboard-layout";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Utility function to get initials from a name, safely handling null/undefined
 const getInitials = (name?: string): string => {
@@ -81,6 +85,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
 import { Meeting as DbMeeting } from "@shared/schema";
 
+// Form schema for meeting creation
+const meetingSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  date: z.string().min(1, "Date is required"),
+  time: z.string().min(1, "Time is required"),
+  duration: z.string().default("30"),
+  agenda: z.string().optional(),
+  attendeeId: z.string().optional(),
+  platform: z.string().optional(),
+  meetingLink: z.string().optional(),
+});
+
 // Types for frontend representation of meetings
 type MeetingStatus = "upcoming" | "completed" | "cancelled";
 type MeetingPlatform = "google_meet" | "microsoft_teams" | "zoom" | "in_person" | "other";
@@ -148,8 +164,11 @@ export default function OneOnOneMeetings() {
     isLoading: isLoadingMeetings, 
     error: meetingsError 
   } = useQuery({
-    queryKey: ['/api/meetings', currentTenant?.id],
+    queryKey: ['/api/meetings'],
     enabled: !!currentTenant?.id,
+    staleTime: 0,
+    gcTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
   
   // Fetch users to get attendee details
@@ -432,7 +451,15 @@ export default function OneOnOneMeetings() {
           </div>
           <Dialog open={newMeetingOpen} onOpenChange={setNewMeetingOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary" disabled={createMeetingMutation.isPending}>
+              <Button 
+                className="bg-primary" 
+                disabled={createMeetingMutation.isPending}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setNewMeetingOpen(true);
+                }}
+              >
                 {createMeetingMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
@@ -706,7 +733,11 @@ export default function OneOnOneMeetings() {
                 </p>
                 <Button 
                   className="mt-4" 
-                  onClick={() => setNewMeetingOpen(true)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setNewMeetingOpen(true);
+                  }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Schedule Meeting

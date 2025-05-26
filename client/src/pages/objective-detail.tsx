@@ -37,11 +37,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   Target, 
-  Calendar, 
+  Calendar,
   User, 
   Building,
   MessageSquare, 
-  CheckCircle, 
+  CheckCircle,
   PlusCircle, 
   Clock, 
   Edit, 
@@ -52,6 +52,7 @@ import {
   CheckSquare,
   AlertCircle
 } from "lucide-react";
+import SimpleAddKeyResultForm from "@/components/okrs/simple-add-key-result-form";
 
 // Types for the Objective Detail based on the database schema
 interface User {
@@ -154,7 +155,7 @@ interface DbObjective {
 }
 
 // Sample data for the objective
-const objectiveData: Objective = {
+const objectiveData: DbObjective = {
   id: 101,
   title: "Launch mobile app redesign",
   description: "Complete redesign and release of our mobile application with improved user experience and new features based on customer feedback. Focus on performance optimization and better onboarding flow to increase user activation.",
@@ -357,48 +358,67 @@ const objectiveData: Objective = {
 };
 
 export default function ObjectiveDetail() {
-  const { id: objectiveId } = useParams();
+  // Get the route parameters and extract the objective ID from different possible routes
+  const [matchesSimpleRoute, simpleParams] = useRoute("/objective/:id");
+  const [matchesPluralRoute, pluralParams] = useRoute("/objectives/:id");
+  const [matchesTenantRoute, tenantParams] = useRoute("/:tenantId/objective/:objectiveId");
+  const [matchesOrgRoute, orgParams] = useRoute("/organization/:organisation/objective/:id");
+  
+  // Use the first matching route's parameters
+  const objectiveId = simpleParams?.id || pluralParams?.id || tenantParams?.objectiveId || orgParams?.id;
   const [progressValue, setProgressValue] = useState<string>("0");
   const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { tenant } = useTenantContext();
+  const { currentTenant } = useTenantContext();
+  
+  // For debugging
+  console.log("Route params:", { simpleParams, tenantParams, orgParams });
+  console.log("Objective ID from URL:", objectiveId);
   
   // Fetch the objective data from API with tenant context
   const { data: objective, isLoading: objectiveLoading, isError: objectiveError } = useQuery({
     queryKey: ['/api/objectives', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
-        throw new Error("Missing objectiveId or tenant");
+      if (!objectiveId) {
+        throw new Error("Missing objectiveId");
       }
       
+      console.log("Fetching objective with ID:", objectiveId);
+      
+      // Explicitly add tenantId to ensure proper authorization
       const response = await apiRequest(
         'GET', 
-        `/api/objectives/${objectiveId}?tenantId=${tenant.id}`
+        `/api/objectives/${objectiveId}`
       );
       
       if (!response.ok) {
+        console.error("Error response:", await response.text());
         throw new Error(`Error fetching objective: ${response.statusText}`);
       }
       
       return await response.json() as DbObjective;
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
+    retry: 3
   });
 
   // Fetch key results related to this objective
   const { data: keyResults, isLoading: keyResultsLoading } = useQuery({
     queryKey: ['/api/key-results', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
-        throw new Error("Missing objectiveId or tenant");
+      if (!objectiveId) {
+        throw new Error("Missing objectiveId");
       }
+      
+      console.log("Fetching key results for objective:", objectiveId);
       
       const response = await apiRequest(
         'GET', 
-        `/api/key-results?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+        `/api/objectives/${objectiveId}/key-results`
       );
       
       if (!response.ok) {
@@ -407,20 +427,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as DbKeyResult[];
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
   });
 
   // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['/api/teams'],
     queryFn: async () => {
-      if (!tenant?.id) {
+      if (!currentTenant?.id) {
         throw new Error("Missing tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/teams?tenantId=${tenant.id}`
+        `/api/teams?tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -429,20 +449,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as Team[];
     },
-    enabled: !!tenant?.id,
+    enabled: !!currentTenant?.id,
   });
 
   // Fetch users
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      if (!tenant?.id) {
+      if (!currentTenant?.id) {
         throw new Error("Missing tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/users?tenantId=${tenant.id}`
+        `/api/users?tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -451,20 +471,20 @@ export default function ObjectiveDetail() {
       
       return await response.json() as User[];
     },
-    enabled: !!tenant?.id,
+    enabled: !!currentTenant?.id,
   });
 
   // Fetch check-ins
   const { data: checkIns, isLoading: checkInsLoading } = useQuery({
     queryKey: ['/api/check-ins', objectiveId],
     queryFn: async () => {
-      if (!objectiveId || !tenant?.id) {
+      if (!objectiveId || !currentTenant?.id) {
         throw new Error("Missing objectiveId or tenant");
       }
       
       const response = await apiRequest(
         'GET', 
-        `/api/check-ins?objectiveId=${objectiveId}&tenantId=${tenant.id}`
+        `/api/check-ins?objectiveId=${objectiveId}&tenantId=${currentTenant.id}`
       );
       
       if (!response.ok) {
@@ -473,7 +493,7 @@ export default function ObjectiveDetail() {
       
       return await response.json() as DbCheckIn[];
     },
-    enabled: !!objectiveId && !!tenant?.id,
+    enabled: !!objectiveId && !!currentTenant?.id,
   });
 
   // Update progress value when objective data changes
@@ -545,7 +565,7 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    if (!objective || !tenant?.id) {
+    if (!objective || !currentTenant?.id) {
       toast({
         title: "Cannot Update Progress",
         description: "Missing objective data or tenant information.",
@@ -558,13 +578,13 @@ export default function ObjectiveDetail() {
       // Prepare the update data
       const updateData = {
         progress: newProgress,
-        tenantId: tenant.id
+        tenantId: currentTenant.id
       };
 
       // Make API request to update objective
       const response = await apiRequest(
         'PATCH',
-        `/api/objectives/${objective.id}?tenantId=${tenant.id}`,
+        `/api/objectives/${objective.id}?tenantId=${currentTenant.id}`,
         updateData
       );
 
@@ -602,7 +622,7 @@ export default function ObjectiveDetail() {
       return;
     }
 
-    if (!objective || !tenant?.id) {
+    if (!objective || !currentTenant?.id) {
       toast({
         title: "Cannot Add Check-in",
         description: "Missing objective data or tenant information.",
@@ -618,13 +638,13 @@ export default function ObjectiveDetail() {
         objectiveId: objective.id,
         progress: objective.progress,
         notes: newCheckInNotes,
-        tenantId: tenant.id
+        tenantId: currentTenant.id
       };
 
       // Make API request to create check-in
       const response = await apiRequest(
         'POST',
-        `/api/check-ins?tenantId=${tenant.id}`,
+        `/api/check-ins?tenantId=${currentTenant.id}`,
         checkInData
       );
 
@@ -819,7 +839,11 @@ export default function ObjectiveDetail() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle>Key Results</CardTitle>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsAddKeyResultModalOpen(true)}
+                    >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add Key Result
                     </Button>
@@ -829,50 +853,52 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {objective.keyResults.map((keyResult) => (
-                    <div key={keyResult.id} className="border rounded-md p-4">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{keyResult.title}</h3>
-                            <Badge className={getStatusColor(keyResult.status)}>
-                              {getStatusText(keyResult.status)}
-                            </Badge>
+                  {keyResults && keyResults.length > 0 ? (
+                    keyResults.map((keyResult) => (
+                      <div key={keyResult.id} className="border rounded-md p-4">
+                        <div className="flex justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{keyResult.title || 'Untitled Key Result'}</h3>
+                              <Badge className={getStatusColor(keyResult.status || 'not_started')}>
+                                {getStatusText(keyResult.status || 'not_started')}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3">{keyResult.description || 'No description provided'}</p>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{keyResult.description}</p>
-                        </div>
-                        <div className={`text-xl font-bold ${getProgressColorClass(keyResult.progress)}`}>
-                          {keyResult.progress}%
-                        </div>
-                      </div>
-                      
-                      <Progress value={keyResult.progress} className="h-2 mb-3" />
-                      
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            {keyResult.owner.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Due: {keyResult.dueDate}
+                          <div className={`text-xl font-bold ${getProgressColorClass(keyResult.progress || 0)}`}>
+                            {keyResult.progress || 0}%
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <BarChart3 className="h-4 w-4 mr-1" />
-                            Update Progress
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
+                        <Progress value={keyResult.progress || 0} className="h-2 mb-3" />
+                        
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1" />
+                              {keyResult.assignedTo?.name || 'Unassigned'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <BarChart3 className="h-4 w-4 mr-1" />
+                              Update Progress
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No key results found for this objective
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -893,45 +919,47 @@ export default function ObjectiveDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {objective.initiatives.map((initiative) => (
-                    <div key={initiative.id} className="border rounded-md p-4">
-                      <div className="flex justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{initiative.title}</h3>
-                            <Badge className={getInitiativeStatusColor(initiative.status)}>
-                              {getInitiativeStatusText(initiative.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{initiative.description}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            {initiative.owner.name}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Due: {initiative.dueDate}
+                  {objective?.initiatives?.length > 0 ? (
+                    objective.initiatives.map((initiative) => (
+                      <div key={initiative.id} className="border rounded-md p-4">
+                        <div className="flex justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{initiative.title || 'Untitled Initiative'}</h3>
+                              <Badge className={getInitiativeStatusColor(initiative.status || 'not_started')}>
+                                {getInitiativeStatusText(initiative.status || 'not_started')}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{initiative.description || 'No description provided'}</p>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-500">
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-gray-500 gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-1" />
+                              {initiative.owner?.name || 'Unassigned'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-red-500">
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No initiatives found for this objective
                     </div>
-                  ))}
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1109,19 +1137,19 @@ export default function ObjectiveDetail() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.keyResults.length}</p>
+                  <p className="text-2xl font-bold">{objective?.keyResults?.length || 0}</p>
                   <p className="text-xs text-gray-500">Key Results</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.initiatives.length}</p>
+                  <p className="text-2xl font-bold">{objective?.initiatives?.length || 0}</p>
                   <p className="text-xs text-gray-500">Initiatives</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.checkIns.length}</p>
+                  <p className="text-2xl font-bold">{objective?.checkIns?.length || 0}</p>
                   <p className="text-xs text-gray-500">Check-ins</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective.todos.filter(t => t.completed).length}/{objective.todos.length}</p>
+                  <p className="text-2xl font-bold">0/0</p>
                   <p className="text-xs text-gray-500">To-Dos Completed</p>
                 </div>
               </div>
@@ -1141,7 +1169,7 @@ export default function ObjectiveDetail() {
                   </div>
                   <div>
                     <p className="text-sm">New check-in added</p>
-                    <p className="text-xs text-gray-500">{objective.checkIns[0]?.date}</p>
+                    <p className="text-xs text-gray-500">{objective?.checkIns?.length > 0 ? new Date(objective.checkIns[0].createdAt || '').toLocaleDateString() : 'No date available'}</p>
                   </div>
                 </div>
                 
@@ -1261,6 +1289,15 @@ export default function ObjectiveDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Key Result Dialog */}
+      {objectiveId && (
+        <SimpleAddKeyResultForm
+          objectiveId={objectiveId}
+          open={isAddKeyResultModalOpen}
+          onOpenChange={setIsAddKeyResultModalOpen}
+        />
+      )}
     </DashboardLayout>
   );
 }

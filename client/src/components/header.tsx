@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { HelpTooltip } from "@/components/help/tooltip";
 import { dashboardHelp } from "@/components/help/help-content";
 import { QuickStartGuide } from "@/components/quick-start-guide";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 type SearchableItemType =
   | "objective"
@@ -322,6 +323,10 @@ const Header = ({
           >
             <Inbox className="h-4.5 w-4.5" />
           </Button>
+          
+          {/* Notifications */}
+          <NotificationBell />
+          
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

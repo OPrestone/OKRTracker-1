@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,20 +7,188 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+// Comprehensive industry list for organization selection
+const industryOptions = [
+  "Accounting",
+  "Airlines/Aviation",
+  "Alternative Dispute Resolution",
+  "Alternative Medicine",
+  "Animation",
+  "Apparel & Fashion",
+  "Architecture & Planning",
+  "Arts & Crafts",
+  "Automotive",
+  "Aviation & Aerospace",
+  "Banking",
+  "Biotechnology",
+  "Broadcast Media",
+  "Building Materials",
+  "Business Supplies & Equipment",
+  "Capital Markets",
+  "Chemicals",
+  "Civic & Social Organization",
+  "Civil Engineering",
+  "Commercial Real Estate",
+  "Computer & Network Security",
+  "Computer Games",
+  "Computer Hardware",
+  "Computer Networking",
+  "Computer Software",
+  "Construction",
+  "Consumer Electronics",
+  "Consumer Goods",
+  "Consumer Services",
+  "Cosmetics",
+  "Dairy",
+  "Defense & Space",
+  "Design",
+  "Education Management",
+  "E-learning",
+  "Electrical & Electronic Manufacturing",
+  "Entertainment",
+  "Environmental Services",
+  "Events Services",
+  "Executive Office",
+  "Facilities Services",
+  "Farming",
+  "Financial Services",
+  "Fine Art",
+  "Fishery",
+  "Food & Beverages",
+  "Food Production",
+  "Fundraising",
+  "Furniture",
+  "Gambling & Casinos",
+  "Glass, Ceramics & Concrete",
+  "Government Administration",
+  "Government Relations",
+  "Graphic Design",
+  "Health, Wellness & Fitness",
+  "Higher Education",
+  "Hospital & Health Care",
+  "Hospitality",
+  "Human Resources",
+  "Import & Export",
+  "Individual & Family Services",
+  "Industrial Automation",
+  "Information Services",
+  "Information Technology & Services",
+  "Insurance",
+  "International Affairs",
+  "International Trade & Development",
+  "Internet",
+  "Investment Banking/Venture",
+  "Investment Management",
+  "Judiciary",
+  "Law Enforcement",
+  "Law Practice",
+  "Legal Services",
+  "Legislative Office",
+  "Leisure & Travel",
+  "Libraries",
+  "Logistics & Supply Chain",
+  "Luxury Goods & Jewelry",
+  "Machinery",
+  "Management Consulting",
+  "Maritime",
+  "Marketing & Advertising",
+  "Market Research",
+  "Mechanical or Industrial Engineering",
+  "Media Production",
+  "Medical Device",
+  "Medical Practice",
+  "Mental Health Care",
+  "Military",
+  "Mining & Metals",
+  "Motion Pictures & Film",
+  "Museums & Institutions",
+  "Music",
+  "Nanotechnology",
+  "Newspapers",
+  "Nonprofit Organization Management",
+  "Oil & Energy",
+  "Online Publishing",
+  "Outsourcing/Offshoring",
+  "Package/Freight Delivery",
+  "Packaging & Containers",
+  "Paper & Forest Products",
+  "Performing Arts",
+  "Pharmaceuticals",
+  "Philanthropy",
+  "Photography",
+  "Plastics",
+  "Political Organization",
+  "Primary/Secondary",
+  "Printing",
+  "Professional Training",
+  "Program Development",
+  "Public Policy",
+  "Public Relations",
+  "Public Safety",
+  "Publishing",
+  "Railroad Manufacture",
+  "Ranching",
+  "Real Estate",
+  "Recreational Facilities & Services",
+  "Religious Institutions",
+  "Renewables & Environment",
+  "Research",
+  "Restaurants",
+  "Retail",
+  "Security & Investigations",
+  "Semiconductors",
+  "Shipbuilding",
+  "Sporting Goods",
+  "Sports",
+  "Staffing & Recruiting",
+  "Supermarkets",
+  "Telecommunications",
+  "Textiles",
+  "Think Tanks",
+  "Tobacco",
+  "Translation & Localization",
+  "Transportation/Trucking/Railroad",
+  "Utilities",
+  "Venture Capital",
+  "Veterinary",
+  "Warehousing",
+  "Wholesale",
+  "Wine & Spirits",
+  "Wireless",
+  "Writing & Editing"
+];
+
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   Building2,
-  Check, 
+  Check,
+  CheckCircle, 
   CreditCard,
+  FileUp,
   Loader2,
   Mail,
   Plus,
   UserPlus,
   Users,
   X,
+  Rocket,
+  BarChart3,
+  Target,
+  Landmark,
+  Award,
+  Zap,
+  Sparkles,
+  Save,
+  Megaphone,
+  Briefcase,
+  Code,
+  Building
 } from "lucide-react";
+
+import { CSVImport } from "@/components/csv/csv-import";
+import { cn } from "@/lib/utils";
 
 import {
   Form,
@@ -41,6 +209,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Select,
   SelectContent,
@@ -56,12 +226,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
-// Example OKR templates
+// OKR templates - must match backend template ids
 const okrTemplates = [
   {
-    id: "growth",
-    name: "Growth & Expansion",
+    id: "startup",
+    name: "Startup Growth",
+    description: "Focus on product-market fit and team building",
+  },
+  {
+    id: "sales",
+    name: "Sales & Revenue",
     description: "Focus on market expansion and revenue growth",
   },
   {
@@ -69,79 +246,107 @@ const okrTemplates = [
     name: "Product Development",
     description: "Accelerate product development and innovation",
   },
-  {
-    id: "customer",
-    name: "Customer Success",
-    description: "Improve customer satisfaction and retention",
-  },
-  {
-    id: "operational",
-    name: "Operational Excellence",
-    description: "Streamline operations and improve efficiency",
-  },
 ];
 
-// Example price tiers for the subscription plans
+// Subscription plans with detailed features
 const priceTiers = [
   {
     id: "free",
     name: "Free",
     description: "Basic features for small teams",
     price: 0,
+    popular: false,
     features: [
       "Up to 10 users",
+      "3 teams maximum",
       "Basic OKR tracking",
-      "Standard templates",
-      "Email support",
-      "7-day history",
+      "Default OKR templates",
+      "Weekly check-ins",
+      "Email support (48hr response)",
+      "7-day history retention",
+      "Public dashboard sharing",
+      "Basic progress reporting",
+      "1 Admin user"
     ],
     maxUsers: 10,
+    recommended: false,
+    buttonText: "Start Free Plan"
   },
   {
     id: "starter",
     name: "Starter",
     description: "Great for small teams getting started",
     price: 9.99,
+    popular: true,
     features: [
       "Up to 25 users",
-      "Advanced OKR tracking",
-      "Custom templates",
-      "Priority support",
-      "30-day history",
-      "Basic analytics",
+      "10 teams maximum",
+      "Comprehensive OKR tracking",
+      "Custom OKR templates",
+      "Daily & weekly check-ins",
+      "Priority email support (24hr response)",
+      "30-day history retention",
+      "Custom dashboard layouts",
+      "Team analytics dashboard",
+      "Up to 3 Admin users",
+      "Progress tracking notifications",
+      "Engagement metrics"
     ],
     maxUsers: 25,
+    recommended: true,
+    buttonText: "Select Starter Plan"
   },
   {
     id: "professional",
     name: "Professional",
     description: "Enhanced features for growing teams",
     price: 29.99,
+    popular: false,
     features: [
       "Up to 100 users",
-      "Advanced OKR tracking",
-      "Custom reporting",
-      "Advanced analytics",
-      "Priority support",
+      "Unlimited teams",
+      "Advanced OKR tracking & alignment",
+      "Custom templates library",
+      "Scheduled & ad-hoc check-ins",
+      "Priority support with dedicated account manager",
+      "90-day history retention",
+      "Advanced reporting & export",
+      "Department analytics",
+      "Unlimited Admin users",
       "API access",
+      "Custom integrations",
+      "SSO authentication"
     ],
     maxUsers: 100,
+    recommended: false,
+    buttonText: "Select Professional Plan"
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    description: "Full-featured solution for large organizations",
+    description: "Full solution for large organizations",
     price: 99.99,
+    popular: false,
     features: [
       "Unlimited users",
-      "Advanced OKR tracking",
-      "Custom reporting & templates",
+      "Unlimited teams",
+      "Enterprise-grade security",
+      "Advanced permissions & roles",
+      "Custom OKR methodologies",
+      "Advanced alignment tools",
+      "Custom check-in schedules",
+      "24/7 priority support",
+      "Unlimited history retention",
+      "Executive dashboard",
       "Advanced analytics & insights",
-      "Dedicated support manager",
-      "API access & custom integrations",
-      "SSO & advanced security",
+      "Custom training & onboarding",
+      "Dedicated success manager",
+      "On-premise deployment option",
+      "Custom contract terms"
     ],
     maxUsers: Infinity,
+    recommended: false,
+    buttonText: "Contact Sales"
   },
 ];
 
@@ -150,10 +355,20 @@ const formSchema = z.object({
   setup: z.object({
     createInitialOKRs: z.boolean().default(false),
     template: z.string().optional(),
+    importedOKRs: z.array(z.record(z.string(), z.any())).optional(),
+  }).refine(data => {
+    // If createInitialOKRs is true, either a template or importedOKRs must be provided
+    if (data.createInitialOKRs) {
+      return !!data.template || (data.importedOKRs && data.importedOKRs.length > 0);
+    }
+    return true;
+  }, {
+    message: "Please select a template or import OKRs when 'Create initial OKRs' is checked",
+    path: ["template"]
   }),
   plan: z.object({
     plan: z.enum(["free", "starter", "professional", "enterprise"]),
-    agreeToTerms: z.literal(true),
+    agreeToTerms: z.boolean(),
   }),
   orgDetails: z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -161,36 +376,43 @@ const formSchema = z.object({
     description: z.string().optional(),
     industry: z.string().optional(),
   }),
-  team: z.object({
-    users: z.array(z.object({
-      email: z.string().email(),
-      role: z.enum(["admin", "member", "viewer"]),
-      selected: z.boolean(),
-    })).optional(),
-  }),
 });
 
 export default function TenantOnboardingWizard() {
-  const [step, setStep] = useState(1);
-  const totalSteps = 4;
-  const progress = (step / totalSteps) * 100;
-  
-  const [availableUsers] = useState([
-    { id: 1, name: "Jane Cooper", email: "jane@example.com", department: "Marketing" },
-    { id: 2, name: "Wade Warren", email: "wade@example.com", department: "Engineering" },
-    { id: 3, name: "Esther Howard", email: "esther@example.com", department: "Product" },
-    { id: 4, name: "Cameron Williamson", email: "cameron@example.com", department: "Sales" },
-    { id: 5, name: "Brooklyn Simmons", email: "brooklyn@example.com", department: "Design" },
-  ]);
-  
-  const [isQuickSetup, setIsQuickSetup] = useState(true);
+  const [activePage, setActivePage] = useState<string>("organization");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
-  
+  const [animateProgress, setAnimateProgress] = useState(0);
+  const [addedTeams, setAddedTeams] = useState<Array<{
+    name: string;
+    description: string;
+    color: string;
+    icon: string;
+    members: any[];
+  }>>([]);
+
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
-  
+
+  // Steps configuration - team step removed
+  const steps = [
+    { id: "organization", label: "Organization", icon: Building2 },
+    { id: "plan", label: "Subscription", icon: CreditCard },
+    { id: "setup", label: "Initial Setup", icon: Rocket }
+  ];
+
+  // Find active step index
+  const activeIndex = steps.findIndex(step => step.id === activePage);
+
+  // Calculate progress percentage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimateProgress(((activeIndex + 1) / steps.length) * 100);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeIndex]);
+
   // Form setup with default values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -199,154 +421,324 @@ export default function TenantOnboardingWizard() {
         name: "",
         displayName: "",
         description: "",
-        industry: "",
+        industry: "technology",
       },
       plan: {
         plan: "free",
         agreeToTerms: false,
       },
-      team: {
-        users: [],
-      },
       setup: {
         createInitialOKRs: false,
         template: "",
+        importedOKRs: [],
       },
     },
   });
-  
+
+  // Watch for values changes for conditional rendering
+  const createInitialOKRs = form.watch("setup.createInitialOKRs");
+  const selectedTemplate = form.watch("setup.template");
+  const selectedPlan = form.watch("plan.plan");
+  const agreeToTerms = form.watch("plan.agreeToTerms");
+
+  // Create default teams automatically
+  useEffect(() => {
+    // We'll automatically create default teams when setting up the organization
+    if (addedTeams.length === 0) {
+      // Create Marketing Team (blue, megaphone)
+      const marketingTeam = {
+        name: "Marketing Team",
+        description: "Team responsible for brand, communications and marketing campaigns",
+        color: "#3B82F6", // Blue
+        icon: "megaphone",
+        members: []
+      };
+
+      // Create Sales Team (green, chart)
+      const salesTeam = {
+        name: "Sales Team",
+        description: "Team responsible for sales and revenue growth",
+        color: "#10B981", // Green 
+        icon: "briefcase",
+        members: []
+      };
+
+      // Create Engineering Team (purple, code)
+      const engineeringTeam = {
+        name: "Engineering Team",
+        description: "Team responsible for product development and technical operations",
+        color: "#8B5CF6", // Purple
+        icon: "code",
+        members: []
+      };
+
+      setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
+    }
+  }, [addedTeams.length]);
+
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      console.log("Creating organization with form values:", values);
       setIsSubmitting(true);
-      
+
       try {
-        // Extract users that were selected
-        const selectedUsers = values.team.users?.filter(user => user.selected) || [];
-        
+        // Use teams from state or default if none added
+        const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
+          name: team.name,
+          description: team.description,
+          icon: team.icon,
+          color: team.color,
+          leaderId: null // Explicitly set team leader as null initially
+        })) : [
+          {
+            name: "Marketing Team",
+            description: "Team responsible for brand, communications and marketing campaigns",
+            color: "#3B82F6", // Blue
+            icon: "megaphone",
+            leaderId: null // Explicitly set team leader as null initially
+          },
+          {
+            name: "Sales Team",
+            description: "Team responsible for sales and revenue growth", 
+            color: "#10B981", // Green
+            icon: "briefcase",
+            leaderId: null // Explicitly set team leader as null initially
+          },
+          {
+            name: "Engineering Team",
+            description: "Team responsible for product development and technical operations",
+            color: "#8B5CF6", // Purple
+            icon: "code",
+            leaderId: null // Explicitly set team leader as null initially
+          }
+        ];
+
+        console.log("Teams to be created:", teams);
+
+        // Prepare the request data
         const requestData = {
           name: values.orgDetails.name,
           displayName: values.orgDetails.displayName,
           description: values.orgDetails.description,
           industry: values.orgDetails.industry,
           planType: values.plan.plan,
-          users: selectedUsers,
           setup: values.setup,
+          teams: teams,
+          role: "owner" // Set creator's role to owner
         };
-        
-        // Make the API request
-        const response = await apiRequest('POST', '/api/tenants', requestData);
-        const orgData = await response.json();
-        
-        return orgData;
+
+        console.log("Submitting organization data:", requestData);
+
+        // Attempt API call first
+        try {
+          const response = await fetch('/api/tenants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData),
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const orgData = await response.json();
+            console.log("Organization created successfully via API:", orgData);
+
+            // Create time cadences for the organization
+            const tenantId = orgData.tenant.id;
+            console.log("Creating time cadences for tenant:", tenantId);
+
+            // Annual cadence
+            const annualResponse = await fetch('/api/cadences', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: "Annual",
+                description: "12-month time period for long-term strategic planning",
+                startMonth: 1, // January
+                periodMonths: 12,
+                tenantId: tenantId,
+                isDefault: true
+              }),
+              credentials: 'include'
+            });
+
+            if (annualResponse.ok) {
+              console.log("Annual cadence created successfully");
+            } else {
+              console.error("Failed to create annual cadence:", await annualResponse.text());
+            }
+
+            // Quarterly cadence
+            const quarterlyResponse = await fetch('/api/cadences', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: "Quarterly",
+                description: "3-month time period for tactical execution",
+                startMonth: 1, // January
+                periodMonths: 3,
+                tenantId: tenantId,
+                isDefault: true
+              }),
+              credentials: 'include'
+            });
+
+            if (quarterlyResponse.ok) {
+              console.log("Quarterly cadence created successfully");
+            } else {
+              console.error("Failed to create quarterly cadence:", await quarterlyResponse.text());
+            }
+
+            // Create initial OKRs from template if requested
+            if (values.setup.createInitialOKRs && values.setup.template) {
+              console.log("Creating initial OKRs from template:", values.setup.template);
+              
+              const okrResponse = await fetch(`/api/tenants/${tenantId}/okr-templates/${values.setup.template}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              });
+
+              if (okrResponse.ok) {
+                console.log("Initial OKRs created successfully from template");
+              } else {
+                console.error("Failed to create initial OKRs:", await okrResponse.text());
+              }
+            }
+
+            // Process imported OKRs if provided
+            if (values.setup.createInitialOKRs && values.setup.importedOKRs && values.setup.importedOKRs.length > 0) {
+              console.log("Processing imported OKRs:", values.setup.importedOKRs);
+              
+              const importResponse = await fetch(`/api/tenants/${tenantId}/import-okrs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ okrs: values.setup.importedOKRs }),
+                credentials: 'include'
+              });
+
+              if (importResponse.ok) {
+                console.log("Imported OKRs processed successfully");
+              } else {
+                console.error("Failed to import OKRs:", await importResponse.text());
+              }
+            }
+
+            // Success state
+            setTenantCreated(true);
+            return orgData;
+            
+          } else {
+            const errorText = await response.text();
+            console.error("API request failed:", errorText);
+            throw new Error(errorText || "Failed to create organization. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error creating organization:", error);
+          throw error;
+        }
+      } catch (error) {
+        console.error("Mutation error:", error);
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
+
     onSuccess: (data) => {
+      // Invalidate cached data
+      queryClient.invalidateQueries({ queryKey: ['/api/tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
+      // Show success message
       toast({
         title: "Organization created!",
-        description: "Your new organization has been set up successfully.",
+        description: `${data.tenant.displayName} has been set up successfully.`,
       });
-      
-      // Invalidate tenants query to refresh list
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      
-      setTenantCreated(true);
+
+      // Add a slight delay to ensure cache is invalidated and UI update is perceived
+      setTimeout(() => {
+        // Redirect to the new tenant dashboard
+        navigate(`/${data.tenant.id}/`);
+      }, 1000);
     },
-    onError: (error: Error) => {
+
+    onError: (error: any) => {
       toast({
         title: "Failed to create organization",
-        description: error.message,
+        description: error?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    },
+    }
   });
-  
-  // Continue to next step
-  const nextStep = () => {
-    if (step === totalSteps) {
-      onSubmit(form.getValues());
-    } else {
-      const isStepValid = validateStep();
-      if (isStepValid) {
-        setStep(step + 1);
-      }
-    }
-  };
-  
-  // Go back to previous step
-  const prevStep = () => {
-    setStep(Math.max(1, step - 1));
-  };
-  
-  // Submit the form
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createTenantMutation.mutate(values);
-  };
-  
-  // Validate current step before proceeding
-  const validateStep = () => {
-    let isValid = true;
+
+  // Function to check if current step is valid
+  const isCurrentStepValid = () => {
+    const { errors } = form.formState;
     
-    if (step === 1) {
-      const orgDetails = form.getValues("orgDetails");
-      
-      if (!orgDetails.name || !orgDetails.displayName) {
-        form.setError("orgDetails.name", {
-          type: "manual",
-          message: "Organization name is required",
-        });
-        form.setError("orgDetails.displayName", {
-          type: "manual",
-          message: "Display name is required",
-        });
-        isValid = false;
+    if (activePage === "organization") {
+      return !errors.orgDetails;
+    } else if (activePage === "plan") {
+      return !errors.plan && agreeToTerms;
+    } else if (activePage === "setup") {
+      // Setup validation is optional, but if createInitialOKRs is checked, then validation applies
+      if (createInitialOKRs) {
+        return !errors.setup;
       }
+      return true;
     }
     
-    if (step === 2) {
-      const plan = form.getValues("plan");
-      
-      if (!plan.agreeToTerms) {
-        form.setError("plan.agreeToTerms", {
-          type: "manual",
-          message: "You must agree to the terms",
-        });
-        isValid = false;
-      }
-    }
-    
-    return isValid;
+    return true;
   };
-  
-  // If tenant was successfully created, show the success page
+
+  // Navigation functions
+  const goToPreviousStep = () => {
+    const currentIndex = steps.findIndex(step => step.id === activePage);
+    if (currentIndex > 0) {
+      setActivePage(steps[currentIndex - 1].id);
+    }
+  };
+
+  const goToStep = (stepId: string) => {
+    setActivePage(stepId);
+  };
+
+  // Form submission handler
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await createTenantMutation.mutateAsync(values);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
+  };
+
+  // Process CSV import for OKRs
+  const handleImportOKRs = (data: any[]) => {
+    // Update form with imported data
+    form.setValue("setup.importedOKRs", data);
+    
+    toast({
+      title: "OKRs Imported",
+      description: `${data.length} OKRs imported successfully.`,
+    });
+  };
+
+  // Tenant created success screen
   if (tenantCreated) {
     return (
-      <div className="container max-w-5xl py-12">
-        <Card className="border shadow-lg overflow-hidden">
-          <div className="bg-green-50 py-8 px-6 flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-green-100 border-4 border-green-200 flex items-center justify-center text-green-600 mb-4 shadow-sm">
-              <Check className="h-10 w-10" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-center text-green-800">Organization Created Successfully!</CardTitle>
-            <CardDescription className="text-center text-green-700 text-lg mt-2">
-              Your organization has been set up and is ready to use
-            </CardDescription>
-          </div>
-          <CardContent className="flex flex-col items-center py-8 px-6">
-            <div className="max-w-md text-center mb-8">
-              <p className="mb-6 text-gray-700 text-lg leading-relaxed">
-                You can now start setting up your objectives and key results, invite team members, and track your progress toward your goals.
+      <div className="container max-w-5xl mx-auto py-12">
+        <Card className="border-green-100 bg-green-50/50">
+          <CardContent className="pt-6 pb-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-green-100 text-green-700 p-4 rounded-full mb-4">
+                <CheckCircle className="h-12 w-12" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Organization Created Successfully!</h2>
+              <p className="text-gray-600 mb-6 max-w-md">
+                Your organization has been set up and you will be redirected to your dashboard shortly.
               </p>
-              
-              <div className="flex gap-4 justify-center">
-                <Button onClick={() => navigate("/tenants")}>
-                  View All Organizations
-                </Button>
-                <Button variant="outline" onClick={() => navigate(`/t/${createTenantMutation.data?.slug}`)}>
-                  Go to Dashboard
-                </Button>
+              <div className="animate-pulse">
+                <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
               </div>
             </div>
           </CardContent>
@@ -354,249 +746,535 @@ export default function TenantOnboardingWizard() {
       </div>
     );
   }
-  
+
   return (
-    <div className="container max-w-5xl py-12">
-      <Card className="border shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center mb-2">
-              <Building2 className="h-7 w-7 text-primary mr-3" />
-              <CardTitle className="text-3xl font-bold text-gray-800">Set Up Your Organization</CardTitle>
-            </div>
-            <CardDescription className="text-gray-600 text-lg">
-              Create your organization for OKR tracking in just a few steps
-            </CardDescription>
-          </div>
-        </div>
-        <CardContent className="pt-8 px-6">
-          {/* Progress bar and steps indicator */}
-          <div className="mb-8 max-w-3xl mx-auto">
-            <div className="flex justify-between mb-3">
-              <span className="text-sm font-medium text-primary">Step {step} of {totalSteps}</span>
-              <span className="text-sm font-medium">{Math.round(progress)}% Complete</span>
-            </div>
-            <Progress value={progress} className="h-2.5 bg-gray-100" />
-            
-            <div className="flex justify-between mt-8">
-              <div className={`flex flex-col items-center ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <Building2 className="h-6 w-6" />
-                </div>
-                <span className="mt-2 text-sm font-medium">Details</span>
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <div className={`h-px w-full ${step >= 2 ? "bg-primary" : "bg-muted"}`}></div>
-              </div>
-              <div className={`flex flex-col items-center ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <CreditCard className="h-6 w-6" />
-                </div>
-                <span className="mt-2 text-sm font-medium">Plan</span>
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <div className={`h-px w-full ${step >= 3 ? "bg-primary" : "bg-muted"}`}></div>
-              </div>
-              <div className={`flex flex-col items-center ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <Users className="h-6 w-6" />
-                </div>
-                <span className="mt-2 text-sm font-medium">Team</span>
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <div className={`h-px w-full ${step >= 4 ? "bg-primary" : "bg-muted"}`}></div>
-              </div>
-              <div className={`flex flex-col items-center ${step >= 4 ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${step >= 4 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  <Check className="h-6 w-6" />
-                </div>
-                <span className="mt-2 text-sm font-medium">Setup</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Form wrapper */}
-          <div className="mt-6">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                {/* Step 1: Organization Details */}
-                {step === 1 && (
-                  <div className="max-w-3xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
-                      <div className="mb-6 border-b pb-4">
-                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                          <Building2 className="h-5 w-5 mr-2 text-primary" />
-                          Organization Details
-                        </h3>
-                        <p className="text-gray-600 mt-1">Enter the basic information about your organization</p>
-                      </div>
-                      
-                      <div className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="orgDetails.name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-800 font-medium">Organization Name *</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Acme Corporation" className="bg-white" {...field} />
-                              </FormControl>
-                              <FormDescription>
-                                This will be used for identification in the system
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="orgDetails.displayName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-800 font-medium">URL Identifier *</FormLabel>
-                              <FormControl>
-                                <Input placeholder="acme" className="bg-white" {...field} />
-                              </FormControl>
-                              <FormDescription>
-                                This will be used in the URL: example.com/t/<span className="text-primary font-medium">{field.value || "your-org"}</span>
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </div>
+    <div className="container max-w-5xl mx-auto py-12">
+      <div className="mb-8">
+        {/* Progress indicator */}
+        <div className="flex justify-between mb-2">
+          {steps.map((step, index) => (
+            <div 
+              key={step.id}
+              className={cn(
+                "flex-1 flex flex-col items-center",
+                {
+                  "text-primary": activeIndex >= index,
+                  "text-gray-400": activeIndex < index
+                }
+              )}
+              onClick={() => {
+                // Allow clicking on completed steps or current step
+                if (index <= activeIndex) {
+                  goToStep(step.id);
+                }
+              }}
+            >
+              <div 
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors",
+                  {
+                    "bg-primary text-white": activeIndex >= index,
+                    "bg-gray-100 text-gray-400": activeIndex < index,
+                    "cursor-pointer hover:bg-primary/90 hover:text-white": index <= activeIndex
+                  }
                 )}
-                
-                {/* Step 4: Initial Setup */}
-                {step === 4 && (
-                  <div className="max-w-3xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 mb-8">
-                      <div className="mb-6 border-b pb-4">
-                        <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                          <Check className="h-5 w-5 mr-2 text-primary" />
-                          Initial Setup
-                        </h3>
-                        <p className="text-gray-600 mt-1">Configure initial OKR settings for your organization</p>
-                      </div>
-                    
+              >
+                {activeIndex > index ? <Check className="h-5 w-5" /> : <step.icon className="h-5 w-5" />}
+              </div>
+              <span className="text-sm font-medium">{step.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <Progress value={animateProgress} className="h-2" />
+      </div>
+      
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs value={activePage} onValueChange={setActivePage} className="w-full">
+              <TabsList className="hidden">
+                {steps.map(step => (
+                  <TabsTrigger key={step.id} value={step.id}>
+                    {step.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {/* Organization Details */}
+              <TabsContent value="organization" className="mt-0 space-y-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Organization Details</h2>
+                  <p className="text-gray-500">Tell us about your organization</p>
+                </div>
+
+                <Card>
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
+                    <CardTitle>Basic Information</CardTitle>
+                    <CardDescription>
+                      Enter the basic details of your organization
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
                       <FormField
                         control={form.control}
-                        name="setup.createInitialOKRs"
+                        name="orgDetails.name"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormItem>
+                            <FormLabel>Organization Name (Slug) *</FormLabel>
                             <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
+                              <Input 
+                                placeholder="acme-co" 
+                                {...field} 
+                                className="bg-gray-50"
+                                onChange={(e) => {
+                                  // Auto-generate kebab-case slug
+                                  const slug = e.target.value
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9]+/g, '-')
+                                    .replace(/(^-|-$)/g, '');
+                                  field.onChange(slug);
+
+                                  // Auto-fill display name if empty (and name has some content)
+                                  if (e.target.value && !form.getValues("orgDetails.displayName")) {
+                                    const displayName = e.target.value
+                                      .replace(/-/g, ' ')
+                                      .replace(/\b\w/g, l => l.toUpperCase());
+                                    form.setValue("orgDetails.displayName", displayName);
+                                  }
+                                }}
                               />
                             </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-gray-700 font-medium">
-                                Create initial OKRs from a template
-                              </FormLabel>
-                              <FormDescription className="text-gray-500">
-                                Jump-start your OKR process with a pre-configured template
-                              </FormDescription>
-                            </div>
+                            <FormDescription>
+                              This will be used in URLs and cannot be changed later
+                            </FormDescription>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
-                      {form.watch("setup.createInitialOKRs") && (
+
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.displayName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Display Name *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="ACME Corporation" 
+                                {...field}
+                                className="bg-gray-50"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              This is how your organization will appear to users
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Tell us about your organization" 
+                                {...field}
+                                className="bg-gray-50"
+                                rows={4}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              A brief description of your organization and its mission
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="orgDetails.industry"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Industry</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-50">
+                                  <SelectValue placeholder="Select an industry" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <div className="sticky top-0 p-2">
+                                  <Input 
+                                    placeholder="Search industries..." 
+                                    className="border-gray-200"
+                                    onChange={(e) => {
+                                      const query = e.target.value.toLowerCase();
+                                      let visibleCount = 0;
+                                      document.querySelectorAll('.industry-item').forEach(item => {
+                                        if ((item.textContent || '').toLowerCase().includes(query)) {
+                                          (item as HTMLElement).style.display = 'flex';
+                                          visibleCount++;
+                                        } else {
+                                          (item as HTMLElement).style.display = 'none';
+                                        }
+                                      });
+                                    }}
+                                  />
+                                </div>
+                                {industryOptions.map((industry) => (
+                                  <SelectItem 
+                                    key={industry} 
+                                    value={industry.toLowerCase()}
+                                    className="industry-item"
+                                  >
+                                    {industry}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end pt-4">
+                    <Button 
+                      type="button"
+                      onClick={() => setActivePage("plan")}
+                      disabled={!isCurrentStepValid()}
+                      className="w-full md:w-auto"
+                    >
+                      Continue to Subscription
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+
+              {/* Subscription Plan */}
+              <TabsContent value="plan" className="mt-0 space-y-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Choose Your Plan</h2>
+                  <p className="text-gray-500">Select the subscription plan that fits your needs</p>
+                </div>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <FormField
+                      control={form.control}
+                      name="plan.plan"
+                      render={({ field }) => (
+                        <FormItem className="space-y-6">
+                          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                            {priceTiers.map((tier) => (
+                              <FormItem
+                                key={tier.id}
+                                className="flex"
+                              >
+                                <FormControl>
+                                  <RadioGroup 
+                                    onValueChange={field.onChange} 
+                                    defaultValue={field.value}
+                                    className="flex"
+                                  >
+                                    <div 
+                                      className={cn(
+                                        "relative h-full rounded-xl border-2 p-0 overflow-hidden transition-all flex-1 cursor-pointer",
+                                        field.value === tier.id 
+                                          ? "border-primary shadow-md" 
+                                          : "border-gray-200 hover:border-gray-300",
+                                        tier.popular && "md:scale-105 md:-translate-y-1"
+                                      )}
+                                      onClick={() => field.onChange(tier.id)}
+                                    >
+                                      {tier.popular && (
+                                        <div className="absolute top-0 right-0 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-bl-xl">
+                                          Popular
+                                        </div>
+                                      )}
+                                      
+                                      <div className="bg-gradient-to-b from-gray-50 to-white px-4 py-5 text-center">
+                                        <h3 className="text-lg font-semibold">{tier.name}</h3>
+                                        <p className="text-sm text-gray-500 h-10 flex items-center justify-center">
+                                          {tier.description}
+                                        </p>
+                                        <div className="mt-2">
+                                          <span className="text-3xl font-bold">
+                                            {tier.price === 0 ? 'Free' : `$${tier.price}`}
+                                          </span>
+                                          {tier.price > 0 && <span className="text-gray-500">/month</span>}
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="px-4 py-5">
+                                        <ul className="space-y-3 text-sm">
+                                          {tier.features.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start">
+                                              <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                              <span>{feature}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      <div className="border-t p-4 mt-auto">
+                                        <div className={cn(
+                                          "p-2 rounded-md text-center text-sm",
+                                          field.value === tier.id ? "bg-primary/10 text-primary" : "bg-gray-50 text-gray-500"
+                                        )}>
+                                          {field.value === tier.id ? (
+                                            <span className="flex items-center justify-center">
+                                              <Check className="h-4 w-4 mr-1" />
+                                              Selected
+                                            </span>
+                                          ) : tier.buttonText}
+                                        </div>
+                                      </div>
+                                      
+                                      <FormItem className="absolute top-2 left-2">
+                                        <FormControl>
+                                          <RadioGroupItem value={tier.id} className="sr-only" />
+                                        </FormControl>
+                                      </FormItem>
+                                    </div>
+                                  </RadioGroup>
+                                </FormControl>
+                              </FormItem>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="plan.agreeToTerms"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              I agree to the <a href="#" className="text-primary underline">Terms of Service</a> and <a href="#" className="text-primary underline">Privacy Policy</a>
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter className="flex justify-between pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActivePage("organization")}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={() => setActivePage("setup")}
+                      className="bg-primary hover:bg-primary/90 shadow-sm"
+                    >
+                      Continue to Setup
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+
+              {/* Initial Setup */}
+              <TabsContent value="setup" className="mt-0 space-y-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Final Step</h2>
+                  <p className="text-gray-500">You are almost done</p>
+                </div>
+
+                <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-emerald-100 text-emerald-700 rounded-full p-3 mt-1">
+                        <Zap className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR Platform!</h3>
+                        <p className="text-gray-600 mb-3">
+                          You're all set to create your organization. Click the button below to finish setup and start tracking your objectives and key results.
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          You can always update these settings later from your organization's admin panel.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 pb-8">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
+                        <Target className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <CardTitle>Initial OKRs</CardTitle>
+                        <CardDescription>Start with a template or import your existing OKRs</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-6 pb-8">
+                    <FormField
+                      control={form.control}
+                      name="setup.createInitialOKRs"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-6">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-base font-medium">Create initial OKRs</FormLabel>
+                            <FormDescription>
+                              Start with pre-defined OKRs based on a template or import your existing objectives
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {createInitialOKRs && (
+                      <div className="space-y-6 mt-6">
                         <FormField
                           control={form.control}
                           name="setup.template"
                           render={({ field }) => (
-                            <FormItem className="ml-7 mt-4">
-                              <FormLabel>Select a Template</FormLabel>
-                              <FormControl>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  {okrTemplates.map((template) => (
-                                    <div 
-                                      key={template.id}
-                                      className={`border rounded-md p-3 cursor-pointer transition-all ${
-                                        field.value === template.id 
-                                          ? "border-primary bg-primary/5"
-                                          : "hover:border-gray-300"
-                                      }`}
-                                      onClick={() => field.onChange(template.id)}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="font-medium">{template.name}</div>
-                                        {field.value === template.id && <Check className="h-4 w-4 text-primary" />}
-                                      </div>
-                                      <div className="mt-1 text-sm text-muted-foreground">
-                                        {template.description}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </FormControl>
+                            <FormItem>
+                              <FormLabel>OKR Template</FormLabel>
+                              <FormDescription className="mb-3">
+                                Choose a template that matches your organization's focus
+                              </FormDescription>
+                              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+                                {okrTemplates.map((template) => (
+                                  <FormItem
+                                    key={template.id}
+                                    className="flex"
+                                  >
+                                    <FormControl>
+                                      <RadioGroup 
+                                        onValueChange={field.onChange} 
+                                        defaultValue={field.value}
+                                        className="flex"
+                                      >
+                                        <div 
+                                          className={cn(
+                                            "border-2 rounded-lg p-4 cursor-pointer flex-1 transition-all",
+                                            field.value === template.id 
+                                              ? "border-primary bg-primary/5" 
+                                              : "border-gray-200 hover:border-gray-300 bg-white"
+                                          )}
+                                          onClick={() => field.onChange(template.id)}
+                                        >
+                                          <div className="mb-2 flex justify-between">
+                                            <div>
+                                              <h4 className="font-medium">{template.name}</h4>
+                                              <p className="text-sm text-gray-500">{template.description}</p>
+                                            </div>
+                                            <RadioGroupItem value={template.id} className="mt-1" />
+                                          </div>
+                                        </div>
+                                      </RadioGroup>
+                                    </FormControl>
+                                  </FormItem>
+                                ))}
+                              </div>
+                              <Separator className="my-6" />
+                              <div className="mb-4">
+                                <h4 className="text-base font-medium mb-1">Import Your OKRs</h4>
+                                <p className="text-sm text-gray-500 mb-4">
+                                  Already have OKRs? Import them from a CSV file
+                                </p>
+                                <CSVImport onDataImported={handleImportOKRs} />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                      )}
-                    </div>
-                    
-                    <div className="rounded-lg border p-6 bg-muted/40">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-primary/10 text-primary rounded-full p-3">
-                          <AlertCircle className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-lg mb-2">Ready to Create Your Organization</h4>
-                          <p className="text-muted-foreground">
-                            Click the "Create Organization" button below to finish setting up your organization. You can always update these settings later.
-                          </p>
-                        </div>
                       </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Navigation buttons */}
-                <div className="flex justify-between mt-8 max-w-3xl mx-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={step === 1 || createTenantMutation.isPending}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={createTenantMutation.isPending}
-                  >
-                    {createTenantMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : step === totalSteps ? (
-                      <>
-                        Create Organization
-                      </>
-                    ) : (
-                      <>
-                        Next
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
                     )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </CardContent>
-      </Card>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+
+            {/* Navigation buttons */}
+            <span>Test {JSON.stringify(form.formState.errors)}</span>
+            <div className="flex justify-between mt-8">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={goToPreviousStep}
+                disabled={activeIndex === 0}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Previous
+              </Button>
+
+              {activeIndex < steps.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const nextIndex = activeIndex + 1;
+                    if (nextIndex < steps.length) {
+                      setActivePage(steps[nextIndex].id);
+                    }
+                  }}
+                  disabled={!isCurrentStepValid()}
+                >
+                  Next
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !isCurrentStepValid()}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Organization...
+                    </>
+                  ) : (
+                    <>
+                      Create Organization
+                      <Zap className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }

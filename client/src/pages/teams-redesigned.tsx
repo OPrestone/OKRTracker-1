@@ -20,6 +20,7 @@ import DashboardLayout from "@/layouts/dashboard-layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Team, User } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { useTeams } from "@/contexts/team-context";
 import { ColumnDef } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -177,17 +178,47 @@ const TeamCard = ({
     queryKey: ["/api/teams", team.id, "users", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
   });
+  
+  // Get team leader if leaderId is available
+  const { data: leader } = useQuery<User>({
+    queryKey: ["/api/users", team.leaderId, currentTenant?.id],
+    enabled: !!team.id && !!team.leaderId && !!currentTenant?.id,
+  });
 
   // Get objectives for the team
   const { data: objectives = [] } = useQuery<TeamObjective[]>({
     queryKey: ["/api/teams", team.id, "objectives", currentTenant?.id],
     enabled: !!team.id && !!currentTenant?.id,
+    staleTime: 0,
+    gcTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
   });
 
-  // Calculate progress as average of objectives or default to 0
-  const progress = objectives && objectives.length > 0
-    ? objectives.reduce((sum: number, obj: TeamObjective) => sum + obj.progress, 0) / objectives.length
-    : 0;
+  // Get team performance data with key results
+  const { data: performanceData } = useQuery({
+    queryKey: ["/api/teams", team.id, "performance", currentTenant?.id],
+    enabled: !!team.id && !!currentTenant?.id,
+    staleTime: 0,
+    gcTime: 0,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+  });
+
+  // Calculate overall progress from authentic key results and objectives
+  const calculateOverallProgress = () => {
+    if (performanceData?.keyResults && performanceData.keyResults.length > 0) {
+      // Use actual key results progress from database
+      const totalProgress = performanceData.keyResults.reduce((sum: number, kr: any) => {
+        return sum + (kr.progress || 0);
+      }, 0);
+      return totalProgress / performanceData.keyResults.length;
+    } else if (objectives && objectives.length > 0) {
+      // Fallback to objectives progress
+      return objectives.reduce((sum: number, obj: TeamObjective) => sum + (obj.progress || 0), 0) / objectives.length;
+    }
+    return 0;
+  };
+
+  const progress = calculateOverallProgress();
 
   // Get team color or default
   const teamColor = team.color || "#3B82F6";
@@ -255,6 +286,28 @@ const TeamCard = ({
               </div>
               <Progress value={progress} className="h-2" indicatorStyle={{ background: getProgressColor(progress) }} />
             </div>
+            
+            {/* Team leader section */}
+            {leader && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md border border-gray-200 mb-3">
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="text-xs bg-primary/80 text-white">
+                    {leader.firstName?.[0]}{leader.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {leader.firstName} {leader.lastName}
+                    </span>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                      Leader
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{leader.title || leader.email}</p>
+                </div>
+              </div>
+            )}
             
             <div className="flex gap-3 justify-between">
               <div className="rounded-md border border-gray-200 bg-white p-2 flex flex-col items-center text-center">
@@ -690,9 +743,11 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
   const [teamParent, setTeamParent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch all teams for parent selection
+  // Use team context for operations
+  const { updateTeam } = useTeams();
+  // For legacy compatibility
   const { currentTenant } = useTenantContext();
-  const { data: teams } = useQuery<Team[]>({
+  const { data: teamsData } = useQuery<Team[]>({
     queryKey: ["/api/teams", currentTenant?.id],
     enabled: !!currentTenant?.id && isOpen,
   });
@@ -733,19 +788,15 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
     
     try {
       const updatedTeam = {
-        id: team.id,
         name: teamName,
         description: teamDescription,
         color: teamColor,
         icon: teamIcon,
         parentId: teamParent === "none" ? null : teamParent,
-        tenantId: currentTenant?.id,  // Include tenant ID to preserve multi-tenancy
       };
 
-      await apiRequest("PATCH", `/api/teams/${team.id}`, updatedTeam);
-      
-      // Invalidate and refetch teams with the correct tenant context
-      await queryClient.invalidateQueries({ queryKey: ["/api/teams", currentTenant?.id] });
+      // Use the centralized team context for updating teams
+      await updateTeam(team.id, updatedTeam);
       
       toast({
         title: "Team updated",
@@ -865,7 +916,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None (Top-level team)</SelectItem>
-                {teams?.filter(t => t.id !== team?.id).map((t) => (
+                {teamsData?.filter(t => t.id !== team?.id).map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
                   </SelectItem>
@@ -892,7 +943,7 @@ const EditTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: 
 const DeleteTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen: boolean, onClose: () => void }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentTenant } = useTenantContext();
+  const { deleteTeam } = useTeams();
 
   const handleDeleteTeam = async () => {
     if (!team?.id) {
@@ -907,10 +958,8 @@ const DeleteTeamDialog = ({ team, isOpen, onClose }: { team: Team | null, isOpen
     setIsSubmitting(true);
     
     try {
-      await apiRequest("DELETE", `/api/teams/${team.id}?tenantId=${currentTenant?.id}`);
-      
-      // Invalidate and refetch teams
-      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      // Use the centralized team context for deleting teams
+      await deleteTeam(team.id);
       
       toast({
         title: "Team deleted",
@@ -970,22 +1019,8 @@ const TeamsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Fetch all teams with tenant context
-  const { data: teams = [], isLoading, error } = useQuery<Team[]>({
-    queryKey: ["/api/teams", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    onSuccess: (data) => {
-      console.log("Teams data successfully fetched:", data);
-    },
-    onError: (err) => {
-      console.error("Error fetching teams:", err);
-      toast({
-        title: "Error loading teams",
-        description: "There was an error loading teams data. Please try again later.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Use centralized team context instead of direct API query
+  const { teams = [], isLoading, error, deleteTeam, updateTeam } = useTeams();
 
   // Filter teams by search query
   const filteredTeams = teams.filter(team => 

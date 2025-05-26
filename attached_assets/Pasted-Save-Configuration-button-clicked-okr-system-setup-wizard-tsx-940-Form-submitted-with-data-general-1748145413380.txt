@@ -1,0 +1,67 @@
+Save Configuration button clicked
+okr-system-setup-wizard.tsx:940 Form submitted with data: {generalSettings: {…}, timeframes: {…}, objectiveSettings: {…}, teamConfiguration: {…}, integrations: {…}}
+okr-system-setup-wizard.tsx:802 Saving OKR system setup: {generalSettings: {…}, timeframes: {…}, objectiveSettings: {…}, teamConfiguration: {…}, integrations: {…}}
+okr-system-setup-wizard.tsx:809 Using tenant ID for save: 01JW2Q5KTA8AW4KYXS3M4GK32T
+okr-system-setup-wizard.tsx:848 Sending data with tenant: {generalSettings: {…}, timeframes: {…}, objectiveSettings: {…}, teamConfiguration: {…}, integrations: {…}, …}
+okr-system-setup-wizard.tsx:850 Sending OKR system config with tenant ID: 01JW2Q5KTA8AW4KYXS3M4GK32T
+okr-system-setup-wizard.tsx:852 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/okr-system-setup?tenantId=01JW2Q5KTA8AW4KYXS3M4GK32T 400 (Bad Request)
+mutationFn @ okr-system-setup-wizard.tsx:852
+fn @ @tanstack_react-query.js?v=8f915a0e:1197
+run @ @tanstack_react-query.js?v=8f915a0e:494
+start @ @tanstack_react-query.js?v=8f915a0e:536
+execute @ @tanstack_react-query.js?v=8f915a0e:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=8f915a0e:2655
+(anonymous) @ @tanstack_react-query.js?v=8f915a0e:3377
+onSubmitForm @ okr-system-setup-wizard.tsx:942
+(anonymous) @ chunk-4BFJKWC4.js?v=8f915a0e:1465
+await in (anonymous)
+onClick @ okr-system-setup-wizard.tsx:1960
+callCallback2 @ chunk-RPCDYKBN.js?v=8f915a0e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8f915a0e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8f915a0e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8f915a0e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8f915a0e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8f915a0e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8f915a0e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8f915a0e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8f915a0e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8f915a0e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8f915a0e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8f915a0e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8f915a0e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5449Understand this error
+okr-system-setup-wizard.tsx:864 Failed to save OKR system setup: 400 {error: 'Invalid OKR system configuration data', details: {…}}
+mutationFn @ okr-system-setup-wizard.tsx:864
+await in mutationFn
+fn @ @tanstack_react-query.js?v=8f915a0e:1197
+run @ @tanstack_react-query.js?v=8f915a0e:494
+start @ @tanstack_react-query.js?v=8f915a0e:536
+execute @ @tanstack_react-query.js?v=8f915a0e:1233
+await in execute
+mutate @ @tanstack_react-query.js?v=8f915a0e:2655
+(anonymous) @ @tanstack_react-query.js?v=8f915a0e:3377
+onSubmitForm @ okr-system-setup-wizard.tsx:942
+(anonymous) @ chunk-4BFJKWC4.js?v=8f915a0e:1465
+await in (anonymous)
+onClick @ okr-system-setup-wizard.tsx:1960
+callCallback2 @ chunk-RPCDYKBN.js?v=8f915a0e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8f915a0e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8f915a0e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8f915a0e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8f915a0e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8f915a0e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8f915a0e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8f915a0e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8f915a0e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8f915a0e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8f915a0e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8f915a0e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8f915a0e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5449Understand this error
+okr-system-setup-wizard.tsx:802 

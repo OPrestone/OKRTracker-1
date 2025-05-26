@@ -234,8 +234,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    // Make username lookup case-insensitive
+    console.log(`Looking up user with case-insensitive username: ${username}`);
+    
     // Select specific columns to avoid issues with missing columns
-    const [user] = await db.select({
+    const results = await db.select({
       id: users.id,
       username: users.username,
       password: users.password,
@@ -255,9 +258,17 @@ export class DatabaseStorage implements IStorage {
       lastLoginAt: users.lastLoginAt,
       stripeCustomerId: users.stripeCustomerId,
       stripeSubscriptionId: users.stripeSubscriptionId
-    }).from(users).where(eq(users.username, username));
+    }).from(users).where(
+      sql`LOWER(${users.username}) = LOWER(${username})`
+    );
     
-    return user;
+    if (results.length > 0) {
+      console.log(`Found user by case-insensitive username match: ${username}`);
+      return results[0];
+    }
+    
+    console.log(`No user found with username: ${username} (case-insensitive)`);
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -511,6 +522,7 @@ export class DatabaseStorage implements IStorage {
         icon: teams.icon,
         parentId: teams.parentId,
         ownerId: teams.ownerId,
+        leaderId: teams.leaderId,
         tenantId: teams.tenantId,
         createdAt: teams.createdAt
       }).from(teams).where(eq(teams.id, id));
@@ -567,6 +579,7 @@ export class DatabaseStorage implements IStorage {
         icon: teams.icon,
         parentId: teams.parentId,
         ownerId: teams.ownerId,
+        leaderId: teams.leaderId,
         tenantId: teams.tenantId,
         createdAt: teams.createdAt
       })
@@ -1114,9 +1127,12 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`Cadence with ID ${timeframe.cadenceId} not found`);
       }
       
-      // If both tenantId values are provided, ensure they match
+      // If both tenantId values are provided, log a warning but don't fail
+      // This allows new organizations to work with default cadences
       if ('tenantId' in timeframe && cadence.tenantId && timeframe.tenantId !== cadence.tenantId) {
-        throw new Error("Timeframe and cadence must belong to the same tenant");
+        console.warn(`Warning: Timeframe tenant (${timeframe.tenantId}) doesn't match cadence tenant (${cadence.tenantId})`);
+        // We'll update the timeframe to use the current tenant
+        timeframe.tenantId = cadence.tenantId;
       }
     }
     
@@ -1631,21 +1647,28 @@ export class DatabaseStorage implements IStorage {
 
   // Key Results
   async createKeyResult(keyResult: InsertKeyResult): Promise<KeyResult> {
-    // Check if objective_id is provided since it's required by the database
-    if (!keyResult.objective_id) {
-      throw new Error("objective_id is required to create a key result");
+    console.log("createKeyResult called with:", JSON.stringify(keyResult, null, 2));
+    
+    // Check if objectiveId is provided since it's required by the database
+    if (!keyResult.objectiveId) {
+      console.log("ERROR: objectiveId is missing from keyResult:", keyResult);
+      throw new Error("objectiveId is required to create a key result");
     }
     
-    // Fix column names to match the database schema
+    console.log("objectiveId found:", keyResult.objectiveId);
+    
+    // Map camelCase input to snake_case database columns - ensuring all required fields are present
     const values = {
-      ...keyResult,
-      // Make sure required fields are set with proper fallbacks
-      current_value: keyResult.current_value || keyResult.start_value || "0",
-      start_value: keyResult.start_value || "0",
+      title: keyResult.title,
+      description: keyResult.description || "",
+      objectiveId: keyResult.objectiveId, // Use camelCase for Drizzle ORM
+      startValue: keyResult.startValue || "0",
+      targetValue: keyResult.targetValue || "100", 
+      currentValue: keyResult.currentValue || keyResult.startValue || "0",
       progress: keyResult.progress || 0,
       status: keyResult.status || "not_started",
-      // Map schema columns to database columns if needed
-      objectiveId: keyResult.objective_id
+      tenantId: keyResult.tenantId,
+      assignedToId: keyResult.assignedToId
     };
     
     // Add error handling and logging

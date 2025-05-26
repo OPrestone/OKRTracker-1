@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Building, LayoutGrid, PaintBucket, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -46,9 +46,20 @@ const teamFormSchema = z.object({
   color: z.string().optional(),
   icon: z.string().optional(),
   parentId: z.string().optional(),
+  leaderId: z.string().optional(), // New field for team leader
 });
 
 type TeamFormValues = z.infer<typeof teamFormSchema>;
+
+// Simple user type for the dropdown
+interface User {
+  id: string;
+  name?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -61,6 +72,12 @@ export function CreateTeamModal({ isOpen, onClose, parentTeams = [] }: CreateTea
   const queryClient = useQueryClient();
   const { currentTenant } = useTenantContext();
   const tenantId = currentTenant?.id;
+  
+  // Fetch users for the tenant to populate the leader selection dropdown
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
+    queryKey: ["/api/users", tenantId],
+    enabled: !!tenantId && isOpen, // Only fetch when modal is open and tenant is selected
+  });
   
   // Define default colors
   const defaultColors = [
@@ -90,6 +107,7 @@ export function CreateTeamModal({ isOpen, onClose, parentTeams = [] }: CreateTea
       color: defaultColors[0],
       icon: "building",
       parentId: undefined,
+      leaderId: undefined,
     },
   });
 
@@ -97,7 +115,13 @@ export function CreateTeamModal({ isOpen, onClose, parentTeams = [] }: CreateTea
   const createTeamMutation = useMutation({
     mutationFn: async (data: TeamFormValues) => {
       // Add tenant ID to request context via the URL
-      const response = await apiRequest("POST", `/api/teams?tenantId=${tenantId}`, data);
+      // Include the leaderId in the request if provided
+      const teamData = {
+        ...data,
+        leaderId: data.leaderId || undefined, // Only include if it has a value
+      };
+      
+      const response = await apiRequest("POST", `/api/teams?tenantId=${tenantId}`, teamData);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -214,6 +238,45 @@ export function CreateTeamModal({ isOpen, onClose, parentTeams = [] }: CreateTea
                     </Select>
                     <FormDescription>
                       Select a parent team if this is a sub-team.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="leaderId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Team Leader (Optional)</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || ""}
+                      disabled={isLoadingUsers}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={isLoadingUsers ? "Loading users..." : "Select team leader"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No leader assigned</SelectItem>
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {/* Display user's name if available, fallback to username or email */}
+                            {user.name || 
+                             `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
+                             user.username || 
+                             user.email || 
+                             `User ${user.id}`
+                            }
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Assign a leader to this team.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

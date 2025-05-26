@@ -41,7 +41,8 @@ const objectiveSchema = z.object({
   description: z.string().optional(),
   timeframeId: z.string().min(1, "Timeframe is required"),
   teamId: z.string(),
-  status: z.string().default("draft")
+  status: z.string().default("draft"),
+  ownerId: z.string().optional()
 });
 
 type ObjectiveFormValues = z.infer<typeof objectiveSchema>;
@@ -60,13 +61,8 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
 
   // Query for timeframes
   const { data: timeframes = [] } = useQuery({
-    queryKey: ["/api/timeframes", tenantId],
-    queryFn: async () => {
-      const res = await fetch(`/api/timeframes?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch timeframes");
-      return res.json();
-    },
-    enabled: !!tenantId && isOpen
+    queryKey: ["/api/timeframes"],
+    enabled: isOpen
   });
 
   const form = useForm<ObjectiveFormValues>({
@@ -76,33 +72,56 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
       description: "",
       timeframeId: "",
       teamId: teamId,
-      status: "draft"
+      status: "draft",
+      ownerId: undefined
     }
   });
 
   // Create objective mutation
   const createObjectiveMutation = useMutation({
     mutationFn: async (data: ObjectiveFormValues) => {
-      return apiRequest("POST", `/api/objectives`, {
-        ...data,
-        tenantId
-      });
+      console.log("Creating objective with data:", { ...data, tenantId });
+      
+      // Clean the data - remove undefined values
+      const cleanedData = {
+        title: data.title,
+        description: data.description || "",
+        timeframeId: data.timeframeId,
+        teamId: data.teamId,
+        status: data.status,
+        tenantId,
+        level: "team" // Set default level for team objectives
+      };
+      
+      // Only add ownerId if it's a valid string
+      if (data.ownerId && data.ownerId.trim()) {
+        cleanedData.ownerId = data.ownerId;
+      }
+      
+      console.log("Sending cleaned data:", cleanedData);
+      const response = await apiRequest("POST", `/api/objectives`, cleanedData);
+      console.log("Objective creation response:", response);
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Objective created successfully:", response);
       toast({
-        title: "Objective Created",
-        description: "The objective has been successfully created.",
+        title: "Success!",
+        description: "Team objective has been created successfully.",
       });
+      // Invalidate multiple related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "performance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       form.reset();
       onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Failed to create objective:", error);
       toast({
-        title: "Error",
-        description: `Failed to create objective: ${error.message}`,
+        title: "Failed to Create Objective",
+        description: error?.message || "There was an error creating the objective. Please try again.",
         variant: "destructive"
       });
     }

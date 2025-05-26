@@ -225,7 +225,11 @@ export default function MyOKRs() {
           <TabsContent value="active" className="space-y-4">
             {activeOKRs.length > 0 ? (
               activeOKRs.map((okr) => (
-                <Card key={okr.id} className="shadow-sm">
+                <Card 
+                  key={okr.id} 
+                  className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/objective/${okr.id}`)}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -323,7 +327,11 @@ export default function MyOKRs() {
           <TabsContent value="pending-approval" className="space-y-4">
             {pendingApprovalOKRs.length > 0 ? (
               pendingApprovalOKRs.map((okr) => (
-                <Card key={okr.id} className="shadow-sm border-purple-200">
+                <Card 
+                  key={okr.id} 
+                  className="shadow-sm border-purple-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/objective/${okr.id}`)}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -384,7 +392,11 @@ export default function MyOKRs() {
           <TabsContent value="drafts" className="space-y-4">
             {draftOKRs.length > 0 ? (
               draftOKRs.map((draft) => (
-                <Card key={draft.id} className="shadow-sm border-neutral-200">
+                <Card 
+                  key={draft.id} 
+                  className="shadow-sm border-neutral-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/objectives/${draft.id}`)}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -455,7 +467,11 @@ export default function MyOKRs() {
           <TabsContent value="completed" className="space-y-4">
             {completedOKRs.length > 0 ? (
               completedOKRs.map((okr) => (
-                <Card key={okr.id} className="shadow-sm border-blue-200">
+                <Card 
+                  key={okr.id} 
+                  className="shadow-sm border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/objective/${okr.id}`)}
+                >
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>

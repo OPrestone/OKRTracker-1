@@ -1,0 +1,47 @@
+team-context.tsx:65 
+            
+            
+           PUT https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams/01JW4X2GH5DWQ6NVGS6J3EGNT8/leader 403 (Forbidden)
+setTeamLeader @ team-context.tsx:65
+handleMakeTeamLead @ team-detail.tsx:163
+onClick @ team-detail.tsx:1356
+callCallback2 @ chunk-RPCDYKBN.js?v=8f915a0e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8f915a0e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8f915a0e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8f915a0e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8f915a0e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8f915a0e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8f915a0e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8f915a0e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8f915a0e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8f915a0e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8f915a0e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8f915a0e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8f915a0e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5449Understand this error
+team-context.tsx:84 Error setting team leader: Error: Failed to update team leader
+    at setTeamLeader (team-context.tsx:74:15)
+    at async handleMakeTeamLead (team-detail.tsx:163:7)
+setTeamLeader @ team-context.tsx:84
+await in setTeamLeader
+handleMakeTeamLead @ team-detail.tsx:163
+onClick @ team-detail.tsx:1356
+callCallback2 @ chunk-RPCDYKBN.js?v=8f915a0e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=8f915a0e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=8f915a0e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=8f915a0e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=8f915a0e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=8f915a0e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=8f915a0e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=8f915a0e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=8f915a0e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=8f915a0e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=8f915a0e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=8f915a0e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=8f915a0e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=8f915a0e:5449Understand this error
+team-detail.tsx:183 Error setting team leader: Error: Failed to update team leader
+    at setTeamLeader (team-context.tsx:74:15)
+    at async handleMakeTeamLead (team-detail.tsx:163:7)

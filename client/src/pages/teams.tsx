@@ -353,10 +353,16 @@ const Teams = () => {
       header: "Members",
       cell: ({ row }) => {
         const team = row.original;
+        // Fetch real member count for this team
+        const { data: members } = useQuery<User[]>({
+          queryKey: ["/api/teams", team.id, "users"],
+          enabled: !!team.id,
+        });
+        
         return (
           <Badge variant="outline" className="flex items-center gap-1">
             <Users size={14} />
-            <span>0 members</span>
+            <span>{members?.length || 0} members</span>
           </Badge>
         );
       },

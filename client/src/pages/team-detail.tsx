@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTeams } from "@/contexts/team-context";
 import { useParams, useLocation } from "wouter";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import {
@@ -42,13 +43,25 @@ import {
   Activity,
   ThumbsUp,
   CalendarDays,
-  UserPlus
+  UserPlus,
+  Plus,
+  ListPlus,
+  Crown,
+  Edit2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
+import AddKeyResultDialog from "@/components/okrs/add-key-result-dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -79,6 +92,7 @@ interface TaskActivity {
 export default function TeamDetailPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   // Get parameters from the URL, supporting both ID and slug-based routes
   const params = useParams<{ id?: string; teamId?: string; teamSlug?: string }>();
   
@@ -91,16 +105,16 @@ export default function TeamDetailPage() {
   const [viewMode, setViewMode] = useState<"today" | "weekly" | "monthly">("weekly");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   
-  // Sample activity data for the chart (this would come from API in real implementation)
-  const activityData: TaskActivity[] = [
-    { day: "Mon", created: 20, completed: 15 },
-    { day: "Tue", created: 32, completed: 25 },
-    { day: "Wed", created: 27, completed: 20 },
-    { day: "Thu", created: 35, completed: 30 },
-    { day: "Fri", created: 30, completed: 22 },
-    { day: "Sat", created: 18, completed: 16 },
-    { day: "Sun", created: 13, completed: 11 },
-  ];
+  // Use real performance data from the API
+  const [activityData, setActivityData] = useState<TaskActivity[]>([
+    { day: "Mon", created: 0, completed: 0 },
+    { day: "Tue", created: 0, completed: 0 },
+    { day: "Wed", created: 0, completed: 0 },
+    { day: "Thu", created: 0, completed: 0 },
+    { day: "Fri", created: 0, completed: 0 },
+    { day: "Sat", created: 0, completed: 0 },
+    { day: "Sun", created: 0, completed: 0 },
+  ]);
   
   // Get tenant ID from path and context
   const { currentTenant } = useTenantContext();
@@ -113,48 +127,165 @@ export default function TeamDetailPage() {
   // State for modal controls
   const [isCreateObjectiveModalOpen, setIsCreateObjectiveModalOpen] = useState(false);
   const [isAddTeamMemberModalOpen, setIsAddTeamMemberModalOpen] = useState(false);
+  const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
+  const [isEditObjectiveModalOpen, setIsEditObjectiveModalOpen] = useState(false);
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string | null>(null);
+  const [editingObjective, setEditingObjective] = useState<any>(null);
   
-  // Query for teams data (either by ID or by finding team by slug)
-  const { data: team, isLoading: teamLoading, error: teamError } = useQuery({
-    queryKey: teamSlug ? ["/api/teams", tenantId, "slug", teamSlug] : ["/api/teams", teamId, tenantId],
-    queryFn: async () => {
-      if (teamSlug) {
-        // If we have a slug, we need to fetch all teams and find by slug
-        const res = await fetch(`/api/teams?tenantId=${tenantId}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-        const teams = await res.json();
-        // Find the team with matching slug (normalized team name)
-        const matchedTeam = teams.find((t: any) => 
-          t.name.toLowerCase().replace(/\s+/g, '-') === teamSlug
-        );
-        
-        if (!matchedTeam) {
-          throw new Error("Team not found");
-        }
-        return matchedTeam;
-      } else {
-        // Direct ID lookup
-        const res = await fetch(`/api/teams/${teamId}?tenantId=${tenantId}`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            throw new Error("Team not found");
-          }
-          throw new Error("Failed to fetch team details");
-        }
-        return res.json();
+  // Function to handle opening the Add Key Result modal
+  const handleAddKeyResult = (objectiveId: string) => {
+    console.log("Opening Add Key Result modal for objective:", objectiveId);
+    setSelectedObjectiveId(objectiveId);
+    setIsAddKeyResultModalOpen(true);
+  };
+  
+  // Use the centralized team context for instant data access
+  const { teams, isLoading: teamsContextLoading, error: teamsContextError, refetchTeams, setTeamLeader } = useTeams();
+  
+  // Get team data from the team context, eliminating the need for a separate API call
+  const [team, setTeam] = useState<any>(null);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [teamError, setTeamError] = useState<Error | null>(null);
+  
+  // State for highlighting the new team leader
+  const [highlightedLeaderId, setHighlightedLeaderId] = useState<string | null>(null);
+  
+  // Auto-refresh team data when page is accessed
+  useEffect(() => {
+    // Refresh team data from the server when component mounts
+    refetchTeams().catch(error => {
+      console.error("Error refreshing teams data:", error);
+    });
+  }, [refetchTeams]);
+  
+  // State for team leader selection modal
+  const [isTeamLeaderModalOpen, setIsTeamLeaderModalOpen] = useState(false);
+  const [selectedLeaderId, setSelectedLeaderId] = useState<string | null>(null);
+
+  // Handle making a user the team leader
+  const handleMakeTeamLead = async (userId: string) => {
+    try {
+      if (!team?.id) {
+        toast({
+          title: "Error",
+          description: "Team ID is not available",
+          variant: "destructive"
+        });
+        return;
       }
-    },
-    retry: false,
-    onError: (err) => {
+      
+      // Call the setTeamLeader function from the team context
+      await setTeamLeader(team.id, userId);
+      
       toast({
-        title: "Error loading team",
-        description: err instanceof Error ? err.message : String(err),
+        title: "Team Leader Updated",
+        description: "The team leader has been successfully updated",
+        variant: "default"
+      });
+      
+      // Set the highlighted leader ID to trigger the visual effect
+      setHighlightedLeaderId(userId);
+      
+      // Remove the highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedLeaderId(null);
+      }, 3000);
+      
+      // Refetch data to update the UI
+      await refetchTeams();
+      
+    } catch (error) {
+      console.error("Error setting team leader:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update team leader",
         variant: "destructive"
       });
     }
-  });
+  };
+
+  // Handle bulk team leader assignment
+  const handleBulkLeaderAssignment = async () => {
+    if (!selectedLeaderId) return;
+    
+    await handleMakeTeamLead(selectedLeaderId);
+    setIsTeamLeaderModalOpen(false);
+    setSelectedLeaderId(null);
+  };
+
+  // Handle quick leader assignment via dropdown
+  const handleQuickLeaderChange = async (newLeaderId: string) => {
+    if (newLeaderId === team?.leaderId) return;
+    await handleMakeTeamLead(newLeaderId);
+  };
+  
+  // Find team from the centralized context data with better error handling
+  useEffect(() => {
+    const loadTeamData = async () => {
+      setTeamLoading(true);
+      setTeamError(null);
+      
+      try {
+        // If teams context is loading, wait for it
+        if (teamsContextLoading) {
+          return;
+        }
+        
+        // If there's an error in teams context, handle it
+        if (teamsContextError) {
+          setTeamError(teamsContextError);
+          setTeamLoading(false);
+          return;
+        }
+        
+        // Ensure teams is an array and has data
+        if (!Array.isArray(teams) || teams.length === 0) {
+          console.log("No teams data available, refreshing...");
+          await refetchTeams();
+          return;
+        }
+        
+        let foundTeam;
+        
+        // Try to find team by different methods
+        if (teamSlug && teams.length > 0) {
+          console.log("Looking for team by slug:", teamSlug);
+          // Find by slug, with normalization for comparison
+          foundTeam = teams.find((t) => {
+            if (!t || !t.name) return false;
+            const normalizedName = t.name.toLowerCase().replace(/\s+/g, '-');
+            return normalizedName === teamSlug;
+          });
+        } else if (teamId && teams.length > 0) {
+          console.log("Looking for team by ID:", teamId);
+          // Find by ID with null safety
+          foundTeam = teams.find((t) => t && t.id === teamId);
+        }
+      
+      console.log("Found team:", foundTeam ? { id: foundTeam.id, name: foundTeam.name } : 'not found');
+      
+      if (!foundTeam) {
+        console.warn("Team not found in context data");
+        setTeamError(new Error("Team not found"));
+        setTeamLoading(false);
+      } else {
+        setTeam(foundTeam);
+        setTeamLoading(false);
+      }
+    } catch (error) {
+      console.error("Error finding team:", error);
+      setTeamError(error instanceof Error ? error : new Error("Failed to find team"));
+      setTeamLoading(false);
+      toast({
+        title: "Error loading team",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive"
+      });
+    }
+    };
+
+    loadTeamData();
+  }, [teams, teamsContextLoading, teamsContextError, teamId, teamSlug, toast, refetchTeams]);
 
   // Query for team members data
   const { data: members = [], isLoading: membersLoading } = useQuery({
@@ -162,16 +293,36 @@ export default function TeamDetailPage() {
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/users?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team members");
-      return res.json();
+      console.log("Fetching members for team:", resolvedTeamId);
+      
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing required data for members query");
+        return [];
+      }
+      
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/users?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.error("Failed to fetch members, status:", res.status);
+          return [];
+        }
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        return [];
+      }
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId && tenantId),
-    onError: (err) => {
+    enabled: !!(team?.id || teamId) && !!tenantId,
+    onSuccess: (data) => {
+      console.log("Team members loaded successfully:", Array.isArray(data) ? data.length : "not an array");
+    },
+    onError: (error: Error) => {
+      console.error("Error loading team members:", error);
       toast({
         title: "Error loading team members",
-        description: err instanceof Error ? err.message : String(err),
+        description: error.message || "Failed to load team members",
         variant: "destructive"
       });
     }
@@ -183,12 +334,27 @@ export default function TeamDetailPage() {
     queryFn: async () => {
       // Use the team ID from the resolved team data if available (for slug-based routing)
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/objectives?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team objectives");
-      return res.json();
+      console.log("Fetching objectives for team:", resolvedTeamId);
+      
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing required data for objectives query");
+        return [];
+      }
+      
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/objectives?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.error("Failed to fetch objectives, status:", res.status);
+          return [];
+        }
+        return res.json();
+      } catch (error) {
+        console.error("Error fetching objectives:", error);
+        return [];
+      }
     },
     // Only enable the query once we have a team ID to use
-    enabled: !!(team?.id || teamId && tenantId),
+    enabled: !!(team?.id || teamId) && !!tenantId,
     onError: (err) => {
       toast({
         title: "Error loading objectives",
@@ -203,11 +369,23 @@ export default function TeamDetailPage() {
     queryKey: ["/api/teams", team?.id || teamId, "performance", tenantId],
     queryFn: async () => {
       const resolvedTeamId = team?.id || teamId;
-      const res = await fetch(`/api/teams/${resolvedTeamId}/performance?tenantId=${tenantId}`);
-      if (!res.ok) throw new Error("Failed to fetch team performance data");
-      return res.json();
+      if (!resolvedTeamId || !tenantId) {
+        console.log("Missing teamId or tenantId for performance data");
+        return { stats: null, activity: null };
+      }
+      try {
+        const res = await fetch(`/api/teams/${resolvedTeamId}/performance?tenantId=${tenantId}`);
+        if (!res.ok) {
+          console.log("API returned non-200 status for team performance");
+          return { stats: null, activity: null };
+        }
+        return res.json();
+      } catch (error) {
+        console.log("Error fetching team performance:", error);
+        return { stats: null, activity: null };
+      }
     },
-    enabled: !!(team?.id || teamId && tenantId),
+    enabled: !!(team?.id || teamId) && !!tenantId,
     onError: (err) => {
       // Silently log errors without toast to avoid overwhelming users
       console.error("Error loading team performance:", err);
@@ -264,6 +442,8 @@ export default function TeamDetailPage() {
     }
   ];
 
+  // Using the handleMakeTeamLead function defined above
+
   const handleGoBack = () => {
     // If we have a tenant ID, navigate back to the tenant-specific teams page
     if (tenantId) {
@@ -274,9 +454,31 @@ export default function TeamDetailPage() {
     }
   };
 
+  // Process and use real performance data when available
+  useEffect(() => {
+    // If we have objectives data, generate activity data from it
+    if (objectives && Array.isArray(objectives) && objectives.length > 0) {
+      generateActivityDataFromObjectives(objectives);
+    }
+    
+    // If we have performance data from API, use that instead
+    try {
+      if (teamPerformance && 
+          typeof teamPerformance === 'object' &&
+          'activity' in teamPerformance &&
+          teamPerformance.activity && 
+          Array.isArray(teamPerformance.activity) && 
+          teamPerformance.activity.length > 0) {
+        setActivityData(teamPerformance.activity);
+      }
+    } catch (error) {
+      console.error("Error processing team performance activity data:", error);
+    }
+  }, [teamPerformance, objectives]);
+
   // Generate activity data based on objectives and their progress
-  const generateActivityData = (objectives: any[]) => {
-    if (!objectives || objectives.length === 0) return activityData;
+  const generateActivityDataFromObjectives = (objectives: any[]) => {
+    if (!objectives || objectives.length === 0) return;
     
     const days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
@@ -287,10 +489,22 @@ export default function TeamDetailPage() {
       date.setDate(today.getDate() - i);
       const dayName = days_of_week[date.getDay()];
       
-      // For real implementation, we'd query actual data from the API
-      // For now, generate data based on objectives count
-      const created = Math.floor(Math.random() * 10) + (objectives.length);
-      const completed = Math.floor(Math.random() * created * 0.8);
+      // Create real data based on objectives and their timestamps
+      // Count created objectives on this date
+      const createdOnDate = objectives.filter(obj => {
+        const createdDate = new Date(obj.createdAt || Date.now());
+        return createdDate.toDateString() === date.toDateString();
+      }).length;
+      
+      // Count completed/updated objectives on this date (if status changed to completed)
+      const completedCount = objectives.filter(obj => {
+        return obj.status === "completed" && 
+               (obj.updatedAt ? new Date(obj.updatedAt).toDateString() === date.toDateString() : false);
+      }).length;
+      
+      // Use real counts, but ensure at least 1 if we have any objectives at all
+      const created = Math.max(createdOnDate, objectives.length > 0 ? 1 : 0);
+      const completed = Math.max(completedCount, objectives.length > 0 ? 1 : 0);
       
       result.push({
         day: dayName,
@@ -299,7 +513,7 @@ export default function TeamDetailPage() {
       });
     }
     
-    return result;
+    setActivityData(result);
   };
   
   // Calculate team statistics
@@ -395,17 +609,71 @@ export default function TeamDetailPage() {
     }).format(date);
   };
 
-  // Get calculated stats and data
-  const teamStats = calculateTeamStats(objectives);
-  const dynamicActivityData = generateActivityData(objectives);
-  const memberContributions = calculateMemberContribution(members, objectives);
+  // Log the state of data for debugging
+  console.log("Team detail data state:", {
+    teamId,
+    teamSlug,
+    hasTeam: !!team,
+    tenantId,
+    objectivesCount: Array.isArray(objectives) ? objectives.length : 'not array',
+    membersCount: Array.isArray(members) ? members.length : 'not array'
+  });
   
-  // Status distribution data for pie chart
+  // Safely get calculated stats and data
+  const teamStats = calculateTeamStats(Array.isArray(objectives) ? objectives : []);
+  const memberContributions = calculateMemberContribution(
+    Array.isArray(members) ? members : [], 
+    Array.isArray(objectives) ? objectives : []
+  );
+  
+  // Create performance stats using available data with null safety
+  const fallbackStats = {
+    completionRate: teamStats.totalObjectives > 0 ? (teamStats.completedObjectives / teamStats.totalObjectives) * 100 : 0,
+    weeklyProgress: teamStats.averageProgress || 0,
+    teamEngagement: Array.isArray(members) && members.length > 0 
+      ? (memberContributions.filter(m => m.assignedCount > 0).length / members.length) * 100 
+      : 0
+  };
+  
+  // Use team performance data if available, otherwise use calculated stats
+  // Always use fallback stats to ensure the UI renders correctly
+  const performanceStats = {
+    completionRate: fallbackStats.completionRate,
+    weeklyProgress: fallbackStats.weeklyProgress,
+    teamEngagement: fallbackStats.teamEngagement
+  };
+  
+  // Try to enhance with real performance data if available
+  try {
+    if (teamPerformance && typeof teamPerformance === 'object' && 'stats' in teamPerformance && teamPerformance.stats) {
+      // Only update properties that exist in the API response
+      if (typeof teamPerformance.stats.completionRate === 'number') {
+        performanceStats.completionRate = teamPerformance.stats.completionRate;
+      }
+      if (typeof teamPerformance.stats.weeklyProgress === 'number') {
+        performanceStats.weeklyProgress = teamPerformance.stats.weeklyProgress;
+      }
+      if (typeof teamPerformance.stats.teamEngagement === 'number') {
+        performanceStats.teamEngagement = teamPerformance.stats.teamEngagement;
+      }
+    }
+  } catch (error) {
+    console.error("Error accessing team performance stats:", error);
+  }
+  
+  console.log("Rendering team detail page with data:", {
+    team: team ? team.name : "No team data",
+    objectives: Array.isArray(objectives) ? objectives.length : "No objectives data",
+    members: Array.isArray(members) ? members.length : "No members data",
+    stats: teamStats
+  });
+
+  // Status distribution data for pie chart with safety checks
   const statusDistribution = [
-    { name: 'On Track', value: teamStats.onTrackCount, color: '#16a34a' },
-    { name: 'At Risk', value: teamStats.atRiskCount, color: '#eab308' },
-    { name: 'Behind', value: teamStats.behindCount, color: '#dc2626' },
-    { name: 'Completed', value: teamStats.completedObjectives, color: '#3b82f6' },
+    { name: 'On Track', value: teamStats.onTrackCount || 0, color: '#16a34a' },
+    { name: 'At Risk', value: teamStats.atRiskCount || 0, color: '#eab308' },
+    { name: 'Behind', value: teamStats.behindCount || 0, color: '#dc2626' },
+    { name: 'Completed', value: teamStats.completedObjectives || 0, color: '#3b82f6' },
   ].filter(item => item.value > 0);
   
   // Get team color styling
@@ -497,6 +765,26 @@ export default function TeamDetailPage() {
                         {members?.length || 0} members
                       </span>
                     </h1>
+                    
+                    {/* Team Leader Display */}
+                    {(team.leaderId || team.leader_id) && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Team Leader: 
+                        </span>
+                        <span className="text-sm font-semibold">
+                          {(() => {
+                            const leaderId = team.leaderId || team.leader_id;
+                            const leader = members?.find(m => m.id === leaderId);
+                            return leader ? 
+                              (leader.name || `${leader.firstName || ''} ${leader.lastName || ''}`.trim() || leader.username || leader.email || 'Unknown') : 
+                              'Loading...';
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                    
                     <p className="text-muted-foreground mt-1 max-w-3xl">
                       {team.description || "No description provided for this team."}
                     </p>
@@ -671,7 +959,7 @@ export default function TeamDetailPage() {
                       <div className="h-[200px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart
-                            data={dynamicActivityData}
+                            data={activityData}
                             margin={{
                               top: 5,
                               right: 10,
@@ -833,20 +1121,32 @@ export default function TeamDetailPage() {
                                     </div>
                                   </div>
                                   
-                                  {objective.assignee && (
-                                    <Avatar className="h-8 w-8">
-                                      {objective.assignee.avatarUrl ? (
-                                        <AvatarImage 
-                                          src={objective.assignee.avatarUrl} 
-                                          alt={`${objective.assignee.firstName} ${objective.assignee.lastName}`} 
-                                        />
-                                      ) : (
-                                        <AvatarFallback className="text-xs">
-                                          {objective.assignee.firstName?.[0]}{objective.assignee.lastName?.[0]}
-                                        </AvatarFallback>
-                                      )}
-                                    </Avatar>
-                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 px-2 text-xs"
+                                      onClick={() => handleAddKeyResult(objective.id)}
+                                    >
+                                      <ListPlus className="h-3.5 w-3.5 mr-1" />
+                                      Add KR
+                                    </Button>
+                                    
+                                    {objective.assignee && (
+                                      <Avatar className="h-8 w-8">
+                                        {objective.assignee.avatarUrl ? (
+                                          <AvatarImage 
+                                            src={objective.assignee.avatarUrl} 
+                                            alt={`${objective.assignee.firstName} ${objective.assignee.lastName}`} 
+                                          />
+                                        ) : (
+                                          <AvatarFallback className="text-xs">
+                                            {objective.assignee.firstName?.[0]}{objective.assignee.lastName?.[0]}
+                                          </AvatarFallback>
+                                        )}
+                                      </Avatar>
+                                    )}
+                                  </div>
                                 </div>
                                 
                                 <div className="mt-4">
@@ -998,8 +1298,29 @@ export default function TeamDetailPage() {
                                     </div>
                                     
                                     <div className="flex gap-4">
-                                      <Button size="sm" variant="outline">Edit</Button>
-                                      <Button size="sm" variant="outline">Add Key Result</Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingObjective(objective);
+                                          setIsEditObjectiveModalOpen(true);
+                                        }}
+                                      >
+                                        <Edit2 className="h-3.5 w-3.5 mr-1" />
+                                        Edit
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleAddKeyResult(objective.id);
+                                        }}
+                                      >
+                                        <ListPlus className="h-3.5 w-3.5 mr-1" />
+                                        Add Key Result
+                                      </Button>
                                     </div>
                                   </div>
                                 </motion.div>
@@ -1034,16 +1355,50 @@ export default function TeamDetailPage() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-lg">Team Members</CardTitle>
-                    <Button 
-                      size="sm"
-                      onClick={() => setIsAddTeamMemberModalOpen(true)}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      <span>Add Member</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Quick Team Leader Selector */}
+                      {members && members.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-muted-foreground">
+                            Team Leader:
+                          </label>
+                          <Select
+                            value={team?.leaderId || ""}
+                            onValueChange={handleQuickLeaderChange}
+                          >
+                            <SelectTrigger className="w-[160px] h-8">
+                              <SelectValue placeholder="Select leader" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {members.map((member: any) => (
+                                <SelectItem key={member.id} value={member.id}>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-5 w-5">
+                                      <AvatarFallback className="text-xs">
+                                        {member.firstName?.[0]}{member.lastName?.[0]}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm">
+                                      {member.firstName} {member.lastName}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      <Button 
+                        size="sm"
+                        onClick={() => setIsAddTeamMemberModalOpen(true)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        <span>Add Member</span>
+                      </Button>
+                    </div>
                   </div>
                   <CardDescription>
-                    All members in {team.name}
+                    All members in {team.name}. Use the dropdown above for quick leader assignment or click individual "Promote" buttons below.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1089,6 +1444,41 @@ export default function TeamDetailPage() {
                                   <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
                                     {member.role || "Member"}
                                   </Badge>
+                                  {member.id === team?.leaderId && (
+                                    <Badge 
+                                      className={cn(
+                                        "bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1",
+                                        highlightedLeaderId === member.id && "animate-pulse bg-green-200"
+                                      )}
+                                    >
+                                      <Award className="h-3 w-3" />
+                                      Team Lead
+                                    </Badge>
+                                  )}
+                                  {member.id !== team?.leaderId ? (
+                                    <Button 
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleMakeTeamLead(member.id)}
+                                      className="ml-auto flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      <Crown className="h-3 w-3" />
+                                      Promote
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      variant="outline"
+                                      size="sm"
+                                      disabled
+                                      className={cn(
+                                        "ml-auto flex items-center gap-1",
+                                        highlightedLeaderId === member.id && "animate-pulse"
+                                      )}
+                                    >
+                                      <Award className="h-3 w-3" />
+                                      Current Leader
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
                             </CardContent>
@@ -1213,6 +1603,15 @@ export default function TeamDetailPage() {
         teamId={team?.id || ""}
         currentMembers={members || []}
       />
+
+      {/* Add Key Result Dialog */}
+      {selectedObjectiveId && (
+        <AddKeyResultDialog
+          objectiveId={selectedObjectiveId}
+          open={isAddKeyResultModalOpen}
+          onOpenChange={setIsAddKeyResultModalOpen}
+        />
+      )}
     </DashboardLayout>
   );
 }

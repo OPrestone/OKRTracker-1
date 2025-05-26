@@ -76,6 +76,11 @@ export default function MyOKRs() {
   const { data: objectives, isLoading, error } = useQuery({
     queryKey: ["/api/my-objectives", currentTenant?.id],
     enabled: !!currentTenant?.id && !!user,
+    retry: 3,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.error("Error fetching objectives:", err);
+    }
   });
 
   // Function to map DB objectives to UI format

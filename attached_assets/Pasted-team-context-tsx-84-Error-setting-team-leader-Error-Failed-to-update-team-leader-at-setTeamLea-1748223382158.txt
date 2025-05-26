@@ -1,0 +1,56 @@
+team-context.tsx:84 Error setting team leader: Error: Failed to update team leader
+    at setTeamLeader (team-context.tsx:74:15)
+    at async handleMakeTeamLead (team-detail.tsx:178:7)
+    at async Object.handleQuickLeaderChange [as current] (team-detail.tsx:219:5)
+setTeamLeader @ team-context.tsx:84
+await in setTeamLeader
+handleMakeTeamLead @ team-detail.tsx:178
+handleQuickLeaderChange @ team-detail.tsx:219
+(anonymous) @ chunk-LETPRLTX.js?v=414b3942:17
+(anonymous) @ chunk-NWIKVZDZ.js?v=414b3942:28
+handleSelect @ @radix-ui_react-select.js?v=414b3942:868
+(anonymous) @ @radix-ui_react-select.js?v=414b3942:914
+handleEvent @ chunk-5Q5YC75F.js?v=414b3942:6
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+team-detail.tsx:198 Error setting team leader: Error: Failed to update team leader
+    at setTeamLeader (team-context.tsx:74:15)
+    at async handleMakeTeamLead (team-detail.tsx:178:7)
+    at async Object.handleQuickLeaderChange [as current] (team-detail.tsx:219:5)
+handleMakeTeamLead @ team-detail.tsx:198
+await in handleMakeTeamLead
+handleQuickLeaderChange @ team-detail.tsx:219
+(anonymous) @ chunk-LETPRLTX.js?v=414b3942:17
+(anonymous) @ chunk-NWIKVZDZ.js?v=414b3942:28
+handleSelect @ @radix-ui_react-select.js?v=414b3942:868
+(anonymous) @ @radix-ui_react-select.js?v=414b3942:914
+handleEvent @ chunk-5Q5YC75F.js?v=414b3942:6
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+team-detail.tsx:613 Team detail data state: 
