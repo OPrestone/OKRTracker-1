@@ -89,9 +89,7 @@ export function setupConfigRoutes(router: Router) {
       }
       
       // Check if config already exists for this tenant
-      const existingConfig = await db.query.okrSystemConfigs.findFirst({
-        where: eq(okrSystemConfigs.tenant_id, tenantId)
-      });
+      const existingConfig = await db.select().from(okrSystemConfigs).where(eq(okrSystemConfigs.tenant_id, tenantId)).limit(1).then(rows => rows[0]);
       
       // Extract data from request body
       const generalSettings = req.body.generalSettings || {};
@@ -299,10 +297,7 @@ export function setupConfigRoutes(router: Router) {
         return res.status(400).json({ error: 'Missing tenantId parameter' });
       }
       
-      const config = await db.query.okrSystemConfigs.findFirst({
-        where: eq(okrSystemConfigs.tenant_id, tenantId)
-      });
-      
+      const config = await db.select().from(okrSystemConfigs).where(eq(okrSystemConfigs.tenant_id, tenantId)).limit(1).then(rows => rows[0]);
       if (!config) {
         return res.status(404).json({ error: 'OKR system configuration not found' });
       }
@@ -378,9 +373,12 @@ export function setupConfigRoutes(router: Router) {
       }
       
       // Check if config already exists for this tenant
-      const existingConfig = await db.query.okrSystemConfigs.findFirst({
-        where: eq(okrSystemConfigs.tenant_id, tenantId)
-      });
+      const existingConfig = await db
+							.select()
+							.from(okrSystemConfigs)
+							.where(eq(okrSystemConfigs.tenant_id, tenantId))
+							.limit(1)
+							.then((rows) => rows[0]);
       
       let result;
       
