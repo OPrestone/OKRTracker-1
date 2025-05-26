@@ -767,7 +767,7 @@ export default function TeamDetailPage() {
                     </h1>
                     
                     {/* Team Leader Display */}
-                    {team.leaderId && (
+                    {(team.leaderId || team.leader_id) && (
                       <div className="flex items-center gap-2 mt-2">
                         <Crown className="h-4 w-4 text-yellow-500" />
                         <span className="text-sm font-medium text-muted-foreground">
@@ -775,10 +775,11 @@ export default function TeamDetailPage() {
                         </span>
                         <span className="text-sm font-semibold">
                           {(() => {
-                            const leader = members?.find(m => m.id === team.leaderId);
+                            const leaderId = team.leaderId || team.leader_id;
+                            const leader = members?.find(m => m.id === leaderId);
                             return leader ? 
                               (leader.name || `${leader.firstName || ''} ${leader.lastName || ''}`.trim() || leader.username || leader.email || 'Unknown') : 
-                              'Unknown Leader';
+                              'Loading...';
                           })()}
                         </span>
                       </div>
