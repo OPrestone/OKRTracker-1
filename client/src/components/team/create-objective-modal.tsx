@@ -41,7 +41,8 @@ const objectiveSchema = z.object({
   description: z.string().optional(),
   timeframeId: z.string().min(1, "Timeframe is required"),
   teamId: z.string(),
-  status: z.string().default("draft")
+  status: z.string().default("draft"),
+  ownerId: z.string().optional()
 });
 
 type ObjectiveFormValues = z.infer<typeof objectiveSchema>;
@@ -71,7 +72,8 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
       description: "",
       timeframeId: "",
       teamId: teamId,
-      status: "draft"
+      status: "draft",
+      ownerId: undefined
     }
   });
 
@@ -79,12 +81,25 @@ export function CreateObjectiveModal({ isOpen, onClose, teamId }: CreateObjectiv
   const createObjectiveMutation = useMutation({
     mutationFn: async (data: ObjectiveFormValues) => {
       console.log("Creating objective with data:", { ...data, tenantId });
-      const response = await apiRequest("POST", `/api/objectives`, {
-        ...data,
+      
+      // Clean the data - remove undefined values
+      const cleanedData = {
+        title: data.title,
+        description: data.description || "",
+        timeframeId: data.timeframeId,
+        teamId: data.teamId,
+        status: data.status,
         tenantId,
-        level: "team", // Set default level for team objectives
-        ownerId: null // Will be set on the server
-      });
+        level: "team" // Set default level for team objectives
+      };
+      
+      // Only add ownerId if it's a valid string
+      if (data.ownerId && data.ownerId.trim()) {
+        cleanedData.ownerId = data.ownerId;
+      }
+      
+      console.log("Sending cleaned data:", cleanedData);
+      const response = await apiRequest("POST", `/api/objectives`, cleanedData);
       console.log("Objective creation response:", response);
       return response;
     },
