@@ -167,8 +167,13 @@ export default function DraftOKRs() {
       
       const objectives = await response.json();
       
+      // Filter to only show objectives with "draft" status
+      const draftOnlyObjectives = objectives.filter((objective: DraftObjective) => 
+        objective.status === 'draft'
+      );
+      
       // Ensure each objective has a keyResults array
-      return objectives.map((objective: DraftObjective) => ({
+      return draftOnlyObjectives.map((objective: DraftObjective) => ({
         ...objective,
         keyResults: objective.keyResults || []
       }));
