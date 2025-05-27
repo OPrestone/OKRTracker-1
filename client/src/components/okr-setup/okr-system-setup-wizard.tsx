@@ -654,6 +654,8 @@ export default function OKRSystemSetupWizard() {
           
           // Step 2.5: Assign users to their teams with proper team IDs
           console.log("Step 2.5: Assigning users to teams...");
+          console.log("Users to assign:", csvImportedUsers.map(u => ({ email: u.email, team: u.team })));
+          
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for users to be committed
           
           // Fetch current teams to get team IDs
@@ -667,7 +669,7 @@ export default function OKRSystemSetupWizard() {
           
           if (teamsResponse.ok) {
             const allTeams = await teamsResponse.json();
-            console.log("Available teams for assignment:", allTeams);
+            console.log("Available teams for assignment:", allTeams.map(t => ({ id: t.id, name: t.name })));
             
             // Fetch current users to get user IDs
             const usersResponse = await fetch("/api/users", {
@@ -680,7 +682,7 @@ export default function OKRSystemSetupWizard() {
             
             if (usersResponse.ok) {
               const allUsers = await usersResponse.json();
-              console.log("Available users for team assignment:", allUsers);
+              console.log("Available users for team assignment:", allUsers.map(u => ({ id: u.id, email: u.email })));
               
               // Enhanced team assignment with comprehensive tracking
               const teamAssignmentResults = {
