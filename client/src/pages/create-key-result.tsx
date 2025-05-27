@@ -311,15 +311,39 @@ export default function CreateKeyResult() {
     handleSaveKeyResult();
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     console.log('Finish button clicked!');
+    
     if (keyResultData.title.trim() || keyResultData.description.trim()) {
       // Save current key result first if there's data
-      handleSaveKeyResult();
-      setTimeout(() => {
+      console.log('Saving key result before finishing...');
+      setIsSubmitting(true);
+      
+      if (!validateForm()) {
+        setIsSubmitting(false);
+        return;
+      }
+      
+      try {
+        await createKeyResultMutation.mutateAsync(keyResultData);
+        console.log('Key result saved successfully, navigating to objective page...');
+        toast({
+          title: "Success!",
+          description: "Key result created successfully. Returning to objective view.",
+        });
         setLocation(`/objective/${objectiveId}`);
-      }, 1000);
+      } catch (error) {
+        console.error('Error saving key result:', error);
+        setIsSubmitting(false);
+        toast({
+          title: "Error",
+          description: "Failed to save key result. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
+      // Navigate directly if no data to save
+      console.log('No data to save, navigating directly to objective page...');
       setLocation(`/objective/${objectiveId}`);
     }
   };
