@@ -567,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tenants", ensureAuthenticated, async (req, res, next) => {
     try {
       const userId = (req.user as User).id;
-      const tenants = await tenantService.getUserTenants(userId);
+      const tenants = await storage.getUserTenants(userId);
       res.json(tenants);
     } catch (error) {
       next(error);
