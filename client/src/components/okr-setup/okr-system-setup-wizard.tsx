@@ -330,7 +330,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const steps = [
   { id: "general", label: "General", icon: Settings2 },
-  { id: "timeframes", label: "Timeframes", icon: Calendar },
   { id: "objectives", label: "Objectives", icon: Target },
   { id: "teams", label: "Teams", icon: Users2 },
   { id: "integrations", label: "Integrations", icon: Layers },
@@ -2110,135 +2109,7 @@ export default function OKRSystemSetupWizard() {
                 </Card>
               </TabsContent>
               
-              {/* Timeframes */}
-              <TabsContent value="timeframes">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Calendar className="mr-2 h-5 w-5 text-primary" />
-                        OKR Timeframes
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Configure your OKR planning cycles and timeframes to establish your organization's rhythm.
-                      </p>
-                      
-                      <div className="space-y-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Primary OKR Cadence</label>
-                          <Select
-                            defaultValue={form.getValues("timeframes.primaryCadence")}
-                            onValueChange={(value) => form.setValue("timeframes.primaryCadence", value as "quarterly" | "trimester" | "halfYearly" | "annual")}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select primary cadence" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
-                              <SelectItem value="trimester">Trimester (4 months)</SelectItem>
-                              <SelectItem value="halfYearly">Half-yearly (6 months)</SelectItem>
-                              <SelectItem value="annual">Annual (12 months)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-gray-500 mt-1">This will be your main planning cycle length</p>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium mb-3">Additional Time Cadences</label>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="enableQuarterlyCadence"
-                                checked={form.getValues("timeframes.enableQuarterlyCadence")}
-                                onCheckedChange={(checked) => 
-                                  form.setValue("timeframes.enableQuarterlyCadence", checked as boolean)
-                                }
-                              />
-                              <label 
-                                htmlFor="enableQuarterlyCadence"
-                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Enable Quarterly OKRs
-                              </label>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="enableAnnualCadence"
-                                checked={form.getValues("timeframes.enableAnnualCadence")}
-                                onCheckedChange={(checked) => 
-                                  form.setValue("timeframes.enableAnnualCadence", checked as boolean)
-                                }
-                              />
-                              <label 
-                                htmlFor="enableAnnualCadence"
-                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Enable Annual OKRs
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Custom Cadence (Optional)</label>
-                          <Input
-                            placeholder="e.g., Sprint-based (2 weeks)"
-                            {...form.register("timeframes.customCadence")}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">If your organization uses a unique timeframe for planning</p>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium mb-1">OKR Year Start Month</label>
-                          <Select
-                            defaultValue={form.getValues("timeframes.startMonth")}
-                            onValueChange={(value) => form.setValue("timeframes.startMonth", value as "january" | "february" | "march" | "april" | "may" | "june" | "july" | "august" | "september" | "october" | "november" | "december")}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select start month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="january">January</SelectItem>
-                              <SelectItem value="february">February</SelectItem>
-                              <SelectItem value="march">March</SelectItem>
-                              <SelectItem value="april">April</SelectItem>
-                              <SelectItem value="may">May</SelectItem>
-                              <SelectItem value="june">June</SelectItem>
-                              <SelectItem value="july">July</SelectItem>
-                              <SelectItem value="august">August</SelectItem>
-                              <SelectItem value="september">September</SelectItem>
-                              <SelectItem value="october">October</SelectItem>
-                              <SelectItem value="november">November</SelectItem>
-                              <SelectItem value="december">December</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="text-xs text-gray-500 mt-1">When your OKR year begins</p>
-                        </div>
 
-                        <div className="pt-6 border-t mt-6">
-                          <h3 className="text-lg font-medium mb-4">Create Your OKR Timeframes</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Set up specific timeframes for your OKR cycles. These will be used when creating objectives.
-                          </p>
-                          
-                          {tenantId && (
-                            <TimeframeSetup
-                              tenantId={tenantId}
-                              primaryCadence={form.getValues("timeframes.primaryCadence")}
-                              startMonth={form.getValues("timeframes.startMonth")}
-                              onTimeframesSaved={goToNextStep}
-                            />
-                          )}
-                          <p className="text-xs text-gray-500 mt-4">
-                            Tip: Creating timeframes now will make it easier for your team to align objectives to specific time periods.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
               
               {/* Objective Settings */}
               <TabsContent value="objectives">
