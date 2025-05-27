@@ -2314,6 +2314,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Bulk team assignment endpoint for CSV uploads
+  app.post("/api/users-to-teams", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const { userId, teamId, tenantId } = z.object({ 
+        userId: z.string(),
+        teamId: z.string(),
+        tenantId: z.string().optional()
+      }).parse(req.body);
+      
+      // Verify user exists and belongs to current tenant
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Verify user belongs to current tenant
+      const userInTenant = await db
+        .select()
+        .from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, userId),
+          eq(usersToTenants.tenantId, req.tenantId)
+        ))
+        .limit(1);
+        
+      if (userInTenant.length === 0) {
+        return res.status(403).json({ error: "User does not belong to current tenant" });
+      }
+      
+      // Verify team exists and belongs to current tenant
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      
+      if (team.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Team does not belong to current tenant" });
+      }
+      
+      // Check if user is already assigned to this team
+      if (user.teamId === teamId) {
+        return res.status(409).json({ message: "User already assigned to this team" });
+      }
+      
+      // Assign user to team
+      const updatedUser = await storage.assignUserToTeam(userId, teamId);
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error in bulk team assignment:', error);
+      next(error);
+    }
+  });
+
   // Assign user to team
   app.post("/api/users/:userId/team", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {

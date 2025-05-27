@@ -682,45 +682,113 @@ export default function OKRSystemSetupWizard() {
               const allUsers = await usersResponse.json();
               console.log("Available users for team assignment:", allUsers);
               
-              // Assign each CSV user to their team
+              // Enhanced team assignment with comprehensive tracking
+              const teamAssignmentResults = {
+                successful: 0,
+                failed: 0,
+                skipped: 0,
+                errors: [] as string[]
+              };
+              
+              console.log(`Starting team assignments for ${csvImportedUsers.length} users...`);
+              
               for (const csvUser of csvImportedUsers) {
-                if (csvUser.team && csvUser.team.trim() !== '') {
-                  const matchingTeam = allTeams.find(team => 
-                    team.name.toLowerCase() === csvUser.team.toLowerCase()
-                  );
-                  const matchingUser = allUsers.find(user => 
-                    user.email.toLowerCase() === csvUser.email.toLowerCase()
-                  );
-                  
-                  if (matchingTeam && matchingUser) {
-                    try {
-                      // Assign user to team using the users-to-teams relationship
-                      const assignResponse = await fetch("/api/users-to-teams", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
-                        },
-                        body: JSON.stringify({
-                          userId: matchingUser.id,
-                          teamId: matchingTeam.id,
-                          tenantId: tenantContext.currentTenant?.id || tenantId
-                        }),
-                        credentials: 'include'
-                      });
-                      
-                      if (assignResponse.ok) {
-                        console.log(`Assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
-                      } else {
-                        console.log(`Failed to assign ${csvUser.email} to team ${csvUser.team}:`, await assignResponse.text());
-                      }
-                    } catch (error) {
-                      console.error(`Error assigning ${csvUser.email} to team:`, error);
-                    }
-                  } else {
-                    console.log(`Could not find matching team or user for ${csvUser.email} -> ${csvUser.team}`);
-                  }
+                if (!csvUser.team || csvUser.team.trim() === '') {
+                  teamAssignmentResults.skipped++;
+                  console.log(`Skipping ${csvUser.email} - no team specified`);
+                  continue;
                 }
+                
+                const matchingTeam = allTeams.find(team => 
+                  team.name.toLowerCase().trim() === csvUser.team.toLowerCase().trim()
+                );
+                const matchingUser = allUsers.find(user => 
+                  user.email.toLowerCase().trim() === csvUser.email.toLowerCase().trim()
+                );
+                
+                if (!matchingTeam) {
+                  teamAssignmentResults.failed++;
+                  const error = `Team "${csvUser.team}" not found for user ${csvUser.email}`;
+                  teamAssignmentResults.errors.push(error);
+                  console.error(error);
+                  continue;
+                }
+                
+                if (!matchingUser) {
+                  teamAssignmentResults.failed++;
+                  const error = `User "${csvUser.email}" not found in system`;
+                  teamAssignmentResults.errors.push(error);
+                  console.error(error);
+                  continue;
+                }
+                
+                try {
+                  // Enhanced team assignment with retry logic
+                  let assignmentSuccess = false;
+                  let attempts = 0;
+                  const maxAttempts = 3;
+                  
+                  while (!assignmentSuccess && attempts < maxAttempts) {
+                    attempts++;
+                    console.log(`Assignment attempt ${attempts} for ${csvUser.email} -> ${csvUser.team}`);
+                    
+                    const assignResponse = await fetch("/api/users-to-teams", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                      },
+                      body: JSON.stringify({
+                        userId: matchingUser.id,
+                        teamId: matchingTeam.id,
+                        tenantId: tenantContext.currentTenant?.id || tenantId
+                      }),
+                      credentials: 'include'
+                    });
+                    
+                    if (assignResponse.ok) {
+                      assignmentSuccess = true;
+                      teamAssignmentResults.successful++;
+                      console.log(`✓ Successfully assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
+                    } else if (assignResponse.status === 409) {
+                      // User already assigned to team - count as success
+                      assignmentSuccess = true;
+                      teamAssignmentResults.successful++;
+                      console.log(`✓ ${csvUser.email} already assigned to team ${csvUser.team}`);
+                    } else {
+                      const errorText = await assignResponse.text();
+                      console.error(`Attempt ${attempts} failed for ${csvUser.email}:`, errorText);
+                      
+                      if (attempts === maxAttempts) {
+                        teamAssignmentResults.failed++;
+                        teamAssignmentResults.errors.push(`Failed to assign ${csvUser.email} to ${csvUser.team}: ${errorText}`);
+                      } else {
+                        // Wait before retry
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                      }
+                    }
+                  }
+                } catch (error) {
+                  teamAssignmentResults.failed++;
+                  const errorMsg = `Error assigning ${csvUser.email} to team: ${error}`;
+                  teamAssignmentResults.errors.push(errorMsg);
+                  console.error(errorMsg);
+                }
+              }
+              
+              // Report team assignment results
+              console.log("Team Assignment Summary:", teamAssignmentResults);
+              
+              if (teamAssignmentResults.successful > 0) {
+                toast({
+                  title: "Team Assignments Complete",
+                  description: `Successfully assigned ${teamAssignmentResults.successful} users to teams. ${teamAssignmentResults.failed} failed, ${teamAssignmentResults.skipped} skipped.`,
+                  variant: teamAssignmentResults.failed > 0 ? "destructive" : "default"
+                });
+              }
+              
+              if (teamAssignmentResults.errors.length > 0) {
+                console.error("Team assignment errors:", teamAssignmentResults.errors);
               }
             }
           }
