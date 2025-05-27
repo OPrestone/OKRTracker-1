@@ -333,15 +333,7 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
 
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-100">
-        <h3 className="text-lg font-medium text-blue-700 mb-2">Timeframe Setup</h3>
-        <p className="text-blue-600 mb-2">Set up your OKR planning periods based on your selected cadence and start month.</p>
-        <ul className="list-disc list-inside text-blue-600 text-sm space-y-1">
-          <li>Click <strong>Apply Default Timeframes</strong> to automatically create standard timeframes</li>
-          <li>Default timeframes are based on your selected cadence ({primaryCadence}) starting in {startMonth}</li>
-          <li>These timeframes will be available when creating objectives</li>
-        </ul>
-      </div>
+
       
       {/* Loading overlay */}
       {createTimeframeMutation.isPending && (
