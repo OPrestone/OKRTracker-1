@@ -299,7 +299,7 @@ export default function CompanyOKRs() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            {permissions.canCreateCompanyOKRs() && (
+            {permissions.canCreateCompanyObjectives() && (
               <Button 
                 onClick={() => navigate("/create-company-objective")}
                 className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
@@ -564,7 +564,7 @@ export default function CompanyOKRs() {
               Create your first company objective to get started.
             </p>
             <div className="flex gap-4">
-              {permissions.canCreateCompanyOKRs() && (
+              {permissions.canCreateCompanyObjectives() && (
                 <Button 
                   onClick={() => navigate("/create-company-objective")}
                   className="flex items-center gap-2"
