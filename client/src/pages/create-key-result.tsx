@@ -197,16 +197,17 @@ export default function CreateKeyResult() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Create key result mutation using existing working objectives endpoint
+  // Create key result mutation using the proven working POST pattern
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('=== CREATING KEY RESULT VIA OBJECTIVES UPDATE ===');
+      console.log('=== CREATING KEY RESULT USING POST METHOD ===');
       console.log('Data being sent:', data);
       
-      // Use the working objectives endpoint that we know functions properly
+      // Use POST method that we know works reliably
       const keyResultData = {
         title: data.title,
         description: data.description || '',
+        objectiveId: objectiveId,
         startValue: data.startValue?.toString() || '0',
         currentValue: data.currentValue?.toString() || data.startValue?.toString() || '0',
         targetValue: data.targetValue?.toString() || '100',
@@ -217,9 +218,18 @@ export default function CreateKeyResult() {
         progress: Math.round(((parseFloat(data.currentValue || '0') - parseFloat(data.startValue || '0')) / (parseFloat(data.targetValue || '100') - parseFloat(data.startValue || '0'))) * 100) || 0
       };
       
-      // Update the objective to add this key result
-      const response = await apiRequest('PUT', `/api/objectives/${objectiveId}/key-results`, keyResultData);
-      return response.json();
+      // Use POST to the key results endpoint
+      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/key-results`, keyResultData);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('API Success Response:', result);
+      return result.keyResult || result;
     },
     onSuccess: (newKeyResult: KeyResult) => {
       setSavedKeyResults(prev => [...prev, newKeyResult]);

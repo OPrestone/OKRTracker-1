@@ -1977,6 +1977,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST endpoint for key result creation
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId } = req.params;
+      const keyResultData = req.body;
+      
+      console.log('=== POST KEY RESULT ENDPOINT CALLED ===');
+      console.log('Objective ID:', objectiveId);
+      console.log('Key Result Data:', keyResultData);
+      
+      if (!keyResultData.title) {
+        return res.status(400).json({ error: 'Key result title is required' });
+      }
+
+      const newKeyResultData = {
+        ...keyResultData,
+        objectiveId,
+        tenantId: req.tenantId!
+      };
+
+      const newKeyResult = await storage.createKeyResult(newKeyResultData);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      console.log('=== KEY RESULT CREATED SUCCESSFULLY ===');
+      console.log('New Key Result:', newKeyResult);
+      
+      res.json({ success: true, keyResult: newKeyResult });
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
+    }
+  });
+
   // Key result creation via objectives update endpoint
   app.put("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
     try {
