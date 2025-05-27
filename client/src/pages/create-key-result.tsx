@@ -204,7 +204,7 @@ export default function CreateKeyResult() {
       console.log('URL:', `/api/objectives/${objectiveId}/key-results`);
       console.log('Data being sent:', data);
       
-      const response = await apiRequest(`/api/objectives/${objectiveId}/key-results`, 'POST', {
+      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/key-results`, {
         ...data,
         objectiveId,
         progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
