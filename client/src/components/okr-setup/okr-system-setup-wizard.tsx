@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
   Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
-  AlertCircle, UserPlus, ChevronDown, X
+  AlertCircle, UserPlus, ChevronDown, X, Save, Users
 } from "lucide-react";
 import {
   AlertDialog,
@@ -332,6 +332,9 @@ export default function OKRSystemSetupWizard() {
   const [showCsvPreview, setShowCsvPreview] = useState(false);
   const [isProcessingCsv, setIsProcessingCsv] = useState(false);
   const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>([]);
+  const [csvImportedTeams, setCsvImportedTeams] = useState<string[]>([]);
+  const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
+  const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -438,7 +441,7 @@ export default function OKRSystemSetupWizard() {
         // Create user object
         const user: UserImport = {
           email: '',
-          role: 'member', // Default role
+          role: 'user', // Default role updated to match new system
           isValid: true,
           error: undefined,
         };
@@ -462,12 +465,12 @@ export default function OKRSystemSetupWizard() {
                 user.name = value;
                 break;
               case 'role':
-                // Normalize role values
+                // Normalize role values to support new five-role organization system
                 const normalizedRole = value.toLowerCase();
-                if (['admin', 'member', 'viewer'].includes(normalizedRole)) {
+                if (['user', 'manager', 'executive', 'admin', 'owner'].includes(normalizedRole)) {
                   user.role = normalizedRole;
                 } else {
-                  user.role = 'member'; // Default to member for invalid roles
+                  user.role = 'user'; // Default to user for invalid roles
                 }
                 break;
               case 'department':
@@ -501,6 +504,19 @@ export default function OKRSystemSetupWizard() {
         description: `Successfully processed ${users.length} users (${users.filter(u => u.isValid).length} valid)`,
       });
       
+      // Store teams and users for later saving
+      if (users.length > 0) {
+        const validUsers = users.filter(user => user.isValid);
+        const uniqueTeamNames = Array.from(new Set(
+          users
+            .filter((user: any) => user.team && user.team.trim() !== '')
+            .map((user: any) => user.team.trim())
+        ));
+        
+        setCsvImportedTeams(uniqueTeamNames);
+        setCsvImportedUsers(validUsers);
+      }
+      
       // Show preview
       setShowCsvPreview(true);
     } catch (error) {
@@ -512,6 +528,249 @@ export default function OKRSystemSetupWizard() {
       });
     } finally {
       setIsProcessingCsv(false);
+    }
+  };
+
+  // Function to save teams and users to the database
+  const saveTeamsAndUsers = async () => {
+    setIsSavingUsersAndTeams(true);
+    
+    try {
+      console.log("Starting save process...");
+      console.log("Teams to save:", csvImportedTeams);
+      console.log("Users to save:", csvImportedUsers);
+      
+      // Get tenant ID from context
+      const tenantId = tenantContext?.currentTenant?.id;
+      if (!tenantId) {
+        throw new Error("No tenant ID found");
+      }
+      console.log("Using tenant ID:", tenantId);
+      
+      let teamsCreated = 0;
+      let usersCreated = 0;
+      
+      // Create teams first if needed
+      if (csvImportedTeams.length > 0) {
+        try {
+          console.log("Creating teams via batch endpoint...");
+          const teamCreateRes = await fetch("/api/teams/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(csvImportedTeams.map(teamName => ({
+              name: teamName,
+              description: `Team created from CSV upload`
+            }))),
+            credentials: 'include'
+          });
+          
+          console.log("Team creation response status:", teamCreateRes.status);
+          const teamResponseText = await teamCreateRes.text();
+          console.log("Team creation response:", teamResponseText);
+          
+          if (teamCreateRes.ok) {
+            const teamCreateData = JSON.parse(teamResponseText);
+            teamsCreated = teamCreateData.createdTeams?.length || csvImportedTeams.length;
+            console.log("Teams created successfully:", teamCreateData);
+          } else {
+            console.error("Team creation failed:", teamResponseText);
+          }
+        } catch (error) {
+          console.error("Error creating teams:", error);
+        }
+      }
+      
+      // Create users using the bulk user creation endpoint (same as All Users page)
+      if (csvImportedUsers.length > 0) {
+        try {
+          console.log("Creating users using bulk endpoint...");
+          
+          // Create users one by one using the working approach from All Users page
+          let createdCount = 0;
+          const failedUsers = [];
+          
+          for (const user of csvImportedUsers) {
+            try {
+              const response = await fetch("/api/users", {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId
+                },
+                body: JSON.stringify({
+                  username: user.email.split('@')[0].toLowerCase(),
+                  email: user.email.toLowerCase(),
+                  name: user.name || user.email.split('@')[0],
+                  title: user.department || '',
+                  role: user.role || 'user'
+                }),
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                createdCount++;
+                console.log(`Created user: ${user.email}`);
+              } else {
+                const errorText = await response.text();
+                console.error(`Failed to create user ${user.email}:`, errorText);
+                failedUsers.push(user.email);
+              }
+            } catch (error) {
+              console.error(`Error creating user ${user.email}:`, error);
+              failedUsers.push(user.email);
+            }
+          }
+          
+          usersCreated = createdCount;
+          console.log(`Successfully created ${createdCount} users, ${failedUsers.length} failed`);
+          
+          // Now set managers as team leaders for their respective teams
+          const managersToSetAsLeaders = csvImportedUsers.filter(user => 
+            user.role === 'manager' && user.team && user.team.trim() !== ''
+          );
+          
+          console.log("Setting managers as team leaders:", managersToSetAsLeaders);
+          
+          if (managersToSetAsLeaders.length > 0) {
+            // Get fresh team and user data
+            const teamsResponse = await fetch("/api/teams", {
+              method: "GET",
+              credentials: 'include'
+            });
+            
+            const usersResponse = await fetch("/api/users", {
+              method: "GET", 
+              credentials: 'include'
+            });
+            
+            if (teamsResponse.ok && usersResponse.ok) {
+              const teams = await teamsResponse.json();
+              const users = await usersResponse.json();
+              
+              for (const manager of managersToSetAsLeaders) {
+                try {
+                  const team = teams.find((t: any) => t.name === manager.team);
+                  const user = users.find((u: any) => u.email === manager.email);
+                  
+                  if (team && user) {
+                    // Set the user as team leader
+                    const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ leaderId: user.id }),
+                      credentials: 'include'
+                    });
+                    
+                    if (leaderResponse.ok) {
+                      console.log(`Set ${manager.name} as leader of team ${manager.team}`);
+                    } else {
+                      console.error(`Failed to set ${manager.name} as team leader:`, await leaderResponse.text());
+                    }
+                  } else {
+                    console.error(`Could not find team "${manager.team}" or user "${manager.email}" for leadership assignment`);
+                  }
+                } catch (error) {
+                  console.error(`Error setting ${manager.name} as team leader:`, error);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error creating users:", error);
+        }
+      }
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      toast({
+        title: "Save Complete!",
+        description: `Successfully saved ${teamsCreated} teams and ${usersCreated} users to your organization.`,
+      });
+      
+      // Clear the imported data
+      setCsvImportedTeams([]);
+      setCsvImportedUsers([]);
+      
+    } catch (error) {
+      console.error("Error saving teams and users:", error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your teams and users. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingUsersAndTeams(false);
+    }
+  };
+  
+  // Function to process CSV data and create teams/users immediately
+  const createTeamsAndUsersFromCsv = async (users: UserImport[]) => {
+    try {
+      console.log("Processing CSV data immediately...", users);
+      
+      // Extract unique team names from CSV data
+      const uniqueTeamNames = Array.from(new Set(
+        users
+          .filter((user: any) => user.team && user.team.trim() !== '')
+          .map((user: any) => user.team.trim())
+      ));
+      
+      console.log("Unique teams to create:", uniqueTeamNames);
+      
+      // Create teams first if there are any
+      if (uniqueTeamNames.length > 0) {
+        try {
+          const teamCreateRes = await fetch("/api/teams/batch", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Tenant-ID": tenantId
+            },
+            body: JSON.stringify(uniqueTeamNames.map(teamName => ({
+              name: teamName,
+              description: `Auto-created team from CSV upload`
+            }))),
+            credentials: 'include'
+          });
+          
+          if (teamCreateRes.ok) {
+            const teamCreateData = await teamCreateRes.json();
+            console.log("Teams created successfully:", teamCreateData);
+            
+            toast({
+              title: "Teams Created",
+              description: `Successfully created ${teamCreateData.createdTeams?.length || uniqueTeamNames.length} teams from your CSV file.`,
+            });
+          } else {
+            console.error("Failed to create teams:", await teamCreateRes.text());
+          }
+        } catch (error) {
+          console.error("Error creating teams:", error);
+        }
+      }
+      
+      // Process users - since teams are created, just show success message
+      const validUsers = users.filter((user: any) => user.isValid && user.email);
+      
+      if (validUsers.length > 0) {
+        toast({
+          title: "CSV Upload Complete",
+          description: `Successfully created ${uniqueTeamNames.length} teams. ${validUsers.length} users processed and ready for import.`,
+        });
+      }
+      
+      // Invalidate teams query to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      
+    } catch (error) {
+      console.error("Error processing CSV data:", error);
+      toast({
+        title: "Error Processing CSV",
+        description: "Failed to create teams and users from CSV file.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -870,7 +1129,7 @@ export default function OKRSystemSetupWizard() {
             .map(user => ({
               email: user.email,
               name: user.name || '',
-              role: user.role || 'member',
+              role: user.role || 'user',
               department: user.department || '',
               team: user.team || '',
               tenant_id: tenantId
@@ -980,8 +1239,83 @@ export default function OKRSystemSetupWizard() {
   };
 
   // Submit handler
-  const onSubmitForm = (data: FormValues) => {
+  const onSubmitForm = async (data: FormValues) => {
     console.log("Form submitted with data:", data);
+    setIsSubmitting(true);
+    
+    try {
+      // First, process CSV users and create teams if needed
+      if (data.teamConfiguration.csvUsers && data.teamConfiguration.csvUsers.length > 0) {
+        console.log("Processing CSV users and creating teams...");
+        
+        // Extract unique team names from CSV data
+        const uniqueTeams = Array.from(new Set(
+          data.teamConfiguration.csvUsers
+            .filter((user: any) => user.team && user.team.trim() !== '')
+            .map((user: any) => user.team.trim())
+        ));
+        
+        // Create teams if there are any
+        if (uniqueTeams.length > 0) {
+          try {
+            const teamCreateRes = await fetch("/api/teams/batch", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                teams: uniqueTeams.map(teamName => ({
+                  name: teamName,
+                  description: `Auto-created team from CSV upload`
+                }))
+              })
+            });
+            
+            if (teamCreateRes.ok) {
+              const teamCreateData = await teamCreateRes.json();
+              console.log("Teams created successfully:", teamCreateData);
+            }
+          } catch (error) {
+            console.error("Error creating teams:", error);
+          }
+        }
+        
+        // Teams are already created during CSV upload, just show success
+        const validUsers = data.teamConfiguration.csvUsers.filter((user: any) => user.isValid);
+        
+        if (validUsers.length > 0) {
+          console.log(`CSV upload complete: ${uniqueTeams.length} teams created, ${validUsers.length} users processed`);
+        }
+      }
+      
+      // Make sure teamConfiguration has all required properties to prevent submission errors
+      const validatedData = {
+        ...data,
+        teamConfiguration: {
+          ...data.teamConfiguration,
+          defaultTeams: data.teamConfiguration.defaultTeams || [],
+          csvUsers: data.teamConfiguration.csvUsers || [],
+          // Make sure useDefaultTeams is present and properly set
+          useDefaultTeams: typeof data.teamConfiguration.useDefaultTeams === 'boolean' 
+            ? data.teamConfiguration.useDefaultTeams 
+            : true // Default to true if not present
+        }
+      };
+      
+      // Continue with the OKR system setup
+      saveOKRSystemMutation.mutate(validatedData);
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      setIsSubmitting(false);
+      toast({
+        title: "Error",
+        description: "An error occurred while processing your setup. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Legacy submit handler for the mutation
+  const handleFormSubmit = (data: FormValues) => {
+    console.log("Legacy form submitted with data:", data);
     setIsSubmitting(true);
     
     // Make sure teamConfiguration has all required properties to prevent submission errors
@@ -1950,18 +2284,18 @@ export default function OKRSystemSetupWizard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => {
-                                    // Download comprehensive CSV template with all required fields
+                                    // Download comprehensive CSV template with all required fields and new roles
                                     const sample = `email,name,role,department,team
-john.doe@company.com,John Doe,member,Marketing,Marketing Team
-jane.smith@company.com,Jane Smith,admin,Engineering,Engineering Team
-mike.johnson@company.com,Mike Johnson,member,Sales,Sales Team
-sarah.williams@company.com,Sarah Williams,viewer,HR,Human Resources
-david.brown@company.com,David Brown,admin,Finance,Finance Team`;
+john.doe@company.com,John Doe,user,Marketing,Marketing Team
+jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Team
+mike.johnson@company.com,Mike Johnson,executive,Sales,Sales Team
+sarah.williams@company.com,Sarah Williams,admin,HR,Human Resources
+david.brown@company.com,David Brown,owner,Finance,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');
                                     a.href = url;
-                                    a.download = 'user_import_template.csv';
+                                    a.download = 'team_user_upload_template.csv';
                                     document.body.appendChild(a);
                                     a.click();
                                     document.body.removeChild(a);
@@ -2035,6 +2369,78 @@ david.brown@company.com,David Brown,admin,Finance,Finance Team`;
                                     </tbody>
                                   </table>
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Imported Teams and Users Display */}
+                            {(csvImportedTeams.length > 0 || csvImportedUsers.length > 0) && (
+                              <div className="mt-6 border rounded-lg p-4 bg-blue-50 border-blue-200">
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-semibold text-blue-900">Ready to Save</h4>
+                                  <Button
+                                    type="button"
+                                    onClick={saveTeamsAndUsers}
+                                    disabled={isSavingUsersAndTeams}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    {isSavingUsersAndTeams ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="mr-2 h-4 w-4" />
+                                        Save Teams & Users
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Teams to be created */}
+                                  {csvImportedTeams.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium text-blue-800 mb-2">
+                                        Teams to Create ({csvImportedTeams.length})
+                                      </h5>
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {csvImportedTeams.map((teamName, index) => (
+                                          <div key={index} className="flex items-center text-sm text-blue-700">
+                                            <Users2 className="mr-2 h-3 w-3" />
+                                            {teamName}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Users to be created */}
+                                  {csvImportedUsers.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium text-blue-800 mb-2">
+                                        Users to Create ({csvImportedUsers.length})
+                                      </h5>
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {csvImportedUsers.slice(0, 5).map((user, index) => (
+                                          <div key={index} className="flex items-center text-sm text-blue-700">
+                                            <User className="mr-2 h-3 w-3" />
+                                            {user.name} ({user.email})
+                                          </div>
+                                        ))}
+                                        {csvImportedUsers.length > 5 && (
+                                          <div className="text-sm text-blue-600 italic">
+                                            ... and {csvImportedUsers.length - 5} more users
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <p className="text-sm text-blue-700 mt-3">
+                                  Click "Save Teams & Users" to add these to your organization permanently.
+                                </p>
                               </div>
                             )}
                           </div>

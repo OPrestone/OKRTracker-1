@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Filter, Search, BarChart, ChevronRight, Calendar, Target, 
@@ -93,9 +93,6 @@ export default function CompanyOKRs() {
     enabled: isAuthenticated,
     refetchInterval: 3000, // Auto-refresh every 3 seconds
     refetchIntervalInBackground: true,
-    onSuccess: (data) => {
-      console.log("Objectives data received:", data);
-    }
   });
 
   // Fetch all OKRs to find those linked to company objectives
@@ -470,137 +467,110 @@ export default function CompanyOKRs() {
           </CardContent>
         </Card>
       ) : filteredObjectives.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredObjectives.map((objective) => {
-            // Find OKRs that are linked to this company objective
-            const linkedOKRs = allOKRs.filter(okr => 
+            // Calculate average progress from connected OKRs
+            const connectedOKRs = allOKRs.filter(okr => 
               okr.parentId === objective.id || 
               okr.strategicAlignment === objective.id ||
               okr.alignedToObjectiveId === objective.id
             );
             
-            // Get all key results from the linked OKRs
-            const objectiveKeyResults = linkedOKRs.flatMap(okr => okr.keyResults || []);
-            
-            // Determine color based on objective type
-            const typeColor = objective.type === 'financial' ? '#818cf8' : 
-                          objective.type === 'product' ? '#6ee7b7' : 
-                          objective.type === 'customer' ? '#fcd34d' : 
-                          objective.type === 'market' ? '#93c5fd' :
-                          objective.type === 'operations' ? '#a5b4fc' :
-                          objective.type === 'people' ? '#f472b6' : '#d1d5db';
+            const averageProgress = connectedOKRs.length > 0 
+              ? Math.round(connectedOKRs.reduce((sum, okr) => sum + (okr.progress || 0), 0) / connectedOKRs.length)
+              : objective.progress || 0;
             
             return (
               <Card 
                 key={objective.id} 
-                className="border-t-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                style={{ borderTopColor: typeColor }}
-                onClick={() => navigate(`/objectives/${objective.id}`)}
+                className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={(e) => {
+                  // Prevent navigation if clicking on buttons inside the card
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  navigate(`/objective/${objective.id}`);
+                }}
               >
                 <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="flex items-center">
-                      <Badge className="mr-2" variant="outline">
-                        <span className="flex items-center">
-                          {getTypeIcon(objective.type)}
-                          <span className="ml-1 capitalize">{objective.type || 'General'}</span>
-                        </span>
-                      </Badge>
-                      <Badge className={getStatusColor(objective.status)}>
-                        {objective.status.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <Badge variant="outline" className="ml-2">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {getTimeframeName(objective.timeframeId)}
-                    </Badge>
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg font-semibold">{objective.title}</CardTitle>
+                    <Badge variant="secondary" className="ml-2">Company</Badge>
                   </div>
-                  <CardTitle className="text-xl">{objective.title}</CardTitle>
-                  <CardDescription className="mt-1.5">
-                    {objective.description || 'No description provided'}
-                  </CardDescription>
+                  {objective.description && (
+                    <CardDescription className="mt-2 line-clamp-2">
+                      {objective.description}
+                    </CardDescription>
+                  )}
                 </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">Overall Progress</span>
-                      <span>{objective.progress}%</span>
-                    </div>
-                    <Progress value={objective.progress} className="h-2" />
-                  </div>
-                  
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Key Results from Linked OKRs:</h4>
-                    {objectiveKeyResults.length > 0 ? (
-                      <ul className="space-y-3">
-                        {objectiveKeyResults.map((kr) => {
-                          // Find which OKR this key result belongs to
-                          const parentOKR = linkedOKRs.find(okr => 
-                            okr.keyResults && okr.keyResults.some(okrKr => okrKr.id === kr.id)
-                          );
-                          return (
-                            <li key={kr.id} className="text-sm">
-                              <div className="flex justify-between mb-1">
-                                <div className="flex-1">
-                                  <span className="text-gray-700">{kr.title}</span>
-                                  {parentOKR && (
-                                    <span className="text-xs text-gray-500 ml-2">
-                                      (from "{parentOKR.title}")
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-gray-500">{kr.progress}%</span>
-                              </div>
-                              <Progress value={kr.progress} className="h-1.5" />
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : (
-                      <div className="text-sm text-gray-500">
-                        <p>No OKRs are currently linked to this company objective.</p>
-                        <p className="text-xs mt-1">Key results will appear here when team or individual OKRs are aligned to this objective.</p>
-                      </div>
+                <CardContent className="pb-2">
+                  <h4 className="text-sm font-medium mb-2">Key Results</h4>
+                  {objective.keyResults && objective.keyResults.length > 0 ? (
+                    <ul className="space-y-2 list-disc pl-5">
+                      {objective.keyResults.slice(0, 3).map((keyResult) => (
+                        <li key={keyResult.id} className="text-sm text-muted-foreground">
+                          {keyResult.title}
+                        </li>
+                      ))}
+                      {objective.keyResults.length > 3 && (
+                        <li className="text-sm text-muted-foreground">
+                          +{objective.keyResults.length - 3} more key results
+                        </li>
+                      )}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No key results defined</p>
+                  )}
+                </CardContent>
+                <CardFooter className="pt-2 flex justify-between">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/objective/${objective.id}`)}>
+                      <Target className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
+                    {connectedOKRs.length > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {connectedOKRs.length} Connected OKR{connectedOKRs.length > 1 ? 's' : ''}
+                      </Badge>
                     )}
                   </div>
-                  
-                  <div className="mt-5 text-sm text-gray-500 flex justify-between items-center">
-                    <span>Assigned: {getTeamName(objective.teamId)}</span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        const tenantId = user?.defaultTenant || "";
-                        navigate(`/organization/${tenantId}/objectives/${objective.id}`);
-                      }}
-                    >
-                      Details <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {averageProgress}%
+                    </span>
+                    <Progress value={averageProgress} className="w-16" />
                   </div>
-                </CardContent>
+                </CardFooter>
               </Card>
             );
           })}
         </div>
       ) : (
-        <Card>
+        <Card className="border-2 border-dashed border-gray-200">
           <CardHeader>
-            <CardTitle>No company objectives found</CardTitle>
+            <CardTitle>No Company OKRs Found</CardTitle>
             <CardDescription>
-              {searchQuery || selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0
-                ? "No objectives match your current filters"
-                : "There are no company-level objectives at this time."}
+              There are no company-level objectives matching your current filters.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {(searchQuery || selectedTypes.length > 0 || selectedStatuses.length > 0 || selectedTimeframes.length > 0) && (
-              <Button className="mb-4" variant="outline" onClick={resetFilters}>
-                Clear all filters
-              </Button>
-            )}
-            <p className="text-sm text-gray-500">
-              Company objectives provide direction and alignment for the entire organization.
+          <CardContent className="flex flex-col items-center justify-center py-6">
+            <div className="mb-4 p-4 bg-primary/5 rounded-full">
+              <Building className="h-12 w-12 text-primary" />
+            </div>
+            <p className="text-center text-muted-foreground mb-6 max-w-md">
+              Company OKRs help align organization-wide goals and track strategic initiatives.
+              Create your first company objective to get started.
             </p>
+            <div className="flex gap-4">
+              <Button 
+                onClick={() => navigate("/create-company-objective")}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Company OKR
+              </Button>
+              <Button variant="outline" onClick={resetFilters}>
+                Clear Filters
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

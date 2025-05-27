@@ -206,7 +206,7 @@ class TenantService {
   async addUserToTenant(
     userId: string, 
     tenantId: string, 
-    role: 'owner' | 'admin' | 'member' = 'member',
+    role: 'user' | 'manager' | 'executive' | 'admin' | 'owner' = 'user',
     isDefault = false
   ): Promise<UserToTenant> {
     try {

@@ -413,7 +413,7 @@ export class DatabaseStorage implements IStorage {
         const connection = userTenantConnections.find(utc => utc.tenantId === tenant.id);
         return {
           ...tenant,
-          userRole: connection?.role || 'member',
+          userRole: connection?.role || 'user',
           isDefault: connection?.isDefault || false
         };
       });

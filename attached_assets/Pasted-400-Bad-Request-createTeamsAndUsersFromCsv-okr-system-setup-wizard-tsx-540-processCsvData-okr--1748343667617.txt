@@ -1,0 +1,65 @@
+400 (Bad Request)
+createTeamsAndUsersFromCsv @ okr-system-setup-wizard.tsx:540
+processCsvData @ okr-system-setup-wizard.tsx:506
+reader.onload @ okr-system-setup-wizard.tsx:393
+FileReader
+handleCsvUpload @ okr-system-setup-wizard.tsx:405
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:561 Failed to create teams: {"error":"Expected an array of teams"}
+createTeamsAndUsersFromCsv @ okr-system-setup-wizard.tsx:561
+await in createTeamsAndUsersFromCsv
+processCsvData @ okr-system-setup-wizard.tsx:506
+reader.onload @ okr-system-setup-wizard.tsx:393
+FileReader
+handleCsvUpload @ okr-system-setup-wizard.tsx:405
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:600 Error creating users: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+createTeamsAndUsersFromCsv @ okr-system-setup-wizard.tsx:600
+await in createTeamsAndUsersFromCsv
+processCsvData @ okr-system-setup-wizard.tsx:506
+reader.onload @ okr-system-setup-wizard.tsx:393
+FileReader
+handleCsvUpload @ okr-system-setup-wizard.tsx:405
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error

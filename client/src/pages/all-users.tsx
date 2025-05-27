@@ -49,7 +49,8 @@ import {
   Loader2,
   Upload,
   Download,
-  FileText
+  FileText,
+  Crown
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,9 +82,9 @@ export default function AllUsers() {
     errors: string[];
   } | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
-  const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
+  const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "executive" | "manager" | "user" }>({ 
     tenantId: "", 
-    role: "member" 
+    role: "user" 
   });
   const [updateUserData, setUpdateUserData] = useState({
     id: '',
@@ -208,7 +209,7 @@ export default function AllUsers() {
 
   // Organization assignment mutation
   const assignOrgMutation = useMutation({
-    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: "owner" | "admin" | "member" }) => {
+    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: "owner" | "admin" | "executive" | "manager" | "user" }) => {
       const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { userId, role });
       return await res.json();
     },
@@ -223,7 +224,7 @@ export default function AllUsers() {
       
       setIsOrgAssignDialogOpen(false);
       setSelectedUser(null);
-      setOrgAssignment({ tenantId: "", role: "member" });
+      setOrgAssignment({ tenantId: "", role: "user" });
       
       toast({
         title: "Success",
@@ -250,7 +251,7 @@ export default function AllUsers() {
   
   const openOrgAssignDialog = (user: UserSchema) => {
     setSelectedUser(user);
-    setOrgAssignment({ tenantId: "", role: "member" });
+    setOrgAssignment({ tenantId: "", role: "user" });
     setIsOrgAssignDialogOpen(true);
   };
 
@@ -387,14 +388,64 @@ export default function AllUsers() {
         total: users.length,
         successful: 0,
         failed: 0,
-        errors: [] as string[]
+        errors: [] as string[],
+        teamsCreated: 0
       };
 
+      // First, extract unique team names and create teams
+      const uniqueTeams = [...new Set(users.map(user => user.team).filter(Boolean))];
+      const createdTeams: Record<string, string> = {}; // teamName -> teamId mapping
+
+      if (uniqueTeams.length > 0) {
+        try {
+          // Create teams in bulk
+          const teamCreateRes = await apiRequest("POST", "/api/teams/batch", {
+            teams: uniqueTeams.map(teamName => ({
+              name: teamName,
+              description: `Auto-created team from CSV upload`
+            }))
+          });
+
+          if (teamCreateRes.ok) {
+            const teamResults = await teamCreateRes.json();
+            results.teamsCreated = teamResults.teams?.length || 0;
+            
+            // Build mapping of team names to IDs
+            teamResults.teams?.forEach((team: any) => {
+              createdTeams[team.name] = team.id;
+            });
+            
+            // For skipped teams, we need to fetch their IDs from existing teams
+            if (teamResults.skippedDuplicates?.length > 0) {
+              try {
+                const existingTeamsRes = await apiRequest("GET", "/api/teams");
+                if (existingTeamsRes.ok) {
+                  const existingTeamsData = await existingTeamsRes.json();
+                  existingTeamsData.forEach((team: any) => {
+                    if (teamResults.skippedDuplicates.includes(team.name)) {
+                      createdTeams[team.name] = team.id;
+                    }
+                  });
+                }
+              } catch (error) {
+                console.warn("Failed to fetch existing team IDs:", error);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("Failed to create teams, proceeding with user creation:", error);
+        }
+      }
+
+      // Then create users
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
         setUploadProgress(((i + 1) / users.length) * 100);
 
         try {
+          // Find team ID for this user
+          const teamId = user.team ? createdTeams[user.team] : null;
+
           const res = await apiRequest("POST", `/api/users`, {
             email: user.email,
             firstName: user.firstName || user.first_name,
@@ -403,8 +454,8 @@ export default function AllUsers() {
             password: user.password || undefined, // Will be auto-generated if not provided
             department: user.department,
             title: user.title,
-            role: user.role || 'member',
-            teamId: user.teamId || null,
+            role: user.role || 'user', // Updated to use new default role
+            teamId: teamId,
             tenantId: tenantId,
           });
 
@@ -437,7 +488,7 @@ export default function AllUsers() {
       
       toast({
         title: "Bulk Upload Complete",
-        description: `${results.successful} users created successfully, ${results.failed} failed`,
+        description: `${results.successful} users created successfully, ${results.teamsCreated} teams created, ${results.failed} failed`,
         variant: results.failed > 0 ? "destructive" : "default",
       });
     },
@@ -544,12 +595,17 @@ export default function AllUsers() {
 
   // Generate CSV template
   const downloadCSVTemplate = () => {
-    const csvContent = "email,firstName,lastName,username,department,title,role,password\njohn.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,member,tempPassword123\njane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,member,tempPassword456";
+    const csvContent = `email,firstName,lastName,username,department,title,role,team,password
+john.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,user,Development Team,tempPassword123
+jane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,manager,Marketing Team,tempPassword456
+alex.wilson@example.com,Alex,Wilson,alexwilson,Operations,Operations Lead,executive,Operations Team,tempPassword789
+sarah.brown@example.com,Sarah,Brown,sarahbrown,HR,HR Director,admin,HR Team,tempPassword012
+mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'user_upload_template.csv';
+    a.download = 'team_user_upload_template.csv';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -764,7 +820,7 @@ export default function AllUsers() {
     
     // Get user's role in the current tenant
     const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
-    const tenantRole = userTenantRelation?.userRole || 'member';
+    const tenantRole = userTenantRelation?.userRole || 'user';
     console.log("User tenant relation:", userTenantRelation, "Current tenant:", tenantId);
     
     // Populate the update form with the user's current data
@@ -777,7 +833,7 @@ export default function AllUsers() {
       department: user.department || '',
       title: user.title || '',
       teamId: user.teamId?.toString() || '',
-      tenantRole: tenantRole as 'member' | 'admin' | 'owner',
+      tenantRole: tenantRole as 'user' | 'manager' | 'executive' | 'admin' | 'owner',
     };
     console.log("Setting update user data:", userData);
     
@@ -1111,7 +1167,9 @@ export default function AllUsers() {
     all: filteredUsers.length,
     owner: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'owner').length,
     admin: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'admin').length,
-    member: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'member').length,
+    executive: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'executive').length,
+    manager: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'manager').length,
+    user: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'user').length,
   };
 
   return (
@@ -1335,7 +1393,7 @@ export default function AllUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* Organization Assignment Dialog */}
+      {/* Organization Assignment Dialog - Updated Role System */}
       <Dialog open={isOrgAssignDialogOpen} onOpenChange={setIsOrgAssignDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -1384,23 +1442,57 @@ export default function AllUsers() {
             </div>
             
             <div className="space-y-3">
-              <label className="text-sm font-medium">Role in Organization</label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="text-sm font-medium">Select Organization Role</label>
+              <div className="grid grid-cols-2 gap-2">
                 <div 
                   className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                    orgAssignment.role === 'member' 
+                    orgAssignment.role === 'user' 
                       ? 'border-green-500 bg-green-50 dark:bg-green-500/10' 
                       : 'border-border hover:border-muted-foreground'
                   }`}
-                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'member' })}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'user' })}
                 >
                   <div className="flex justify-center mb-1">
                     <UserCheck className={`h-6 w-6 ${
-                      orgAssignment.role === 'member' ? 'text-green-500' : 'text-muted-foreground'
+                      orgAssignment.role === 'user' ? 'text-green-500' : 'text-muted-foreground'
                     }`} />
                   </div>
-                  <p className="text-center text-sm font-medium">Member</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Basic user access</p>
+                  <p className="text-center text-sm font-medium">User</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Basic access to objectives</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'manager' 
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'manager' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <Users className={`h-6 w-6 ${
+                      orgAssignment.role === 'manager' ? 'text-purple-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Manager</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Manage team members</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'executive' 
+                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'executive' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <Crown className={`h-6 w-6 ${
+                      orgAssignment.role === 'executive' ? 'text-orange-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Executive</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Senior leadership access</p>
                 </div>
                 
                 <div 
@@ -1417,11 +1509,11 @@ export default function AllUsers() {
                     }`} />
                   </div>
                   <p className="text-center text-sm font-medium">Admin</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Manage users & teams</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Manage users & settings</p>
                 </div>
                 
                 <div 
-                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors col-span-2 ${
                     orgAssignment.role === 'owner' 
                       ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' 
                       : 'border-border hover:border-muted-foreground'
@@ -1434,7 +1526,7 @@ export default function AllUsers() {
                     }`} />
                   </div>
                   <p className="text-center text-sm font-medium">Owner</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Full organization control</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Full organizational control</p>
                 </div>
               </div>
             </div>
@@ -1891,17 +1983,44 @@ export default function AllUsers() {
             <div className="space-y-3">
               <label className="text-sm font-medium">Organization Role</label>
               <div className="space-y-2">
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
-                    id="role-member"
+                    id="role-user"
                     name="tenantRole"
-                    value="member"
-                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'member'}
-                    onChange={(e) => e.target.checked && handleUpdatePermissions('member')}
+                    value="user"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'user'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('user')}
                   />
-                  <label htmlFor="role-member" className="text-sm">
-                    <span className="font-medium">Member</span> - Can view and participate in OKRs
+                  <label htmlFor="role-user" className="text-sm">
+                    <span className="font-medium">User</span> - Basic access to objectives and teams
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-manager"
+                    name="tenantRole"
+                    value="manager"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'manager'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('manager')}
+                  />
+                  <label htmlFor="role-manager" className="text-sm">
+                    <span className="font-medium">Manager</span> - Can manage team members and objectives
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-executive"
+                    name="tenantRole"
+                    value="executive"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'executive'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('executive')}
+                  />
+                  <label htmlFor="role-executive" className="text-sm">
+                    <span className="font-medium">Executive</span> - Senior leadership with broad organizational access
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -2037,7 +2156,7 @@ export default function AllUsers() {
                 disabled={isUploading}
               />
               <p className="text-xs text-muted-foreground">
-                Required columns: email, firstName, lastName. Optional: username, department, title, role, password
+                Required columns: email, firstName, lastName. Optional: username, department, title, role, team, password. Teams will be created automatically if they don't exist.
               </p>
             </div>
 
