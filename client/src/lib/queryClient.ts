@@ -158,11 +158,11 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false, // Disable auto-refresh for faster performance
-      refetchOnWindowFocus: false, // Disable for lighter load
-      refetchOnMount: false, // Use cached data when available
-      refetchOnReconnect: true, // Only refetch on network reconnect
-      staleTime: 5 * 60 * 1000, // 5 minutes cache for speed
-      gcTime: 10 * 60 * 1000, // 10 minutes memory cache
+      refetchOnWindowFocus: true, // Enable refetch on window focus for fresh data
+      refetchOnMount: true, // Always refetch on mount to ensure fresh data
+      refetchOnReconnect: true, // Refetch on network reconnect
+      staleTime: 1 * 60 * 1000, // 1 minute cache - shorter for better responsiveness
+      gcTime: 5 * 60 * 1000, // 5 minutes memory cache
       retry: 1, // Reduce retries for faster failure detection
       retryDelay: 300, // Quick retry for speed
     },
