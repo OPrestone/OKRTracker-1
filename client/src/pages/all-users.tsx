@@ -399,7 +399,7 @@ export default function AllUsers() {
       if (uniqueTeams.length > 0) {
         try {
           // Create teams in bulk
-          const teamCreateRes = await apiRequest("POST", "/api/teams/bulk", {
+          const teamCreateRes = await apiRequest("POST", "/api/teams/batch", {
             teams: uniqueTeams.map(teamName => ({
               name: teamName,
               description: `Auto-created team from CSV upload`
