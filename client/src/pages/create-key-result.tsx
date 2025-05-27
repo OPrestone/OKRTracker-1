@@ -302,6 +302,7 @@ export default function CreateKeyResult() {
   };
 
   const handleFinish = () => {
+    console.log('Finish button clicked!');
     if (keyResultData.title.trim() || keyResultData.description.trim()) {
       // Save current key result first if there's data
       handleSaveKeyResult();
@@ -873,7 +874,11 @@ export default function CreateKeyResult() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
-                onClick={handleAddAnother}
+                onClick={() => {
+                  console.log('Button clicked directly!');
+                  alert('Button clicked!');
+                  handleAddAnother();
+                }}
                 disabled={isSubmitting}
                 variant="outline"
                 className="flex-1"
