@@ -533,18 +533,67 @@ export default function CreateKeyResult() {
                 onValueChange={(value) => setKeyResultData(prev => ({ ...prev, measureType: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue>
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4" />
-                      Numerical
-                    </div>
-                  </SelectValue>
+                  <SelectValue placeholder="Select measurement type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="numerical">
                     <div className="flex items-center gap-2">
                       <Hash className="h-4 w-4" />
-                      Numerical
+                      Number
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="percentage">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Percentage (%)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="currency">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Currency ($)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="ratio">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Ratio (e.g., 3:1)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="score">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4" />
+                      Score (1-10)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="time">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Time (hours/days)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="frequency">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4" />
+                      Frequency (per week/month)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="rate">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Rate (per unit)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="milestone">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Milestone completion
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="binary">
+                    <div className="flex items-center gap-2">
+                      <ToggleRight className="h-4 w-4" />
+                      Yes/No
                     </div>
                   </SelectItem>
                 </SelectContent>
