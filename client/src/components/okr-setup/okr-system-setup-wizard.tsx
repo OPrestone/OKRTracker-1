@@ -353,6 +353,7 @@ export default function OKRSystemSetupWizard() {
   const [csvImportedTeams, setCsvImportedTeams] = useState<string[]>([]);
   const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
   const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
+  const [showDefaultTeams, setShowDefaultTeams] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -2351,30 +2352,34 @@ export default function OKRSystemSetupWizard() {
                         
                         {/* Default Team Templates Section */}
                         <div className="mt-6 border-t pt-6">
-                          <h3 className="text-lg font-medium mb-4">Quick Start with Default Teams</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Select pre-configured team templates to quickly set up your organization structure. 
-                            These teams will be created automatically when you save your OKR system setup.
-                          </p>
-                          
-                          {/* <div className="flex items-center space-x-2 mb-6">
+                          <div className="flex items-center space-x-2 mb-4">
                             <Checkbox
                               id="useDefaultTeams"
-                              checked={form.getValues("teamConfiguration.useDefaultTeams")}
-                              onCheckedChange={(checked) => 
-                                form.setValue("teamConfiguration.useDefaultTeams", checked as boolean)
-                              }
+                              checked={showDefaultTeams}
+                              onCheckedChange={(checked) => {
+                                setShowDefaultTeams(checked as boolean);
+                                if (!checked) {
+                                  setSelectedDefaultTeams([]);
+                                  form.setValue("teamConfiguration.defaultTeams", []);
+                                }
+                              }}
                             />
                             <label 
                               htmlFor="useDefaultTeams"
-                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              className="text-lg font-medium cursor-pointer"
                             >
-                              Use default team templates
+                              Quick Start with Default Teams
                             </label>
-                          </div> */}
+                          </div>
                           
-                          {/* {form.getValues("teamConfiguration.useDefaultTeams") && ( */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                          {showDefaultTeams && (
+                            <>
+                              <p className="text-sm text-gray-600 mb-4">
+                                Select pre-configured team templates to quickly set up your organization structure. 
+                                These teams will be created automatically when you save your OKR system setup.
+                              </p>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                               {defaultTeamTemplates.map((template) => (
                                 <div 
                                   key={template.id}
@@ -2417,8 +2422,9 @@ export default function OKRSystemSetupWizard() {
                                   </div>
                                 </div>
                               ))}
-                            </div>
-                          {/* )} */}
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* CSV User Upload Section */}
