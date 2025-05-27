@@ -1547,10 +1547,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate a username if not provided
         const generatedUsername = username || email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // Hash the password (either the provided one or a generated one)
+        // Hash the password (use email as default password for CSV uploads, or provided password)
         const { hashPassword } = await import('./auth');
-        const passwordToUse = req.body.password || tempPassword;
+        const passwordToUse = req.body.password || email.toLowerCase(); // Default to email for CSV imports
         const hashedPassword = await hashPassword(passwordToUse);
+        
+        console.log(`Setting password for ${email}: using ${req.body.password ? 'provided' : 'email as default'} password`);
         
         // Prepare user data
         const userData = {
