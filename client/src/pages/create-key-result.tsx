@@ -16,6 +16,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Target,
   TrendingUp,
   Loader2,
@@ -94,6 +100,65 @@ export default function CreateKeyResult() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedKeyResults, setSavedKeyResults] = useState<KeyResult[]>([]);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
+
+  // Generate contextual examples based on objective
+  const getExamplesForObjective = () => {
+    const objectiveTitle = objective?.title?.toLowerCase() || '';
+    
+    // Revenue/Financial objectives
+    if (objectiveTitle.includes('revenue') || objectiveTitle.includes('sales') || objectiveTitle.includes('profit')) {
+      return [
+        { name: "Increase monthly recurring revenue from $50K to $75K", type: "Revenue Growth" },
+        { name: "Achieve 85% gross profit margin", type: "Profitability" },
+        { name: "Generate $200K in new customer revenue", type: "New Business" },
+        { name: "Reduce customer acquisition cost from $150 to $100", type: "Cost Efficiency" }
+      ];
+    }
+    
+    // Customer/Growth objectives
+    if (objectiveTitle.includes('customer') || objectiveTitle.includes('user') || objectiveTitle.includes('growth')) {
+      return [
+        { name: "Increase monthly active users from 10K to 15K", type: "User Growth" },
+        { name: "Achieve 95% customer satisfaction score", type: "Customer Experience" },
+        { name: "Acquire 500 new paying customers", type: "Customer Acquisition" },
+        { name: "Reduce customer churn rate from 5% to 2%", type: "Retention" }
+      ];
+    }
+    
+    // Product/Quality objectives
+    if (objectiveTitle.includes('product') || objectiveTitle.includes('quality') || objectiveTitle.includes('feature')) {
+      return [
+        { name: "Deploy 3 major product features", type: "Product Development" },
+        { name: "Achieve 99.9% system uptime", type: "Reliability" },
+        { name: "Reduce average page load time to under 2 seconds", type: "Performance" },
+        { name: "Complete 100% of security audit recommendations", type: "Security" }
+      ];
+    }
+    
+    // Team/Operations objectives
+    if (objectiveTitle.includes('team') || objectiveTitle.includes('operation') || objectiveTitle.includes('efficiency')) {
+      return [
+        { name: "Hire and onboard 5 senior engineers", type: "Team Building" },
+        { name: "Achieve 90% employee satisfaction score", type: "Employee Experience" },
+        { name: "Reduce project delivery time by 25%", type: "Efficiency" },
+        { name: "Complete training for 100% of team members", type: "Development" }
+      ];
+    }
+    
+    // Default examples for any objective
+    return [
+      { name: "Increase key metric from X to Y", type: "Growth" },
+      { name: "Achieve Z% completion rate", type: "Performance" },
+      { name: "Reduce process time by X%", type: "Efficiency" },
+      { name: "Launch N new initiatives", type: "Innovation" }
+    ];
+  };
+
+  const handleUseExample = (exampleName: string) => {
+    setKeyResultData(prev => ({ ...prev, title: exampleName }));
+    setShowExamples(false);
+  };
 
   // Fetch objective details
   const { data: objective, isLoading } = useQuery({
@@ -345,7 +410,7 @@ export default function CreateKeyResult() {
               {errors.title && (
                 <p className="text-sm text-red-600">{errors.title}</p>
               )}
-              <p className="text-sm text-blue-600">Need inspiration? Check <span className="underline cursor-pointer">examples</span>.</p>
+              <p className="text-sm text-blue-600">Need inspiration? Check <span className="underline cursor-pointer" onClick={() => setShowExamples(true)}>examples</span>.</p>
             </div>
 
             {/* Description */}
@@ -704,6 +769,44 @@ export default function CreateKeyResult() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Examples Dialog */}
+      <Dialog open={showExamples} onOpenChange={setShowExamples}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Key Result Examples</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Here are some examples relevant to your objective: <span className="font-medium">"{objective?.title}"</span>
+            </p>
+            <div className="grid gap-3">
+              {getExamplesForObjective().map((example, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleUseExample(example.name)}
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">{example.name}</h4>
+                    <Badge variant="secondary" className="mt-1 text-xs">
+                      {example.type}
+                    </Badge>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    Use This Example
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="pt-4 border-t">
+              <p className="text-xs text-gray-500">
+                Click any example to use it as your key result name. You can always modify it afterwards.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
