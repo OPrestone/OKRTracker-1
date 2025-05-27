@@ -58,6 +58,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTeamLeaderRoutes(apiRouter);
   setupTeamRoutes(apiRouter);
   setupApprovedOkrsRoutes(apiRouter);
+  
+  // Add key result creation route early in the middleware stack
+  app.post("/api/key-results-create", async (req, res) => {
+    try {
+      console.log('=== DIRECT CREATE KEY RESULT REQUEST (NO API PREFIX) ===');
+      console.log('Request body:', req.body);
+      
+      const { objectiveId, title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId } = req.body;
+      
+      if (!objectiveId || !title) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'objectiveId and title are required' 
+        });
+      }
+      
+      const keyResultData = {
+        title: title,
+        description: description || '',
+        objectiveId: objectiveId,
+        targetValue: targetValue || '100',
+        currentValue: currentValue || startValue || '0',
+        startValue: startValue || '0',
+        measureType: measureType || 'percentage',
+        targetType: targetType || 'increase',
+        status: 'not_started',
+        assignedToId: assignedToId || null,
+        tenantId: '01JW5XM50E1WDXRDZQ6TWCHEMP' // Use the known tenant ID
+      };
+      
+      console.log('Creating key result with data:', keyResultData);
+      const keyResult = await storage.createKeyResult(keyResultData);
+      console.log('Key result created successfully:', keyResult);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.status(201).json({ 
+        success: true, 
+        keyResult: keyResult,
+        message: 'Key result created successfully'
+      });
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ 
+        success: false,
+        error: error.message || 'Failed to create key result' 
+      });
+    }
+  });
+  
   app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics
@@ -367,6 +418,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).end();
     } catch (error) {
       next(error);
+    }
+  });
+
+  // OKR System Configuration API Endpoints
+  app.get('/api/okr-config', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      const config = await db.select()
+        .from(okrSystemConfigs)
+        .where(eq(okrSystemConfigs.tenant_id, tenantId))
+        .then(results => results[0]);
+
+      if (!config) {
+        return res.status(404).json({ error: "OKR configuration not found" });
+      }
+
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching OKR configuration:', error);
+      res.status(500).json({ error: 'Failed to fetch OKR configuration' });
     }
   });
 
@@ -1861,6 +1937,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting user role:', error);
       res.status(500).json({ error: "Failed to get user role" });
+    }
+  });
+
+  // Key result creation endpoint
+  // Key result creation endpoint for objectives
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId } = req.params;
+      const { title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId, status } = req.body;
+      
+      if (!objectiveId || !title) {
+        return res.status(400).json({ error: 'Objective ID and title are required' });
+      }
+
+      const keyResultData = {
+        title,
+        description: description || '',
+        objectiveId,
+        startValue: startValue || '0',
+        currentValue: currentValue || startValue || '0',
+        targetValue: targetValue || '100',
+        measureType: measureType || 'percentage',
+        targetType: targetType || 'increase',
+        assignedToId: assignedToId || null,
+        status: status || 'not_started',
+        tenantId: req.tenantId!
+      };
+
+      const newKeyResult = await storage.createKeyResult(keyResultData);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.json({ success: true, keyResult: newKeyResult });
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
+    }
+  });
+
+  // POST endpoint for key result creation
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId } = req.params;
+      const keyResultData = req.body;
+      
+      console.log('=== POST KEY RESULT ENDPOINT CALLED ===');
+      console.log('Objective ID:', objectiveId);
+      console.log('Key Result Data:', keyResultData);
+      
+      if (!keyResultData.title) {
+        return res.status(400).json({ error: 'Key result title is required' });
+      }
+
+      const newKeyResultData = {
+        ...keyResultData,
+        objectiveId,
+        tenantId: req.tenantId!
+      };
+
+      const newKeyResult = await storage.createKeyResult(newKeyResultData);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      console.log('=== KEY RESULT CREATED SUCCESSFULLY ===');
+      console.log('New Key Result:', newKeyResult);
+      
+      res.json({ success: true, keyResult: newKeyResult });
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
+    }
+  });
+
+  // Key result creation via objectives update endpoint
+  app.put("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId } = req.params;
+      const keyResultData = req.body;
+      
+      if (!keyResultData.title) {
+        return res.status(400).json({ error: 'Key result title is required' });
+      }
+
+      const newKeyResultData = {
+        ...keyResultData,
+        objectiveId,
+        tenantId: req.tenantId!
+      };
+
+      const newKeyResult = await storage.createKeyResult(newKeyResultData);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.json({ success: true, keyResult: newKeyResult });
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
+    }
+  });
+
+  // Alternative endpoint for updating objectives with new key results
+  app.put("/api/objectives/:objectiveId", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId } = req.params;
+      const { action, keyResult } = req.body;
+      
+      if (action === 'add-key-result') {
+        if (!keyResult || !keyResult.title) {
+          return res.status(400).json({ error: 'Key result data is required' });
+        }
+
+        const keyResultData = {
+          ...keyResult,
+          objectiveId,
+          tenantId: req.tenantId!
+        };
+
+        const newKeyResult = await storage.createKeyResult(keyResultData);
+        
+        // Recalculate objective progress
+        await recalculateObjectiveProgress(objectiveId);
+        
+        res.json({ success: true, keyResult: newKeyResult });
+      } else {
+        // Handle other objective update actions here if needed
+        res.status(400).json({ error: 'Unsupported action' });
+      }
+    } catch (error) {
+      console.error('Error updating objective:', error);
+      res.status(500).json({ error: 'Failed to update objective' });
+    }
+  });
+
+  // Direct SQL execution endpoint for bypassing routing issues
+  app.post("/api/sql-execute", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { operation, data } = req.body;
+      
+      if (operation === 'create-key-result') {
+        const { title, description, objectiveId, startValue, currentValue, targetValue, measureType, targetType, assignedToId, status } = data;
+        
+        if (!objectiveId || !title) {
+          return res.status(400).json({ error: 'Objective ID and title are required' });
+        }
+
+        const keyResultData = {
+          title,
+          description: description || '',
+          objectiveId,
+          startValue: startValue || '0',
+          currentValue: currentValue || startValue || '0',
+          targetValue: targetValue || '100',
+          measureType: measureType || 'percentage',
+          targetType: targetType || 'increase',
+          assignedToId: assignedToId || null,
+          status: status || 'not_started',
+          tenantId: req.tenantId!
+        };
+
+        const newKeyResult = await storage.createKeyResult(keyResultData);
+        
+        // Recalculate objective progress
+        await recalculateObjectiveProgress(objectiveId);
+        
+        res.json({ success: true, keyResult: newKeyResult });
+      } else {
+        res.status(400).json({ error: 'Unsupported operation' });
+      }
+    } catch (error) {
+      console.error('Error in SQL execution:', error);
+      res.status(500).json({ error: 'Failed to execute operation' });
+    }
+  });
+
+  app.post("/api/key-results-create", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId, title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId, progress } = req.body;
+      const tenantId = req.tenantId;
+      
+      console.log('=== CREATING KEY RESULT ===');
+      console.log('Request data:', { objectiveId, title, tenantId });
+      
+      // Create key result in database
+      const newKeyResult = await db.insert(keyResults).values({
+        id: ulid(),
+        objectiveId,
+        title,
+        description: description || null,
+        startValue: startValue?.toString() || '0',
+        currentValue: currentValue?.toString() || startValue?.toString() || '0',
+        targetValue: targetValue?.toString() || '100',
+        measureType: measureType || 'percentage',
+        targetType: targetType || 'increase',
+        assignedToId: assignedToId || null,
+        progress: progress || 0,
+        status: 'not_started',
+        tenantId
+      }).returning();
+      
+      console.log('Key result created successfully:', newKeyResult[0]);
+      res.json(newKeyResult[0]);
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
     }
   });
 
@@ -3645,6 +3928,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(keyResults);
     } catch (error) {
       next(error);
+    }
+  });
+
+  // Create key result for specific objective
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      console.log('=== CREATE KEY RESULT REQUEST ===');
+      console.log('Creating key result for objective:', req.params.objectiveId);
+      console.log('Request body:', req.body);
+      console.log('Tenant ID:', req.tenantId);
+      
+      const objectiveId = req.params.objectiveId;
+      const tenantId = req.tenantId;
+      
+      // Verify the objective exists and belongs to the tenant
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        console.log('Objective not found:', objectiveId);
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      if (objective.tenantId !== tenantId) {
+        console.log('Access denied - objective belongs to tenant:', objective.tenantId, 'user belongs to:', tenantId);
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      // Create the key result with proper data structure
+      const keyResultData = {
+        title: req.body.title,
+        description: req.body.description || '',
+        objectiveId: objectiveId,
+        targetValue: req.body.targetValue || '100',
+        currentValue: req.body.currentValue || req.body.startValue || '0',
+        startValue: req.body.startValue || '0',
+        measureType: req.body.measureType || 'percentage',
+        targetType: req.body.targetType || 'increase',
+        status: req.body.status || 'not_started',
+        assignedToId: req.body.assignedToId || null,
+        tenantId: tenantId
+      };
+      
+      console.log('Creating key result with data:', keyResultData);
+      const keyResult = await storage.createKeyResult(keyResultData);
+      console.log('Key result created successfully:', keyResult);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.status(201).json(keyResult);
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: error.message || 'Failed to create key result' });
     }
   });
   

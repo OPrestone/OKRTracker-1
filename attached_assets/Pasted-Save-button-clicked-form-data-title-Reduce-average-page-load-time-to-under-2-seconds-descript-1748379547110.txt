@@ -1,0 +1,28 @@
+Save button clicked, form data: {title: 'Reduce average page load time to under 2 seconds', description: 'ihg iugiuuhui iuh ui i', assignedToId: '01JW8NKNQFHVJKC7JS8PYYQBWT', measureType: 'percentage', targetType: 'increase', …}assignedToId: "01JW8NKNQFHVJKC7JS8PYYQBWT"contributors: ['01JW6EPJ9WKCQCC61NR841XAWM']currentValue: 0description: "ihg iugiuuhui iuh ui i"dueDate: "2025-06-06"measureType: "percentage"startDate: "2025-05-22"startValue: 67targetType: "increase"targetValue: 100title: "Reduce average page load time to under 2 seconds"type: "key-result"[[Prototype]]: Object
+create-key-result.tsx:300 Objective ID: 01JW9KW9XJAPXPJAC7GKBVZ1CN
+create-key-result.tsx:307 Form validation passed, submitting...
+create-key-result.tsx:203 === CREATING KEY RESULT DIRECTLY ===
+create-key-result.tsx:204 Data being sent: {title: 'Reduce average page load time to under 2 seconds', description: 'ihg iugiuuhui iuh ui i', assignedToId: '01JW8NKNQFHVJKC7JS8PYYQBWT', measureType: 'percentage', targetType: 'increase', …}assignedToId: "01JW8NKNQFHVJKC7JS8PYYQBWT"contributors: ['01JW6EPJ9WKCQCC61NR841XAWM']currentValue: 0description: "ihg iugiuuhui iuh ui i"dueDate: "2025-06-06"measureType: "percentage"startDate: "2025-05-22"startValue: 67targetType: "increase"targetValue: 100title: "Reduce average page load time to under 2 seconds"type: "key-result"[[Prototype]]: Object
+create-key-result.tsx:203 === CREATING KEY RESULT DIRECTLY ===
+create-key-result.tsx:204 Data being sent: {title: 'Reduce average page load time to under 2 seconds', description: 'ihg iugiuuhui iuh ui i', assignedToId: '01JW8NKNQFHVJKC7JS8PYYQBWT', measureType: 'percentage', targetType: 'increase', …}assignedToId: "01JW8NKNQFHVJKC7JS8PYYQBWT"contributors: ['01JW6EPJ9WKCQCC61NR841XAWM']currentValue: 0description: "ihg iugiuuhui iuh ui i"dueDate: "2025-06-06"measureType: "percentage"startDate: "2025-05-22"startValue: 67targetType: "increase"targetValue: 100title: "Reduce average page load time to under 2 seconds"type: "key-result"[[Prototype]]: Object
+create-key-result.tsx:313 Error creating key result: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+handleSaveKeyResult @ create-key-result.tsx:313
+await in handleSaveKeyResult
+handleAddAnother @ create-key-result.tsx:321
+onClick @ create-key-result.tsx:900
+callCallback2 @ chunk-RPCDYKBN.js?v=e46b1212:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e46b1212:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e46b1212:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e46b1212:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e46b1212:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e46b1212:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e46b1212:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e46b1212:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e46b1212:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e46b1212:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e46b1212:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e46b1212:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e46b1212:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e46b1212:5449Understand this error
+use-auth.tsx:111 

@@ -383,13 +383,6 @@ export default function TenantOnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantCreated, setTenantCreated] = useState(false);
   const [animateProgress, setAnimateProgress] = useState(0);
-  const [addedTeams, setAddedTeams] = useState<Array<{
-    name: string;
-    description: string;
-    color: string;
-    icon: string;
-    members: any[];
-  }>>([]);
 
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -440,41 +433,6 @@ export default function TenantOnboardingWizard() {
   const selectedPlan = form.watch("plan.plan");
   const agreeToTerms = form.watch("plan.agreeToTerms");
 
-  // Create default teams automatically
-  useEffect(() => {
-    // We'll automatically create default teams when setting up the organization
-    if (addedTeams.length === 0) {
-      // Create Marketing Team (blue, megaphone)
-      const marketingTeam = {
-        name: "Marketing Team",
-        description: "Team responsible for brand, communications and marketing campaigns",
-        color: "#3B82F6", // Blue
-        icon: "megaphone",
-        members: []
-      };
-
-      // Create Sales Team (green, chart)
-      const salesTeam = {
-        name: "Sales Team",
-        description: "Team responsible for sales and revenue growth",
-        color: "#10B981", // Green 
-        icon: "briefcase",
-        members: []
-      };
-
-      // Create Engineering Team (purple, code)
-      const engineeringTeam = {
-        name: "Engineering Team",
-        description: "Team responsible for product development and technical operations",
-        color: "#8B5CF6", // Purple
-        icon: "code",
-        members: []
-      };
-
-      setAddedTeams([marketingTeam, salesTeam, engineeringTeam]);
-    }
-  }, [addedTeams.length]);
-
   // Mutation for creating a new tenant
   const createTenantMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
@@ -482,39 +440,6 @@ export default function TenantOnboardingWizard() {
       setIsSubmitting(true);
 
       try {
-        // Use teams from state or default if none added
-        const teams = addedTeams.length > 0 ? addedTeams.map(team => ({
-          name: team.name,
-          description: team.description,
-          icon: team.icon,
-          color: team.color,
-          leaderId: null // Explicitly set team leader as null initially
-        })) : [
-          {
-            name: "Marketing Team",
-            description: "Team responsible for brand, communications and marketing campaigns",
-            color: "#3B82F6", // Blue
-            icon: "megaphone",
-            leaderId: null // Explicitly set team leader as null initially
-          },
-          {
-            name: "Sales Team",
-            description: "Team responsible for sales and revenue growth", 
-            color: "#10B981", // Green
-            icon: "briefcase",
-            leaderId: null // Explicitly set team leader as null initially
-          },
-          {
-            name: "Engineering Team",
-            description: "Team responsible for product development and technical operations",
-            color: "#8B5CF6", // Purple
-            icon: "code",
-            leaderId: null // Explicitly set team leader as null initially
-          }
-        ];
-
-        console.log("Teams to be created:", teams);
-
         // Prepare the request data
         const requestData = {
           name: values.orgDetails.name,
@@ -523,7 +448,6 @@ export default function TenantOnboardingWizard() {
           industry: values.orgDetails.industry,
           planType: values.plan.plan,
           setup: values.setup,
-          teams: teams,
           role: "owner" // Set creator's role to owner
         };
 

@@ -1263,6 +1263,7 @@ export const okrSystemConfigs = pgTableWithUlid("okr_system_configs", {
   company_mission: text("company_mission"),
   company_vision: text("company_vision"),
   company_values: text("company_values"),
+  strategic_directions: text("strategic_directions"),
   enable_notifications: boolean("enable_notifications").default(true).notNull(),
   enable_quarterly_cadence: boolean("enable_quarterly_cadence").default(true).notNull(),
   enable_annual_cadence: boolean("enable_annual_cadence").default(true).notNull(),

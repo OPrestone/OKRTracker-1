@@ -5,7 +5,7 @@ import { z } from "zod";
 import { pgTableWithUlid } from "./utils/schema";
 
 // ENUMS
-export const userRoleEnum = pgEnum("user_role", ["owner", "admin", "member"]);
+export const userRoleEnum = pgEnum("user_role", ["user", "manager", "executive", "admin", "owner"]);
 export const objectiveStatusEnum = pgEnum("objective_status", ["draft", "active", "completed", "archived"]);
 export const objectiveStatusReasonEnum = pgEnum("objective_status_reason", ["success", "failed", "changed", "other"]);
 export const keyResultTypeEnum = pgEnum("key_result_type", ["numeric", "percentage", "boolean", "currency", "milestone"]);
@@ -45,7 +45,7 @@ export const users = pgTableWithUlid("users", {
 export const usersToTenants = pgTable("users_to_tenants", {
   userId: text("user_id").references(() => users.id).notNull(),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  role: userRoleEnum("role").default("member").notNull(),
+  role: userRoleEnum("role").default("user").notNull(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.userId, t.tenantId] })
 }));

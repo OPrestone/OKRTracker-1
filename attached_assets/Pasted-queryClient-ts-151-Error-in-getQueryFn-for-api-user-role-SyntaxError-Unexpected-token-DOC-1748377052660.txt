@@ -1,0 +1,173 @@
+queryClient.ts:151 Error in getQueryFn for /api/user/role: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/user/is-team-leader: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/user/role: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/user/is-team-leader: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+chunk-LY4YDYTP.js?v=e46b1212:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-LY4YDYTP.js?v=e46b1212:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19416
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:18627Understand this warning
+create-key-result.tsx:871 Button clicked directly!
+create-key-result.tsx:293 Add Another button clicked!
+create-key-result.tsx:272 Save button clicked, form data: {title: 'Reduce average page load time to under 2 seconds', description: 'iuuiyy iu u yui iu iu', assignedToId: '01JW8SV361NG59MM9CSJQNJ41X', measureType: 'percentage', targetType: 'increase', …}
+create-key-result.tsx:273 Objective ID: 01JW9KW9XJAPXPJAC7GKBVZ1CN
+create-key-result.tsx:280 Form validation passed, submitting...
+create-key-result.tsx:203 === MAKING API REQUEST ===
+create-key-result.tsx:204 URL: /api/objectives/01JW9KW9XJAPXPJAC7GKBVZ1CN/key-results
+create-key-result.tsx:205 Data being sent: {title: 'Reduce average page load time to under 2 seconds', description: 'iuuiyy iu u yui iu iu', assignedToId: '01JW8SV361NG59MM9CSJQNJ41X', measureType: 'percentage', targetType: 'increase', …}
+create-key-result.tsx:203 === MAKING API REQUEST ===
+create-key-result.tsx:204 URL: /api/objectives/01JW9KW9XJAPXPJAC7GKBVZ1CN/key-results
+create-key-result.tsx:205 Data being sent: {title: 'Reduce average page load time to under 2 seconds', description: 'iuuiyy iu u yui iu iu', assignedToId: '01JW8SV361NG59MM9CSJQNJ41X', measureType: 'percentage', targetType: 'increase', …}
+create-key-result.tsx:286 Error creating key result: TypeError: Failed to execute 'fetch' on 'Window': '[object Object]' is not a valid HTTP method.
+    at apiRequest (queryClient.ts:53:21)
+    at Object.mutationFn (create-key-result.tsx:207:14)
+    at Object.fn (@tanstack_react-query.js?v=e46b1212:1197:29)
+    at run (@tanstack_react-query.js?v=e46b1212:494:49)
+    at @tanstack_react-query.js?v=e46b1212:519:11
+handleSaveKeyResult @ create-key-result.tsx:286
+await in handleSaveKeyResult
+handleAddAnother @ create-key-result.tsx:294
+onClick @ create-key-result.tsx:873
+callCallback2 @ chunk-RPCDYKBN.js?v=e46b1212:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e46b1212:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e46b1212:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e46b1212:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e46b1212:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e46b1212:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e46b1212:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e46b1212:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e46b1212:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e46b1212:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e46b1212:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e46b1212:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e46b1212:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e46b1212:5449Understand this error
+use-auth.tsx:111 

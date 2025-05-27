@@ -286,11 +286,7 @@ const formSchema = z.object({
     companyMission: z.string().min(1, "Company mission is required"),
     companyVision: z.string().min(1, "Company vision is required"),
     companyValues: z.string().min(1, "Company values are required"),
-    strategicDirections: z.array(z.object({
-      title: z.string().min(1, "Strategic direction title is required"),
-      description: z.string().min(1, "Strategic direction description is required"),
-      priority: z.number().min(1).max(10).default(1)
-    })).default([]),
+    strategicDirections: z.string().optional(),
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
     enableNotifications: z.boolean().default(true),
   }),
@@ -316,12 +312,7 @@ const formSchema = z.object({
     csvUsers: z.array(z.any()).default([]),
     useDefaultTeams: z.boolean().default(true),
   }),
-  integrations: z.object({
-    enableSlackIntegration: z.boolean().default(false),
-    enableEmailNotifications: z.boolean().default(true),
-    enableCalendarSync: z.boolean().default(false),
-    enableAnalyticsReporting: z.boolean().default(true),
-  }),
+
 });
 
 // Type for the form values
@@ -332,7 +323,6 @@ const steps = [
   { id: "timeframes", label: "Timeframes", icon: Calendar },
   { id: "objectives", label: "Objectives", icon: Target },
   { id: "teams", label: "Teams", icon: Users2 },
-  { id: "integrations", label: "Integrations", icon: Layers },
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
@@ -970,7 +960,7 @@ export default function OKRSystemSetupWizard() {
         companyMission: "",
         companyVision: "",
         companyValues: "",
-        strategicDirections: [],
+        strategicDirections: "",
         trackingFrequency: "weekly",
         enableNotifications: true,
       },
@@ -996,12 +986,7 @@ export default function OKRSystemSetupWizard() {
         csvUsers: [] as any[],
         useDefaultTeams: true, // Check this by default
       },
-      integrations: {
-        enableSlackIntegration: false,
-        enableEmailNotifications: true,
-        enableCalendarSync: false,
-        enableAnalyticsReporting: true,
-      },
+
     },
   });
   
@@ -1974,77 +1959,21 @@ export default function OKRSystemSetupWizard() {
                         </div>
                         
                         {/* Strategic Directions Section */}
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Strategic Directions</label>
-                              <p className="text-xs text-gray-500">Define key strategic priorities that will guide your organization's OKRs</p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                form.setValue("generalSettings.strategicDirections", [
-                                  ...currentDirections,
-                                  { title: "", description: "", priority: currentDirections.length + 1 }
-                                ]);
-                              }}
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add Direction
-                            </Button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            {(form.watch("generalSettings.strategicDirections") || []).map((direction: any, index: number) => (
-                              <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                                <div className="flex items-start justify-between mb-3">
-                                  <h4 className="text-sm font-medium text-gray-700">Strategic Direction {index + 1}</h4>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                      const updatedDirections = currentDirections.filter((_: any, i: number) => i !== index);
-                                      form.setValue("generalSettings.strategicDirections", updatedDirections);
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-xs font-medium mb-1">Strategic Direction</label>
-                                  <Textarea
-                                    placeholder="Describe this strategic direction and its importance..."
-                                    className="resize-none h-20"
-                                    value={direction.description || ""}
-                                    onChange={(e) => {
-                                      const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                      currentDirections[index] = { 
-                                        ...currentDirections[index], 
-                                        description: e.target.value,
-                                        title: e.target.value.substring(0, 50) || `Direction ${index + 1}`, // Auto-generate title from description
-                                        priority: index + 1 // Auto-assign priority based on order
-                                      };
-                                      form.setValue("generalSettings.strategicDirections", currentDirections);
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                            
-                            {(!form.watch("generalSettings.strategicDirections") || form.watch("generalSettings.strategicDirections")?.length === 0) && (
-                              <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                                <Target className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                                <p className="text-sm">No strategic directions defined yet</p>
-                                <p className="text-xs">Click "Add Direction" to create your first strategic priority</p>
-                              </div>
-                            )}
-                          </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Strategic Directions</label>
+                          <Textarea
+                            placeholder="Define key strategic priorities that will guide your organization's OKRs..."
+                            className="resize-none h-20"
+                            defaultValue={form.getValues("generalSettings.strategicDirections")}
+                            onChange={(e) => {
+                              form.setValue("generalSettings.strategicDirections", e.target.value);
+                            }}
+                          />
+                          {form.formState.errors.generalSettings?.strategicDirections && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {form.formState.errors.generalSettings.strategicDirections.message}
+                            </p>
+                          )}
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2664,88 +2593,7 @@ david.brown@company.com,David Brown,owner,Finance,Finance Team`;
               </TabsContent>
               
               {/* Integrations */}
-              <TabsContent value="integrations">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-semibold flex items-center">
-                        <Layers className="mr-2 h-5 w-5 text-primary" />
-                        Integrations & Notifications
-                      </h2>
-                      <p className="text-gray-600 mb-4">
-                        Configure how your OKR system connects with other tools and how users receive updates.
-                      </p>
-                      
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableSlackIntegration"
-                            checked={form.getValues("integrations.enableSlackIntegration")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableSlackIntegration", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableSlackIntegration"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Slack Integration
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableEmailNotifications"
-                            checked={form.getValues("integrations.enableEmailNotifications")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableEmailNotifications", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableEmailNotifications"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Email Notifications
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableCalendarSync"
-                            checked={form.getValues("integrations.enableCalendarSync")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableCalendarSync", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableCalendarSync"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Calendar Sync (Check-ins & Reviews)
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="enableAnalyticsReporting"
-                            checked={form.getValues("integrations.enableAnalyticsReporting")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("integrations.enableAnalyticsReporting", checked as boolean)
-                            }
-                          />
-                          <label 
-                            htmlFor="enableAnalyticsReporting"
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            Enable Analytics & Reporting Dashboard
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
+
               {/* Review */}
               <TabsContent value="review">
                 <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100">
