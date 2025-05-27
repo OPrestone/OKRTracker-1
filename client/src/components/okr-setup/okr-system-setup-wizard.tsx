@@ -349,6 +349,55 @@ export default function OKRSystemSetupWizard() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
 
+  // Auto-save timeout ref for Strategic Directions
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced auto-save function for Strategic Directions
+  const handleStrategicDirectionsAutoSave = async (value: string) => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout to save after 2 seconds of no typing
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        if (!tenantId) return;
+
+        // Update or create the OKR config with the new strategic directions
+        const response = await fetch('/api/okr-config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant-ID': tenantId
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            strategic_directions: value,
+            tenant_id: tenantId
+          }),
+        });
+
+        if (response.ok) {
+          // Invalidate the config query to refresh displays
+          queryClient.invalidateQueries({ queryKey: ['okr-config'] });
+          console.log('Strategic directions auto-saved successfully');
+        }
+      } catch (error) {
+        console.error('Error auto-saving strategic directions:', error);
+      }
+    }, 2000);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Fetch existing teams to preselect corresponding default templates
   const { data: existingTeams = [] } = useQuery({
     queryKey: ['/api/teams', tenantId],
@@ -2049,7 +2098,10 @@ export default function OKRSystemSetupWizard() {
                             className="resize-none h-20"
                             defaultValue={form.getValues("generalSettings.strategicDirections")}
                             onChange={(e) => {
-                              form.setValue("generalSettings.strategicDirections", e.target.value);
+                              const value = e.target.value;
+                              form.setValue("generalSettings.strategicDirections", value);
+                              // Auto-save with debounce
+                              handleStrategicDirectionsAutoSave(value);
                             }}
                           />
                           {form.formState.errors.generalSettings?.strategicDirections && (
