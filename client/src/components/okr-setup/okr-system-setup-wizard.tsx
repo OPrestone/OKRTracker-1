@@ -2143,51 +2143,7 @@ export default function OKRSystemSetupWizard() {
                           <p className="text-xs text-gray-500 mt-1">This will be your main planning cycle length</p>
                         </div>
                         
-                        <div>
-                          <label className="block text-sm font-medium mb-3">Additional Time Cadences</label>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="enableQuarterlyCadence"
-                                checked={form.getValues("timeframes.enableQuarterlyCadence")}
-                                onCheckedChange={(checked) => 
-                                  form.setValue("timeframes.enableQuarterlyCadence", checked as boolean)
-                                }
-                              />
-                              <label 
-                                htmlFor="enableQuarterlyCadence"
-                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Enable Quarterly OKRs
-                              </label>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="enableAnnualCadence"
-                                checked={form.getValues("timeframes.enableAnnualCadence")}
-                                onCheckedChange={(checked) => 
-                                  form.setValue("timeframes.enableAnnualCadence", checked as boolean)
-                                }
-                              />
-                              <label 
-                                htmlFor="enableAnnualCadence"
-                                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Enable Annual OKRs
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Custom Cadence (Optional)</label>
-                          <Input
-                            placeholder="e.g., Sprint-based (2 weeks)"
-                            {...form.register("timeframes.customCadence")}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">If your organization uses a unique timeframe for planning</p>
-                        </div>
+
                         
                         <div>
                           <label className="block text-sm font-medium mb-1">OKR Year Start Month</label>
@@ -2216,24 +2172,16 @@ export default function OKRSystemSetupWizard() {
                           <p className="text-xs text-gray-500 mt-1">When your OKR year begins</p>
                         </div>
 
-                        <div className="pt-6 border-t mt-6">
-                          <h3 className="text-lg font-medium mb-4">Create Your OKR Timeframes</h3>
-                          <p className="text-sm text-gray-600 mb-4">
-                            Set up specific timeframes for your OKR cycles. These will be used when creating objectives.
-                          </p>
-                          
-                          {tenantId && (
+                        {tenantId && (
+                          <div className="pt-6 border-t mt-6">
                             <TimeframeSetupSimplified
                               tenantId={tenantId}
                               primaryCadence={form.watch("timeframes.primaryCadence")}
                               startMonth={form.watch("timeframes.startMonth")}
                               onTimeframesSaved={goToNextStep}
                             />
-                          )}
-                          <p className="text-xs text-gray-500 mt-4">
-                            Tip: Creating timeframes now will make it easier for your team to align objectives to specific time periods.
-                          </p>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
