@@ -5,6 +5,7 @@ import { RecognitionWall } from "@/components/feedback/recognition-wall";
 import { BadgeAwardModal } from "@/components/feedback/badge-award-modal";
 import { UserBadgeDisplay } from "@/components/feedback/user-badge";
 import { FeedbackCard } from "@/components/feedback/feedback-card";
+import { FeedbackForm } from "@/components/feedback/feedback-form";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Card,
@@ -170,6 +171,10 @@ export default function FeedbackWall() {
               <Trophy className="mr-2 h-4 w-4" />
               Recognition Wall
             </TabsTrigger>
+            <TabsTrigger value="give-feedback">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Give Feedback
+            </TabsTrigger>
             <TabsTrigger value="badges">
               <Medal className="mr-2 h-4 w-4" />
               Recent Badges
@@ -184,6 +189,10 @@ export default function FeedbackWall() {
 
           <TabsContent value="recognition-wall" className="space-y-4">
             <RecognitionWall />
+          </TabsContent>
+
+          <TabsContent value="give-feedback" className="space-y-4">
+            <FeedbackForm />
           </TabsContent>
 
           <TabsContent value="badges" className="space-y-4">
