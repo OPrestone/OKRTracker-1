@@ -1,0 +1,423 @@
+https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/teams?tenantId=01JW9V1MBG1848CA21K7G15Z9T 503 (Service Unavailable)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+onError @ @tanstack_react-query.js?v=e46b1212:866
+reject @ @tanstack_react-query.js?v=e46b1212:465
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:508
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+setOptions @ @tanstack_react-query.js?v=e46b1212:1999
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3109
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:19328
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams: Error: 503: <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>The app is currently not running. Deploy this app to keep it running externally.</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1c2333;
+      font-family: "IBM Plex Sans", "sans";
+      color: #f5f9fc;
+    }
+
+    .title-box {
+      font-size: 12px;
+      inline-size: max-content;
+    }
+
+    .err-box {
+      padding: 1em;
+      max-width: 30em;
+      width: 100vw;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @media (max-width: 500px) {
+      .message {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    .ascii {
+      font-size: 6px;
+      text-align: center;
+      opacity: .8;
+    }
+
+    .console {
+      background-color: #0e1628;
+      color: #fff;
+      font-family: "IBM Plex Sans", "sans";
+      padding: 1em;
+      margin: 1em;
+    }
+
+    .footer {
+      margin: 1em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .link-icon {
+      margin-right: 20px;
+      margin-top: 4px;
+    }
+
+    a {
+      color: #c2c8cc;
+    }
+  </style>
+
+  <script>
+    var reload_timeout = setTimeout(function () {
+      window.location.reload();
+    }, 60000);
+  </script>
+</head>
+
+<body>
+  <div class="err-box">
+    <div class="message">
+      <pre class="ascii">
+
+                                  -%%%%%%%%%%%##**++==---::....                                     
+                                  *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%%%%%%##*+=--::...              
+                                  #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#*######******##*****+           
+                                 .#@%**+++**##%%@@@@@@@@@@@@@@@@@@%#*#*******************:          
+                                 .#@#*+.-*######%%%%#**+++++=+#@@%%#*#####***************+          
+                                 .#@#*=:=***####%%%%%%%%%%%%%#%@@%##*####*****************:         
+                                 .%@#*--+****######%%%%%%%%%%%@@@%##*#####***************+:         
+                                 :%@##-=+****########%%%%%%%%%@@@%##*####****************+.         
+                                 :%@#*-===+++**########%%%%%%@@@@%#**#####**************+*.         
+                                 :@@#*-====++++**###########%%@@@%#*######**************+*          
+                                 -@@#*--====+++++++*****#####%@@@%#*#######*************++          
+                                 -@@#*--======++++++++++*****#@@%%#*#####***************++          
+                                 -@%#*--========+++++++++++++#@@%%#*######**************++          
+                                 =@%#*--=================+===#@@%%#*##*****************++=          
+                                 =@%#*---====================#@@%#**#####*#************++=          
+                                 =@%#*----===================%@@%#*########************++-          
+                                 +@%%@#*+====================@@@%#*######*************+++-          
+                                 +@@@@@@@@@%%*==============-@@@%#*###*#**************+++:          
+                                 +@@@@@@@@@@@@@@@@@@@#+======@@@%#**##****************+++:          
+                                 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%***#****************++++.          
+                                 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%********************++++.          
+                                 *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%*******************+++++           
+                                 *@@@@@@@@@@@@@##@@@@@@@@@@@@@@%#******************+++++=           
+                                 #@%%@@@@@@@@@@@@@%#-:=*#%%@@@@%#*****************++++++=           
+                                .#@@@@@@@@@@@@@@@@@@@@@%=::*@@@%#*****************++++++=           
+                                 +##%%@@@@@@@@@@@@@@@@@@@@@@@@@%*****************++++++=-           
+                    .*%#*#%##:     .:+####%%%@@@@@@@@@@@@@@@@@@%*****************+++=+==-           
+                .:*@%##+**++%%#%%*-:.-++===**##%%%@@@@@@@@@@@@@%***************+++=+=+==:           
+              -*%%%##%*#+*****+#**##%%%#*=======++*##%%%%@@@@@%#************++*++++++-.             
+           -%@@#%#**+#+##+**=#*+#*+#+##+#%@@#+=========+####%%##*********+++++++++:.                
+       .=%@@@@##*+*#+##*+#+##***+**+**+#*+#**#%%@#++======-==+*=--=****++*+**+=:                 .:.
+     .*@@@@@@@%*##*###**+#***#+*#**#*+#***#=*+*#**%%%%#*+=====::++*****+***-:                    :. 
+      +%@@@@@@@@@@########**#+#*+**+#*+*#*+#*+##+**+####%@@@#====++*****:                       ::  
+       -*##%@@@@@@@@@%########*+#+*#*+*#+#*****=#*+*#****%@@@@@@#-=+=:                         :-   
+         .:=*#%%@@@@@@@@@@%#########+*+##*+**+###******%@@@@@@%#*:......                      ::    
+              .*##%%@@@@@@@@@@%###*+####+*%%####****#@@@@@@@##**=--=-==++++.               .-=.     
+                 .-+#%%@@@@@@@@@@@%###*+##*=+##***%@@@@@@%#**+-.:..   ..:-==:         .:--:.        
+                     .-*#%%@@@@@@@@@@@%##**%%%%%@@@@@@@%#**+: .:=#**==-+---:.:----::::.             
+                         :+##%%@@@@@@@@@@@@@@@@@@@@@@##**+-. :#@#####***+--=.                       
+                            .-+#%%%@@@@@@@@@@@@@@@%#**+-. .+@@@@@@@@%%%@@@%-                        
+                                .:*##%%@@@@@@@@@%#**+: .=%@@@@@@@@@@@@@@##*=                        
+                                    .-*##%%@@@#**+=. .*@@@@@@@@@@@@@@%#*****.                       
+                                        :=*##**+-.   =@@@@@@@@@@@@@%#****+-.                        
+                                           .::.      +@@@@@@@@@@@#****+-.                           
+                                                      :+#%@@@@@#***+=.                              
+
+        </pre>
+      <div class="title-box">
+        <h1>The app is currently not running. Deploy this app to keep it running externally.</h1>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="link-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6.66668 8.66666C6.95298 9.04942 7.31825 9.36612 7.73771 9.59529C8.15717 9.82446 8.62102 9.96074 9.09778 9.99489C9.57454 10.029 10.0531 9.96024 10.5009 9.79319C10.9487 9.62613 11.3554 9.36471 11.6933 9.02666L13.6933 7.02666C14.3005 6.39799 14.6365 5.55598 14.6289 4.68199C14.6213 3.808 14.2708 2.97196 13.6527 2.35394C13.0347 1.73591 12.1987 1.38535 11.3247 1.37775C10.4507 1.37016 9.60869 1.70614 8.98001 2.31333L7.83334 3.45333M9.33334 7.33333C9.04704 6.95058 8.68177 6.63388 8.26231 6.4047C7.84285 6.17553 7.37901 6.03925 6.90224 6.00511C6.42548 5.97096 5.94695 6.03975 5.49911 6.20681C5.05128 6.37387 4.6446 6.63528 4.30668 6.97333L2.30668 8.97333C1.69948 9.602 1.3635 10.444 1.3711 11.318C1.37869 12.192 1.72926 13.028 2.34728 13.6461C2.96531 14.2641 3.80135 14.6147 4.67534 14.6222C5.54933 14.6298 6.39134 14.2939 7.02001 13.6867L8.16001 12.5467"
+            stroke="#C2C8CC" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <div class="repl-links">
+        <a href="https://docs.replit.com/cloud-services/deployments/about-deployments">Learn how to Deploy on Replit</a>
+      </div>
+      <div></div>
+    </div>
+  </div>
+</body>
+
+</html>
+
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+onError @ @tanstack_react-query.js?v=e46b1212:866
+reject @ @tanstack_react-query.js?v=e46b1212:465
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:508
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:2278
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=e46b1212:2276
+updateTimers_fn @ @tanstack_react-query.js?v=e46b1212:2283
+onQueryUpdate @ @tanstack_react-query.js?v=e46b1212:2239
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1003
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1002
+batch @ @tanstack_react-query.js?v=e46b1212:584
+dispatch_fn @ @tanstack_react-query.js?v=e46b1212:1001
+setData @ @tanstack_react-query.js?v=e46b1212:699
+onSuccess @ @tanstack_react-query.js?v=e46b1212:902
+resolve @ @tanstack_react-query.js?v=e46b1212:456
+Promise.then
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+setOptions @ @tanstack_react-query.js?v=e46b1212:1999
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3109
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:19328
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+okr-system-setup-wizard.tsx:1545 Saving mission data: {mission: 'Welcome', vision: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", behaviors: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", tenantId: '01JW9V1MBG1848CA21K7G15Z9T'}
+okr-system-setup-wizard.tsx:1548 Checking if cadences exist for tenant: 01JW9V1MBG1848CA21K7G15Z9T
+okr-system-setup-wizard.tsx:1551 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/cadences?tenantId=01JW9V1MBG1848CA21K7G15Z9T 503 (Service Unavailable)
+saveMissionData @ okr-system-setup-wizard.tsx:1551
+callCallback2 @ chunk-RPCDYKBN.js?v=e46b1212:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e46b1212:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e46b1212:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e46b1212:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e46b1212:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e46b1212:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e46b1212:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e46b1212:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e46b1212:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e46b1212:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e46b1212:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e46b1212:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e46b1212:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e46b1212:5449Understand this error
+okr-system-setup-wizard.tsx:1793 Error saving mission data: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+saveMissionData @ okr-system-setup-wizard.tsx:1793
+await in saveMissionData
+callCallback2 @ chunk-RPCDYKBN.js?v=e46b1212:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e46b1212:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e46b1212:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e46b1212:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e46b1212:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e46b1212:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e46b1212:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e46b1212:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e46b1212:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e46b1212:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e46b1212:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e46b1212:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e46b1212:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e46b1212:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e46b1212:5449Understand this error
+use-auth.tsx:111 
