@@ -332,6 +332,9 @@ export default function OKRSystemSetupWizard() {
   const [showCsvPreview, setShowCsvPreview] = useState(false);
   const [isProcessingCsv, setIsProcessingCsv] = useState(false);
   const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>([]);
+  const [csvImportedTeams, setCsvImportedTeams] = useState<string[]>([]);
+  const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
+  const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -501,9 +504,17 @@ export default function OKRSystemSetupWizard() {
         description: `Successfully processed ${users.length} users (${users.filter(u => u.isValid).length} valid)`,
       });
       
-      // Create teams and users immediately after processing CSV
+      // Store teams and users for later saving
       if (users.length > 0) {
-        createTeamsAndUsersFromCsv(users);
+        const validUsers = users.filter(user => user.isValid);
+        const uniqueTeamNames = Array.from(new Set(
+          users
+            .filter((user: any) => user.team && user.team.trim() !== '')
+            .map((user: any) => user.team.trim())
+        ));
+        
+        setCsvImportedTeams(uniqueTeamNames);
+        setCsvImportedUsers(validUsers);
       }
       
       // Show preview
@@ -517,6 +528,90 @@ export default function OKRSystemSetupWizard() {
       });
     } finally {
       setIsProcessingCsv(false);
+    }
+  };
+
+  // Function to save teams and users to the database
+  const saveTeamsAndUsers = async () => {
+    setIsSavingUsersAndTeams(true);
+    
+    try {
+      let teamsCreated = 0;
+      let usersCreated = 0;
+      
+      // Create teams first if needed
+      if (csvImportedTeams.length > 0) {
+        try {
+          const teamCreateRes = await fetch("/api/teams/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(csvImportedTeams.map(teamName => ({
+              name: teamName,
+              description: `Team created from CSV upload`
+            }))),
+            credentials: 'include'
+          });
+          
+          if (teamCreateRes.ok) {
+            const teamCreateData = await teamCreateRes.json();
+            teamsCreated = teamCreateData.createdTeams?.length || 0;
+            console.log("Teams created:", teamCreateData);
+          }
+        } catch (error) {
+          console.error("Error creating teams:", error);
+        }
+      }
+      
+      // Create users through the working endpoint
+      if (csvImportedUsers.length > 0) {
+        try {
+          const response = await fetch("/api/users/bulk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              users: csvImportedUsers.map(user => ({
+                email: user.email,
+                name: user.name,
+                role: user.role || 'user',
+                department: user.department || '',
+                team: user.team || ''
+              }))
+            }),
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            usersCreated = userData.created?.length || csvImportedUsers.length;
+            console.log("Users created:", userData);
+          }
+        } catch (error) {
+          console.error("Error creating users:", error);
+        }
+      }
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      
+      toast({
+        title: "Save Complete!",
+        description: `Successfully saved ${teamsCreated} teams and ${usersCreated} users to your organization.`,
+      });
+      
+      // Clear the imported data
+      setCsvImportedTeams([]);
+      setCsvImportedUsers([]);
+      
+    } catch (error) {
+      console.error("Error saving teams and users:", error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your teams and users. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingUsersAndTeams(false);
     }
   };
   
