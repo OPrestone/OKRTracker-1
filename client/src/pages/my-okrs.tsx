@@ -128,45 +128,61 @@ export default function MyOKRs() {
   const handleSubmitForApproval = (objectiveId: string) => {
     submitForApprovalMutation.mutate(objectiveId);
   };
-  
-  // Transform database objectives into OKR format needed for UI
-  const transformObjectivesToOKRs = (): OKR[] => {
-    if (loadingObjectives || loadingKeyResults || loadingTimeframes) return [];
-    
-    return objectives.map(obj => {
-      // Find related key results
-      const objKeyResults = keyResults.filter(kr => kr.objectiveId === obj.id);
+  // Function to map DB objectives to UI format
+  const mapDbObjectivesToUiFormat = (dbObjectives: DbObjective[] = []): OKR[] => {
+    return dbObjectives.map(obj => {
+      // Determine status mapping
+      let status: "draft" | "active" | "completed" | "pending-approval" = "active";
+      if (obj.status === "draft") status = "draft";
+      else if (obj.status === "completed") status = "completed";
+      else if (obj.status === "pending_approval") status = "pending-approval";
       
-      // Find timeframe
-      const timeframe = timeframes.find(tf => tf.id === obj.timeframeId);
+      // Determine type mapping
+      let type: "personal" | "team" | "company" = "personal";
+      if (obj.level === "company") type = "company";
+      else if (obj.level === "team") type = "team";
+      
+      // Find timeframe name
+      const timeframe = timeframes?.find(t => t.id === obj.timeframeId)?.name || "Unknown";
+      
+      // Map key results
+      const keyResults: KeyResult[] = (obj.keyResults || []).map(kr => {
+        // Determine key result status
+        let krStatus: "on-track" | "at-risk" | "behind" | "complete" = "on-track";
+        if (kr.status === "at_risk") krStatus = "at-risk";
+        else if (kr.status === "behind") krStatus = "behind";
+        else if (kr.status === "completed") krStatus = "complete";
+        
+        return {
+          id: kr.id,
+          title: kr.title,
+          progress: kr.progress || 0,
+          dueDate: "Ongoing", // No due date in DB schema, using default
+          status: krStatus
+        };
+      });
       
       return {
         id: obj.id,
         title: obj.title,
         description: obj.description || "",
-        progress: obj.progress,
-        timeframe: timeframe?.name || "Unknown",
-        status: obj.status,
-        type: obj.level, // using level field to determine type
-        keyResults: objKeyResults
+        progress: obj.progress || 0,
+        timeframe,
+        status,
+        type,
+        keyResults
       };
     });
   };
   
-  const myOKRs = transformObjectivesToOKRs();
+  // Process data
+  const myOKRs = objectives ? mapDbObjectivesToUiFormat(objectives) : [];
   
-  // Filter objectives by user
-  const userOKRs = myOKRs.filter(okr => {
-    // For now, show all objectives as we build out the system, but in future we can filter
-    // to only show those belonging to current user with: okr.ownerId === user?.id
-    return true;
-  });
-  
-  // Filter by status
-  const activeOKRs = userOKRs.filter(okr => okr.status === "active");
-  const pendingApprovalOKRs = userOKRs.filter(okr => okr.status === "pending-approval");
-  const draftOKRs = userOKRs.filter(okr => okr.status === "draft");
-  const completedOKRs = userOKRs.filter(okr => okr.status === "completed");
+  // Get filtered lists
+  const activeOKRs = myOKRs.filter(okr => okr.status === "active");
+  const pendingApprovalOKRs = myOKRs.filter(okr => okr.status === "pending-approval");
+  const draftsOKRs = myOKRs.filter(okr => okr.status === "draft");
+  const completedOKRs = myOKRs.filter(okr => okr.status === "completed");
   
   // Helper functions for UI display
   const getStatusBadge = (status: string) => {
@@ -216,15 +232,39 @@ export default function MyOKRs() {
   };
   
   // Loading state
-  if (loadingObjectives || loadingKeyResults || loadingTimeframes) {
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="container mx-auto p-6 flex justify-center items-center min-h-[50vh]">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p className="text-neutral-600">Loading your objectives...</p>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-72" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-[200px] w-full" />
+            <Skeleton className="h-[200px] w-full" />
           </div>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error loading your OKRs</AlertTitle>
+          <AlertDescription>
+            There was a problem fetching your objectives. Please try again later or contact support.
+          </AlertDescription>
+        </Alert>
       </DashboardLayout>
     );
   }
@@ -240,33 +280,27 @@ export default function MyOKRs() {
             </p>
           </div>
           
-          {canCreateObjectives() && (
-            <Button 
-              onClick={() => navigate("/create-objective")}
-              className="flex items-center gap-2"
-            >
+          <Link href="/create-objective">
+            <Button className="gap-2">
               <Plus className="h-4 w-4" />
               Create OKR
             </Button>
-          )}
+          </Link>
         </div>
         
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="active">Active ({activeOKRs.length})</TabsTrigger>
             <TabsTrigger value="pending-approval">Pending Approval ({pendingApprovalOKRs.length})</TabsTrigger>
-            <TabsTrigger value="drafts">Drafts ({draftOKRs.length})</TabsTrigger>
+            <TabsTrigger value="drafts">Drafts ({draftsOKRs.length})</TabsTrigger>
             <TabsTrigger value="completed">Completed ({completedOKRs.length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="active" className="space-y-4">
             {activeOKRs.length > 0 ? (
               activeOKRs.map((okr) => (
-                <Card 
-                  key={okr.id} 
-                  className="shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/objective/${okr.id}`)}
-                >
+                <Link key={okr.id} href={`/objective/${okr.id}`}>
+                  <Card className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
