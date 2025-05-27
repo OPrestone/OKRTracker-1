@@ -148,7 +148,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                   <GaugeChart value={Math.round(stats.teamProgress)} color="#6366f1" />
                   <div className="flex justify-between mt-2 text-sm">
                     <div className="text-slate-500">Current Progress</div>
-                    <div className="font-medium text-emerald-600">{Math.round(stats.teamProgress)}%</div>
+                    <div className="font-medium text-emerald-600">{Math.floor(stats.teamProgress)}%</div>
                   </div>
                 </CardContent>
               </Card>
