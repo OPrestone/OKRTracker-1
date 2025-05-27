@@ -26,19 +26,32 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   const { currentTenant } = useTenantContext();
   const tenantId = currentTenant?.id;
   
-  const stats = overviewStats || {
-    totalObjectives: 0,
-    completedObjectives: 0,
-    atRiskObjectives: 0,
-    teamProgress: 0,
-    upcomingCheckins: 0
-  };
+  // Fetch all objectives for this tenant to calculate real stats
+  const { data: objectivesData = [] } = useQuery({
+    queryKey: ['/api/my-objectives', tenantId],
+    enabled: !!tenantId
+  });
   
   // Fetch tenant-specific teams data
   const { data: teamsData = [] } = useQuery({
     queryKey: ['/api/teams-performance', tenantId],
     enabled: !!tenantId
   }) as { data: any[] };
+  
+  // Calculate real stats from objectives data
+  const stats = objectivesData.length > 0 ? {
+    totalObjectives: objectivesData.length,
+    completedObjectives: objectivesData.filter((obj: any) => obj.progress === 100).length,
+    atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 40 && obj.progress < 70).length,
+    teamProgress: Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) || 0,
+    upcomingCheckins: 0
+  } : (overviewStats || {
+    totalObjectives: 0,
+    completedObjectives: 0,
+    atRiskObjectives: 0,
+    teamProgress: 0,
+    upcomingCheckins: 0
+  });
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [
@@ -79,7 +92,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Total Objectives"
               value={stats.totalObjectives}
-              trend={1.0}
               icon={<Target className="h-5 w-5 text-indigo-500" />}
               chart={
                 <MiniSparkline 
@@ -94,7 +106,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Team Progress"
               value={`${stats.teamProgress}%`}
-              subtitle="of 50 GB"
               progressBar
               progressValue={stats.teamProgress}
               trendLabel={`${stats.teamProgress}% complete`}
@@ -104,7 +115,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Completed Objectives"
               value={stats.completedObjectives}
-              trend={2.5}
               icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
               chart={
                 <MiniSparkline 
@@ -119,7 +129,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="At Risk Objectives"
               value={stats.atRiskObjectives}
-              trend={0.5}
               icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
               chart={
                 <MiniSparkline 
