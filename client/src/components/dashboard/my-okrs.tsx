@@ -74,6 +74,8 @@ export default function MyOKRs() {
   const { data: timeframes } = useQuery({
     queryKey: ["/api/timeframes", currentTenant?.id],
     enabled: !!currentTenant?.id,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
   
   const { data: objectives, isLoading, error } = useQuery({
@@ -81,7 +83,9 @@ export default function MyOKRs() {
     enabled: !!currentTenant?.id && !!user,
     retry: 1,
     retryDelay: 1000,
-    meta: { requiresTenant: true }
+    meta: { requiresTenant: true },
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Submit for approval mutation

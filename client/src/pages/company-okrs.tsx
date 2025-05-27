@@ -91,6 +91,8 @@ export default function CompanyOKRs() {
     queryKey: ["/api/objectives"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
     onSuccess: (data) => {
       console.log("Objectives data received:", data);
     }
@@ -100,21 +102,27 @@ export default function CompanyOKRs() {
   const { data: allOKRs = [] } = useQuery<Objective[]>({
     queryKey: ["/api/objectives-with-links"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Fetch timeframes for filtering
   const { data: timeframes = [] } = useQuery<any[]>({
     queryKey: ["/api/timeframes"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Fetch teams for assignment info
   const { data: teams = [] } = useQuery<any[]>({
     queryKey: ["/api/teams"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Filter objectives based on all criteria
