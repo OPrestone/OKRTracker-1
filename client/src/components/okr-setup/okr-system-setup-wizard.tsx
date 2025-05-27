@@ -2225,8 +2225,8 @@ export default function OKRSystemSetupWizard() {
                           {tenantId && (
                             <TimeframeSetupSimplified
                               tenantId={tenantId}
-                              primaryCadence={form.getValues("timeframes.primaryCadence")}
-                              startMonth={form.getValues("timeframes.startMonth")}
+                              primaryCadence={form.watch("timeframes.primaryCadence")}
+                              startMonth={form.watch("timeframes.startMonth")}
                               onTimeframesSaved={goToNextStep}
                             />
                           )}
