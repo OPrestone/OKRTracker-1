@@ -197,13 +197,13 @@ export default function CreateKeyResult() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Create key result mutation using the proven working POST pattern
+  // Create key result mutation using direct fetch to bypass Vite routing issues
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('=== CREATING KEY RESULT USING POST METHOD ===');
+      console.log('=== CREATING KEY RESULT USING DIRECT FETCH ===');
       console.log('Data being sent:', data);
       
-      // Use POST method that we know works reliably
+      // Use direct fetch with full URL to bypass Vite development server routing
       const keyResultData = {
         title: data.title,
         description: data.description || '',
@@ -218,8 +218,19 @@ export default function CreateKeyResult() {
         progress: Math.round(((parseFloat(data.currentValue || '0') - parseFloat(data.startValue || '0')) / (parseFloat(data.targetValue || '100') - parseFloat(data.startValue || '0'))) * 100) || 0
       };
       
-      // Use POST to the key results endpoint
-      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/key-results`, keyResultData);
+      // Use direct fetch with absolute URL to bypass development server issues
+      const baseUrl = window.location.origin;
+      const response = await fetch(`${baseUrl}/api/objectives/${objectiveId}/key-results`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(keyResultData)
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
       
       if (!response.ok) {
         const errorText = await response.text();
