@@ -470,8 +470,19 @@ export default function OKRSystemSetupWizard() {
                   user.error = 'Invalid email format';
                 }
                 break;
+              case 'firstname':
+              case 'first_name':
+                user.firstName = value;
+                break;
+              case 'lastname':
+              case 'last_name':
+                user.lastName = value;
+                break;
               case 'name':
                 user.name = value;
+                break;
+              case 'title':
+                user.title = value;
                 break;
               case 'role':
                 // Normalize role values to support new five-role organization system
@@ -618,8 +629,10 @@ export default function OKRSystemSetupWizard() {
                   firstName: user.firstName || user.name?.split(' ')[0] || user.email.split('@')[0],
                   lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
                   name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
-                  title: user.department || '',
+                  title: user.title || user.department || '',
                   role: user.role || 'user',
+                  password: user.email.toLowerCase(), // Set password to email initially
+                  requirePasswordReset: true, // Flag to require password reset on first login
                   tenantId: tenantId  // Ensure tenant ID is included
                 }),
                 credentials: 'include'
@@ -2478,12 +2491,12 @@ export default function OKRSystemSetupWizard() {
                                   variant="outline"
                                   onClick={() => {
                                     // Download comprehensive CSV template with all required fields and new roles
-                                    const sample = `email,name,role,department,team
-john.doe@company.com,John Doe,user,Marketing,Marketing Team
-jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Team
-mike.johnson@company.com,Mike Johnson,executive,Sales,Sales Team
-sarah.williams@company.com,Sarah Williams,admin,HR,Human Resources
-david.brown@company.com,David Brown,owner,Finance,Finance Team`;
+                                    const sample = `email,firstName,lastName,department,title,role,team
+john.doe@company.com,John,Doe,Marketing,Marketing Specialist,user,Marketing Team
+jane.smith@company.com,Jane,Smith,Engineering,Software Engineer,manager,Engineering Team
+mike.johnson@company.com,Mike,Johnson,Sales,Sales Director,executive,Sales Team
+sarah.williams@company.com,Sarah,Williams,HR,HR Manager,admin,Human Resources
+david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');

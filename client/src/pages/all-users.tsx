@@ -593,14 +593,14 @@ export default function AllUsers() {
     }
   };
 
-  // Generate CSV template
+  // Generate CSV template (password removed - will be set to email automatically)
   const downloadCSVTemplate = () => {
-    const csvContent = `email,firstName,lastName,username,department,title,role,team,password
-john.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,user,Development Team,tempPassword123
-jane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,manager,Marketing Team,tempPassword456
-alex.wilson@example.com,Alex,Wilson,alexwilson,Operations,Operations Lead,executive,Operations Team,tempPassword789
-sarah.brown@example.com,Sarah,Brown,sarahbrown,HR,HR Director,admin,HR Team,tempPassword012
-mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345`;
+    const csvContent = `email,firstName,lastName,department,title,role,team
+john.doe@example.com,John,Doe,Engineering,Software Engineer,user,Development Team
+jane.smith@example.com,Jane,Smith,Marketing,Marketing Manager,manager,Marketing Team
+alex.wilson@example.com,Alex,Wilson,Operations,Operations Lead,executive,Operations Team
+sarah.brown@example.com,Sarah,Brown,HR,HR Director,admin,HR Team
+mike.davis@example.com,Mike,Davis,Executive,CEO,owner,`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
