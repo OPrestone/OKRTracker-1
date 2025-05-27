@@ -2806,7 +2806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get objectives owned by the current user
-  app.get("/api/my-objectives", withTenant, ensureAuthenticated, async (req, res, next) => {
+  app.get("/api/my-objectives", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const ownerId = req.user.id;
       const tenantId = req.tenantId;
