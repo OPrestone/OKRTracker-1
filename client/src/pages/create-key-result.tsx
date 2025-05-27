@@ -675,25 +675,69 @@ export default function CreateKeyResult() {
                 {/* Contributors */}
                 <div className="space-y-2">
                   <Label>Contributors <span className="text-gray-400">Optional</span></Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs">
-                                {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{user.firstName} {user.lastName}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    {/* Selected Contributors */}
+                    {keyResultData.contributors.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {keyResultData.contributors.map((contributorId) => {
+                          const contributor = users.find(u => u.id === contributorId);
+                          return contributor ? (
+                            <div key={contributorId} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                              <Avatar className="h-4 w-4">
+                                <AvatarFallback className="text-xs">
+                                  {(contributor.firstName?.[0] || '') + (contributor.lastName?.[0] || '')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{contributor.firstName} {contributor.lastName}</span>
+                              <button
+                                type="button"
+                                onClick={() => setKeyResultData(prev => ({
+                                  ...prev,
+                                  contributors: prev.contributors.filter(id => id !== contributorId)
+                                }))}
+                                className="ml-1 text-blue-600 hover:text-blue-800"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                    
+                    {/* Contributors Selector */}
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value && !keyResultData.contributors.includes(value)) {
+                          setKeyResultData(prev => ({
+                            ...prev,
+                            contributors: [...prev.contributors, value]
+                          }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Add contributors..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users
+                          .filter(user => !keyResultData.contributors.includes(user.id))
+                          .map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback className="text-xs">
+                                    {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{user.firstName} {user.lastName}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Integration */}
