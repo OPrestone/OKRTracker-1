@@ -2404,6 +2404,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Strategic Directions API
+  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const type = req.query.type || 'company'; // Default to company level
+      const teamId = req.query.teamId;
+      
+      console.log(`Getting strategic directions for tenant: ${tenantId}, type: ${type}`);
+      
+      // Build the query based on parameters
+      let query = `SELECT * FROM strategic_directions WHERE tenant_id = ? AND type = ?`;
+      let params = [tenantId, type];
+      
+      if (teamId && type === 'team') {
+        query += ` AND team_id = ?`;
+        params.push(teamId);
+      }
+      
+      query += ` ORDER BY priority ASC, created_at ASC`;
+      
+      const result = await db.execute(query, params);
+      const directions = result.rows || [];
+      
+      res.json(directions);
+    } catch (error) {
+      console.error('Error fetching strategic directions:', error);
+      next(error);
+    }
+  });
+
   // Timeframes API
   app.get("/api/timeframes", async (req, res, next) => {
     try {

@@ -493,6 +493,63 @@ export function setupConfigRoutes(router: Router) {
         // Continue execution, don't fail the main request
       }
       
+      // Process and save strategic directions
+      const strategicDirections = okrSystemData.generalSettings.strategicDirections || [];
+      if (Array.isArray(strategicDirections) && strategicDirections.length > 0) {
+        try {
+          console.log('Processing strategic directions:', strategicDirections.length);
+          
+          // First, remove existing strategic directions for this tenant (company level)
+          await db.execute(
+            `DELETE FROM strategic_directions WHERE tenant_id = ? AND type = 'company'`,
+            [tenantId]
+          );
+          
+          // Create new strategic directions
+          for (let index = 0; index < strategicDirections.length; index++) {
+            const direction = strategicDirections[index];
+            if (direction.description && direction.description.trim()) {
+              const directionData = {
+                id: ulid(),
+                title: direction.title || direction.description.substring(0, 50) || `Direction ${index + 1}`,
+                description: direction.description.trim(),
+                priority: direction.priority || (index + 1),
+                type: 'company',
+                tenant_id: tenantId,
+                team_id: null,
+                created_by_id: null, // Could be set to current user if available
+                parent_direction_id: null,
+                created_at: new Date(),
+                updated_at: new Date()
+              };
+              
+              await db.execute(
+                `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, team_id, created_by_id, parent_direction_id, created_at, updated_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  directionData.id,
+                  directionData.title,
+                  directionData.description,
+                  directionData.priority,
+                  directionData.type,
+                  directionData.tenant_id,
+                  directionData.team_id,
+                  directionData.created_by_id,
+                  directionData.parent_direction_id,
+                  directionData.created_at,
+                  directionData.updated_at
+                ]
+              );
+              
+              console.log(`Saved strategic direction: ${directionData.title}`);
+            }
+          }
+        } catch (directionsError) {
+          console.error('Error saving strategic directions:', directionsError);
+          // Continue execution, don't fail the main request
+        }
+      }
+      
       // Process default teams if available - either from the dedicated array or from the teamConfiguration
       const defaultTeams = req.body.default_teams || [];
       if (Array.isArray(defaultTeams) && defaultTeams.length > 0) {
