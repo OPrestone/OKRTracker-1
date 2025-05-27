@@ -297,6 +297,7 @@ export default function CreateKeyResult() {
   };
 
   const handleAddAnother = () => {
+    console.log('Add Another button clicked!');
     handleSaveKeyResult();
   };
 
