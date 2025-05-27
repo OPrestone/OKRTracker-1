@@ -302,7 +302,6 @@ const formSchema = z.object({
     startMonth: z.enum(["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]).default("january"),
   }),
   objectiveSettings: z.object({
-    defaultObjectiveCategory: z.enum(["growth", "product", "customer", "people", "financial", "operations", "other"]).default("growth"),
     maxObjectivesPerTeam: z.enum(["3", "4", "5", "6", "7", "8"]).default("5"),
     maxKeyResultsPerObjective: z.enum(["3", "4", "5", "6"]).default("3"),
     requireObjectiveApproval: z.boolean().default(true),
@@ -982,7 +981,6 @@ export default function OKRSystemSetupWizard() {
         startMonth: "january",
       },
       objectiveSettings: {
-        defaultObjectiveCategory: "growth",
         maxObjectivesPerTeam: "5",
         maxKeyResultsPerObjective: "3",
         requireObjectiveApproval: true,
@@ -1060,7 +1058,6 @@ export default function OKRSystemSetupWizard() {
             startMonth: "january",
           },
           objectiveSettings: {
-            defaultObjectiveCategory: "growth",
             maxObjectivesPerTeam: "5",
             maxKeyResultsPerObjective: "3",
             requireObjectiveApproval: true,
@@ -2202,26 +2199,7 @@ export default function OKRSystemSetupWizard() {
                       </p>
                       
                       <div className="space-y-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Default Objective Category</label>
-                          <Select
-                            defaultValue={form.getValues("objectiveSettings.defaultObjectiveCategory")}
-                            onValueChange={(value) => form.setValue("objectiveSettings.defaultObjectiveCategory", value as "growth" | "product" | "customer" | "people" | "financial" | "operations" | "other")}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select default category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="growth">Growth</SelectItem>
-                              <SelectItem value="product">Product</SelectItem>
-                              <SelectItem value="customer">Customer</SelectItem>
-                              <SelectItem value="people">People</SelectItem>
-                              <SelectItem value="financial">Financial</SelectItem>
-                              <SelectItem value="operations">Operations</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
@@ -2820,7 +2798,7 @@ david.brown@company.com,David Brown,owner,Finance,Finance Team`;
                         <li><span className="font-medium">Max Objectives/Team:</span> {form.getValues("objectiveSettings.maxObjectivesPerTeam")}</li>
                         <li><span className="font-medium">Max KRs/Objective:</span> {form.getValues("objectiveSettings.maxKeyResultsPerObjective")}</li>
                         <li><span className="font-medium">Approval Required:</span> {form.getValues("objectiveSettings.requireObjectiveApproval") ? "Yes" : "No"}</li>
-                        <li><span className="font-medium">Default Category:</span> {form.getValues("objectiveSettings.defaultObjectiveCategory")}</li>
+
                       </ul>
                     </div>
                     
