@@ -798,10 +798,12 @@ export default function OKRSystemSetupWizard() {
               "Content-Type": "application/json",
               "X-Tenant-ID": tenantId
             },
-            body: JSON.stringify(uniqueTeamNames.map(teamName => ({
-              name: teamName,
-              description: `Auto-created team from CSV upload`
-            }))),
+            body: JSON.stringify({
+              teams: uniqueTeamNames.map(teamName => ({
+                name: teamName,
+                description: `Auto-created team from CSV upload`
+              }))
+            }),
             credentials: 'include'
           });
           
