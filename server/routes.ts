@@ -3085,8 +3085,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "Add contingency plans for potential obstacles"
         ],
         improvedObjective: {
-          title: objective.title + " (AI Enhanced)",
-          description: objective.description + " This enhanced version includes clearer success criteria and measurable outcomes.",
+          title: `Achieve measurable ${objective.title.toLowerCase()} with 25% improvement by Q4 2024`,
+          description: `${objective.description || 'This objective'} focuses on delivering specific, measurable outcomes that drive business value and team performance. Enhanced with clear success criteria and trackable metrics.`,
           keyResults: [
             "Increase customer satisfaction score from baseline to 90% by quarter end",
             "Achieve 95% on-time delivery rate across all projects",
