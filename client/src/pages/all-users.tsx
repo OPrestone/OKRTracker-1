@@ -1893,17 +1893,44 @@ export default function AllUsers() {
             <div className="space-y-3">
               <label className="text-sm font-medium">Organization Role</label>
               <div className="space-y-2">
+
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
-                    id="role-member"
+                    id="role-user"
                     name="tenantRole"
-                    value="member"
-                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'member'}
-                    onChange={(e) => e.target.checked && handleUpdatePermissions('member')}
+                    value="user"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'user'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('user')}
                   />
-                  <label htmlFor="role-member" className="text-sm">
-                    <span className="font-medium">Member</span> - Can view and participate in OKRs
+                  <label htmlFor="role-user" className="text-sm">
+                    <span className="font-medium">User</span> - Basic access to objectives and teams
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-manager"
+                    name="tenantRole"
+                    value="manager"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'manager'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('manager')}
+                  />
+                  <label htmlFor="role-manager" className="text-sm">
+                    <span className="font-medium">Manager</span> - Can manage team members and objectives
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="role-executive"
+                    name="tenantRole"
+                    value="executive"
+                    defaultChecked={selectedUser?.tenants?.find(t => t.id === tenantId)?.userRole === 'executive'}
+                    onChange={(e) => e.target.checked && handleUpdatePermissions('executive')}
+                  />
+                  <label htmlFor="role-executive" className="text-sm">
+                    <span className="font-medium">Executive</span> - Senior leadership with broad organizational access
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">

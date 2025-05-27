@@ -1290,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email, 
         firstName, 
         lastName, 
-        role = 'member',
+        role = 'user',
         username,
         department,
         title,
