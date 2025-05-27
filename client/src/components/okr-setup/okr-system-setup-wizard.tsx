@@ -273,6 +273,7 @@ const formSchema = z.object({
   generalSettings: z.object({
     companyMission: z.string().min(1, "Company mission is required"),
     companyVision: z.string().min(1, "Company vision is required"),
+    strategicDirection: z.string().optional(),
     companyValues: z.string().min(1, "Company values are required"),
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
     enableNotifications: z.boolean().default(true),
