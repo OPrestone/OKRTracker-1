@@ -337,38 +337,72 @@ export function UpdateOKRDialog({ open, onOpenChange, onComplete }: UpdateOKRDia
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Progress (%)
+                  <div className="space-y-4">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
+                      Progress
                     </label>
-                    <div className="flex space-x-2 items-center">
-                      <Input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        step="1"
-                        value={formData.objectiveProgress.toString()}
-                        onChange={(e) => handleObjectiveProgressChange(e.target.value)}
-                        className="flex-1"
-                      />
-                      <span className="w-10 text-center">{formData.objectiveProgress}%</span>
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+                      <div className="flex items-center justify-between mb-3">
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          step="1"
+                          value={formData.objectiveProgress}
+                          onChange={(e) => handleObjectiveProgressChange(e.target.value)}
+                          className="w-16 text-center font-bold text-lg border-2 focus:border-primary"
+                          placeholder="0"
+                        />
+                        <div className="flex-1 mx-4">
+                          <Input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            step="1"
+                            value={formData.objectiveProgress.toString()}
+                            onChange={(e) => handleObjectiveProgressChange(e.target.value)}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                        </div>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            {formData.objectiveProgress}%
+                          </span>
+                          <div className="text-xs text-gray-500">complete</div>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <Progress 
+                          value={formData.objectiveProgress} 
+                          className={cn("h-4 transition-all duration-500 ease-out", getProgressColorClass(formData.objectiveProgress))}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs font-semibold text-white drop-shadow-lg">
+                            {formData.objectiveProgress}% Complete
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <Progress 
-                      value={formData.objectiveProgress} 
-                      className={cn("h-2", getProgressColorClass(formData.objectiveProgress))}
-                    />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Notes
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Objective Notes
                     </label>
-                    <Textarea 
-                      placeholder="Add notes about your objective progress..."
-                      value={formData.objectiveNotes}
-                      onChange={(e) => handleObjectiveNotesChange(e.target.value)}
-                      rows={3}
-                    />
+                    <div className="relative">
+                      <Textarea 
+                        placeholder="Share insights about your overall objective progress, challenges overcome, or next steps..."
+                        value={formData.objectiveNotes}
+                        onChange={(e) => handleObjectiveNotesChange(e.target.value)}
+                        rows={4}
+                        className="border-2 focus:border-primary resize-none transition-colors duration-200"
+                      />
+                      <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                        {formData.objectiveNotes.length}/1000
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -397,38 +431,64 @@ export function UpdateOKRDialog({ open, onOpenChange, onComplete }: UpdateOKRDia
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Progress (%)
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Target className="h-3 w-3 text-primary" />
+                          Progress
                         </label>
-                        <div className="flex space-x-2 items-center">
-                          <Input 
-                            type="range" 
-                            min="0" 
-                            max="100" 
-                            step="1"
-                            value={formData.keyResults[kr.id]?.progress.toString() || "0"}
-                            onChange={(e) => handleKeyResultProgressChange(kr.id.toString(), e.target.value)}
-                            className="flex-1"
+                        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-lg border">
+                          <div className="flex items-center justify-between mb-2">
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="100" 
+                              step="1"
+                              value={formData.keyResults[kr.id]?.progress || 0}
+                              onChange={(e) => handleKeyResultProgressChange(kr.id.toString(), e.target.value)}
+                              className="w-14 text-center font-semibold border-2 focus:border-primary"
+                              placeholder="0"
+                            />
+                            <div className="flex-1 mx-3">
+                              <Input 
+                                type="range" 
+                                min="0" 
+                                max="100" 
+                                step="1"
+                                value={formData.keyResults[kr.id]?.progress.toString() || "0"}
+                                onChange={(e) => handleKeyResultProgressChange(kr.id.toString(), e.target.value)}
+                                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                            </div>
+                            <div className="text-right">
+                              <span className="text-lg font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                                {formData.keyResults[kr.id]?.progress || 0}%
+                              </span>
+                            </div>
+                          </div>
+                          <Progress 
+                            value={formData.keyResults[kr.id]?.progress || 0} 
+                            className={cn("h-3 transition-all duration-300 ease-out", getProgressColorClass(formData.keyResults[kr.id]?.progress || 0))}
                           />
-                          <span className="w-10 text-center">{formData.keyResults[kr.id]?.progress || 0}%</span>
                         </div>
-                        <Progress 
-                          value={formData.keyResults[kr.id]?.progress || 0} 
-                          className={cn("h-2", getProgressColorClass(formData.keyResults[kr.id]?.progress || 0))}
-                        />
                       </div>
                       
-                      <div className="grid gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Notes
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <FileText className="h-3 w-3 text-primary" />
+                          Progress Notes
                         </label>
-                        <Textarea 
-                          placeholder="Add notes about your key result progress..."
-                          value={formData.keyResults[kr.id]?.notes || ""}
-                          onChange={(e) => handleKeyResultNotesChange(kr.id.toString(), e.target.value)}
-                          rows={2}
-                        />
+                        <div className="relative">
+                          <Textarea 
+                            placeholder="Share your achievements, challenges, or insights about this key result..."
+                            value={formData.keyResults[kr.id]?.notes || ""}
+                            onChange={(e) => handleKeyResultNotesChange(kr.id.toString(), e.target.value)}
+                            rows={3}
+                            className="border-2 focus:border-primary resize-none transition-colors duration-200"
+                          />
+                          <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                            {(formData.keyResults[kr.id]?.notes || "").length}/500
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

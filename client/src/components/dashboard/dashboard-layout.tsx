@@ -1,13 +1,15 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
+import UpcomingCheckIns from "@/components/dashboard/upcoming-checkins";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -23,20 +25,50 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
   const { currentTenant } = useTenantContext();
   const tenantId = currentTenant?.id;
+  const queryClient = useQueryClient();
   
-  const stats = overviewStats || {
-    totalObjectives: 0,
-    completedObjectives: 0,
-    atRiskObjectives: 0,
-    teamProgress: 0,
-    upcomingCheckins: 0
-  };
+  // Auto-refresh dashboard data every 3 seconds
+  useEffect(() => {
+    if (!tenantId) return;
+    
+    const interval = setInterval(() => {
+      // Invalidate all dashboard-related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/my-objectives'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teams-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/check-ins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+    }, 3000); // 3 seconds
+    
+    return () => clearInterval(interval);
+  }, [tenantId, queryClient]);
+  
+  // Fetch all objectives for this tenant to calculate real stats
+  const { data: objectivesData = [] } = useQuery({
+    queryKey: ['/api/my-objectives', tenantId],
+    enabled: !!tenantId
+  });
   
   // Fetch tenant-specific teams data
   const { data: teamsData = [] } = useQuery({
     queryKey: ['/api/teams-performance', tenantId],
     enabled: !!tenantId
   }) as { data: any[] };
+  
+  // Calculate real stats from objectives data
+  const stats = objectivesData.length > 0 ? {
+    totalObjectives: objectivesData.length,
+    completedObjectives: objectivesData.filter((obj: any) => obj.progress === 100).length,
+    atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 40 && obj.progress < 70).length,
+    teamProgress: Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) || 0,
+    upcomingCheckins: 0
+  } : (overviewStats || {
+    totalObjectives: 0,
+    completedObjectives: 0,
+    atRiskObjectives: 0,
+    teamProgress: 0,
+    upcomingCheckins: 0
+  });
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [
@@ -77,7 +109,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Total Objectives"
               value={stats.totalObjectives}
-              trend={1.0}
               icon={<Target className="h-5 w-5 text-indigo-500" />}
               chart={
                 <MiniSparkline 
@@ -92,7 +123,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Team Progress"
               value={`${stats.teamProgress}%`}
-              subtitle="of 50 GB"
               progressBar
               progressValue={stats.teamProgress}
               trendLabel={`${stats.teamProgress}% complete`}
@@ -102,7 +132,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="Completed Objectives"
               value={stats.completedObjectives}
-              trend={2.5}
               icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
               chart={
                 <MiniSparkline 
@@ -117,7 +146,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             <StatsCard
               title="At Risk Objectives"
               value={stats.atRiskObjectives}
-              trend={0.5}
               icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
               chart={
                 <MiniSparkline 
@@ -131,52 +159,12 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <Card className="col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium">Objectives Progress</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <MiniChart
-                    data={objectivesChartData}
-                    dataKey="value"
-                    type="bar"
-                    color="#6366f1"
-                    height={320}
-                    showGrid
-                    showAxis
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <div className="col-span-2">
+              <ObjectivesProgressChart />
+            </div>
             
             <div className="space-y-5">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium">Upcoming Check-ins</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-indigo-100 p-2 rounded-md">
-                        <Calendar className="h-5 w-5 text-indigo-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{stats.upcomingCheckins} Check-ins</h3>
-                        <p className="text-sm text-slate-500">
-                          {stats.upcomingCheckins > 0 
-                            ? 'Scheduled for this week' 
-                            : 'No upcoming check-ins'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-slate-100 px-2 py-1 rounded text-xs text-slate-600">
-                      This Week
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <UpcomingCheckIns />
               
               <Card>
                 <CardHeader className="pb-2">
@@ -186,7 +174,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                   <GaugeChart value={Math.round(stats.teamProgress)} color="#6366f1" />
                   <div className="flex justify-between mt-2 text-sm">
                     <div className="text-slate-500">Current Progress</div>
-                    <div className="font-medium text-emerald-600">{Math.round(stats.teamProgress)}%</div>
+                    <div className="font-medium text-emerald-600">{Math.floor(stats.teamProgress)}%</div>
                   </div>
                 </CardContent>
               </Card>
@@ -200,7 +188,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                 <MiniStatsCard
                   key={team.id}
                   title={team.name || `Team ${index + 1}`}
-                  value={`${team.performance || Math.round(stats.teamProgress)}%`}
+                  value={`${Math.floor(team.progress || 0)}%`}
                   trend={team.memberCount || 0}
                   trendLabel={team.memberCount ? `${team.memberCount} members` : undefined}
                   icon={<Users className="h-4 w-4 text-indigo-500" />}
