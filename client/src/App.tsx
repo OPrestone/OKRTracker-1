@@ -42,6 +42,7 @@ const QuickStartGuide = lazy(() => import("@/pages/quick-start-guide"));
 const MissionPage = lazy(() => import("@/pages/mission"));
 const MissionCompanyPage = lazy(() => import("@/pages/mission-company"));
 const CompanyMission = lazy(() => import("@/pages/company-mission"));
+const MissionOverview = lazy(() => import("@/pages/mission-overview"));
 const OneOnOneMeetings = lazy(() => import("@/pages/one-on-one-meetings"));
 const TeamLeaderDashboard = lazy(() => import("@/pages/team-leader-dashboard"));
 const CEODashboard = lazy(() => import("@/pages/ceo-dashboard"));
@@ -140,6 +141,7 @@ function AppRoutes() {
       <ProtectedRoute path="/mission" component={MissionPage} />
       <ProtectedRoute path="/mission-company" component={MissionCompanyPage} />
       <ProtectedRoute path="/company-mission" component={CompanyMission} />
+      <ProtectedRoute path="/mission-overview" component={MissionOverview} />
       <ProtectedRoute path="/company-strategy" component={CompanyStrategy} />
 
       {/* Manage OKRs Section */}
