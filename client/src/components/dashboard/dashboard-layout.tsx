@@ -7,6 +7,7 @@ import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calen
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -20,6 +21,9 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
+  const { currentTenant } = useTenantContext();
+  const tenantId = currentTenant?.id;
+  
   const stats = overviewStats || {
     totalObjectives: 0,
     completedObjectives: 0,
@@ -28,9 +32,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     upcomingCheckins: 0
   };
   
-  // Fetch teams data
+  // Fetch tenant-specific teams data
   const { data: teamsData = [] } = useQuery({
-    queryKey: ['/api/teams'],
+    queryKey: ['/api/teams-performance', tenantId],
+    enabled: !!tenantId
   }) as { data: any[] };
   
   // Generate chart data based on objectives counts

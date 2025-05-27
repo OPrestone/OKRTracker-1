@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import {
   Card,
   CardContent,
@@ -191,22 +192,28 @@ const teamSummaryStats = [
 ];
 
 export function TeamsOKRPerformance() {
+  const { currentTenant } = useTenantContext();
+  const tenantId = currentTenant?.id;
+  
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeTableTab, setActiveTableTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('all');
   
-  // Fetch real data from API
+  // Fetch tenant-specific data from API
   const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
-    queryKey: ['/api/dashboard'],
+    queryKey: ['/api/dashboard', tenantId],
+    enabled: !!tenantId
   }) as { data: any, isLoading: boolean };
   
   const { data: objectives, isLoading: isObjectivesLoading } = useQuery({
-    queryKey: ['/api/objectives'],
+    queryKey: ['/api/objectives', tenantId],
+    enabled: !!tenantId
   }) as { data: any[], isLoading: boolean };
   
   const { data: teams, isLoading: isTeamsLoading } = useQuery({
-    queryKey: ['/api/teams-performance'],
+    queryKey: ['/api/teams-performance', tenantId],
+    enabled: !!tenantId
   }) as { data: any[], isLoading: boolean };
   
   const isLoading = isDashboardLoading || isObjectivesLoading || isTeamsLoading;
