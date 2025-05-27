@@ -661,6 +661,10 @@ export default function OKRSystemSetupWizard() {
               const teams = await teamsResponse.json();
               const users = await usersResponse.json();
               
+              console.log("Available teams:", teams.map((t: any) => ({ id: t.id, name: t.name })));
+              console.log("Available users:", users.map((u: any) => ({ id: u.id, email: u.email })));
+              console.log("Looking for managers:", managersToSetAsLeaders.map(m => ({ email: m.email, team: m.team })));
+              
               for (const manager of managersToSetAsLeaders) {
                 try {
                   const team = teams.find((t: any) => t.name === manager.team);
