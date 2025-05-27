@@ -146,11 +146,7 @@ export function FeedbackModal({ recipient, trigger }: FeedbackModalProps = {}) {
       
       console.log("Request body:", requestBody);
       
-      return await apiRequest({
-        url: "/api/feedback",
-        method: "POST",
-        body: requestBody,
-      });
+      return await apiRequest("POST", "/api/feedback", requestBody);
     },
     onSuccess: () => {
       toast({
