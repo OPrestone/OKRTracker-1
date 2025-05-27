@@ -362,6 +362,7 @@ export function setupConfigRoutes(router: Router) {
           companyMission: req.body.generalSettings?.companyMission || '',
           companyVision: req.body.generalSettings?.companyVision || '',
           companyValues: req.body.generalSettings?.companyValues || '',
+          strategicDirections: req.body.generalSettings?.strategicDirections || [],
           trackingFrequency: req.body.generalSettings?.trackingFrequency || 'weekly',
           enableNotifications: req.body.generalSettings?.enableNotifications || false
         },
