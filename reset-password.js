@@ -1,6 +1,6 @@
-import { hashPassword } from './server/auth.js';
-import { db } from './server/db.js';
-import { users } from './shared/schema.js';
+import { hashPassword } from './server/auth.ts';
+import { db } from './server/db.ts';
+import { users } from './shared/schema.ts';
 import { eq } from 'drizzle-orm';
 
 async function resetUserPassword() {
