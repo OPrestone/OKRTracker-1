@@ -3615,6 +3615,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to recalculate objective progress based on key results
+  async function recalculateObjectiveProgress(objectiveId: string) {
+    try {
+      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      if (keyResults.length === 0) {
+        // No key results, set objective progress to 0
+        await storage.updateObjective(objectiveId, { progress: 0 });
+        return;
+      }
+      
+      // Calculate average progress of all key results
+      const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+      const averageProgress = Math.round(totalProgress / keyResults.length);
+      
+      // Update objective progress
+      await storage.updateObjective(objectiveId, { progress: averageProgress });
+    } catch (error) {
+      console.error('Error recalculating objective progress:', error);
+    }
+  }
+
   app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
@@ -3631,6 +3652,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertKeyResultSchema.partial().parse(req.body);
       const updatedKeyResult = await storage.updateKeyResult(id, validatedData);
+      
+      // If progress was updated, recalculate objective progress
+      if (validatedData.progress !== undefined && keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
       res.json(updatedKeyResult);
     } catch (error) {
       next(error);
@@ -3653,6 +3680,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { progress } = z.object({ progress: z.number().min(0).max(100) }).parse(req.body);
       const updatedKeyResult = await storage.updateKeyResultProgress(id, progress);
+      
+      // Recalculate objective progress since key result progress was updated
+      if (keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
       res.json(updatedKeyResult);
     } catch (error) {
       next(error);
