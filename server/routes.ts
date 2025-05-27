@@ -58,6 +58,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTeamLeaderRoutes(apiRouter);
   setupTeamRoutes(apiRouter);
   setupApprovedOkrsRoutes(apiRouter);
+  
+  // Add key result creation route to the API router
+  apiRouter.post("/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      console.log('=== CREATE KEY RESULT REQUEST (API ROUTER) ===');
+      console.log('Creating key result for objective:', req.params.objectiveId);
+      console.log('Request body:', req.body);
+      console.log('Tenant ID:', req.tenantId);
+      
+      const objectiveId = req.params.objectiveId;
+      const tenantId = req.tenantId;
+      
+      // Verify the objective exists and belongs to the tenant
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        console.log('Objective not found:', objectiveId);
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      if (objective.tenantId !== tenantId) {
+        console.log('Access denied - objective belongs to tenant:', objective.tenantId, 'user belongs to:', tenantId);
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      // Create the key result with proper data structure
+      const keyResultData = {
+        title: req.body.title,
+        description: req.body.description || '',
+        objectiveId: objectiveId,
+        targetValue: req.body.targetValue || '100',
+        currentValue: req.body.currentValue || req.body.startValue || '0',
+        startValue: req.body.startValue || '0',
+        measureType: req.body.measureType || 'percentage',
+        targetType: req.body.targetType || 'increase',
+        status: req.body.status || 'not_started',
+        assignedToId: req.body.assignedToId || null,
+        tenantId: tenantId
+      };
+      
+      console.log('Creating key result with data:', keyResultData);
+      const keyResult = await storage.createKeyResult(keyResultData);
+      console.log('Key result created successfully:', keyResult);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.status(201).json(keyResult);
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: error.message || 'Failed to create key result' });
+    }
+  });
+  
   app.use('/api', apiRouter);
   
   // Add a route for project-related diagnostics
