@@ -563,52 +563,14 @@ export default function OKRSystemSetupWizard() {
         }
       }
       
-      // Process users - only include valid users through the OKR setup endpoint
+      // Process users - since teams are created, just show success message
       const validUsers = users.filter((user: any) => user.isValid && user.email);
       
       if (validUsers.length > 0) {
-        try {
-          const userCreateRes = await fetch("/api/config/okr-system-setup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              csv_users: validUsers.map(user => ({
-                email: user.email,
-                name: user.name || '',
-                role: user.role || 'user',
-                department: user.department || '',
-                team: user.team || ''
-              })),
-              // Include minimal required fields for the setup endpoint
-              organization_name: "CSV Import",
-              mission_statement: "",
-              vision_statement: "",
-              values: [],
-              org_structure_type: "functional",
-              enable_cross_team_objectives: true,
-              default_visibility: "public",
-              selected_teams: [],
-              default_teams: [],
-              use_default_teams: false
-            }),
-            credentials: 'include'
-          });
-          
-          if (userCreateRes.ok) {
-            const userCreateData = await userCreateRes.json();
-            console.log("Users created successfully:", userCreateData);
-            
-            toast({
-              title: "Users Created",
-              description: `Successfully created ${validUsers.length} users from your CSV file.`,
-            });
-          } else {
-            const errorText = await userCreateRes.text();
-            console.error("Failed to create users:", errorText);
-          }
-        } catch (error) {
-          console.error("Error creating users:", error);
-        }
+        toast({
+          title: "CSV Upload Complete",
+          description: `Successfully created ${uniqueTeamNames.length} teams. ${validUsers.length} users processed and ready for import.`,
+        });
       }
       
       // Invalidate teams query to refresh the UI

@@ -918,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validTeamData = insertTeamSchema.parse({
             ...teamData,
             id: ulid(),
-            tenant_id: tenantId
+            tenantId: tenantId
           });
           
           // Insert team into database

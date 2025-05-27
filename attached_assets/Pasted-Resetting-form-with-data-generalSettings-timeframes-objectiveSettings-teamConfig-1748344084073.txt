@@ -1,0 +1,35 @@
+Resetting form with data: {generalSettings: {…}, timeframes: {…}, objectiveSettings: {…}, teamConfiguration: {…}, integrations: {…}}
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+okr-system-setup-wizard.tsx:526 Processing CSV data immediately... (5) [{…}, {…}, {…}, {…}, {…}]
+okr-system-setup-wizard.tsx:535 Unique teams to create: (4) ['Cooking Team', 'Eating Team', 'Mayai Team', 'Asali Team']
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+okr-system-setup-wizard.tsx:552 Teams created successfully: {success: true, createdTeams: Array(4), skippedDuplicates: Array(0), message: 'Created 4 teams'}
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+okr-system-setup-wizard.tsx:610 Error creating users: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+createTeamsAndUsersFromCsv @ okr-system-setup-wizard.tsx:610
+await in createTeamsAndUsersFromCsv
+processCsvData @ okr-system-setup-wizard.tsx:506
+reader.onload @ okr-system-setup-wizard.tsx:393
+FileReader
+handleCsvUpload @ okr-system-setup-wizard.tsx:405
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+use-auth.tsx:111 
