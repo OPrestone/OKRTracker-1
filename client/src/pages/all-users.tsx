@@ -1775,13 +1775,19 @@ mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="owner">Owner</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  <strong>Member:</strong> Regular user
+                  <strong>User:</strong> Regular user
+                  <br />
+                  <strong>Manager:</strong> Can manage team members
+                  <br />
+                  <strong>Executive:</strong> The CEO of the company
                   <br />
                   <strong>Admin:</strong> Can manage users/teams
                   <br />
