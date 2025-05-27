@@ -3679,16 +3679,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectiveId = req.params.objectiveId;
       const tenantId = req.tenantId;
       
+      console.log('=== CREATE KEY RESULT REQUEST ===');
       console.log('Creating key result for objective:', objectiveId);
       console.log('Request body:', req.body);
+      console.log('Tenant ID:', tenantId);
       
       // Verify the objective exists and belongs to the tenant
       const objective = await storage.getObjective(objectiveId);
       if (!objective) {
+        console.log('Objective not found:', objectiveId);
         return res.status(404).json({ error: "Objective not found" });
       }
       
       if (objective.tenantId !== tenantId) {
+        console.log('Access denied - objective belongs to tenant:', objective.tenantId, 'user belongs to:', tenantId);
         return res.status(403).json({ error: "Access denied to this objective" });
       }
       
@@ -3699,7 +3703,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tenantId
       };
       
+      console.log('Creating key result with data:', keyResultData);
       const keyResult = await storage.createKeyResult(keyResultData);
+      console.log('Key result created successfully:', keyResult);
       
       // Recalculate objective progress
       await recalculateObjectiveProgress(objectiveId);
@@ -3707,7 +3713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(keyResult);
     } catch (error) {
       console.error('Error creating key result:', error);
-      next(error);
+      res.status(500).json({ error: error.message || 'Failed to create key result' });
     }
   });
   
