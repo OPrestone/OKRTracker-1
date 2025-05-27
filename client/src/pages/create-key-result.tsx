@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -102,6 +104,7 @@ export default function CreateKeyResult() {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
   const [showDifference, setShowDifference] = useState(false);
+  const [contributorsOpen, setContributorsOpen] = useState(false);
 
   // Generate contextual examples based on objective
   const getExamplesForObjective = () => {
@@ -706,37 +709,53 @@ export default function CreateKeyResult() {
                     )}
                     
                     {/* Contributors Selector */}
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (value && !keyResultData.contributors.includes(value)) {
-                          setKeyResultData(prev => ({
-                            ...prev,
-                            contributors: [...prev.contributors, value]
-                          }));
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Add contributors..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users
-                          .filter(user => !keyResultData.contributors.includes(user.id))
-                          .map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-xs">
-                                    {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span>{user.firstName} {user.lastName}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={contributorsOpen} onOpenChange={setContributorsOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={contributorsOpen}
+                          className="w-full justify-between"
+                        >
+                          Add contributors...
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search team members..." />
+                          <CommandList>
+                            <CommandEmpty>No team member found.</CommandEmpty>
+                            <CommandGroup>
+                              {users
+                                .filter(user => !keyResultData.contributors.includes(user.id))
+                                .map((user) => (
+                                  <CommandItem
+                                    key={user.id}
+                                    value={`${user.firstName} ${user.lastName}`}
+                                    onSelect={() => {
+                                      setKeyResultData(prev => ({
+                                        ...prev,
+                                        contributors: [...prev.contributors, user.id]
+                                      }));
+                                      setContributorsOpen(false);
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarFallback className="text-xs">
+                                          {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span>{user.firstName} {user.lastName}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
 
