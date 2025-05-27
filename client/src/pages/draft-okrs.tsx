@@ -232,24 +232,36 @@ export default function DraftOKRs() {
     if (!selectedObjective || !aiAnalysis) return;
 
     try {
+      console.log("Applying AI suggestions for objective:", selectedObjective.id);
+      console.log("AI Analysis:", aiAnalysis);
+      
       // Update the objective with AI suggestions
       const updatedObjective = {
-        ...selectedObjective,
         title: aiAnalysis.improvedObjective.title,
         description: aiAnalysis.improvedObjective.description,
+        status: selectedObjective.status,
+        level: selectedObjective.level,
+        timeframeId: selectedObjective.timeframe_id,
+        ownerId: selectedObjective.owner_id,
         keyResults: aiAnalysis.improvedObjective.keyResults.map((krTitle, index) => ({
-          id: selectedObjective.keyResults[index]?.id || `new-${index}`,
           title: krTitle,
-          objective_id: selectedObjective.id,
           description: "",
-          progress: 0
+          target_value: "100",
+          current_value: "0",
+          start_value: "0",
+          progress: 0,
+          status: "not_started",
+          assigned_to_id: selectedObjective.keyResults[index]?.assigned_to_id || null
         }))
       };
+
+      console.log("Sending update data:", updatedObjective);
 
       // Save the updated objective to the database
       const response = await apiRequest("PUT", `/api/objectives/${selectedObjective.id}`, updatedObjective);
       
       if (response.ok) {
+        console.log("Update successful!");
         toast({
           title: "Success",
           description: "OKR updated with AI suggestions successfully!",
@@ -257,18 +269,18 @@ export default function DraftOKRs() {
         
         // Refresh the data to show updated information
         await queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-        await queryClient.invalidateQueries({ queryKey: ["api", "objectives"] });
-        
-        // Force refetch to immediately show updated data
-        window.location.reload();
+        await queryClient.refetchQueries({ queryKey: ["/api/objectives"] });
         
         // Close the AI dialog
         setAiDialogOpen(false);
         setAiAnalysis(null);
       } else {
-        throw new Error("Failed to update objective");
+        const errorText = await response.text();
+        console.error("Update failed:", response.status, errorText);
+        throw new Error(`Failed to update objective: ${response.status}`);
       }
     } catch (error) {
+      console.error("Error applying AI suggestions:", error);
       toast({
         title: "Error",
         description: "Failed to apply AI suggestions. Please try again.",
