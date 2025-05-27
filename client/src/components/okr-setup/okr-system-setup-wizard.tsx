@@ -1539,8 +1539,6 @@ export default function OKRSystemSetupWizard() {
         mission: generalSettings.companyMission,
         vision: generalSettings.companyVision,
         behaviors: generalSettings.companyValues,
-        strategicDirections: generalSettings.strategicDirections,
-        strategicDirectionsType: "company", // Mark as company-level strategic directions
         tenantId: tenantId
       };
       

@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get tenant ID from middleware, query parameter, or request body
       const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
-      const { mission, vision, boundaries, strategicDirection, behaviors, strategicDirections, strategicDirectionsType } = req.body;
+      const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
       
       console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
         fromMiddleware: req.tenantId,
@@ -415,8 +415,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromBody: req.body.tenantId,
         resolved: tenantId
       });
-      
-      console.log("Strategic directions data:", { strategicDirections, strategicDirectionsType });
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });
@@ -468,90 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })
           .returning();
       }
-
-      // Handle strategic directions separately if provided
-      if (strategicDirections && strategicDirections.trim() && strategicDirectionsType === "company") {
-        try {
-          console.log("Processing strategic directions for company level");
-          
-          // Import strategicDirections table from schema
-          const { strategicDirections: strategicDirectionsTable } = await import("../shared/schema");
-          
-          // First, remove existing company-level strategic directions for this tenant
-          await db.delete(strategicDirectionsTable)
-            .where(and(
-              eq(strategicDirectionsTable.tenantId, tenantId),
-              eq(strategicDirectionsTable.type, 'company')
-            ));
-          
-          // Create new strategic direction record
-          const strategicDirectionId = ulid();
-          await db.insert(strategicDirectionsTable)
-            .values({
-              id: strategicDirectionId,
-              title: "Company Strategic Directions",
-              description: strategicDirections.trim(),
-              type: "company",
-              priority: 1,
-              tenantId: tenantId,
-              createdById: req.user.id,
-              createdAt: new Date()
-            });
-          
-          console.log("Strategic directions saved successfully");
-        } catch (directionError) {
-          console.error("Error saving strategic directions:", directionError);
-          // Continue execution, don't fail the main request
-        }
-      }
       
-      // Handle strategic directions if provided
-      if (strategicDirections && strategicDirections.trim()) {
-        try {
-          console.log("Processing strategic directions:", strategicDirections);
-          
-          // First, remove existing strategic directions for this tenant (company level)
-          await db.execute(
-            `DELETE FROM strategic_directions WHERE tenant_id = ? AND type = 'company'`,
-            [tenantId]
-          );
-          
-          // Create new strategic direction entry
-          const directionData = {
-            id: ulid(),
-            title: "Company Strategic Directions",
-            description: strategicDirections.trim(),
-            priority: 1,
-            type: 'company',
-            tenant_id: tenantId,
-            created_by_id: req.user.id,
-            created_at: new Date(),
-            updated_at: new Date()
-          };
-          
-          await db.execute(
-            `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, created_by_id, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              directionData.id,
-              directionData.title,
-              directionData.description,
-              directionData.priority,
-              directionData.type,
-              directionData.tenant_id,
-              directionData.created_by_id,
-              directionData.created_at,
-              directionData.updated_at
-            ]
-          );
-          
-          console.log("Strategic directions saved successfully");
-        } catch (directionError) {
-          console.error("Error saving strategic directions:", directionError);
-          // Continue execution, don't fail the main request
-        }
-      }
-
       // Make sure we have a result to return
       if (result && result.length > 0) {
         return res.json({
@@ -567,40 +482,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating organization mission:", error);
       res.status(500).json({ error: "Failed to update organization mission" });
-    }
-  });
-
-  // Strategic Directions API endpoint
-  app.get('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
-    try {
-      const tenantId = req.tenantId || req.query.tenantId as string;
-      const { type = 'company', teamId } = req.query;
-      
-      if (!tenantId) {
-        return res.status(400).json({ error: "Missing tenantId parameter" });
-      }
-
-      const { strategicDirections } = await import("../shared/schema");
-      
-      // Build query conditions
-      const conditions = [
-        eq(strategicDirections.tenantId, tenantId),
-        eq(strategicDirections.type, type as string)
-      ];
-      
-      // Add team filter if specified
-      if (teamId && type === 'team') {
-        conditions.push(eq(strategicDirections.teamId, teamId as string));
-      }
-      
-      const directions = await db.select().from(strategicDirections)
-        .where(and(...conditions))
-        .orderBy(strategicDirections.priority, strategicDirections.createdAt);
-
-      res.json(directions);
-    } catch (error) {
-      console.error("Error fetching strategic directions:", error);
-      res.status(500).json({ error: "Failed to fetch strategic directions" });
     }
   });
   
