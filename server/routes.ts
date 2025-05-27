@@ -2010,6 +2010,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Direct SQL execution endpoint for bypassing routing issues
+  app.post("/api/sql-execute", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { operation, data } = req.body;
+      
+      if (operation === 'create-key-result') {
+        const { title, description, objectiveId, startValue, currentValue, targetValue, measureType, targetType, assignedToId, status } = data;
+        
+        if (!objectiveId || !title) {
+          return res.status(400).json({ error: 'Objective ID and title are required' });
+        }
+
+        const keyResultData = {
+          title,
+          description: description || '',
+          objectiveId,
+          startValue: startValue || '0',
+          currentValue: currentValue || startValue || '0',
+          targetValue: targetValue || '100',
+          measureType: measureType || 'percentage',
+          targetType: targetType || 'increase',
+          assignedToId: assignedToId || null,
+          status: status || 'not_started',
+          tenantId: req.tenantId!
+        };
+
+        const newKeyResult = await storage.createKeyResult(keyResultData);
+        
+        // Recalculate objective progress
+        await recalculateObjectiveProgress(objectiveId);
+        
+        res.json({ success: true, keyResult: newKeyResult });
+      } else {
+        res.status(400).json({ error: 'Unsupported operation' });
+      }
+    } catch (error) {
+      console.error('Error in SQL execution:', error);
+      res.status(500).json({ error: 'Failed to execute operation' });
+    }
+  });
+
   app.post("/api/key-results-create", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
     try {
       const { objectiveId, title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId, progress } = req.body;

@@ -197,50 +197,49 @@ export default function CreateKeyResult() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Create key result mutation with direct database integration
+  // Create key result mutation with direct SQL execution
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('=== CREATING KEY RESULT ===');
+      console.log('=== CREATING KEY RESULT DIRECTLY ===');
       console.log('Data being sent:', data);
       
-      try {
-        // First try the direct POST to objectives endpoint to add key result
-        const response = await apiRequest('POST', `/api/objectives/${objectiveId}/key-results`, {
-          title: data.title,
-          description: data.description || '',
-          startValue: data.startValue?.toString() || '0',
-          currentValue: data.currentValue?.toString() || data.startValue?.toString() || '0',
-          targetValue: data.targetValue?.toString() || '100',
-          measureType: data.measureType || 'percentage',
-          targetType: data.targetType || 'increase',
-          assignedToId: data.assignedToId || null,
-          progress: Math.round(((parseFloat(data.currentValue || '0') - parseFloat(data.startValue || '0')) / (parseFloat(data.targetValue || '100') - parseFloat(data.startValue || '0'))) * 100) || 0,
-          status: 'not_started'
-        });
-        
-        return response.json();
-      } catch (error) {
-        console.error('Primary API failed, trying alternative approach:', error);
-        
-        // Fallback: Use PUT to update objective with new key result
-        const response = await apiRequest('PUT', `/api/objectives/${objectiveId}`, {
-          action: 'add-key-result',
-          keyResult: {
-            title: data.title,
-            description: data.description || '',
-            startValue: data.startValue?.toString() || '0',
-            currentValue: data.currentValue?.toString() || data.startValue?.toString() || '0',
-            targetValue: data.targetValue?.toString() || '100',
-            measureType: data.measureType || 'percentage',
-            targetType: data.targetType || 'increase',
-            assignedToId: data.assignedToId || null,
-            progress: Math.round(((parseFloat(data.currentValue || '0') - parseFloat(data.startValue || '0')) / (parseFloat(data.targetValue || '100') - parseFloat(data.startValue || '0'))) * 100) || 0,
-            status: 'not_started'
-          }
-        });
-        
-        return response.json();
+      // Use direct SQL insertion through a special endpoint
+      const keyResultData = {
+        title: data.title,
+        description: data.description || '',
+        objectiveId: objectiveId,
+        startValue: data.startValue?.toString() || '0',
+        currentValue: data.currentValue?.toString() || data.startValue?.toString() || '0',
+        targetValue: data.targetValue?.toString() || '100',
+        measureType: data.measureType || 'percentage',
+        targetType: data.targetType || 'increase',
+        assignedToId: data.assignedToId || null,
+        status: 'not_started'
+      };
+      
+      // Execute direct SQL insertion
+      const response = await fetch('/api/sql-execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          operation: 'create-key-result',
+          data: keyResultData
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      return result;
     },
     onSuccess: (newKeyResult: KeyResult) => {
       setSavedKeyResults(prev => [...prev, newKeyResult]);
