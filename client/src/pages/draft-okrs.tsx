@@ -258,7 +258,9 @@ export default function DraftOKRs() {
       console.log("Sending update data:", updatedObjective);
 
       // Save the updated objective to the database
+      console.log("Making PUT request to:", `/api/objectives/${selectedObjective.id}`);
       const response = await apiRequest("PUT", `/api/objectives/${selectedObjective.id}`, updatedObjective);
+      console.log("Response status:", response.status);
       
       if (response.ok) {
         console.log("Update successful!");
