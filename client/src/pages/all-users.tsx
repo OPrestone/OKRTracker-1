@@ -388,14 +388,64 @@ export default function AllUsers() {
         total: users.length,
         successful: 0,
         failed: 0,
-        errors: [] as string[]
+        errors: [] as string[],
+        teamsCreated: 0
       };
 
+      // First, extract unique team names and create teams
+      const uniqueTeams = [...new Set(users.map(user => user.team).filter(Boolean))];
+      const createdTeams: Record<string, string> = {}; // teamName -> teamId mapping
+
+      if (uniqueTeams.length > 0) {
+        try {
+          // Create teams in bulk
+          const teamCreateRes = await apiRequest("POST", "/api/teams/bulk", {
+            teams: uniqueTeams.map(teamName => ({
+              name: teamName,
+              description: `Auto-created team from CSV upload`
+            }))
+          });
+
+          if (teamCreateRes.ok) {
+            const teamResults = await teamCreateRes.json();
+            results.teamsCreated = teamResults.teams?.length || 0;
+            
+            // Build mapping of team names to IDs
+            teamResults.teams?.forEach((team: any) => {
+              createdTeams[team.name] = team.id;
+            });
+            
+            // For skipped teams, we need to fetch their IDs from existing teams
+            if (teamResults.skippedDuplicates?.length > 0) {
+              try {
+                const existingTeamsRes = await apiRequest("GET", "/api/teams");
+                if (existingTeamsRes.ok) {
+                  const existingTeamsData = await existingTeamsRes.json();
+                  existingTeamsData.forEach((team: any) => {
+                    if (teamResults.skippedDuplicates.includes(team.name)) {
+                      createdTeams[team.name] = team.id;
+                    }
+                  });
+                }
+              } catch (error) {
+                console.warn("Failed to fetch existing team IDs:", error);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("Failed to create teams, proceeding with user creation:", error);
+        }
+      }
+
+      // Then create users
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
         setUploadProgress(((i + 1) / users.length) * 100);
 
         try {
+          // Find team ID for this user
+          const teamId = user.team ? createdTeams[user.team] : null;
+
           const res = await apiRequest("POST", `/api/users`, {
             email: user.email,
             firstName: user.firstName || user.first_name,
@@ -404,8 +454,8 @@ export default function AllUsers() {
             password: user.password || undefined, // Will be auto-generated if not provided
             department: user.department,
             title: user.title,
-            role: user.role || 'member',
-            teamId: user.teamId || null,
+            role: user.role || 'user', // Updated to use new default role
+            teamId: teamId,
             tenantId: tenantId,
           });
 
@@ -438,7 +488,7 @@ export default function AllUsers() {
       
       toast({
         title: "Bulk Upload Complete",
-        description: `${results.successful} users created successfully, ${results.failed} failed`,
+        description: `${results.successful} users created successfully, ${results.teamsCreated} teams created, ${results.failed} failed`,
         variant: results.failed > 0 ? "destructive" : "default",
       });
     },
@@ -545,7 +595,12 @@ export default function AllUsers() {
 
   // Generate CSV template
   const downloadCSVTemplate = () => {
-    const csvContent = "email,firstName,lastName,username,department,title,role,password\njohn.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,member,tempPassword123\njane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,member,tempPassword456";
+    const csvContent = `email,firstName,lastName,username,department,title,role,team,password
+john.doe@example.com,John,Doe,johndoe,Engineering,Software Engineer,user,Development Team,tempPassword123
+jane.smith@example.com,Jane,Smith,janesmith,Marketing,Marketing Manager,manager,Marketing Team,tempPassword456
+alex.wilson@example.com,Alex,Wilson,alexwilson,Operations,Operations Lead,executive,Operations Team,tempPassword789
+sarah.brown@example.com,Sarah,Brown,sarahbrown,HR,HR Director,admin,HR Team,tempPassword012
+mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2101,7 +2156,7 @@ export default function AllUsers() {
                 disabled={isUploading}
               />
               <p className="text-xs text-muted-foreground">
-                Required columns: email, firstName, lastName. Optional: username, department, title, role, password
+                Required columns: email, firstName, lastName. Optional: username, department, title, role, team, password. Teams will be created automatically if they don't exist.
               </p>
             </div>
 
