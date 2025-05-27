@@ -59,10 +59,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTeamRoutes(apiRouter);
   setupApprovedOkrsRoutes(apiRouter);
   
-  // Add key result creation route directly to app before the API router
-  app.post("/api/create-key-result-direct", async (req, res) => {
+  // Add key result creation route early in the middleware stack
+  app.post("/api/key-results-create", async (req, res) => {
     try {
-      console.log('=== DIRECT CREATE KEY RESULT REQUEST ===');
+      console.log('=== DIRECT CREATE KEY RESULT REQUEST (NO API PREFIX) ===');
       console.log('Request body:', req.body);
       
       const { objectiveId, title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId } = req.body;
@@ -85,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetType: targetType || 'increase',
         status: 'not_started',
         assignedToId: assignedToId || null,
-        tenantId: '01JW8NPA00SNSRFKG2V147V88J' // Use the known tenant ID
+        tenantId: '01JW5XM50E1WDXRDZQ6TWCHEMP' // Use the known tenant ID
       };
       
       console.log('Creating key result with data:', keyResultData);

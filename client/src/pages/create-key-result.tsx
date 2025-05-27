@@ -197,14 +197,13 @@ export default function CreateKeyResult() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  // Create key result mutation
+  // Create key result mutation using the correct API endpoint
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log('=== MAKING API REQUEST ===');
-      console.log('Using direct route for key result creation');
+      console.log('=== CREATING KEY RESULT ===');
       console.log('Data being sent:', data);
       
-      const response = await apiRequest('POST', `/api/create-key-result-direct`, {
+      const response = await apiRequest('POST', `/api/key-results-create`, {
         ...data,
         objectiveId,
         progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
