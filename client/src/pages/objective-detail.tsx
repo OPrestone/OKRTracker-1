@@ -371,6 +371,13 @@ export default function ObjectiveDetail() {
   const [isAddKeyResultModalOpen, setIsAddKeyResultModalOpen] = useState(false);
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
   const [newCheckInNotes, setNewCheckInNotes] = useState("");
+  
+  // Key result progress update states
+  const [keyResultProgressDialogOpen, setKeyResultProgressDialogOpen] = useState(false);
+  const [selectedKeyResult, setSelectedKeyResult] = useState<DbKeyResult | null>(null);
+  const [keyResultProgressValue, setKeyResultProgressValue] = useState<string>("0");
+  const [keyResultNotes, setKeyResultNotes] = useState("");
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { currentTenant } = useTenantContext();
@@ -677,6 +684,77 @@ export default function ObjectiveDetail() {
     }
   };
 
+  // Handle opening key result progress dialog
+  const handleOpenKeyResultProgress = (keyResult: DbKeyResult) => {
+    setSelectedKeyResult(keyResult);
+    setKeyResultProgressValue((keyResult.progress || 0).toString());
+    setKeyResultNotes("");
+    setKeyResultProgressDialogOpen(true);
+  };
+
+  // Handle key result progress update
+  const handleKeyResultProgressUpdate = async () => {
+    const newProgress = parseInt(keyResultProgressValue, 10);
+    if (isNaN(newProgress) || newProgress < 0 || newProgress > 100) {
+      toast({
+        title: "Invalid Progress Value",
+        description: "Progress must be a number between 0 and 100.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedKeyResult || !currentTenant?.id) {
+      toast({
+        title: "Cannot Update Progress",
+        description: "Missing key result data or tenant information.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Prepare the update data
+      const updateData = {
+        progress: newProgress,
+        tenantId: currentTenant.id
+      };
+
+      // Make API request to update key result
+      const response = await apiRequest(
+        'PATCH',
+        `/api/key-results/${selectedKeyResult.id}?tenantId=${currentTenant.id}`,
+        updateData
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error updating key result: ${response.statusText}`);
+      }
+
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/key-results', objectiveId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId] });
+
+      // Close dialog and reset states
+      setKeyResultProgressDialogOpen(false);
+      setSelectedKeyResult(null);
+      setKeyResultProgressValue("0");
+      setKeyResultNotes("");
+      
+      toast({
+        title: "Progress Updated",
+        description: `Key result progress updated to ${newProgress}%.`,
+      });
+    } catch (error) {
+      console.error("Error updating key result progress:", error);
+      toast({
+        title: "Error Updating Progress",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Toggle todo completion
   const toggleTodo = (todoId: number) => {
     const updatedTodos = objective.todos.map(todo => 
@@ -882,7 +960,11 @@ export default function ObjectiveDetail() {
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleOpenKeyResultProgress(keyResult)}
+                            >
                               <BarChart3 className="h-4 w-4 mr-1" />
                               Update Progress
                             </Button>
@@ -1286,6 +1368,65 @@ export default function ObjectiveDetail() {
               Cancel
             </Button>
             <Button onClick={handleCheckInSubmit}>Submit Check-in</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Key Result Progress Update Dialog */}
+      <Dialog open={keyResultProgressDialogOpen} onOpenChange={setKeyResultProgressDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Key Result Progress</DialogTitle>
+            <DialogDescription>
+              Update the progress for "{selectedKeyResult?.title}".
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6 space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="keyResultProgress" className="text-sm font-medium">
+                Progress Percentage
+              </label>
+              <Input
+                id="keyResultProgress"
+                type="number"
+                min="0"
+                max="100"
+                value={keyResultProgressValue}
+                onChange={(e) => setKeyResultProgressValue(e.target.value)}
+                placeholder="Enter progress percentage (0-100)"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="keyResultNotes" className="text-sm font-medium">
+                Notes (Optional)
+              </label>
+              <Textarea
+                id="keyResultNotes"
+                value={keyResultNotes}
+                onChange={(e) => setKeyResultNotes(e.target.value)}
+                placeholder="Add any notes about this progress update..."
+                rows={3}
+              />
+            </div>
+
+            {selectedKeyResult && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Current Progress</label>
+                <div className="flex items-center gap-2">
+                  <Progress value={selectedKeyResult.progress || 0} className="flex-1" />
+                  <span className="text-sm font-medium">{selectedKeyResult.progress || 0}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setKeyResultProgressDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleKeyResultProgressUpdate}>Update Progress</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
