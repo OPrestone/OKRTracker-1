@@ -552,10 +552,10 @@ export default function OKRSystemSetupWizard() {
       let teamsCreated = 0;
       let usersCreated = 0;
       
-      // Create teams first if needed
+      // Step 1: Create teams first if needed
       if (csvImportedTeams.length > 0) {
         try {
-          console.log("Creating teams via batch endpoint...");
+          console.log("Step 1: Creating teams via batch endpoint...");
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
             headers: { 
@@ -577,6 +577,9 @@ export default function OKRSystemSetupWizard() {
             const teamCreateData = JSON.parse(teamResponseText);
             teamsCreated = teamCreateData.createdTeams?.length || csvImportedTeams.length;
             console.log("Teams created successfully:", teamCreateData);
+            
+            // Wait a moment for teams to be fully committed to database
+            await new Promise(resolve => setTimeout(resolve, 1000));
           } else {
             console.error("Team creation failed:", teamResponseText);
           }
@@ -585,10 +588,10 @@ export default function OKRSystemSetupWizard() {
         }
       }
       
-      // Create users using the bulk user creation endpoint (same as All Users page)
+      // Step 2: Create users using the bulk user creation endpoint
       if (csvImportedUsers.length > 0) {
         try {
-          console.log("Creating users using bulk endpoint...");
+          console.log("Step 2: Creating users using bulk endpoint...");
           
           // Create users one by one using the working approach from All Users page
           let createdCount = 0;
@@ -634,11 +637,11 @@ export default function OKRSystemSetupWizard() {
             user.role === 'manager' && user.team && user.team.trim() !== ''
           );
           
-          console.log("Setting managers as team leaders:", managersToSetAsLeaders);
+          console.log("Step 3: Setting managers as team leaders:", managersToSetAsLeaders);
           
           if (managersToSetAsLeaders.length > 0) {
-            // Wait a moment for data to be fully available
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Wait for users to be fully available in database after creation
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Get fresh team and user data with proper tenant headers
             const teamsResponse = await fetch("/api/teams", {
