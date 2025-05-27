@@ -1433,7 +1433,7 @@ mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345
                     <SelectItem key={tenant.id} value={tenant.id}>
                       <div className="flex items-center">
                         <Building2 className="h-4 w-4 mr-2 text-primary" />
-                        {tenant.name || tenant.displayName || 'Unnamed Organization'}
+                        {tenant.name || tenant.display_name || 'Unnamed Organization'}
                       </div>
                     </SelectItem>
                   ))}

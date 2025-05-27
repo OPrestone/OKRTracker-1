@@ -156,7 +156,7 @@ export default function TenantsPage() {
                   <Card key={tenant.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <CardTitle className="truncate">{tenant.displayName || tenant.name}</CardTitle>
+                        <CardTitle className="truncate">{tenant.display_name || tenant.name}</CardTitle>
                         {tenant.isDefault && (
                           <Badge variant="outline">Default</Badge>
                         )}

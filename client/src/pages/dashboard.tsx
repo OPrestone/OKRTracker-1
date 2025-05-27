@@ -144,7 +144,7 @@ export default function Dashboards() {
               <div className="flex items-center mb-4 md:mb-0">
                 <Building className="h-10 w-10 text-primary mr-4 p-2 bg-primary/10 rounded-full" />
                 <div>
-                  <h3 className="text-lg font-semibold">{currentTenant.displayName || currentTenant.name}</h3>
+                  <h3 className="text-lg font-semibold">{currentTenant.display_name || currentTenant.name}</h3>
                   <p className="text-sm text-muted-foreground flex items-center">
                     <span>Organization Dashboard</span>
                     <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">

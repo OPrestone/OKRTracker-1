@@ -54,7 +54,7 @@ export default function TenantDashboardRedirect() {
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-lg">{currentTenant.displayName || currentTenant.name}</p>
+                  <p className="font-medium text-lg">{currentTenant.display_name || currentTenant.name}</p>
                   <p className="text-sm text-muted-foreground">ID: {currentTenant.id}</p>
                 </div>
                 <div className="flex items-center text-sm text-primary">

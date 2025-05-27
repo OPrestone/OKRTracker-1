@@ -56,7 +56,7 @@ export default function TenantPage() {
     <div className="container py-6 max-w-7xl">
       <div className="flex flex-col gap-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{tenant.displayName || tenant.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{tenant.display_name || tenant.name}</h1>
           <p className="text-muted-foreground mt-1">
             Manage your organization settings, users, and subscription.
           </p>

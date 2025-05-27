@@ -653,7 +653,7 @@ export default function TenantOnboardingWizard() {
       // Show success message
       toast({
         title: "Organization created!",
-        description: `${data.tenant.displayName} has been set up successfully.`,
+        description: `${data.tenant.display_name} has been set up successfully.`,
       });
 
       // Add a slight delay to ensure cache is invalidated and UI update is perceived

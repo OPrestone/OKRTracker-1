@@ -544,49 +544,6 @@ export default function TenantOnboardingWizard() {
 
             // Create time cadences for the organization
             const tenantId = orgData.tenant.id;
-            console.log("Creating time cadences for tenant:", tenantId);
-
-            // Annual cadence
-            const annualResponse = await fetch('/api/cadences', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: "Annual",
-                description: "12-month time period for long-term strategic planning",
-                startMonth: 1, // January
-                periodMonths: 12,
-                tenantId: tenantId,
-                isDefault: true
-              }),
-              credentials: 'include'
-            });
-
-            if (annualResponse.ok) {
-              console.log("Annual cadence created successfully");
-            } else {
-              console.error("Failed to create annual cadence:", await annualResponse.text());
-            }
-
-            // Quarterly cadence
-            const quarterlyResponse = await fetch('/api/cadences', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: "Quarterly",
-                description: "3-month time period for tactical execution",
-                startMonth: 1, // January
-                periodMonths: 3,
-                tenantId: tenantId,
-                isDefault: true
-              }),
-              credentials: 'include'
-            });
-
-            if (quarterlyResponse.ok) {
-              console.log("Quarterly cadence created successfully");
-            } else {
-              console.error("Failed to create quarterly cadence:", await quarterlyResponse.text());
-            }
 
             // Create initial OKRs from template if requested
             if (values.setup.createInitialOKRs && values.setup.template) {
@@ -652,7 +609,7 @@ export default function TenantOnboardingWizard() {
       // Show success message
       toast({
         title: "Organization created!",
-        description: `${data.tenant.displayName} has been set up successfully.`,
+        description: `${data.tenant.display_name} has been set up successfully.`,
       });
 
       // Add a slight delay to ensure cache is invalidated and UI update is perceived
@@ -816,27 +773,21 @@ export default function TenantOnboardingWizard() {
                         name="orgDetails.name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Organization Name (Slug) *</FormLabel>
+                            <FormLabel>Organization Name</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder="acme-co" 
+                                placeholder="Organization Name" 
                                 {...field} 
                                 className="bg-gray-50"
                                 onChange={(e) => {
-                                  // Auto-generate kebab-case slug
-                                  const slug = e.target.value
-                                    .toLowerCase()
-                                    .replace(/[^a-z0-9]+/g, '-')
-                                    .replace(/(^-|-$)/g, '');
-                                  field.onChange(slug);
 
                                   // Auto-fill display name if empty (and name has some content)
-                                  if (e.target.value && !form.getValues("orgDetails.displayName")) {
+                                  console.log("Name changed:", e.target.value, field.value, "displayName:", form.getValues("orgDetails.displayName"));
+                                  if (form.getValues("orgDetails.displayName") === field.value || !form.getValues("orgDetails.displayName")) {
                                     const displayName = e.target.value
-                                      .replace(/-/g, ' ')
-                                      .replace(/\b\w/g, l => l.toUpperCase());
                                     form.setValue("orgDetails.displayName", displayName);
                                   }
+                                  field.onChange(e.target.value);
                                 }}
                               />
                             </FormControl>
@@ -907,7 +858,7 @@ export default function TenantOnboardingWizard() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <div className="sticky top-0 p-2">
+                                <div className="sticky top-0 p-2 z-20">
                                   <Input 
                                     placeholder="Search industries..." 
                                     className="border-gray-200"
