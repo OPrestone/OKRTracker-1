@@ -95,7 +95,7 @@ export default function CreateKeyResult() {
     title: '',
     description: '',
     assignedToId: '',
-    measureType: 'numerical',
+    measureType: 'percentage',
     targetType: 'increase',
     startValue: 0,
     currentValue: 0,
