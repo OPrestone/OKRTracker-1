@@ -1,0 +1,31 @@
+Team creation response: {"success":true,"createdTeams":[{"id":"01JW8SHXTJW3EGK4BW9CGG5ZT6","name":"Cooking Team","description":"Team created from CSV upload","color":"#3B82F6","icon":"building","parentId":null,"ownerId":null,"leaderId":null,"tenantId":null,"createdAt":"2025-05-27T11:55:26.939Z"},{"id":"01JW8SHXV68XFP8ZJW392J1RSD","name":"Eating Team","description":"Team created from CSV upload","color":"#3B82F6","icon":"building","parentId":null,"ownerId":null,"leaderId":null,"tenantId":null,"createdAt":"2025-05-27T11:55:26.961Z"},{"id":"01JW8SHXVVG2N9E082VJMEV6P2","name":"Mayai Team","description":"Team created from CSV upload","color":"#3B82F6","icon":"building","parentId":null,"ownerId":null,"leaderId":null,"tenantId":null,"createdAt":"2025-05-27T11:55:26.981Z"},{"id":"01JW8SHXWFFMB6FF8BQ3DPC10V","name":"Asali Team","description":"Team created from CSV upload","color":"#3B82F6","icon":"building","parentId":null,"ownerId":null,"leaderId":null,"tenantId":null,"createdAt":"2025-05-27T11:55:27.001Z"},{"id":"01JW8SHXX3S8Y14B4V247WGVXZ","name":"Running Team","description":"Team created from CSV upload","color":"#3B82F6","icon":"building","parentId":null,"ownerId":null,"leaderId":null,"tenantId":null,"createdAt":"2025-05-27T11:55:27.021Z"}],"skippedDuplicates":[],"message":"Created 5 teams"}
+okr-system-setup-wizard.tsx:576 Teams created successfully: {success: true, createdTeams: Array(5), skippedDuplicates: Array(0), message: 'Created 5 teams'}
+okr-system-setup-wizard.tsx:588 Creating users using bulk endpoint...
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+okr-system-setup-wizard.tsx:614 Created user: truk.de@test.co.ke
+okr-system-setup-wizard.tsx:614 Created user: juyu.sth@exale.co.ke
+okr-system-setup-wizard.tsx:614 Created user: trkij.wilon@exmple.co.k
+okr-system-setup-wizard.tsx:614 Created user: erkiu.brwn@exmple.co.ke
+okr-system-setup-wizard.tsx:614 Created user: jerdhsa.dvis@exmple.co.ke
+okr-system-setup-wizard.tsx:627 Successfully created 5 users, 0 failed
+okr-system-setup-wizard.tsx:634 Setting managers as team leaders: (2) [{…}, {…}]
+okr-system-setup-wizard.tsx:672 Could not find team "Eating Team" or user "juyu.sth@exale.co.ke" for leadership assignment
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:672
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:672 Could not find team "Running Team" or user "jerdhsa.dvis@exmple.co.ke" for leadership assignment

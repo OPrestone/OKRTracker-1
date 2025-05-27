@@ -558,7 +558,10 @@ export default function OKRSystemSetupWizard() {
           console.log("Creating teams via batch endpoint...");
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+            },
             body: JSON.stringify(csvImportedTeams.map(teamName => ({
               name: teamName,
               description: `Team created from CSV upload`
