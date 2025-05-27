@@ -319,7 +319,7 @@ export function TeamsOKRPerformance() {
     ];
   };
   
-  const realStatusDistribution = generateStatusDistribution();
+
   
   // Filter data based on active tab and search query
   const filteredData = realPerformanceData.filter(item => {
