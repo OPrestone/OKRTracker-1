@@ -507,6 +507,24 @@ export default function ObjectiveDetail() {
     enabled: !!objectiveId && !!currentTenant?.id,
   });
 
+  // Calculate aggregate progress from key results
+  const calculateAggregateProgress = (keyResults: any[]) => {
+    if (!keyResults || keyResults.length === 0) {
+      return 0;
+    }
+    
+    const totalProgress = keyResults.reduce((sum, kr) => {
+      return sum + (kr.progress || 0);
+    }, 0);
+    
+    return Math.round(totalProgress / keyResults.length);
+  };
+
+  // Get calculated progress from key results, fallback to stored progress
+  const displayProgress = keyResults && keyResults.length > 0 
+    ? calculateAggregateProgress(keyResults)
+    : objective?.progress || 0;
+
   // Update progress value when objective data changes
   useEffect(() => {
     if (objective && objective.progress !== undefined) {
@@ -862,11 +880,11 @@ export default function ObjectiveDetail() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="text-sm font-medium">Progress</h3>
-                      <span className={`text-lg font-bold ${getProgressColorClass(objective.progress)}`}>
-                        {objective.progress}%
+                      <span className={`text-lg font-bold ${getProgressColorClass(displayProgress)}`}>
+                        {displayProgress}%
                       </span>
                     </div>
-                    <Progress value={objective.progress} className="h-2 mb-1" />
+                    <Progress value={displayProgress} className="h-2 mb-1" />
                     <p className="text-xs text-gray-500">Last updated: {objective.lastUpdated}</p>
                   </div>
                   
