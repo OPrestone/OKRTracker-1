@@ -389,27 +389,16 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center mb-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
-                  <h4 className="font-medium text-blue-800">Current Configuration</h4>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-white p-3 rounded-md border border-blue-100">
-                    <span className="text-gray-600 text-xs uppercase tracking-wide">Cadence:</span>
-                    <div className="mt-1">
-                      <span className="font-semibold text-blue-700 capitalize text-base">
-                        {primaryCadence || 'Not selected'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="bg-white p-3 rounded-md border border-blue-100">
-                    <span className="text-gray-600 text-xs uppercase tracking-wide">Start Month:</span>
-                    <div className="mt-1">
-                      <span className="font-semibold text-blue-700 capitalize text-base">
-                        {startMonth || 'Not selected'}
-                      </span>
-                    </div>
+              <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-gray-600">
+                      Cadence: <span className="font-medium text-gray-900 capitalize">{primaryCadence || 'Not selected'}</span>
+                    </span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">
+                      Start: <span className="font-medium text-gray-900 capitalize">{startMonth || 'Not selected'}</span>
+                    </span>
                   </div>
                 </div>
               </div>
