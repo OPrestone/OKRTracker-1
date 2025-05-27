@@ -2018,51 +2018,20 @@ export default function OKRSystemSetupWizard() {
                                   </Button>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                  <div className="md:col-span-2">
-                                    <label className="block text-xs font-medium mb-1">Title</label>
-                                    <Input
-                                      placeholder="e.g., Digital Transformation"
-                                      value={direction.title || ""}
-                                      onChange={(e) => {
-                                        const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                        currentDirections[index] = { ...currentDirections[index], title: e.target.value };
-                                        form.setValue("generalSettings.strategicDirections", currentDirections);
-                                      }}
-                                    />
-                                  </div>
-                                  
-                                  <div>
-                                    <label className="block text-xs font-medium mb-1">Priority</label>
-                                    <Select
-                                      value={direction.priority?.toString() || "1"}
-                                      onValueChange={(value) => {
-                                        const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                        currentDirections[index] = { ...currentDirections[index], priority: parseInt(value) };
-                                        form.setValue("generalSettings.strategicDirections", currentDirections);
-                                      }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {[1, 2, 3, 4, 5].map(num => (
-                                          <SelectItem key={num} value={num.toString()}>Priority {num}</SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                
-                                <div className="mt-3">
-                                  <label className="block text-xs font-medium mb-1">Description</label>
+                                <div>
+                                  <label className="block text-xs font-medium mb-1">Strategic Direction</label>
                                   <Textarea
                                     placeholder="Describe this strategic direction and its importance..."
-                                    className="resize-none h-16"
+                                    className="resize-none h-20"
                                     value={direction.description || ""}
                                     onChange={(e) => {
                                       const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
-                                      currentDirections[index] = { ...currentDirections[index], description: e.target.value };
+                                      currentDirections[index] = { 
+                                        ...currentDirections[index], 
+                                        description: e.target.value,
+                                        title: e.target.value.substring(0, 50) || `Direction ${index + 1}`, // Auto-generate title from description
+                                        priority: index + 1 // Auto-assign priority based on order
+                                      };
                                       form.setValue("generalSettings.strategicDirections", currentDirections);
                                     }}
                                   />

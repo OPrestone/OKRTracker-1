@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { z } from 'zod';
-import { okrSystemConfigs, teams, users, insertTeamSchema, insertUserSchema } from '../../shared/schema';
+import { okrSystemConfigs, teams, users, strategicDirections, insertTeamSchema, insertUserSchema } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { hashPassword } from '../auth';
