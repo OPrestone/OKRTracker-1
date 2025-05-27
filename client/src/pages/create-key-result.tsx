@@ -230,7 +230,7 @@ export default function CreateKeyResult() {
       });
       
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      console.log('Response content-type:', response.headers.get('content-type'));
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -238,7 +238,31 @@ export default function CreateKeyResult() {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
-      const result = await response.json();
+      const responseText = await response.text();
+      console.log('Raw response text (first 200 chars):', responseText.substring(0, 200));
+      
+      // Check if response is HTML (development server issue)
+      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+        console.error('Received HTML instead of JSON - development server routing issue');
+        // Fall back to the working POST endpoint pattern that we know works
+        return await fetch('/api/key-results-create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(keyResultData)
+        }).then(async (fallbackResponse) => {
+          if (!fallbackResponse.ok) {
+            throw new Error(`Fallback API failed: ${fallbackResponse.status}`);
+          }
+          const fallbackText = await fallbackResponse.text();
+          console.log('Fallback response:', fallbackText);
+          return JSON.parse(fallbackText);
+        });
+      }
+      
+      const result = JSON.parse(responseText);
       console.log('API Success Response:', result);
       return result.keyResult || result;
     },
