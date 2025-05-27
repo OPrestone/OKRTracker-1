@@ -5,92 +5,129 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Target, TrendingUp, Clock, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
-import { useUserPermissions } from "@/hooks/use-user-permissions";
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { Plus, Target, TrendingUp, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import MonthlyProgressChart from "@/components/dashboard/monthly-progress-chart";
 
-// Types to match database schema
-interface KeyResult {
+interface DbKeyResult {
   id: string;
   title: string;
   description?: string;
-  currentValue: string; // Changed from number to string to match database
-  targetValue: string; // Changed from number to string to match database
-  startValue: string; // Changed from number to string to match database
-  objectiveId: string;
-  assignedToId?: string; // Changed from ownerId to assignedToId to match database
+  current_value?: string;
+  target_value?: string;
+  start_value?: string;
+  progress?: number;
+  assigned_to_id?: string;
+  objective_id: string;
   status?: string;
-  tenantId?: string; // Added tenantId to match database
-  progress?: number; // Added progress from database
-  createdAt: string;
+  tenant_id?: string;
+  created_at?: string;
 }
 
-interface DBObjective {
+interface DbObjective {
   id: string;
   title: string;
   description?: string;
   ownerId: string;
   teamId?: string;
   timeframeId: string;
-  status: string;
-  progress: number;
-  parentId?: string;
+  status?: string;
+  progress?: number;
   tenantId: string;
   level: string;
-  createdAt: string;
+  createdAt?: string;
+  isApproved?: boolean;
+  keyResults: DbKeyResult[];
 }
 
-interface Timeframe {
-  id: string;
-  name: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  cadenceId: string;
-  createdAt: string;
-}
-
-// Interface for transformed data structure to match UI needs
 interface OKR {
   id: string;
   title: string;
   description: string;
   progress: number;
   timeframe: string;
-  status: string;
-  type: string;
+  status: "draft" | "active" | "completed" | "pending-approval";
+  type: "personal" | "team" | "company";
   keyResults: KeyResult[];
+}
+
+interface KeyResult {
+  id: string;
+  title: string;
+  progress: number;
+  dueDate: string;
+  status: "on-track" | "at-risk" | "behind" | "complete";
 }
 
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
-  const [_, navigate] = useLocation();
-  const { canCreateObjectives } = useUserPermissions();
+  const { currentTenant } = useTenantContext();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
-  // Fetch all objectives
-  const { data: objectives = [], isLoading: loadingObjectives } = useQuery<DBObjective[]>({
-    queryKey: ['/api/objectives'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
-    enabled: !!user
+  const { data: timeframes } = useQuery({
+    queryKey: ["/api/timeframes", currentTenant?.id],
+    enabled: !!currentTenant?.id,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
   
-  // Fetch key results
-  const { data: keyResults = [], isLoading: loadingKeyResults } = useQuery<KeyResult[]>({
-    queryKey: ['/api/key-results'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
-    enabled: !!user
+  const { data: objectives, isLoading, error } = useQuery({
+    queryKey: ["/api/my-objectives"],
+    enabled: !!currentTenant?.id && !!user,
+    retry: 1,
+    retryDelay: 1000,
+    meta: { requiresTenant: true },
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true,
   });
-  
-  // Fetch timeframes for mapping
-  const { data: timeframes = [], isLoading: loadingTimeframes } = useQuery<Timeframe[]>({
-    queryKey: ['/api/timeframes'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
-    enabled: !!user
+
+  // Submit for approval mutation
+  const submitForApprovalMutation = useMutation({
+    mutationFn: async (objectiveId: string) => {
+      const response = await fetch(`/api/objectives/${objectiveId}/submit-for-approval`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit objective for approval');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "Your OKR has been submitted for approval and will be reviewed by your manager.",
+      });
+      
+      // Invalidate and refetch objectives
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives", currentTenant?.id] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to submit OKR for approval. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error submitting objective for approval:", error);
+    }
   });
+
+  const handleSubmitForApproval = (objectiveId: string) => {
+    submitForApprovalMutation.mutate(objectiveId);
+  };
   
   // Transform database objectives into OKR format needed for UI
   const transformObjectivesToOKRs = (): OKR[] => {
