@@ -201,10 +201,10 @@ export default function CreateKeyResult() {
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('=== MAKING API REQUEST ===');
-      console.log('URL:', `/api/objectives/${objectiveId}/key-results`);
+      console.log('Using direct route for key result creation');
       console.log('Data being sent:', data);
       
-      const response = await apiRequest('POST', `/api/objectives/${objectiveId}/key-results`, {
+      const response = await apiRequest('POST', `/api/create-key-result-direct`, {
         ...data,
         objectiveId,
         progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
