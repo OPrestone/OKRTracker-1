@@ -765,7 +765,7 @@ export default function AllUsers() {
     
     // Get user's role in the current tenant
     const userTenantRelation = user.tenants?.find(t => t.id === tenantId);
-    const tenantRole = userTenantRelation?.userRole || 'member';
+    const tenantRole = userTenantRelation?.userRole || 'user';
     console.log("User tenant relation:", userTenantRelation, "Current tenant:", tenantId);
     
     // Populate the update form with the user's current data
@@ -778,7 +778,7 @@ export default function AllUsers() {
       department: user.department || '',
       title: user.title || '',
       teamId: user.teamId?.toString() || '',
-      tenantRole: tenantRole as 'member' | 'admin' | 'owner',
+      tenantRole: tenantRole as 'user' | 'manager' | 'executive' | 'admin' | 'owner',
     };
     console.log("Setting update user data:", userData);
     
