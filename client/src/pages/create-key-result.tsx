@@ -204,15 +204,13 @@ export default function CreateKeyResult() {
       console.log('URL:', `/api/objectives/${objectiveId}/key-results`);
       console.log('Data being sent:', data);
       
-      return apiRequest({
-        url: `/api/objectives/${objectiveId}/key-results`,
-        method: 'POST',
-        data: {
-          ...data,
-          objectiveId,
-          progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
-        }
+      const response = await apiRequest(`/api/objectives/${objectiveId}/key-results`, 'POST', {
+        ...data,
+        objectiveId,
+        progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
       });
+      
+      return response.json();
     },
     onSuccess: (newKeyResult: KeyResult) => {
       setSavedKeyResults(prev => [...prev, newKeyResult]);
