@@ -42,6 +42,18 @@ interface Team {
   selected?: boolean;
 }
 
+// Strategic Direction interface
+interface StrategicDirection {
+  id?: string;
+  title: string;
+  description: string;
+  type: "company" | "team";
+  priority: number;
+  tenantId?: string;
+  teamId?: string | null;
+  createdById?: string;
+}
+
 // User interface for CSV upload
 interface UserImport {
   email: string;

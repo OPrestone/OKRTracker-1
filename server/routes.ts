@@ -262,6 +262,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use the middleware defined above
   // The rest of the routes will use the existing middleware
   
+  // Strategic Directions API
+  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const { type, teamId } = req.query;
+      
+      let query = db.select().from(strategicDirections).where(eq(strategicDirections.tenantId, tenantId));
+      
+      if (type) {
+        query = query.where(eq(strategicDirections.type, type as string));
+      }
+      
+      if (teamId) {
+        query = query.where(eq(strategicDirections.teamId, teamId as string));
+      }
+      
+      const directions = await query;
+      res.json(directions);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user.id;
+      
+      const validatedData = insertStrategicDirectionSchema.parse({
+        ...req.body,
+        tenantId,
+        createdById: userId
+      });
+      
+      const newDirection = await db.insert(strategicDirections).values({
+        id: ulid(),
+        ...validatedData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      
+      res.status(201).json(newDirection[0]);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/strategic-directions/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const directionId = req.params.id;
+      
+      // Verify the direction belongs to the current tenant
+      const existingDirection = await db.select()
+        .from(strategicDirections)
+        .where(and(
+          eq(strategicDirections.id, directionId),
+          eq(strategicDirections.tenantId, tenantId)
+        ))
+        .then(results => results[0]);
+      
+      if (!existingDirection) {
+        return res.status(404).json({ error: "Strategic direction not found" });
+      }
+      
+      const validatedData = insertStrategicDirectionSchema.partial().parse(req.body);
+      
+      const updatedDirection = await db.update(strategicDirections)
+        .set({
+          ...validatedData,
+          updatedAt: new Date()
+        })
+        .where(eq(strategicDirections.id, directionId))
+        .returning();
+      
+      res.json(updatedDirection[0]);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/strategic-directions/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.tenantId;
+      const directionId = req.params.id;
+      
+      // Verify the direction belongs to the current tenant
+      const existingDirection = await db.select()
+        .from(strategicDirections)
+        .where(and(
+          eq(strategicDirections.id, directionId),
+          eq(strategicDirections.tenantId, tenantId)
+        ))
+        .then(results => results[0]);
+      
+      if (!existingDirection) {
+        return res.status(404).json({ error: "Strategic direction not found" });
+      }
+      
+      await db.delete(strategicDirections)
+        .where(eq(strategicDirections.id, directionId));
+      
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Organization Mission API Endpoints
   app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
