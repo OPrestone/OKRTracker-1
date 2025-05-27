@@ -495,7 +495,15 @@ export default function DraftOKRs() {
     }));
     
     // Make API call to update the draft objective
-    apiRequest("PATCH", `/api/objectives/${editDraftData.id}`, {
+    console.log("Updating draft objective:", editDraftData.id);
+    console.log("Update data:", {
+      title: editDraftData.title,
+      description: editDraftData.description,
+      status: "draft",
+      keyResults: preparedKeyResults
+    });
+    
+    apiRequest("PUT", `/api/objectives/${editDraftData.id}`, {
       title: editDraftData.title,
       description: editDraftData.description,
       status: "draft", // Ensure it maintains draft status
