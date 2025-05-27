@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,8 +109,14 @@ export default function CreateKeyResult() {
   });
 
   // Fetch users for Lead and Contributors
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  // Fetch teams data to display team name
+  const { data: teams = [] } = useQuery({
+    queryKey: ['/api/teams'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -399,6 +405,54 @@ export default function CreateKeyResult() {
               <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                 <span className="text-sm font-medium">{objective?.title}</span>
+              </div>
+            </div>
+
+            {/* Team & Ownership - Auto-populated from objective */}
+            <div className="space-y-3">
+              <Label>Team & Ownership</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Owner */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">Owner</Label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+                    {(() => {
+                      const owner = users.find(u => u.id === objective?.ownerId);
+                      return owner ? (
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarFallback className="text-xs">
+                              {(owner.firstName?.[0] || '') + (owner.lastName?.[0] || '')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{owner.firstName} {owner.lastName}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">No owner assigned</span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Team */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">Team</Label>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+                    {(() => {
+                      const team = teams.find(t => t.id === objective?.teamId);
+                      return team ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-100 rounded flex items-center justify-center">
+                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                          </div>
+                          <span className="text-sm font-medium">{team.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">No team assigned</span>
+                      );
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
 
