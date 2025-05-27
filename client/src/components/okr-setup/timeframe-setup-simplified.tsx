@@ -10,7 +10,10 @@ import {
   RefreshCw, 
   Loader2,
   CheckCircle,
-  Zap
+  Zap,
+  Calendar,
+  Save,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -36,6 +39,7 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("create");
+  const [generatedTimeframes, setGeneratedTimeframes] = useState<any[]>([]);
   
   // Fetch existing timeframes
   const { 
@@ -209,8 +213,8 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
     }
   });
 
-  // Apply default timeframes and save them directly
-  const handleApplyDefaultTimeframes = async () => {
+  // Generate default timeframes and display them
+  const handleApplyDefaultTimeframes = () => {
     if (isLoadingCadences) {
       toast({
         title: "Loading",
@@ -225,14 +229,33 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
       return;
     }
 
+    setGeneratedTimeframes(defaultFrames);
+    
+    toast({
+      title: "Timeframes Generated!",
+      description: `Generated ${defaultFrames.length} default timeframes. Review them below and click "Save Timeframes" when ready.`
+    });
+  };
+
+  // Save the generated timeframes to the database
+  const handleSaveTimeframes = async () => {
+    if (generatedTimeframes.length === 0) {
+      toast({
+        title: "No Timeframes",
+        description: "Please generate timeframes first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      console.log("Creating default timeframes:", defaultFrames);
+      console.log("Saving timeframes:", generatedTimeframes);
       let saveCount = 0;
       
       const defaultCadenceId = getCadenceId(primaryCadence);
       console.log("Using default cadence ID:", defaultCadenceId);
       
-      for (const timeframe of defaultFrames) {
+      for (const timeframe of generatedTimeframes) {
         const timeframeData = {
           ...timeframe,
           startDate: timeframe.startDate instanceof Date ? timeframe.startDate.toISOString() : timeframe.startDate,
@@ -252,10 +275,11 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
       }
       
       await refetchTimeframes();
+      setGeneratedTimeframes([]);
       
       toast({
         title: "Success!",
-        description: `${saveCount} default timeframes have been created and saved.`
+        description: `${saveCount} timeframes have been saved to the database.`
       });
       
       setActiveTab("view");
@@ -268,10 +292,10 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create default timeframes. Please try again.",
+        description: "Failed to save timeframes. Please try again.",
         variant: "destructive",
       });
-      console.error("Failed to create default timeframes:", error);
+      console.error("Failed to save timeframes:", error);
     }
   };
 
@@ -362,6 +386,7 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
               
               <div className="text-center">
                 <Button 
+                  type="button"
                   onClick={handleApplyDefaultTimeframes}
                   disabled={createTimeframeMutation.isPending || isLoadingCadences}
                   className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
@@ -436,6 +461,7 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
                     You haven't created any timeframes yet. Use the "Apply Default Timeframes" tab to get started.
                   </p>
                   <Button 
+                    type="button"
                     onClick={() => setActiveTab("create")}
                     className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                   >
