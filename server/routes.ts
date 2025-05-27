@@ -10,7 +10,8 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          keyResults as keyResultsTable, teamMoods, moodEntries, objectiveStatusEnum, User, usersToTenants,
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
-         projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema } from "@shared/schema";
+         projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema,
+         strategicDirections, insertStrategicDirectionSchema } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
