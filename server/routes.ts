@@ -1940,6 +1940,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Key result creation endpoint
+  app.post("/api/key-results-create", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const { objectiveId, title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId, progress } = req.body;
+      const tenantId = req.tenantId;
+      
+      console.log('=== CREATING KEY RESULT ===');
+      console.log('Request data:', { objectiveId, title, tenantId });
+      
+      // Create key result in database
+      const newKeyResult = await db.insert(keyResults).values({
+        id: ulid(),
+        objectiveId,
+        title,
+        description: description || null,
+        startValue: startValue?.toString() || '0',
+        currentValue: currentValue?.toString() || startValue?.toString() || '0',
+        targetValue: targetValue?.toString() || '100',
+        measureType: measureType || 'percentage',
+        targetType: targetType || 'increase',
+        assignedToId: assignedToId || null,
+        progress: progress || 0,
+        status: 'not_started',
+        tenantId
+      }).returning();
+      
+      console.log('Key result created successfully:', newKeyResult[0]);
+      res.json(newKeyResult[0]);
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      res.status(500).json({ error: 'Failed to create key result' });
+    }
+  });
+
   // Access Groups API
   app.get("/api/access-groups", withTenant, async (req, res, next) => {
     try {
