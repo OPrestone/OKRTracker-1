@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
+import UpcomingCheckIns from "@/components/dashboard/upcoming-checkins";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -137,32 +138,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
             </div>
             
             <div className="space-y-5">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium">Upcoming Check-ins</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-indigo-100 p-2 rounded-md">
-                        <Calendar className="h-5 w-5 text-indigo-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{stats.upcomingCheckins} Check-ins</h3>
-                        <p className="text-sm text-slate-500">
-                          {stats.upcomingCheckins > 0 
-                            ? 'Scheduled for this week' 
-                            : 'No upcoming check-ins'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-slate-100 px-2 py-1 rounded text-xs text-slate-600">
-                      This Week
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <UpcomingCheckIns />
               
               <Card>
                 <CardHeader className="pb-2">
