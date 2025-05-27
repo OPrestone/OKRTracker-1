@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -131,24 +132,9 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <Card className="col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium">Objectives Progress</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <MiniChart
-                    data={objectivesChartData}
-                    dataKey="value"
-                    type="bar"
-                    color="#6366f1"
-                    height={320}
-                    showGrid
-                    showAxis
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <div className="col-span-2">
+              <ObjectivesProgressChart />
+            </div>
             
             <div className="space-y-5">
               <Card>
