@@ -410,7 +410,9 @@ export default function ObjectiveDetail() {
       return await response.json() as DbObjective;
     },
     enabled: !!objectiveId && !!currentTenant?.id,
-    retry: 3
+    retry: 3,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true, // Continue refreshing even when tab is not active
   });
 
   // Fetch key results related to this objective
@@ -435,6 +437,8 @@ export default function ObjectiveDetail() {
       return await response.json() as DbKeyResult[];
     },
     enabled: !!objectiveId && !!currentTenant?.id,
+    refetchInterval: 3000, // Auto-refresh every 3 seconds
+    refetchIntervalInBackground: true, // Continue refreshing even when tab is not active
   });
 
   // Fetch teams
