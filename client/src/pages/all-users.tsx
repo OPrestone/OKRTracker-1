@@ -1338,7 +1338,7 @@ export default function AllUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* Organization Assignment Dialog */}
+      {/* Organization Assignment Dialog - Updated Role System */}
       <Dialog open={isOrgAssignDialogOpen} onOpenChange={setIsOrgAssignDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -1387,7 +1387,7 @@ export default function AllUsers() {
             </div>
             
             <div className="space-y-3">
-              <label className="text-sm font-medium">Role in Organization</label>
+              <label className="text-sm font-medium">Select Organization Role</label>
               <div className="grid grid-cols-2 gap-2">
                 <div 
                   className={`border rounded-lg p-3 cursor-pointer transition-colors ${
