@@ -536,12 +536,17 @@ export default function OKRSystemSetupWizard() {
     setIsSavingUsersAndTeams(true);
     
     try {
+      console.log("Starting save process...");
+      console.log("Teams to save:", csvImportedTeams);
+      console.log("Users to save:", csvImportedUsers);
+      
       let teamsCreated = 0;
       let usersCreated = 0;
       
       // Create teams first if needed
       if (csvImportedTeams.length > 0) {
         try {
+          console.log("Creating teams via batch endpoint...");
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -552,38 +557,63 @@ export default function OKRSystemSetupWizard() {
             credentials: 'include'
           });
           
+          console.log("Team creation response status:", teamCreateRes.status);
+          const teamResponseText = await teamCreateRes.text();
+          console.log("Team creation response:", teamResponseText);
+          
           if (teamCreateRes.ok) {
-            const teamCreateData = await teamCreateRes.json();
-            teamsCreated = teamCreateData.createdTeams?.length || 0;
-            console.log("Teams created:", teamCreateData);
+            const teamCreateData = JSON.parse(teamResponseText);
+            teamsCreated = teamCreateData.createdTeams?.length || csvImportedTeams.length;
+            console.log("Teams created successfully:", teamCreateData);
+          } else {
+            console.error("Team creation failed:", teamResponseText);
           }
         } catch (error) {
           console.error("Error creating teams:", error);
         }
       }
       
-      // Create users through the working endpoint
+      // Create users using the working createTeamsAndUsersFromCsv function approach
       if (csvImportedUsers.length > 0) {
         try {
-          const response = await fetch("/api/users/bulk", {
+          console.log("Creating users using direct API call...");
+          
+          // Use the same approach as the working createTeamsAndUsersFromCsv function
+          const response = await fetch("/api/config/okr-system-setup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              users: csvImportedUsers.map(user => ({
+              csv_users: csvImportedUsers.map(user => ({
                 email: user.email,
-                name: user.name,
+                name: user.name || user.email.split('@')[0],
                 role: user.role || 'user',
                 department: user.department || '',
                 team: user.team || ''
-              }))
+              })),
+              organization_name: "CSV Import Organization",
+              mission_statement: "",
+              vision_statement: "",
+              values: [],
+              org_structure_type: "functional",
+              enable_cross_team_objectives: true,
+              default_visibility: "public",
+              selected_teams: [],
+              default_teams: [],
+              use_default_teams: false
             }),
             credentials: 'include'
           });
           
+          console.log("User creation response status:", response.status);
+          const userResponseText = await response.text();
+          console.log("User creation response:", userResponseText);
+          
           if (response.ok) {
-            const userData = await response.json();
-            usersCreated = userData.created?.length || csvImportedUsers.length;
-            console.log("Users created:", userData);
+            const userData = JSON.parse(userResponseText);
+            usersCreated = userData.users_created?.length || csvImportedUsers.length;
+            console.log("Users created successfully:", userData);
+          } else {
+            console.error("User creation failed:", userResponseText);
           }
         } catch (error) {
           console.error("Error creating users:", error);
@@ -2314,7 +2344,7 @@ david.brown@company.com,David Brown,owner,Finance,Finance Team`;
                                       <div className="space-y-1 max-h-32 overflow-y-auto">
                                         {csvImportedTeams.map((teamName, index) => (
                                           <div key={index} className="flex items-center text-sm text-blue-700">
-                                            <Users className="mr-2 h-3 w-3" />
+                                            <Users2 className="mr-2 h-3 w-3" />
                                             {teamName}
                                           </div>
                                         ))}
