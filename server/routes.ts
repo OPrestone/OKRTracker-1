@@ -524,13 +524,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             priority: 1,
             type: 'company',
             tenant_id: tenantId,
+            created_by_id: req.user.id,
             created_at: new Date(),
             updated_at: new Date()
           };
           
           await db.execute(
-            `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, created_by_id, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               directionData.id,
               directionData.title,
@@ -538,6 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               directionData.priority,
               directionData.type,
               directionData.tenant_id,
+              directionData.created_by_id,
               directionData.created_at,
               directionData.updated_at
             ]
