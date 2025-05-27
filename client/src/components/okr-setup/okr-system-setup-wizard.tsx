@@ -438,7 +438,7 @@ export default function OKRSystemSetupWizard() {
         // Create user object
         const user: UserImport = {
           email: '',
-          role: 'member', // Default role
+          role: 'user', // Default role updated to match new system
           isValid: true,
           error: undefined,
         };
@@ -870,7 +870,7 @@ export default function OKRSystemSetupWizard() {
             .map(user => ({
               email: user.email,
               name: user.name || '',
-              role: user.role || 'member',
+              role: user.role || 'user',
               department: user.department || '',
               team: user.team || '',
               tenant_id: tenantId
@@ -1060,7 +1060,7 @@ export default function OKRSystemSetupWizard() {
       };
       
       // Continue with the OKR system setup
-      setupMutation.mutate(validatedData);
+      saveOKRSystemMutation.mutate(validatedData);
     } catch (error) {
       console.error("Error in form submission:", error);
       setIsSubmitting(false);
