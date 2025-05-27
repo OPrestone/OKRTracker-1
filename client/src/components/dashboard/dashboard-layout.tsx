@@ -1,11 +1,11 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
@@ -25,6 +25,23 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, overviewStats }: DashboardLayoutProps) {
   const { currentTenant } = useTenantContext();
   const tenantId = currentTenant?.id;
+  const queryClient = useQueryClient();
+  
+  // Auto-refresh dashboard data every 3 seconds
+  useEffect(() => {
+    if (!tenantId) return;
+    
+    const interval = setInterval(() => {
+      // Invalidate all dashboard-related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/my-objectives'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teams-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/check-ins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+    }, 3000); // 3 seconds
+    
+    return () => clearInterval(interval);
+  }, [tenantId, queryClient]);
   
   // Fetch all objectives for this tenant to calculate real stats
   const { data: objectivesData = [] } = useQuery({
