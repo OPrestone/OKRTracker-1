@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
   Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
-  AlertCircle, UserPlus, ChevronDown, X
+  AlertCircle, UserPlus, ChevronDown, X, Save, Users
 } from "lucide-react";
 import {
   AlertDialog,
@@ -2276,6 +2276,78 @@ david.brown@company.com,David Brown,owner,Finance,Finance Team`;
                                     </tbody>
                                   </table>
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Imported Teams and Users Display */}
+                            {(csvImportedTeams.length > 0 || csvImportedUsers.length > 0) && (
+                              <div className="mt-6 border rounded-lg p-4 bg-blue-50 border-blue-200">
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-semibold text-blue-900">Ready to Save</h4>
+                                  <Button
+                                    type="button"
+                                    onClick={saveTeamsAndUsers}
+                                    disabled={isSavingUsersAndTeams}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    {isSavingUsersAndTeams ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save className="mr-2 h-4 w-4" />
+                                        Save Teams & Users
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Teams to be created */}
+                                  {csvImportedTeams.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium text-blue-800 mb-2">
+                                        Teams to Create ({csvImportedTeams.length})
+                                      </h5>
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {csvImportedTeams.map((teamName, index) => (
+                                          <div key={index} className="flex items-center text-sm text-blue-700">
+                                            <Users className="mr-2 h-3 w-3" />
+                                            {teamName}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Users to be created */}
+                                  {csvImportedUsers.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium text-blue-800 mb-2">
+                                        Users to Create ({csvImportedUsers.length})
+                                      </h5>
+                                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {csvImportedUsers.slice(0, 5).map((user, index) => (
+                                          <div key={index} className="flex items-center text-sm text-blue-700">
+                                            <User className="mr-2 h-3 w-3" />
+                                            {user.name} ({user.email})
+                                          </div>
+                                        ))}
+                                        {csvImportedUsers.length > 5 && (
+                                          <div className="text-sm text-blue-600 italic">
+                                            ... and {csvImportedUsers.length - 5} more users
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <p className="text-sm text-blue-700 mt-3">
+                                  Click "Save Teams & Users" to add these to your organization permanently.
+                                </p>
                               </div>
                             )}
                           </div>
