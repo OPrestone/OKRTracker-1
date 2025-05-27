@@ -49,7 +49,8 @@ import {
   Loader2,
   Upload,
   Download,
-  FileText
+  FileText,
+  Crown
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
