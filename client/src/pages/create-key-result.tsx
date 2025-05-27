@@ -5,18 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Target,
   TrendingUp,
   Loader2,
   Check,
   ArrowLeft,
-  Plus
+  Plus,
+  ChevronDown,
+  Calendar,
+  Users,
+  Hash
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { getQueryFn } from "@/lib/queryClient";
+
+interface User {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  teamId?: string | null;
+}
 
 interface KeyResult {
   id: string;
@@ -26,6 +48,13 @@ interface KeyResult {
   targetValue: number;
   startValue: number;
   progress: number;
+  assignedToId?: string;
+  type?: string;
+  measureType?: string;
+  targetType?: string;
+  contributors?: string[];
+  startDate?: string;
+  dueDate?: string;
 }
 
 interface Objective {
@@ -49,14 +78,22 @@ export default function CreateKeyResult() {
   const [keyResultData, setKeyResultData] = useState({
     title: '',
     description: '',
+    assignedToId: '',
+    measureType: 'numerical',
+    targetType: 'increase',
     startValue: 0,
     currentValue: 0,
-    targetValue: 100
+    targetValue: 100,
+    type: 'key-result',
+    contributors: [] as string[],
+    startDate: '',
+    dueDate: ''
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedKeyResults, setSavedKeyResults] = useState<KeyResult[]>([]);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   // Fetch objective details
   const { data: objective, isLoading } = useQuery({
@@ -69,6 +106,12 @@ export default function CreateKeyResult() {
       return data as Objective;
     },
     enabled: !!objectiveId
+  });
+
+  // Fetch users for Lead and Contributors
+  const { data: users = [] } = useQuery({
+    queryKey: ['/api/users'],
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Create key result mutation
@@ -97,9 +140,16 @@ export default function CreateKeyResult() {
       setKeyResultData({
         title: '',
         description: '',
+        assignedToId: '',
+        measureType: 'numerical',
+        targetType: 'increase',
         startValue: 0,
         currentValue: 0,
-        targetValue: 100
+        targetValue: 100,
+        type: 'key-result',
+        contributors: [],
+        startDate: '',
+        dueDate: ''
       });
       setErrors({});
       toast({
@@ -272,16 +322,16 @@ export default function CreateKeyResult() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              {savedKeyResults.length === 0 ? 'Create Your First Key Result' : 'Add Another Key Result'}
+              {savedKeyResults.length === 0 ? 'Add Key Result or Initiative' : 'Add Another Key Result'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Title */}
+            {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Name *</Label>
               <Input
                 id="title"
-                placeholder="e.g., Increase monthly active users"
+                placeholder="Net profit increase of X%"
                 value={keyResultData.title}
                 onChange={(e) => setKeyResultData(prev => ({ ...prev, title: e.target.value }))}
                 className={errors.title ? "border-red-500" : ""}
@@ -289,87 +339,284 @@ export default function CreateKeyResult() {
               {errors.title && (
                 <p className="text-sm text-red-600">{errors.title}</p>
               )}
+              <p className="text-sm text-blue-600">Need inspiration? Check <span className="underline cursor-pointer">examples</span>.</p>
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">Description <span className="text-gray-400">Optional</span></Label>
               <Textarea
                 id="description"
-                placeholder="Describe what success looks like and how it will be measured"
+                placeholder="Add a description"
                 value={keyResultData.description}
                 onChange={(e) => setKeyResultData(prev => ({ ...prev, description: e.target.value }))}
-                className={errors.description ? "border-red-500" : ""}
-                rows={3}
+                rows={2}
               />
-              {errors.description && (
-                <p className="text-sm text-red-600">{errors.description}</p>
-              )}
             </div>
 
-            {/* Values */}
+            {/* Lead */}
+            <div className="space-y-2">
+              <Label>Lead</Label>
+              <Select
+                value={keyResultData.assignedToId}
+                onValueChange={(value) => setKeyResultData(prev => ({ ...prev, assignedToId: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select lead">
+                    {keyResultData.assignedToId && users.find(u => u.id === keyResultData.assignedToId) && (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">
+                            {(users.find(u => u.id === keyResultData.assignedToId)?.firstName?.[0] || '') + 
+                             (users.find(u => u.id === keyResultData.assignedToId)?.lastName?.[0] || '')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{users.find(u => u.id === keyResultData.assignedToId)?.firstName} {users.find(u => u.id === keyResultData.assignedToId)?.lastName}</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">
+                            {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{user.firstName} {user.lastName}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Objective - Auto-populated */}
+            <div className="space-y-2">
+              <Label>Objective</Label>
+              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium">{objective?.title}</span>
+              </div>
+            </div>
+
+            {/* Measure as */}
+            <div className="space-y-2">
+              <Label>Measure as</Label>
+              <Select
+                value={keyResultData.measureType}
+                onValueChange={(value) => setKeyResultData(prev => ({ ...prev, measureType: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-4 w-4" />
+                      Numerical
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="numerical">
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-4 w-4" />
+                      Numerical
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Target type, Start value, Increase to */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startValue">Start Value</Label>
-                <Input
-                  id="startValue"
-                  type="number"
-                  value={keyResultData.startValue}
-                  onChange={(e) => setKeyResultData(prev => ({ ...prev, startValue: Number(e.target.value) }))}
-                />
+                <Label>Target type</Label>
+                <Select
+                  value={keyResultData.targetType}
+                  onValueChange={(value) => setKeyResultData(prev => ({ ...prev, targetType: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Increase to" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="increase">Increase to</SelectItem>
+                    <SelectItem value="decrease">Decrease to</SelectItem>
+                    <SelectItem value="maintain">Maintain at</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="currentValue">Current Value</Label>
-                <Input
-                  id="currentValue"
-                  type="number"
-                  value={keyResultData.currentValue}
-                  onChange={(e) => setKeyResultData(prev => ({ ...prev, currentValue: Number(e.target.value) }))}
-                  className={errors.currentValue ? "border-red-500" : ""}
-                />
-                {errors.currentValue && (
-                  <p className="text-sm text-red-600">{errors.currentValue}</p>
-                )}
+                <Label>Start value</Label>
+                <div className="flex items-center">
+                  <Hash className="h-4 w-4 text-gray-400 mr-2" />
+                  <Input
+                    type="number"
+                    value={keyResultData.startValue}
+                    onChange={(e) => setKeyResultData(prev => ({ ...prev, startValue: Number(e.target.value) }))}
+                    placeholder="0"
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="targetValue">Target Value *</Label>
-                <Input
-                  id="targetValue"
-                  type="number"
-                  value={keyResultData.targetValue}
-                  onChange={(e) => setKeyResultData(prev => ({ ...prev, targetValue: Number(e.target.value) }))}
-                  className={errors.targetValue ? "border-red-500" : ""}
-                />
+                <Label>{keyResultData.targetType === 'increase' ? 'Increase to' : keyResultData.targetType === 'decrease' ? 'Decrease to' : 'Maintain at'}</Label>
+                <div className="flex items-center">
+                  <Hash className="h-4 w-4 text-gray-400 mr-2" />
+                  <Input
+                    type="number"
+                    value={keyResultData.targetValue}
+                    onChange={(e) => setKeyResultData(prev => ({ ...prev, targetValue: Number(e.target.value) }))}
+                    placeholder="100"
+                    className={errors.targetValue ? "border-red-500" : ""}
+                  />
+                </div>
                 {errors.targetValue && (
                   <p className="text-sm text-red-600">{errors.targetValue}</p>
                 )}
               </div>
             </div>
 
-            {/* Progress Preview */}
-            {keyResultData.targetValue > keyResultData.startValue && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <Label className="text-sm font-medium">Progress Preview</Label>
-                <div className="mt-2">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Current Progress</span>
-                    <span>
-                      {Math.round(((keyResultData.currentValue - keyResultData.startValue) / (keyResultData.targetValue - keyResultData.startValue)) * 100)}%
-                    </span>
+            {/* Result type */}
+            <div className="space-y-3">
+              <Label>Result type</Label>
+              <div className="space-y-3">
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    keyResultData.type === 'key-result' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setKeyResultData(prev => ({ ...prev, type: 'key-result' }))}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 ${
+                      keyResultData.type === 'key-result' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    }`}>
+                      {keyResultData.type === 'key-result' && (
+                        <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm">Key Result</h4>
+                        <TrendingUp className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">Measures success for the Objective and impacts its progress and status.</p>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all duration-300" 
-                      style={{ 
-                        width: `${Math.max(0, Math.min(100, ((keyResultData.currentValue - keyResultData.startValue) / (keyResultData.targetValue - keyResultData.startValue)) * 100))}%` 
-                      }}
-                    />
+                </div>
+                
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    keyResultData.type === 'initiative' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setKeyResultData(prev => ({ ...prev, type: 'initiative' }))}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 ${
+                      keyResultData.type === 'initiative' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    }`}>
+                      {keyResultData.type === 'initiative' && (
+                        <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm">Initiative</h4>
+                        <div className="h-4 w-4 text-green-500">
+                          <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">Supporting work that doesn't affect the Objective's progress and status.</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>What is the difference?</span>
+                <div className="w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center">
+                  <span className="text-xs">?</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Options */}
+            <Collapsible open={showAdvancedOptions} onOpenChange={setShowAdvancedOptions}>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">
+                Advanced Options
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedOptions ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-6 mt-6">
+                {/* Contributors */}
+                <div className="space-y-2">
+                  <Label>Contributors <span className="text-gray-400">Optional</span></Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs">
+                                {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{user.firstName} {user.lastName}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Integration */}
+                <div className="space-y-2">
+                  <Label>Integration <span className="text-gray-400">Optional</span></Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="google-analytics">Google Analytics</SelectItem>
+                      <SelectItem value="salesforce">Salesforce</SelectItem>
+                      <SelectItem value="hubspot">HubSpot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Start date */}
+                <div className="space-y-2">
+                  <Label>Start date <span className="text-gray-400">Optional</span></Label>
+                  <div className="relative">
+                    <Input
+                      type="date"
+                      value={keyResultData.startDate}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="pl-10"
+                    />
+                    <Calendar className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                  </div>
+                </div>
+
+                {/* Due date */}
+                <div className="space-y-2">
+                  <Label>Due date <span className="text-gray-400">Optional</span></Label>
+                  <div className="relative">
+                    <Input
+                      type="date"
+                      value={keyResultData.dueDate}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, dueDate: e.target.value }))}
+                      className="pl-10"
+                    />
+                    <Calendar className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
