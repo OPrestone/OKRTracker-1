@@ -619,6 +619,16 @@ export default function OKRSystemSetupWizard() {
               if (response.ok) {
                 createdCount++;
                 console.log(`Created user: ${user.email}`);
+              } else if (response.status === 409) {
+                // User already exists - this is okay, we can still assign them to teams
+                try {
+                  const errorData = await response.json();
+                  console.log(`User already exists: ${user.email} (ID: ${errorData.userId})`);
+                  createdCount++; // Count as successful since user exists
+                } catch {
+                  console.log(`User already exists: ${user.email}`);
+                  createdCount++; // Count as successful since user exists
+                }
               } else {
                 const errorText = await response.text();
                 console.error(`Failed to create user ${user.email}:`, errorText);
