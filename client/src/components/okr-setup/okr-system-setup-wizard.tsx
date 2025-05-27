@@ -1090,29 +1090,11 @@ export default function OKRSystemSetupWizard() {
           }
         }
         
-        // Process users with the same enhanced approach as All Users page
+        // Teams are already created during CSV upload, just show success
         const validUsers = data.teamConfiguration.csvUsers.filter((user: any) => user.isValid);
         
         if (validUsers.length > 0) {
-          try {
-            const userCreateRes = await fetch("/api/users/batch", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ users: validUsers })
-            });
-            
-            if (userCreateRes.ok) {
-              const userCreateData = await userCreateRes.json();
-              console.log("Users created successfully:", userCreateData);
-              
-              toast({
-                title: "Users and Teams Created",
-                description: `Successfully created ${userCreateData.created?.length || 0} users and ${uniqueTeams.length} teams.`,
-              });
-            }
-          } catch (error) {
-            console.error("Error creating users:", error);
-          }
+          console.log(`CSV upload complete: ${uniqueTeams.length} teams created, ${validUsers.length} users processed`);
         }
       }
       
