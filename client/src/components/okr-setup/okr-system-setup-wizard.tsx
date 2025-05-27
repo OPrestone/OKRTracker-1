@@ -316,12 +316,7 @@ const formSchema = z.object({
     csvUsers: z.array(z.any()).default([]),
     useDefaultTeams: z.boolean().default(true),
   }),
-  integrations: z.object({
-    enableSlackIntegration: z.boolean().default(false),
-    enableEmailNotifications: z.boolean().default(true),
-    enableCalendarSync: z.boolean().default(false),
-    enableAnalyticsReporting: z.boolean().default(true),
-  }),
+
 });
 
 // Type for the form values
@@ -332,7 +327,6 @@ const steps = [
   { id: "timeframes", label: "Timeframes", icon: Calendar },
   { id: "objectives", label: "Objectives", icon: Target },
   { id: "teams", label: "Teams", icon: Users2 },
-  { id: "integrations", label: "Integrations", icon: Layers },
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
@@ -996,12 +990,7 @@ export default function OKRSystemSetupWizard() {
         csvUsers: [] as any[],
         useDefaultTeams: true, // Check this by default
       },
-      integrations: {
-        enableSlackIntegration: false,
-        enableEmailNotifications: true,
-        enableCalendarSync: false,
-        enableAnalyticsReporting: true,
-      },
+
     },
   });
   
