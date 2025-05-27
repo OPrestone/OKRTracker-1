@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import TimeframeSetup from "./timeframe-setup";
+import TimeframeSetupSimplified from "./timeframe-setup-simplified";
 
 // Team interface
 interface Team {
