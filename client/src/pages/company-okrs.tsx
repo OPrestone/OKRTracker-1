@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { getQueryFn } from "@/lib/queryClient";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 
 // Define interfaces for type safety
 interface KeyResult {
@@ -73,6 +74,7 @@ export default function CompanyOKRs() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const permissions = useUserPermissions();
   
   // State for filtering and searching
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,13 +299,15 @@ export default function CompanyOKRs() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button 
-              onClick={() => navigate("/create-company-objective")}
-              className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" />
-              Create Company OKR
-            </Button>
+            {permissions.canCreateCompanyOKRs() && (
+              <Button 
+                onClick={() => navigate("/create-company-objective")}
+                className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                Create Company OKR
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -560,13 +564,15 @@ export default function CompanyOKRs() {
               Create your first company objective to get started.
             </p>
             <div className="flex gap-4">
-              <Button 
-                onClick={() => navigate("/create-company-objective")}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Company OKR
-              </Button>
+              {permissions.canCreateCompanyOKRs() && (
+                <Button 
+                  onClick={() => navigate("/create-company-objective")}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Company OKR
+                </Button>
+              )}
               <Button variant="outline" onClick={resetFilters}>
                 Clear Filters
               </Button>
