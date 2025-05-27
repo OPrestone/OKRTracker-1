@@ -228,6 +228,51 @@ export default function DraftOKRs() {
     setSubmitDialogOpen(true);
   };
 
+  const handleApplySuggestions = async () => {
+    if (!selectedObjective || !aiAnalysis) return;
+
+    try {
+      // Update the objective with AI suggestions
+      const updatedObjective = {
+        ...selectedObjective,
+        title: aiAnalysis.improvedObjective.title,
+        description: aiAnalysis.improvedObjective.description,
+        keyResults: aiAnalysis.improvedObjective.keyResults.map((krTitle, index) => ({
+          id: selectedObjective.keyResults[index]?.id || `new-${index}`,
+          title: krTitle,
+          objective_id: selectedObjective.id,
+          description: "",
+          progress: 0
+        }))
+      };
+
+      // Save the updated objective to the database
+      const response = await apiRequest("PUT", `/api/objectives/${selectedObjective.id}`, updatedObjective);
+      
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "OKR updated with AI suggestions successfully!",
+        });
+        
+        // Refresh the data
+        queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft", currentTenant?.id] });
+        
+        // Close the AI dialog
+        setAiDialogOpen(false);
+        setAiAnalysis(null);
+      } else {
+        throw new Error("Failed to update objective");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply AI suggestions. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSubmitConfirm = () => {
     if (!selectedObjective) return;
 
@@ -946,9 +991,15 @@ export default function DraftOKRs() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setAiDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setAiDialogOpen(false)}>
               Close
             </Button>
+            {aiAnalysis && !analyzing && (
+              <Button onClick={handleApplySuggestions} className="bg-primary text-white hover:bg-primary/90">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Apply Suggestions
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
