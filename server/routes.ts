@@ -2359,7 +2359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Assign user to team
-      const updatedUser = await storage.assignUserToTeam(userId, teamId);
+      const updatedUser = await storage.addUserToTeam(userId, teamId);
       res.json({ success: true, user: updatedUser });
     } catch (error) {
       console.error('Error in bulk team assignment:', error);
