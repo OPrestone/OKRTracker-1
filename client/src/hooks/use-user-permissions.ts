@@ -51,16 +51,125 @@ export function useUserPermissions() {
   };
   
   /**
-   * Check if the user has permission to create objectives
-   * @returns boolean indicating if the user can create objectives
+   * Check if the user is a team leader
+   * @returns boolean indicating if the user is a team leader
    */
-  const canCreateObjectives = (): boolean => {
-    return isAdminOrOwner();
+  const isTeamLeader = (): boolean => {
+    if (!user || !currentTenant) return false;
+    
+    // Check if user has team leader role
+    if (user.tenants) {
+      const tenantMembership = user.tenants.find(t => t.id === currentTenant.id);
+      if (tenantMembership && tenantMembership.userRole === 'manager') {
+        return true;
+      }
+    }
+    
+    return false;
   };
+
+  /**
+   * Check if the user is a manager or above (manager, executive, admin, owner)
+   * @returns boolean indicating if the user has manager+ permissions
+   */
+  const isManagerOrAbove = (): boolean => {
+    if (!user || !currentTenant) return false;
+    
+    // Global system admin check
+    if (user.isAdmin) return true;
+    
+    // Check user's role in the current tenant
+    if (user.tenants) {
+      const tenantMembership = user.tenants.find(t => t.id === currentTenant.id);
+      if (tenantMembership) {
+        const role = tenantMembership.userRole;
+        return ['owner', 'admin', 'executive', 'manager'].includes(role || '');
+      }
+    }
+    
+    return false;
+  };
+
+  /**
+   * Check if the user is an executive or above (executive, admin, owner)
+   * @returns boolean indicating if the user has executive+ permissions
+   */
+  const isExecutiveOrAbove = (): boolean => {
+    if (!user || !currentTenant) return false;
+    
+    // Global system admin check
+    if (user.isAdmin) return true;
+    
+    // Check user's role in the current tenant
+    if (user.tenants) {
+      const tenantMembership = user.tenants.find(t => t.id === currentTenant.id);
+      if (tenantMembership) {
+        const role = tenantMembership.userRole;
+        return ['owner', 'admin', 'executive'].includes(role || '');
+      }
+    }
+    
+    return false;
+  };
+
+  /**
+   * Get the user's role in the current tenant
+   * @returns string representing the user's role
+   */
+  const getUserRole = (): string => {
+    if (!user || !currentTenant) return 'user';
+    
+    if (user.isAdmin) return 'admin';
+    
+    if (user.tenants) {
+      const tenantMembership = user.tenants.find(t => t.id === currentTenant.id);
+      return tenantMembership?.userRole || 'user';
+    }
+    
+    return 'user';
+  };
+
+  // Permission checks for specific actions
+  const canCreateObjectives = (): boolean => isManagerOrAbove();
+  const canEditObjectives = (): boolean => isManagerOrAbove();
+  const canDeleteObjectives = (): boolean => isAdminOrOwner();
+  const canCreateTeams = (): boolean => isAdminOrOwner();
+  const canEditTeams = (): boolean => isManagerOrAbove();
+  const canDeleteTeams = (): boolean => isAdminOrOwner();
+  const canManageUsers = (): boolean => isAdminOrOwner();
+  const canViewReports = (): boolean => isManagerOrAbove();
+  const canAccessConfiguration = (): boolean => isAdminOrOwner();
+  const canManageIntegrations = (): boolean => isAdminOrOwner();
+  const canExportData = (): boolean => isExecutiveOrAbove();
+  const canViewFinancials = (): boolean => isExecutiveOrAbove();
+  const canAssignTeamLeaders = (): boolean => isAdminOrOwner();
+  const canCreateCompanyObjectives = (): boolean => isExecutiveOrAbove();
+  const canApproveObjectives = (): boolean => isManagerOrAbove();
   
   return {
+    // Role checks
     isAdminOrOwner,
     isOwner,
-    canCreateObjectives
+    isTeamLeader,
+    isManagerOrAbove,
+    isExecutiveOrAbove,
+    getUserRole,
+    
+    // Permission checks
+    canCreateObjectives,
+    canEditObjectives,
+    canDeleteObjectives,
+    canCreateTeams,
+    canEditTeams,
+    canDeleteTeams,
+    canManageUsers,
+    canViewReports,
+    canAccessConfiguration,
+    canManageIntegrations,
+    canExportData,
+    canViewFinancials,
+    canAssignTeamLeaders,
+    canCreateCompanyObjectives,
+    canApproveObjectives
   };
 }
