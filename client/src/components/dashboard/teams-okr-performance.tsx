@@ -392,7 +392,7 @@ export function TeamsOKRPerformance() {
   const realTeamTrendData = generateRealTeamTrendData(teams || [], teamsPerformanceData || []);
   
   // Generate real status distribution from database data
-  const statusDistributionData = generateStatusDistribution(teamsPerformanceData || []);
+  const realStatusDistribution = generateStatusDistribution(teamsPerformanceData || []);
   
   // Extract unique team names for the filter dropdown
   const uniqueTeams = teams ? Array.from(new Set(teams.map(team => team.name))) : [];
@@ -510,7 +510,7 @@ export function TeamsOKRPerformance() {
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsPieChart>
                           <Pie
-                            data={statusDistributionData}
+                            data={realStatusDistribution}
                             cx="50%"
                             cy="50%"
                             innerRadius={60}
@@ -520,7 +520,7 @@ export function TeamsOKRPerformance() {
                             dataKey="value"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
-                            {statusDistributionData.map((entry, index) => (
+                            {realStatusDistribution.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
