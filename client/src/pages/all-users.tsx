@@ -81,9 +81,9 @@ export default function AllUsers() {
     errors: string[];
   } | null>(null);
   const [teamAssignment, setTeamAssignment] = useState<{ teamId: string | number }>({ teamId: "" });
-  const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "member" }>({ 
+  const [orgAssignment, setOrgAssignment] = useState<{ tenantId: string, role: "owner" | "admin" | "executive" | "manager" | "user" }>({ 
     tenantId: "", 
-    role: "member" 
+    role: "user" 
   });
   const [updateUserData, setUpdateUserData] = useState({
     id: '',
@@ -208,7 +208,7 @@ export default function AllUsers() {
 
   // Organization assignment mutation
   const assignOrgMutation = useMutation({
-    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: "owner" | "admin" | "member" }) => {
+    mutationFn: async ({ userId, tenantId, role }: { userId: string, tenantId: string, role: "owner" | "admin" | "executive" | "manager" | "user" }) => {
       const res = await apiRequest("POST", `/api/tenants/${tenantId}/users`, { userId, role });
       return await res.json();
     },
@@ -223,7 +223,7 @@ export default function AllUsers() {
       
       setIsOrgAssignDialogOpen(false);
       setSelectedUser(null);
-      setOrgAssignment({ tenantId: "", role: "member" });
+      setOrgAssignment({ tenantId: "", role: "user" });
       
       toast({
         title: "Success",
@@ -250,7 +250,7 @@ export default function AllUsers() {
   
   const openOrgAssignDialog = (user: UserSchema) => {
     setSelectedUser(user);
-    setOrgAssignment({ tenantId: "", role: "member" });
+    setOrgAssignment({ tenantId: "", role: "user" });
     setIsOrgAssignDialogOpen(true);
   };
 
@@ -1387,22 +1387,56 @@ export default function AllUsers() {
             
             <div className="space-y-3">
               <label className="text-sm font-medium">Role in Organization</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div 
                   className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                    orgAssignment.role === 'member' 
+                    orgAssignment.role === 'user' 
                       ? 'border-green-500 bg-green-50 dark:bg-green-500/10' 
                       : 'border-border hover:border-muted-foreground'
                   }`}
-                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'member' })}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'user' })}
                 >
                   <div className="flex justify-center mb-1">
                     <UserCheck className={`h-6 w-6 ${
-                      orgAssignment.role === 'member' ? 'text-green-500' : 'text-muted-foreground'
+                      orgAssignment.role === 'user' ? 'text-green-500' : 'text-muted-foreground'
                     }`} />
                   </div>
-                  <p className="text-center text-sm font-medium">Member</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Basic user access</p>
+                  <p className="text-center text-sm font-medium">User</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Basic access to objectives</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'manager' 
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'manager' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <Users className={`h-6 w-6 ${
+                      orgAssignment.role === 'manager' ? 'text-purple-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Manager</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Manage team members</p>
+                </div>
+                
+                <div 
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                    orgAssignment.role === 'executive' 
+                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setOrgAssignment({ ...orgAssignment, role: 'executive' })}
+                >
+                  <div className="flex justify-center mb-1">
+                    <Crown className={`h-6 w-6 ${
+                      orgAssignment.role === 'executive' ? 'text-orange-500' : 'text-muted-foreground'
+                    }`} />
+                  </div>
+                  <p className="text-center text-sm font-medium">Executive</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Senior leadership access</p>
                 </div>
                 
                 <div 
@@ -1419,11 +1453,11 @@ export default function AllUsers() {
                     }`} />
                   </div>
                   <p className="text-center text-sm font-medium">Admin</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Manage users & teams</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Manage users & settings</p>
                 </div>
                 
                 <div 
-                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors col-span-2 ${
                     orgAssignment.role === 'owner' 
                       ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' 
                       : 'border-border hover:border-muted-foreground'
@@ -1436,7 +1470,7 @@ export default function AllUsers() {
                     }`} />
                   </div>
                   <p className="text-center text-sm font-medium">Owner</p>
-                  <p className="text-center text-xs text-muted-foreground mt-1">Full organization control</p>
+                  <p className="text-center text-xs text-muted-foreground mt-1">Full organizational control</p>
                 </div>
               </div>
             </div>
