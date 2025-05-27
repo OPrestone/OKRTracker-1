@@ -641,38 +641,83 @@ export default function OKRSystemSetupWizard() {
           console.log("Step 3: Setting managers as team leaders:", managersToSetAsLeaders);
           
           if (managersToSetAsLeaders.length > 0) {
-            // Wait for users to be fully available in database after creation
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Wait longer for database transactions to complete
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
-            // Get fresh team and user data with proper tenant headers
-            const teamsResponse = await fetch("/api/teams", {
-              method: "GET",
-              headers: {
-                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
-              },
-              credentials: 'include'
-            });
+            // Retry logic to ensure teams and users are fully available
+            let attempts = 0;
+            const maxAttempts = 5;
+            let teams: any[] = [];
+            let users: any[] = [];
+            let allDataFound = false;
             
-            const usersResponse = await fetch("/api/users", {
-              method: "GET",
-              headers: {
-                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
-              },
-              credentials: 'include'
-            });
+            while (attempts < maxAttempts && !allDataFound) {
+              try {
+                console.log(`Attempt ${attempts + 1} to fetch teams and users...`);
+                
+                const teamsResponse = await fetch("/api/teams", {
+                  method: "GET",
+                  headers: {
+                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                  },
+                  credentials: 'include'
+                });
+                
+                const usersResponse = await fetch("/api/users", {
+                  method: "GET",
+                  headers: {
+                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                  },
+                  credentials: 'include'
+                });
+                
+                if (teamsResponse.ok && usersResponse.ok) {
+                  teams = await teamsResponse.json();
+                  users = await usersResponse.json();
+                  
+                  // Check if all required teams and users are available
+                  const requiredTeams = [...new Set(managersToSetAsLeaders.map(m => m.team))];
+                  const requiredUsers = managersToSetAsLeaders.map(m => m.email);
+                  
+                  const foundTeams = requiredTeams.filter(teamName => 
+                    teams.some((t: any) => t.name.toLowerCase() === teamName.toLowerCase())
+                  );
+                  const foundUsers = requiredUsers.filter(email => 
+                    users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())
+                  );
+                  
+                  console.log(`Found ${foundTeams.length}/${requiredTeams.length} teams and ${foundUsers.length}/${requiredUsers.length} users`);
+                  
+                  if (foundTeams.length === requiredTeams.length && foundUsers.length === requiredUsers.length) {
+                    allDataFound = true;
+                    console.log("✓ All required teams and users found!");
+                    break;
+                  }
+                }
+                
+                attempts++;
+                if (attempts < maxAttempts) {
+                  console.log(`Waiting 3 seconds before retry ${attempts + 1}...`);
+                  await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+              } catch (error) {
+                console.error(`Error in attempt ${attempts + 1}:`, error);
+                attempts++;
+                if (attempts < maxAttempts) {
+                  await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+              }
+            }
             
-            if (teamsResponse.ok && usersResponse.ok) {
-              const teams = await teamsResponse.json();
-              const users = await usersResponse.json();
-              
+            if (allDataFound) {
               console.log("Available teams:", teams.map((t: any) => ({ id: t.id, name: t.name })));
               console.log("Available users:", users.map((u: any) => ({ id: u.id, email: u.email })));
               console.log("Looking for managers:", managersToSetAsLeaders.map(m => ({ email: m.email, team: m.team })));
               
               for (const manager of managersToSetAsLeaders) {
                 try {
-                  const team = teams.find((t: any) => t.name === manager.team);
-                  const user = users.find((u: any) => u.email === manager.email);
+                  const team = teams.find((t: any) => t.name.toLowerCase() === manager.team.toLowerCase());
+                  const user = users.find((u: any) => u.email.toLowerCase() === manager.email.toLowerCase());
                   
                   if (team && user) {
                     // Set the user as team leader
