@@ -364,8 +364,8 @@ export default function OKRSystemSetupWizard() {
       try {
         if (!tenantId) return;
 
-        // Update or create the OKR config with the new strategic directions
-        const response = await fetch('/api/okr-config', {
+        // Update only the strategic directions using the dedicated endpoint
+        const response = await fetch('/api/strategic-directions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -379,9 +379,13 @@ export default function OKRSystemSetupWizard() {
         });
 
         if (response.ok) {
-          // Invalidate the config query to refresh displays
-          queryClient.invalidateQueries({ queryKey: ['okr-config'] });
-          console.log('Strategic directions auto-saved successfully');
+          const result = await response.json();
+          // Invalidate related queries to refresh displays
+          queryClient.invalidateQueries({ queryKey: ['/api/okr-system-config'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/okr-system'] });
+          console.log('Strategic directions auto-saved successfully:', result);
+        } else {
+          console.error('Failed to auto-save strategic directions:', response.status);
         }
       } catch (error) {
         console.error('Error auto-saving strategic directions:', error);
