@@ -203,13 +203,26 @@ export default function CreateKeyResult() {
       console.log('=== CREATING KEY RESULT ===');
       console.log('Data being sent:', data);
       
-      const response = await apiRequest('POST', `/api/key-results-create`, {
-        ...data,
-        objectiveId,
-        progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
+      // Use the working key result creation endpoint
+      const response = await fetch('/api/key-results-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...data,
+          objectiveId,
+          progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
+        })
       });
       
-      return response.json();
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create key result');
+      }
+      
+      return result;
     },
     onSuccess: (newKeyResult: KeyResult) => {
       setSavedKeyResults(prev => [...prev, newKeyResult]);
