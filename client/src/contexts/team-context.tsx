@@ -30,7 +30,16 @@ const TeamContext = createContext<TeamContextValue | undefined>(undefined);
 export function TeamProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
-  const { currentTenant } = useTenantContext();
+  
+  // Use try-catch to handle cases where TenantProvider might not be available
+  let currentTenant = null;
+  try {
+    const tenantContext = useTenantContext();
+    currentTenant = tenantContext.currentTenant;
+  } catch (err) {
+    // If tenant context is not available, continue with null tenant
+    console.warn('Tenant context not available in TeamProvider:', err);
+  }
 
   // Fetch teams data with fast reload functionality
   const { data: teams = [], isLoading, refetch } = useQuery({
