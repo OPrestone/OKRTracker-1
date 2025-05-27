@@ -86,7 +86,7 @@ export default function CompanyOKRs() {
 
 
 
-  // Fetch objectives data
+  // Fetch objectives data including linked OKRs
   const { data: objectives = [], isLoading, error } = useQuery<Objective[]>({
     queryKey: ["/api/objectives"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -96,9 +96,9 @@ export default function CompanyOKRs() {
     }
   });
 
-  // Fetch key results for each objective
-  const { data: keyResults = [] } = useQuery<KeyResult[]>({
-    queryKey: ["/api/key-results"],
+  // Fetch all OKRs to find those linked to company objectives
+  const { data: allOKRs = [] } = useQuery<Objective[]>({
+    queryKey: ["/api/objectives-with-links"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAuthenticated
   });
@@ -464,8 +464,15 @@ export default function CompanyOKRs() {
       ) : filteredObjectives.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           {filteredObjectives.map((objective) => {
-            // Get key results for this objective
-            const objectiveKeyResults = keyResults.filter(kr => kr.objectiveId === objective.id);
+            // Find OKRs that are linked to this company objective
+            const linkedOKRs = allOKRs.filter(okr => 
+              okr.parentId === objective.id || 
+              okr.strategicAlignment === objective.id ||
+              okr.alignedToObjectiveId === objective.id
+            );
+            
+            // Get all key results from the linked OKRs
+            const objectiveKeyResults = linkedOKRs.flatMap(okr => okr.keyResults || []);
             
             // Determine color based on objective type
             const typeColor = objective.type === 'financial' ? '#818cf8' : 
@@ -515,21 +522,37 @@ export default function CompanyOKRs() {
                   </div>
                   
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Key Results:</h4>
+                    <h4 className="text-sm font-medium mb-2">Key Results from Linked OKRs:</h4>
                     {objectiveKeyResults.length > 0 ? (
                       <ul className="space-y-3">
-                        {objectiveKeyResults.map((kr) => (
-                          <li key={kr.id} className="text-sm">
-                            <div className="flex justify-between mb-1">
-                              <span className="text-gray-700">{kr.title}</span>
-                              <span className="text-gray-500">{kr.progress}%</span>
-                            </div>
-                            <Progress value={kr.progress} className="h-1.5" />
-                          </li>
-                        ))}
+                        {objectiveKeyResults.map((kr) => {
+                          // Find which OKR this key result belongs to
+                          const parentOKR = linkedOKRs.find(okr => 
+                            okr.keyResults && okr.keyResults.some(okrKr => okrKr.id === kr.id)
+                          );
+                          return (
+                            <li key={kr.id} className="text-sm">
+                              <div className="flex justify-between mb-1">
+                                <div className="flex-1">
+                                  <span className="text-gray-700">{kr.title}</span>
+                                  {parentOKR && (
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      (from "{parentOKR.title}")
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-gray-500">{kr.progress}%</span>
+                              </div>
+                              <Progress value={kr.progress} className="h-1.5" />
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
-                      <p className="text-sm text-gray-500">No key results defined</p>
+                      <div className="text-sm text-gray-500">
+                        <p>No OKRs are currently linked to this company objective.</p>
+                        <p className="text-xs mt-1">Key results will appear here when team or individual OKRs are aligned to this objective.</p>
+                      </div>
                     )}
                   </div>
                   
