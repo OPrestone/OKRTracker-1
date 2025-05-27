@@ -573,100 +573,97 @@ export default function OKRSystemSetupWizard() {
         }
       }
       
-      // Create users using the working createTeamsAndUsersFromCsv function approach
+      // Create users using the bulk user creation endpoint (same as All Users page)
       if (csvImportedUsers.length > 0) {
         try {
-          console.log("Creating users using direct API call...");
+          console.log("Creating users using bulk endpoint...");
           
-          // Use the same approach as the working createTeamsAndUsersFromCsv function
-          const response = await fetch("/api/config/okr-system-setup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              csv_users: csvImportedUsers.map(user => ({
-                email: user.email,
-                name: user.name || user.email.split('@')[0],
-                role: user.role || 'user',
-                department: user.department || '',
-                team: user.team || ''
-              })),
-              organization_name: "CSV Import Organization",
-              mission_statement: "",
-              vision_statement: "",
-              values: [],
-              org_structure_type: "functional",
-              enable_cross_team_objectives: true,
-              default_visibility: "public",
-              selected_teams: [],
-              default_teams: [],
-              use_default_teams: false
-            }),
-            credentials: 'include'
-          });
+          // Create users one by one using the working approach from All Users page
+          let createdCount = 0;
+          const failedUsers = [];
           
-          console.log("User creation response status:", response.status);
-          const userResponseText = await response.text();
-          console.log("User creation response:", userResponseText);
+          for (const user of csvImportedUsers) {
+            try {
+              const response = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  username: user.email.split('@')[0].toLowerCase(),
+                  email: user.email.toLowerCase(),
+                  name: user.name || user.email.split('@')[0],
+                  title: user.department || '',
+                  role: user.role || 'user'
+                }),
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                createdCount++;
+                console.log(`Created user: ${user.email}`);
+              } else {
+                const errorText = await response.text();
+                console.error(`Failed to create user ${user.email}:`, errorText);
+                failedUsers.push(user.email);
+              }
+            } catch (error) {
+              console.error(`Error creating user ${user.email}:`, error);
+              failedUsers.push(user.email);
+            }
+          }
           
-          if (response.ok) {
-            const userData = JSON.parse(userResponseText);
-            usersCreated = userData.users_created?.length || csvImportedUsers.length;
-            console.log("Users created successfully:", userData);
+          usersCreated = createdCount;
+          console.log(`Successfully created ${createdCount} users, ${failedUsers.length} failed`);
+          
+          // Now set managers as team leaders for their respective teams
+          const managersToSetAsLeaders = csvImportedUsers.filter(user => 
+            user.role === 'manager' && user.team && user.team.trim() !== ''
+          );
+          
+          console.log("Setting managers as team leaders:", managersToSetAsLeaders);
+          
+          if (managersToSetAsLeaders.length > 0) {
+            // Get fresh team and user data
+            const teamsResponse = await fetch("/api/teams", {
+              method: "GET",
+              credentials: 'include'
+            });
             
-            // Now set managers as team leaders for their respective teams
-            const managersToSetAsLeaders = csvImportedUsers.filter(user => 
-              user.role === 'manager' && user.team && user.team.trim() !== ''
-            );
+            const usersResponse = await fetch("/api/users", {
+              method: "GET", 
+              credentials: 'include'
+            });
             
-            console.log("Setting managers as team leaders:", managersToSetAsLeaders);
-            
-            for (const manager of managersToSetAsLeaders) {
-              try {
-                // Find the team by name to get its ID
-                const teamsResponse = await fetch("/api/teams", {
-                  method: "GET",
-                  credentials: 'include'
-                });
-                
-                if (teamsResponse.ok) {
-                  const teams = await teamsResponse.json();
+            if (teamsResponse.ok && usersResponse.ok) {
+              const teams = await teamsResponse.json();
+              const users = await usersResponse.json();
+              
+              for (const manager of managersToSetAsLeaders) {
+                try {
                   const team = teams.find((t: any) => t.name === manager.team);
+                  const user = users.find((u: any) => u.email === manager.email);
                   
-                  if (team) {
-                    // Find the user by email to get their ID
-                    const usersResponse = await fetch("/api/users", {
-                      method: "GET", 
+                  if (team && user) {
+                    // Set the user as team leader
+                    const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ leaderId: user.id }),
                       credentials: 'include'
                     });
                     
-                    if (usersResponse.ok) {
-                      const users = await usersResponse.json();
-                      const user = users.find((u: any) => u.email === manager.email);
-                      
-                      if (user) {
-                        // Set the user as team leader
-                        const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ leaderId: user.id }),
-                          credentials: 'include'
-                        });
-                        
-                        if (leaderResponse.ok) {
-                          console.log(`Set ${manager.name} as leader of team ${manager.team}`);
-                        } else {
-                          console.error(`Failed to set ${manager.name} as team leader:`, await leaderResponse.text());
-                        }
-                      }
+                    if (leaderResponse.ok) {
+                      console.log(`Set ${manager.name} as leader of team ${manager.team}`);
+                    } else {
+                      console.error(`Failed to set ${manager.name} as team leader:`, await leaderResponse.text());
                     }
+                  } else {
+                    console.error(`Could not find team "${manager.team}" or user "${manager.email}" for leadership assignment`);
                   }
+                } catch (error) {
+                  console.error(`Error setting ${manager.name} as team leader:`, error);
                 }
-              } catch (error) {
-                console.error(`Error setting ${manager.name} as team leader:`, error);
               }
             }
-          } else {
-            console.error("User creation failed:", userResponseText);
           }
         } catch (error) {
           console.error("Error creating users:", error);
