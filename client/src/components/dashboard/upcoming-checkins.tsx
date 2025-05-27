@@ -24,22 +24,37 @@ export default function UpcomingCheckIns() {
   const { user } = useAuth();
 
   // Fetch check-ins data
-  const { data: checkIns, isLoading } = useQuery({
+  const { data: checkIns, isLoading, error } = useQuery({
     queryKey: ["/api/check-ins"],
     enabled: !!currentTenant?.id && !!user,
     refetchInterval: 3000,
     refetchIntervalInBackground: true,
+    retry: 1,
   });
+
+  // Log for debugging
+  if (error) {
+    console.log("Check-ins API error:", error);
+  }
+  if (checkIns) {
+    console.log("Check-ins data:", checkIns);
+  }
 
   // Process check-ins to determine upcoming ones
   const upcomingCheckIns = useMemo(() => {
-    if (!checkIns || checkIns.length === 0) return [];
+    if (!checkIns || !Array.isArray(checkIns) || checkIns.length === 0) {
+      return {
+        recent: [],
+        count: 0,
+        usersWithCheckIns: 0
+      };
+    }
 
     const now = new Date();
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     // Get recent check-ins from the last week
     const recentCheckIns = checkIns.filter((checkIn: CheckIn) => {
+      if (!checkIn || !checkIn.createdAt) return false;
       const checkInDate = new Date(checkIn.createdAt);
       const daysSinceCheckIn = Math.floor((now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
       return daysSinceCheckIn <= 7;
@@ -47,6 +62,7 @@ export default function UpcomingCheckIns() {
 
     // Group by user to see who needs to check in
     const userCheckIns = recentCheckIns.reduce((acc: any, checkIn: CheckIn) => {
+      if (!checkIn.userId) return acc;
       if (!acc[checkIn.userId]) {
         acc[checkIn.userId] = [];
       }
