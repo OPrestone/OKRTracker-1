@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useToast } from "@/hooks/use-toast";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Team, User } from "@shared/schema";
@@ -462,30 +463,36 @@ const CardsSkeleton = () => (
 );
 
 // No teams found component
-const NoTeamsFound = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="flex flex-col items-center justify-center py-16 px-4"
-  >
-    <div className="bg-gray-100 p-4 rounded-full mb-4">
-      <Building2 className="h-12 w-12 text-gray-400" />
-    </div>
-    <h3 className="text-xl font-medium text-gray-800 mb-2">No Teams Found</h3>
-    <p className="text-gray-500 text-center max-w-md mb-6">
-      There are no teams in your organization yet. Create your first team to start organizing your objectives and members.
-    </p>
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Your First Team
-        </Button>
-      </DialogTrigger>
-      <CreateTeamDialog />
-    </Dialog>
-  </motion.div>
-);
+const NoTeamsFound = () => {
+  const permissions = useUserPermissions();
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center justify-center py-16 px-4"
+    >
+      <div className="bg-gray-100 p-4 rounded-full mb-4">
+        <Building2 className="h-12 w-12 text-gray-400" />
+      </div>
+      <h3 className="text-xl font-medium text-gray-800 mb-2">No Teams Found</h3>
+      <p className="text-gray-500 text-center max-w-md mb-6">
+        There are no teams in your organization yet. {permissions.canCreateTeams() ? "Create your first team to start organizing your objectives and members." : "Contact your administrator to create teams."}
+      </p>
+      {permissions.canCreateTeams() && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Your First Team
+            </Button>
+          </DialogTrigger>
+          <CreateTeamDialog />
+        </Dialog>
+      )}
+    </motion.div>
+  );
+};
 
 // Color and icon options for team dialogs
 const colorOptions = [
@@ -1013,6 +1020,7 @@ const TeamsPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [, setLocation] = useLocation();
   const { currentTenant } = useTenantContext();
+  const permissions = useUserPermissions();
   
   // State for managing team actions
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -1263,15 +1271,17 @@ const TeamsPage = () => {
               <p className="text-gray-500 mt-1">Manage and organize teams in your organization</p>
             </div>
             
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="default" className="shrink-0">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Create Team
-                </Button>
-              </DialogTrigger>
-              <CreateTeamDialog />
-            </Dialog>
+            {permissions.canCreateTeams() && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="default" className="shrink-0">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Team
+                  </Button>
+                </DialogTrigger>
+                <CreateTeamDialog />
+              </Dialog>
+            )}
           </div>
           
           {/* Filters and search */}
