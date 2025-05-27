@@ -162,7 +162,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
                 <MiniStatsCard
                   key={team.id}
                   title={team.name || `Team ${index + 1}`}
-                  value={`${team.performance || Math.round(stats.teamProgress)}%`}
+                  value={`${Math.floor(team.progress || 0)}%`}
                   trend={team.memberCount || 0}
                   trendLabel={team.memberCount ? `${team.memberCount} members` : undefined}
                   icon={<Users className="h-4 w-4 text-indigo-500" />}
