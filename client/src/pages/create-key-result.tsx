@@ -265,9 +265,8 @@ export default function CreateKeyResult() {
       newErrors.targetValue = 'Target value must be greater than start value';
     }
     
-    if (keyResultData.currentValue < keyResultData.startValue) {
-      newErrors.currentValue = 'Current value cannot be less than start value';
-    }
+    // Current value can be equal to start value, only prevent it from being less
+    // Remove this validation as it's too restrictive for initial key results
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
