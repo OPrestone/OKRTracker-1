@@ -34,17 +34,6 @@ export const organizationMission = pgTableWithUlid("organization_mission", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const strategicPillars = pgTableWithUlid("strategic_pillars", {
-  title: text("title").notNull(),
-  description: text("description"),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  teamId: text("team_id").references(() => teams.id), // null for company-wide pillars
-  priority: integer("priority").default(0),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
 export const cycles = pgTableWithUlid("cycles", {
   name: text("name").notNull(),
   description: text("description"),
@@ -828,17 +817,6 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
   })
 }));
 
-export const strategicPillarsRelations = relations(strategicPillars, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [strategicPillars.tenantId],
-    references: [tenants.id]
-  }),
-  team: one(teams, {
-    fields: [strategicPillars.teamId],
-    references: [teams.id]
-  })
-}));
-
 export const teamMoodsRelations = relations(teamMoods, ({ one }) => ({
   team: one(teams, {
     fields: [teamMoods.teamId],
@@ -1264,8 +1242,3 @@ export const okrSystemConfigs = pgTableWithUlid("okr_system_configs", {
 });
 export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
-
-// Strategic Pillars schemas
-export const insertStrategicPillarSchema = createInsertSchema(strategicPillars).omit({ id: true, createdAt: true, updatedAt: true });
-export type StrategicPillar = typeof strategicPillars.$inferSelect;
-export type InsertStrategicPillar = z.infer<typeof insertStrategicPillarSchema>;

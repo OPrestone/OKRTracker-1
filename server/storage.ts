@@ -10,8 +10,7 @@ import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessG
          meetingsToKeyResults, MeetingToKeyResult, InsertMeetingToKeyResult,
          actionItems, ActionItem, InsertActionItem,
          projects, Project, InsertProject,
-         userProgress, UserProgress, InsertUserProgress,
-         strategicPillars, StrategicPillar, InsertStrategicPillar } from "@shared/schema";
+         userProgress, UserProgress, InsertUserProgress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
@@ -190,15 +189,6 @@ export interface IStorage {
   addReaction(reaction: InsertReaction): Promise<Reaction>;
   removeReaction(userId: string, messageId: string, emoji: string): Promise<void>;
   getReactionsByMessage(messageId: string): Promise<(Reaction & { user: User })[]>;
-  
-  // Strategic Pillars
-  createStrategicPillar(pillar: InsertStrategicPillar): Promise<StrategicPillar>;
-  getStrategicPillar(id: string): Promise<StrategicPillar | undefined>;
-  updateStrategicPillar(id: string, pillar: Partial<InsertStrategicPillar>): Promise<StrategicPillar>;
-  deleteStrategicPillar(id: string): Promise<void>;
-  getStrategicPillarsByTenant(tenantId: string): Promise<StrategicPillar[]>;
-  getStrategicPillarsByTeam(teamId: string): Promise<StrategicPillar[]>;
-  generateStrategicPillarsFromMission(mission: string, tenantId: string, teamId?: string): Promise<StrategicPillar[]>;
   
   // Session Store
   sessionStore: any; // Using any for session store type compatibility
@@ -3110,103 +3100,6 @@ export class DatabaseStorage implements IStorage {
       console.error("Error updating user progress:", error);
       throw error;
     }
-  }
-
-  // Strategic Pillars Management
-  async createStrategicPillar(pillar: InsertStrategicPillar): Promise<StrategicPillar> {
-    const { ulid } = await import('ulid');
-    const [newPillar] = await db.insert(strategicPillars)
-      .values({
-        ...pillar,
-        id: ulid()
-      })
-      .returning();
-    return newPillar;
-  }
-
-  async getStrategicPillar(id: string): Promise<StrategicPillar | undefined> {
-    const [pillar] = await db.select().from(strategicPillars).where(eq(strategicPillars.id, id));
-    return pillar;
-  }
-
-  async updateStrategicPillar(id: string, pillar: Partial<InsertStrategicPillar>): Promise<StrategicPillar> {
-    const [updatedPillar] = await db.update(strategicPillars)
-      .set(pillar)
-      .where(eq(strategicPillars.id, id))
-      .returning();
-    
-    if (!updatedPillar) {
-      throw new Error(`Strategic pillar with id ${id} not found`);
-    }
-    
-    return updatedPillar;
-  }
-
-  async deleteStrategicPillar(id: string): Promise<void> {
-    await db.delete(strategicPillars).where(eq(strategicPillars.id, id));
-  }
-
-  async getStrategicPillarsByTenant(tenantId: string): Promise<StrategicPillar[]> {
-    return db.select()
-      .from(strategicPillars)
-      .where(and(
-        eq(strategicPillars.tenantId, tenantId),
-        eq(strategicPillars.isActive, true),
-        isNull(strategicPillars.teamId) // Company-wide pillars
-      ))
-      .orderBy(strategicPillars.priority);
-  }
-
-  async getStrategicPillarsByTeam(teamId: string): Promise<StrategicPillar[]> {
-    return db.select()
-      .from(strategicPillars)
-      .where(and(
-        eq(strategicPillars.teamId, teamId),
-        eq(strategicPillars.isActive, true)
-      ))
-      .orderBy(strategicPillars.priority);
-  }
-
-  async generateStrategicPillarsFromMission(mission: string, tenantId: string, teamId?: string): Promise<StrategicPillar[]> {
-    // Generate strategic pillars based on company mission
-    const { ulid } = await import('ulid');
-    
-    // Sample strategic pillars that would typically be generated from AI analysis of the mission
-    const pillarsToCreate = [
-      {
-        title: "Customer Excellence",
-        description: "Deliver exceptional customer experiences and build lasting relationships",
-        priority: 1
-      },
-      {
-        title: "Innovation & Growth", 
-        description: "Drive continuous innovation and sustainable business growth",
-        priority: 2
-      },
-      {
-        title: "Operational Excellence",
-        description: "Maintain high standards of quality and efficiency in all operations",
-        priority: 3
-      },
-      {
-        title: "People & Culture",
-        description: "Foster a positive, inclusive, and high-performing culture",
-        priority: 4
-      }
-    ];
-
-    const createdPillars: StrategicPillar[] = [];
-    
-    for (const pillarData of pillarsToCreate) {
-      const newPillar = await this.createStrategicPillar({
-        ...pillarData,
-        tenantId,
-        teamId: teamId || null
-      });
-      createdPillars.push(newPillar);
-    }
-    
-    return createdPillars;
   }
 }
 
