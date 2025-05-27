@@ -3674,15 +3674,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create key result for specific objective
-  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res, next) => {
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res) => {
     try {
+      console.log('=== CREATE KEY RESULT REQUEST ===');
+      console.log('Creating key result for objective:', req.params.objectiveId);
+      console.log('Request body:', req.body);
+      console.log('Tenant ID:', req.tenantId);
+      
       const objectiveId = req.params.objectiveId;
       const tenantId = req.tenantId;
-      
-      console.log('=== CREATE KEY RESULT REQUEST ===');
-      console.log('Creating key result for objective:', objectiveId);
-      console.log('Request body:', req.body);
-      console.log('Tenant ID:', tenantId);
       
       // Verify the objective exists and belongs to the tenant
       const objective = await storage.getObjective(objectiveId);
@@ -3696,11 +3696,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this objective" });
       }
       
-      // Create the key result
+      // Create the key result with proper data structure
       const keyResultData = {
-        ...req.body,
-        objectiveId,
-        tenantId
+        title: req.body.title,
+        description: req.body.description || '',
+        objectiveId: objectiveId,
+        targetValue: req.body.targetValue || '100',
+        currentValue: req.body.currentValue || req.body.startValue || '0',
+        startValue: req.body.startValue || '0',
+        measureType: req.body.measureType || 'percentage',
+        targetType: req.body.targetType || 'increase',
+        status: req.body.status || 'not_started',
+        assignedToId: req.body.assignedToId || null,
+        tenantId: tenantId
       };
       
       console.log('Creating key result with data:', keyResultData);
