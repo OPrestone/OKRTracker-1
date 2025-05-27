@@ -731,9 +731,13 @@ export default function ObjectiveDetail() {
         throw new Error(`Error updating key result: ${response.statusText}`);
       }
 
-      // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ['/api/key-results', objectiveId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId] });
+      // Invalidate queries to refetch data with comprehensive cache refresh
+      await queryClient.invalidateQueries({ queryKey: ['/api/key-results', objectiveId] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+      
+      // Force refetch the objective data immediately
+      await queryClient.refetchQueries({ queryKey: ['/api/objectives', objectiveId] });
 
       // Close dialog and reset states
       setKeyResultProgressDialogOpen(false);
