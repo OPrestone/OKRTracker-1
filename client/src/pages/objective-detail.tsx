@@ -525,12 +525,11 @@ export default function ObjectiveDetail() {
     ? calculateAggregateProgress(keyResults)
     : objective?.progress || 0;
 
-  // Update progress value when objective data changes
+  // Update progress value when objective data or key results change
   useEffect(() => {
-    if (objective && objective.progress !== undefined) {
-      setProgressValue(objective.progress.toString());
-    }
-  }, [objective]);
+    // Use the calculated display progress (aggregate from key results) instead of stored progress
+    setProgressValue(displayProgress.toString());
+  }, [displayProgress]);
 
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number): string => {
