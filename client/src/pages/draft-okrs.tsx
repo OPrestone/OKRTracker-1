@@ -255,8 +255,12 @@ export default function DraftOKRs() {
           description: "OKR updated with AI suggestions successfully!",
         });
         
-        // Refresh the data
-        queryClient.invalidateQueries({ queryKey: ["/api/objectives", "draft", currentTenant?.id] });
+        // Refresh the data to show updated information
+        await queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+        await queryClient.invalidateQueries({ queryKey: ["api", "objectives"] });
+        
+        // Force refetch to immediately show updated data
+        window.location.reload();
         
         // Close the AI dialog
         setAiDialogOpen(false);
