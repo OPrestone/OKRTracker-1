@@ -1,21 +1,19 @@
-import { useState } from "react";
-import DashboardLayout from "@/layouts/dashboard-layout";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Target, TrendingUp, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Link } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { useTenantContext } from "@/hooks/use-tenant-context";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Target, TrendingUp, Plus, AlertTriangle } from "lucide-react";
+import DashboardLayout from "@/components/dashboard/dashboard-layout";
+import { Link } from "wouter";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import MonthlyProgressChart from "@/components/dashboard/monthly-progress-chart";
 
+// Types matching the dashboard implementation
 interface DbKeyResult {
   id: string;
   title: string;
@@ -66,68 +64,64 @@ interface KeyResult {
   status: "on-track" | "at-risk" | "behind" | "complete";
 }
 
+interface Timeframe {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+}
+
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
-  const { currentTenant } = useTenantContext();
-  const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const { data: timeframes } = useQuery({
-    queryKey: ["/api/timeframes", currentTenant?.id],
-    enabled: !!currentTenant?.id,
-    refetchInterval: 3000, // Auto-refresh every 3 seconds
-    refetchIntervalInBackground: true,
-  });
-  
-  const { data: objectives, isLoading, error } = useQuery({
+
+  // Auto-refresh every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch user's objectives
+  const { data: objectives = [], isLoading, error } = useQuery<DbObjective[]>({
     queryKey: ["/api/my-objectives"],
-    enabled: !!currentTenant?.id && !!user,
-    retry: 1,
-    retryDelay: 1000,
-    meta: { requiresTenant: true },
-    refetchInterval: 3000, // Auto-refresh every 3 seconds
-    refetchIntervalInBackground: true,
+    refetchInterval: 3000,
+  });
+
+  // Fetch timeframes
+  const { data: timeframes } = useQuery<Timeframe[]>({
+    queryKey: ["/api/timeframes"],
+    refetchInterval: 3000,
   });
 
   // Submit for approval mutation
   const submitForApprovalMutation = useMutation({
     mutationFn: async (objectiveId: string) => {
-      const response = await fetch(`/api/objectives/${objectiveId}/submit-for-approval`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      return apiRequest(`/api/objectives/${objectiveId}/submit-for-approval`, {
+        method: "POST",
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit objective for approval');
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Success!",
-        description: "Your OKR has been submitted for approval and will be reviewed by your manager.",
+        title: "Success",
+        description: "Objective submitted for approval successfully",
       });
-      
-      // Invalidate and refetch objectives
-      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: "Failed to submit OKR for approval. Please try again.",
+        description: "Failed to submit objective for approval",
         variant: "destructive",
       });
-      console.error("Error submitting objective for approval:", error);
-    }
+    },
   });
 
   const handleSubmitForApproval = (objectiveId: string) => {
     submitForApprovalMutation.mutate(objectiveId);
   };
+
   // Function to map DB objectives to UI format
   const mapDbObjectivesToUiFormat = (dbObjectives: DbObjective[] = []): OKR[] => {
     return dbObjectives.map(obj => {
@@ -183,51 +177,37 @@ export default function MyOKRs() {
   const pendingApprovalOKRs = myOKRs.filter(okr => okr.status === "pending-approval");
   const draftsOKRs = myOKRs.filter(okr => okr.status === "draft");
   const completedOKRs = myOKRs.filter(okr => okr.status === "completed");
-  
+
   // Helper functions for UI display
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "on-track":
-        return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
+        return "bg-green-100 text-green-800";
       case "at-risk":
-        return <Badge className="bg-yellow-100 text-yellow-800">At Risk</Badge>;
+        return "bg-yellow-100 text-yellow-800";
       case "behind":
-        return <Badge className="bg-red-100 text-red-800">Behind</Badge>;
+        return "bg-red-100 text-red-800";
       case "complete":
-      case "completed":
-        return <Badge className="bg-blue-100 text-blue-800">Complete</Badge>;
-      case "pending-approval":
-        return <Badge className="bg-purple-100 text-purple-800">Pending Approval</Badge>;
-      case "active":
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case "draft":
-        return <Badge className="bg-neutral-100 text-neutral-800">Draft</Badge>;
+        return "bg-blue-100 text-blue-800";
       default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+        return "bg-neutral-100 text-neutral-800";
     }
   };
-  
+
   const getProgressColor = (progress: number) => {
-    if (progress >= 70) return "bg-green-500";
-    if (progress >= 40) return "bg-yellow-500";
-    return "bg-blue-500";
+    if (progress >= 80) return "bg-green-500";
+    if (progress >= 60) return "bg-yellow-500";
+    return "bg-red-500";
   };
-  
-  // Calculate key result progress based on current, target and start values
-  const calculateProgressPercentage = (current: string, target: string, start: string) => {
-    // Convert string values to numbers
-    const currentNum = parseFloat(current);
-    const targetNum = parseFloat(target);
-    const startNum = parseFloat(start);
+
+  const calculateProgressPercentage = (current: any, target: any, start: any = 0): number => {
+    const currentVal = parseFloat(current) || 0;
+    const targetVal = parseFloat(target) || 0;
+    const startVal = parseFloat(start) || 0;
     
-    // Check for valid numbers and prevent division by zero
-    if (isNaN(currentNum) || isNaN(targetNum) || isNaN(startNum) || targetNum === startNum) {
-      return 0;
-    }
+    if (targetVal === 0) return 0;
     
-    const progress = Math.min(100, Math.max(0, 
-      ((currentNum - startNum) / (targetNum - startNum)) * 100
-    ));
+    const progress = ((currentVal - startVal) / (targetVal - startVal)) * 100;
     return Math.round(progress);
   };
   
@@ -272,10 +252,10 @@ export default function MyOKRs() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">My OKRs</h1>
-            <p className="text-neutral-600 mt-1">
+            <h1 className="text-3xl font-bold text-neutral-900">My OKRs</h1>
+            <p className="text-neutral-600 mt-2">
               Track and manage your personal objectives and key results
             </p>
           </div>
@@ -301,79 +281,59 @@ export default function MyOKRs() {
               activeOKRs.map((okr) => (
                 <Link key={okr.id} href={`/objective/${okr.id}`}>
                   <Card className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <Badge variant="outline" className="mb-2">{okr.timeframe}</Badge>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5 text-primary" />
-                          {okr.title}
-                        </CardTitle>
-                        <CardDescription className="mt-1">{okr.description}</CardDescription>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Badge variant="outline" className="mb-2">{okr.timeframe}</Badge>
+                          <CardTitle className="flex items-center gap-2">
+                            <Target className="h-5 w-5 text-primary" />
+                            {okr.title}
+                          </CardTitle>
+                          <CardDescription className="mt-1">{okr.description}</CardDescription>
+                        </div>
+                        
+                        <Badge className={okr.type === "personal" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"}>
+                          {okr.type === "personal" ? "Personal" : okr.type === "team" ? "Team" : "Company"}
+                        </Badge>
                       </div>
                       
-                      <Badge className={okr.type === "personal" ? "bg-purple-100 text-purple-800" : "bg-blue-100 text-blue-800"}>
-                        {okr.type === "personal" ? "Personal" : okr.type === "team" ? "Team" : "Company"}
-                      </Badge>
-                    </div>
-                    
-                    <div className="mt-2">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-600">Overall Progress</span>
-                        <span className="text-sm font-medium">{okr.progress}%</span>
+                      <div className="mt-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm text-neutral-600">Overall Progress</span>
+                          <span className="text-sm font-medium">{Math.round(okr.progress)}%</span>
+                        </div>
+                        <Progress value={okr.progress} className="h-2" />
                       </div>
-                      <Progress value={okr.progress} className={`h-2 ${getProgressColor(okr.progress)}`} />
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                    {okr.keyResults.length > 0 ? (
-                      <div className="space-y-3">
-                        {okr.keyResults.map((kr) => {
-                          // Calculate progress for key result
-                          // Use the progress field from the database if available, otherwise calculate it
-                          const krProgress = kr.progress !== undefined 
-                            ? kr.progress 
-                            : calculateProgressPercentage(
-                                kr.currentValue, 
-                                kr.targetValue, 
-                                kr.startValue
-                              );
-                          
-                          return (
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <h4 className="text-sm font-medium mb-2">Key Results</h4>
+                      {okr.keyResults.length > 0 ? (
+                        <div className="space-y-3">
+                          {okr.keyResults.map((kr) => (
                             <div key={kr.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
                               <div className="flex items-start gap-3">
                                 <TrendingUp className="h-5 w-5 text-neutral-400 mt-0.5" />
                                 <div>
-                                  <p className="font-medium text-sm">{kr.title}</p>
-                                  <div className="flex items-center mt-1 gap-3">
-                                    <div className="text-xs text-neutral-500 flex items-center">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      {new Date(kr.createdAt).toLocaleDateString()}
-                                    </div>
-                                    {getStatusBadge(kr.status || 'active')}
-                                  </div>
+                                  <p className="text-sm font-medium">{kr.title}</p>
+                                  <Badge className={`text-xs ${getStatusBadge(kr.status)}`}>
+                                    {kr.status.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                                  </Badge>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <div className="text-sm font-medium">{krProgress}%</div>
-                                <div className="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
-                                  <div 
-                                    className={`h-full ${getProgressColor(krProgress)}`} 
-                                    style={{ width: `${krProgress}%` }}
-                                  ></div>
-                                </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">{Math.round(kr.progress)}%</p>
+                                <p className="text-xs text-neutral-500">{kr.dueDate}</p>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-neutral-500">No key results found for this objective.</p>
-                    )}
-                  </CardContent>
-                </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-neutral-500">No key results found for this objective.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
               ))
             ) : (
               <Card className="shadow-sm">
@@ -381,28 +341,64 @@ export default function MyOKRs() {
                   <Target className="h-12 w-12 text-neutral-300 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No active OKRs</h3>
                   <p className="text-neutral-500 mb-6">You don't have any active OKRs at the moment.</p>
-                  {canCreateObjectives() && (
-                    <Button
-                      onClick={() => navigate("/create-objective")}
-                      className="flex items-center gap-2"
-                    >
+                  <Link href="/create-objective">
+                    <Button className="flex items-center gap-2">
                       <Plus className="h-4 w-4" />
                       Create OKR
                     </Button>
-                  )}
+                  </Link>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
-          
+
           <TabsContent value="pending-approval" className="space-y-4">
             {pendingApprovalOKRs.length > 0 ? (
               pendingApprovalOKRs.map((okr) => (
-                <Card 
-                  key={okr.id} 
-                  className="shadow-sm border-purple-200 cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/objective/${okr.id}`)}
-                >
+                <Link key={okr.id} href={`/objective/${okr.id}`}>
+                  <Card className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Badge variant="outline" className="mb-2">{okr.timeframe}</Badge>
+                          <CardTitle className="flex items-center gap-2">
+                            <Target className="h-5 w-5 text-primary" />
+                            {okr.title}
+                          </CardTitle>
+                          <CardDescription className="mt-1">{okr.description}</CardDescription>
+                        </div>
+                        
+                        <Badge className="bg-yellow-100 text-yellow-800">
+                          Pending Approval
+                        </Badge>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm text-neutral-600">Overall Progress</span>
+                          <span className="text-sm font-medium">{Math.round(okr.progress)}%</span>
+                        </div>
+                        <Progress value={okr.progress} className="h-2" />
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              ))
+            ) : (
+              <Card className="shadow-sm">
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Target className="h-12 w-12 text-neutral-300 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No pending approvals</h3>
+                  <p className="text-neutral-500">You don't have any objectives pending approval.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="drafts" className="space-y-4">
+            {draftsOKRs.length > 0 ? (
+              draftsOKRs.map((okr) => (
+                <Card key={okr.id} className="shadow-sm">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
@@ -414,104 +410,27 @@ export default function MyOKRs() {
                         <CardDescription className="mt-1">{okr.description}</CardDescription>
                       </div>
                       
-                      <Badge className="bg-purple-100 text-purple-800">Pending Approval</Badge>
+                      <Badge className="bg-neutral-100 text-neutral-800">
+                        Draft
+                      </Badge>
                     </div>
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="bg-purple-50 p-3 rounded-md text-sm text-purple-800 mb-4">
-                      This OKR is awaiting approval from your manager. You'll be notified once it's reviewed.
+                    <div className="flex gap-2">
+                      <Link href={`/objective/${okr.id}`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleSubmitForApproval(okr.id)}
+                        disabled={submitForApprovalMutation.isPending}
+                      >
+                        Submit for Approval
+                      </Button>
                     </div>
-                    
-                    <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                    {okr.keyResults.length > 0 ? (
-                      <div className="space-y-3">
-                        {okr.keyResults.map((kr) => (
-                          <div key={kr.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
-                            <div className="flex items-start gap-3">
-                              <TrendingUp className="h-5 w-5 text-neutral-400 mt-0.5" />
-                              <div>
-                                <p className="font-medium text-sm">{kr.title}</p>
-                                <div className="flex items-center mt-1">
-                                  <div className="text-xs text-neutral-500 flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {new Date(kr.createdAt).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-neutral-500">No key results found for this objective.</p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <Card className="shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Target className="h-12 w-12 text-neutral-300 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No pending OKRs</h3>
-                  <p className="text-neutral-500 mb-6">You don't have any OKRs awaiting approval.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="drafts" className="space-y-4">
-            {draftOKRs.length > 0 ? (
-              draftOKRs.map((draft) => (
-                <Card 
-                  key={draft.id} 
-                  className="shadow-sm border-neutral-200 cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/objectives/${draft.id}`)}
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <Badge variant="outline" className="mb-2">{draft.timeframe}</Badge>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5 text-neutral-400" />
-                          {draft.title}
-                        </CardTitle>
-                        <CardDescription className="mt-1">{draft.description}</CardDescription>
-                      </div>
-                      
-                      <Badge className="bg-neutral-100 text-neutral-800">Draft</Badge>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex gap-2 mb-4">
-                      <Button variant="default">Continue Editing</Button>
-                      <Button variant="outline">Submit for Approval</Button>
-                    </div>
-                    
-                    <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                    {draft.keyResults.length > 0 ? (
-                      <div className="space-y-3">
-                        {draft.keyResults.map((kr) => (
-                          <div key={kr.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
-                            <div className="flex items-start gap-3">
-                              <TrendingUp className="h-5 w-5 text-neutral-400 mt-0.5" />
-                              <div>
-                                <p className="font-medium text-sm">{kr.title}</p>
-                                <div className="flex items-center mt-1">
-                                  <div className="text-xs text-neutral-500 flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {new Date(kr.createdAt).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-neutral-500">No key results created yet for this draft.</p>
-                    )}
                   </CardContent>
                 </Card>
               ))
@@ -520,86 +439,56 @@ export default function MyOKRs() {
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <Target className="h-12 w-12 text-neutral-300 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No draft OKRs</h3>
-                  <p className="text-neutral-500 mb-6">You don't have any OKRs in draft status.</p>
-                  {canCreateObjectives() && (
-                    <Button
-                      onClick={() => navigate("/create-objective")}
-                      className="flex items-center gap-2"
-                    >
+                  <p className="text-neutral-500 mb-6">You don't have any draft objectives.</p>
+                  <Link href="/create-objective">
+                    <Button className="flex items-center gap-2">
                       <Plus className="h-4 w-4" />
                       Create OKR
                     </Button>
-                  )}
+                  </Link>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
-          
+
           <TabsContent value="completed" className="space-y-4">
             {completedOKRs.length > 0 ? (
               completedOKRs.map((okr) => (
-                <Card 
-                  key={okr.id} 
-                  className="shadow-sm border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/objective/${okr.id}`)}
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <Badge variant="outline" className="mb-2">{okr.timeframe}</Badge>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5 text-blue-500" />
-                          {okr.title}
-                        </CardTitle>
-                        <CardDescription className="mt-1">{okr.description}</CardDescription>
+                <Link key={okr.id} href={`/objective/${okr.id}`}>
+                  <Card className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Badge variant="outline" className="mb-2">{okr.timeframe}</Badge>
+                          <CardTitle className="flex items-center gap-2">
+                            <Target className="h-5 w-5 text-primary" />
+                            {okr.title}
+                          </CardTitle>
+                          <CardDescription className="mt-1">{okr.description}</CardDescription>
+                        </div>
+                        
+                        <Badge className="bg-green-100 text-green-800">
+                          Completed
+                        </Badge>
                       </div>
                       
-                      <Badge className="bg-blue-100 text-blue-800">Completed</Badge>
-                    </div>
-                    
-                    <div className="mt-2">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-neutral-600">Overall Progress</span>
-                        <span className="text-sm font-medium">100%</span>
+                      <div className="mt-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm text-neutral-600">Final Progress</span>
+                          <span className="text-sm font-medium">{Math.round(okr.progress)}%</span>
+                        </div>
+                        <Progress value={okr.progress} className="h-2" />
                       </div>
-                      <Progress value={100} className="h-2 bg-blue-500" />
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <h4 className="text-sm font-medium mb-2">Key Results</h4>
-                    {okr.keyResults.length > 0 ? (
-                      <div className="space-y-3">
-                        {okr.keyResults.map((kr) => (
-                          <div key={kr.id} className="flex justify-between items-center p-3 bg-neutral-50 rounded-md">
-                            <div className="flex items-start gap-3">
-                              <TrendingUp className="h-5 w-5 text-neutral-400 mt-0.5" />
-                              <div>
-                                <p className="font-medium text-sm">{kr.title}</p>
-                                <div className="flex items-center mt-1 gap-3">
-                                  <div className="text-xs text-neutral-500 flex items-center">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    {new Date(kr.createdAt).toLocaleDateString()}
-                                  </div>
-                                  <Badge className="bg-blue-100 text-blue-800">Complete</Badge>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-neutral-500">No key results found for this objective.</p>
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                  </Card>
+                </Link>
               ))
             ) : (
               <Card className="shadow-sm">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <Target className="h-12 w-12 text-neutral-300 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No completed OKRs</h3>
-                  <p className="text-neutral-500 mb-6">You don't have any completed OKRs yet.</p>
+                  <p className="text-neutral-500">You haven't completed any objectives yet.</p>
                 </CardContent>
               </Card>
             )}
