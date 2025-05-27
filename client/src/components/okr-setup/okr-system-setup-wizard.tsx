@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -328,6 +329,7 @@ export default function OKRSystemSetupWizard() {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
+  const tenantContext = useTenantContext();
   const [csvData, setCsvData] = useState<UserImport[]>([]);
   const [showCsvPreview, setShowCsvPreview] = useState(false);
   const [isProcessingCsv, setIsProcessingCsv] = useState(false);
