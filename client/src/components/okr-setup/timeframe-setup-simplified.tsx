@@ -388,27 +388,92 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
                 <Button 
                   type="button"
                   onClick={handleApplyDefaultTimeframes}
-                  disabled={createTimeframeMutation.isPending || isLoadingCadences}
+                  disabled={false}
                   className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                   size="lg"
                 >
-                  {createTimeframeMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating Timeframes...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Apply Default Timeframes
-                    </>
-                  )}
+                  <Zap className="w-4 h-4 mr-2" />
+                  Generate Default Timeframes
                 </Button>
               </div>
               
-              <p className="text-xs text-gray-500 text-center">
-                This will create standard timeframes based on your cadence settings and save them automatically.
-              </p>
+              {/* Generated Timeframes Display */}
+              {generatedTimeframes.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                        <h4 className="font-medium text-green-800">
+                          Generated Timeframes ({generatedTimeframes.length})
+                        </h4>
+                      </div>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Ready to Save
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid gap-3 mb-4">
+                      {generatedTimeframes.map((timeframe, index) => (
+                        <div key={index} className="bg-white p-3 rounded-lg border border-green-100 shadow-sm">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-800 mb-1">{timeframe.name}</h5>
+                              <p className="text-sm text-gray-600 mb-2">{timeframe.description}</p>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {format(new Date(timeframe.startDate), 'MMM dd, yyyy')} - {format(new Date(timeframe.endDate), 'MMM dd, yyyy')}
+                              </div>
+                            </div>
+                            <div className="text-right ml-4">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {primaryCadence}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-3 justify-center">
+                      <Button 
+                        type="button"
+                        onClick={handleSaveTimeframes}
+                        disabled={createTimeframeMutation.isPending}
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                      >
+                        {createTimeframeMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Timeframes
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        onClick={() => setGeneratedTimeframes([])}
+                        variant="outline"
+                        className="border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {generatedTimeframes.length === 0 && (
+                <p className="text-xs text-gray-500 text-center">
+                  Click "Generate Default Timeframes" to create standard timeframes based on your cadence settings.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
