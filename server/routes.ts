@@ -370,6 +370,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OKR System Configuration API Endpoints
+  app.get('/api/okr-config', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      const config = await db.select()
+        .from(okrSystemConfigs)
+        .where(eq(okrSystemConfigs.tenant_id, tenantId))
+        .then(results => results[0]);
+
+      if (!config) {
+        return res.status(404).json({ error: "OKR configuration not found" });
+      }
+
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching OKR configuration:', error);
+      res.status(500).json({ error: 'Failed to fetch OKR configuration' });
+    }
+  });
+
   // Organization Mission API Endpoints
   app.get('/api/organization-mission', ensureAuthenticated, withTenant, async (req, res) => {
     try {
