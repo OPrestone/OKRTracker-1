@@ -505,6 +505,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Handle strategic directions if provided
+      if (strategicDirections && strategicDirections.trim()) {
+        try {
+          console.log("Processing strategic directions:", strategicDirections);
+          
+          // First, remove existing strategic directions for this tenant (company level)
+          await db.execute(
+            `DELETE FROM strategic_directions WHERE tenant_id = ? AND type = 'company'`,
+            [tenantId]
+          );
+          
+          // Create new strategic direction entry
+          const directionData = {
+            id: ulid(),
+            title: "Company Strategic Directions",
+            description: strategicDirections.trim(),
+            priority: 1,
+            type: 'company',
+            tenant_id: tenantId,
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+          
+          await db.execute(
+            `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              directionData.id,
+              directionData.title,
+              directionData.description,
+              directionData.priority,
+              directionData.type,
+              directionData.tenant_id,
+              directionData.created_at,
+              directionData.updated_at
+            ]
+          );
+          
+          console.log("Strategic directions saved successfully");
+        } catch (directionError) {
+          console.error("Error saving strategic directions:", directionError);
+          // Continue execution, don't fail the main request
+        }
+      }
+
       // Make sure we have a result to return
       if (result && result.length > 0) {
         return res.json({
