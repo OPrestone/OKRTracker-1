@@ -1309,6 +1309,19 @@ export default function OKRSystemSetupWizard() {
               team: user.team || '',
               tenant_id: tenantId
             }))
+          : [],
+          
+        // Include strategic directions for saving
+        strategic_directions: Array.isArray(data.generalSettings.strategicDirections) ?
+          data.generalSettings.strategicDirections
+            .filter(direction => direction && direction.title && direction.title.trim() !== '')
+            .map(direction => ({
+              title: direction.title.trim(),
+              description: direction.description?.trim() || '',
+              priority: direction.priority || 1,
+              type: 'company',
+              tenant_id: tenantId
+            }))
           : []
       };
       

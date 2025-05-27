@@ -275,6 +275,40 @@ export function setupConfigRoutes(router: Router) {
         }
       }
       
+      // Process strategic directions if provided
+      if (Array.isArray(req.body.strategic_directions) && req.body.strategic_directions.length > 0) {
+        try {
+          console.log('Creating strategic directions:', req.body.strategic_directions.length);
+          
+          for (const directionData of req.body.strategic_directions) {
+            if (!directionData || !directionData.title) continue;
+            
+            try {
+              // Create a valid strategic direction object
+              const strategicDirectionData = {
+                id: ulid(),
+                title: directionData.title.trim(),
+                description: directionData.description?.trim() || '',
+                priority: directionData.priority || 1,
+                type: directionData.type || 'company',
+                tenant_id: tenantId,
+                created_at: new Date(),
+                updated_at: new Date()
+              };
+              
+              // Insert the strategic direction
+              const newDirection = await db.insert(strategicDirections).values(strategicDirectionData).returning();
+              console.log(`Created strategic direction: ${strategicDirectionData.title} with ID: ${newDirection[0].id}`);
+              
+            } catch (directionError) {
+              console.error(`Error creating strategic direction ${directionData.title}:`, directionError);
+            }
+          }
+        } catch (strategicDirectionsError) {
+          console.error('Error processing strategic directions:', strategicDirectionsError);
+        }
+      }
+      
       return res.json(result[0]);
     } catch (error) {
       console.error('Error saving OKR system config:', error);
@@ -374,11 +408,11 @@ export function setupConfigRoutes(router: Router) {
       
       // Check if config already exists for this tenant
       const existingConfig = await db
-							.select()
-							.from(okrSystemConfigs)
-							.where(eq(okrSystemConfigs.tenant_id, tenantId))
-							.limit(1)
-							.then((rows) => rows[0]);
+                                                        .select()
+                                                        .from(okrSystemConfigs)
+                                                        .where(eq(okrSystemConfigs.tenant_id, tenantId))
+                                                        .limit(1)
+                                                        .then((rows) => rows[0]);
       
       let result;
       
