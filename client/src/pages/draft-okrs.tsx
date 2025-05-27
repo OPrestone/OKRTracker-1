@@ -229,10 +229,24 @@ export default function DraftOKRs() {
   };
 
   const handleApplySuggestions = async () => {
-    if (!selectedObjective || !aiAnalysis) return;
+    if (!selectedObjective || !aiAnalysis) {
+      console.error("Missing selectedObjective or aiAnalysis:", { selectedObjective, aiAnalysis });
+      return;
+    }
+
+    if (!selectedObjective.id) {
+      console.error("Selected objective missing ID:", selectedObjective);
+      toast({
+        title: "Error",
+        description: "Cannot update objective: missing ID",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       console.log("Applying AI suggestions for objective:", selectedObjective.id);
+      console.log("Selected objective:", selectedObjective);
       console.log("AI Analysis:", aiAnalysis);
       
       // Update the objective with AI suggestions
@@ -256,11 +270,11 @@ export default function DraftOKRs() {
       };
 
       console.log("Sending update data:", updatedObjective);
+      console.log("Making PUT request to:", `/api/objectives/${selectedObjective.id}`);
 
       // Save the updated objective to the database
-      console.log("Making PUT request to:", `/api/objectives/${selectedObjective.id}`);
       const response = await apiRequest("PUT", `/api/objectives/${selectedObjective.id}`, updatedObjective);
-      console.log("Response status:", response.status);
+      console.log("Response received:", response.status, response.statusText);
       
       if (response.ok) {
         console.log("Update successful!");
@@ -278,14 +292,14 @@ export default function DraftOKRs() {
         setAiAnalysis(null);
       } else {
         const errorText = await response.text();
-        console.error("Update failed:", response.status, errorText);
-        throw new Error(`Failed to update objective: ${response.status}`);
+        console.error("Update failed:", response.status, response.statusText, errorText);
+        throw new Error(`Failed to update objective: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.error("Error applying AI suggestions:", error);
       toast({
         title: "Error",
-        description: "Failed to apply AI suggestions. Please try again.",
+        description: `Failed to apply AI suggestions: ${error.message}`,
         variant: "destructive"
       });
     }
