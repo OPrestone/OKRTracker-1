@@ -402,16 +402,27 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Default Configuration</h4>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center mb-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
+                  <h4 className="font-medium text-blue-800">Current Configuration</h4>
+                </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Cadence:</span>
-                    <span className="ml-2 font-medium capitalize">{primaryCadence}</span>
+                  <div className="bg-white p-3 rounded-md border border-blue-100">
+                    <span className="text-gray-600 text-xs uppercase tracking-wide">Cadence:</span>
+                    <div className="mt-1">
+                      <span className="font-semibold text-blue-700 capitalize text-base">
+                        {primaryCadence || 'Not selected'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-gray-600">Start Month:</span>
-                    <span className="ml-2 font-medium capitalize">{startMonth}</span>
+                  <div className="bg-white p-3 rounded-md border border-blue-100">
+                    <span className="text-gray-600 text-xs uppercase tracking-wide">Start Month:</span>
+                    <div className="mt-1">
+                      <span className="font-semibold text-blue-700 capitalize text-base">
+                        {startMonth || 'Not selected'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
