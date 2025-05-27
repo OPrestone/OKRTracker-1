@@ -118,7 +118,7 @@ export async function getPublicFeedback(limit: number = 10): Promise<(Feedback &
   }
 }
 
-export async function getReceivedFeedback(userId: number): Promise<(Feedback & { sender: any; receiver: any })[]> {
+export async function getReceivedFeedback(userId: string): Promise<(Feedback & { sender: any; receiver: any })[]> {
   // Get feedback received by the user
   const feedbackItems = await db
     .select()

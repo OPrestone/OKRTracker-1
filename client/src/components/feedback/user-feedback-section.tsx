@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 
 interface UserFeedbackSectionProps {
-  userId: number;
+  userId: string;
   user: User;
 }
 

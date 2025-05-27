@@ -167,8 +167,13 @@ export default function DraftOKRs() {
       
       const objectives = await response.json();
       
+      // Filter to only show objectives with "draft" status
+      const draftOnlyObjectives = objectives.filter((objective: DraftObjective) => 
+        objective.status === 'draft'
+      );
+      
       // Ensure each objective has a keyResults array
-      return objectives.map((objective: DraftObjective) => ({
+      return draftOnlyObjectives.map((objective: DraftObjective) => ({
         ...objective,
         keyResults: objective.keyResults || []
       }));
@@ -221,6 +226,83 @@ export default function DraftOKRs() {
   const handleSubmit = (objective: DraftObjective) => {
     setSelectedObjective(objective);
     setSubmitDialogOpen(true);
+  };
+
+  const handleApplySuggestions = async () => {
+    if (!selectedObjective || !aiAnalysis) {
+      console.error("Missing selectedObjective or aiAnalysis:", { selectedObjective, aiAnalysis });
+      return;
+    }
+
+    if (!selectedObjective.id) {
+      console.error("Selected objective missing ID:", selectedObjective);
+      toast({
+        title: "Error",
+        description: "Cannot update objective: missing ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log("Applying AI suggestions for objective:", selectedObjective.id);
+      console.log("Selected objective:", selectedObjective);
+      console.log("AI Analysis:", aiAnalysis);
+      
+      // Update the objective with AI suggestions
+      const updatedObjective = {
+        title: aiAnalysis.improvedObjective.title,
+        description: aiAnalysis.improvedObjective.description,
+        status: selectedObjective.status,
+        level: selectedObjective.level,
+        timeframeId: selectedObjective.timeframe_id,
+        ownerId: selectedObjective.owner_id,
+        keyResults: aiAnalysis.improvedObjective.keyResults.map((krTitle, index) => ({
+          title: krTitle,
+          description: "",
+          target_value: "100",
+          current_value: "0",
+          start_value: "0",
+          progress: 0,
+          status: "not_started",
+          assigned_to_id: selectedObjective.keyResults[index]?.assigned_to_id || null
+        }))
+      };
+
+      console.log("Sending update data:", updatedObjective);
+      console.log("Making PUT request to:", `/api/objectives/${selectedObjective.id}`);
+
+      // Save the updated objective to the database
+      const response = await apiRequest("PUT", `/api/objectives/${selectedObjective.id}`, updatedObjective);
+      console.log("Response received:", response.status, response.statusText);
+      
+      if (response.ok) {
+        console.log("Update successful!");
+        toast({
+          title: "Success",
+          description: "OKR updated with AI suggestions successfully!",
+        });
+        
+        // Refresh the data to show updated information
+        await queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+        await queryClient.refetchQueries({ queryKey: ["/api/objectives"] });
+        
+        // Close the AI dialog
+        setAiDialogOpen(false);
+        setAiAnalysis(null);
+      } else {
+        const errorText = await response.text();
+        console.error("Update failed:", response.status, response.statusText, errorText);
+        throw new Error(`Failed to update objective: ${response.status} - ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Error applying AI suggestions:", error);
+      toast({
+        title: "Error",
+        description: `Failed to apply AI suggestions: ${error.message}`,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSubmitConfirm = () => {
@@ -413,7 +495,15 @@ export default function DraftOKRs() {
     }));
     
     // Make API call to update the draft objective
-    apiRequest("PATCH", `/api/objectives/${editDraftData.id}`, {
+    console.log("Updating draft objective:", editDraftData.id);
+    console.log("Update data:", {
+      title: editDraftData.title,
+      description: editDraftData.description,
+      status: "draft",
+      keyResults: preparedKeyResults
+    });
+    
+    apiRequest("PUT", `/api/objectives/${editDraftData.id}`, {
       title: editDraftData.title,
       description: editDraftData.description,
       status: "draft", // Ensure it maintains draft status
@@ -941,9 +1031,15 @@ export default function DraftOKRs() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setAiDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setAiDialogOpen(false)}>
               Close
             </Button>
+            {aiAnalysis && !analyzing && (
+              <Button onClick={handleApplySuggestions} className="bg-primary text-white hover:bg-primary/90">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Apply Suggestions
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

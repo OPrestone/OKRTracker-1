@@ -1717,6 +1717,10 @@ export class DatabaseStorage implements IStorage {
   async getKeyResultsByObjective(objectiveId: string): Promise<KeyResult[]> {
     return db.select().from(keyResults).where(eq(keyResults.objectiveId, objectiveId));
   }
+
+  async deleteKeyResult(id: string): Promise<void> {
+    await db.delete(keyResults).where(eq(keyResults.id, id));
+  }
   
   async getAllKeyResults(): Promise<KeyResult[]> {
     return db.select().from(keyResults);

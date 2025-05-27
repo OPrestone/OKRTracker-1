@@ -2811,9 +2811,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ownerId = req.user.id;
       const tenantId = req.tenantId;
       
+      console.log(`[MY-OBJECTIVES] Fetching objectives for owner: ${ownerId}, tenant: ${tenantId}`);
+      
       // Get objectives by owner and filter by tenant
       const allOwnerObjectives = await storage.getObjectivesByOwner(ownerId);
+      console.log(`[MY-OBJECTIVES] Found ${allOwnerObjectives.length} total objectives for owner`);
+      
       const objectives = allOwnerObjectives.filter(obj => obj.tenantId === tenantId);
+      console.log(`[MY-OBJECTIVES] Filtered to ${objectives.length} objectives for tenant`);
       
       // Get key results for each objective
       const objectivesWithKeyResults = await Promise.all(
@@ -2826,8 +2831,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
+      console.log(`[MY-OBJECTIVES] Returning ${objectivesWithKeyResults.length} objectives with key results`);
       res.json(objectivesWithKeyResults);
     } catch (error) {
+      console.error("[MY-OBJECTIVES] Error:", error);
       next(error);
     }
   });
@@ -2962,6 +2969,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(result);
     } catch (error) {
+      next(error);
+    }
+  });
+
+  // PUT endpoint to update an objective
+  app.put("/api/objectives/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      console.log("ROUTE HIT: PUT /api/objectives/:id");
+      const objectiveId = req.params.id;
+      const tenantId = req.tenantId;
+      const user = req.user as User;
+      
+      console.log("Update request for objective:", objectiveId);
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      
+      // Get existing objective to verify ownership/access
+      const existingObjective = await storage.getObjective(objectiveId);
+      if (!existingObjective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      // Check if objective belongs to this tenant
+      if (existingObjective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      // Update the objective
+      const updatedData = {
+        title: req.body.title,
+        description: req.body.description,
+        status: req.body.status,
+        level: req.body.level,
+        timeframeId: req.body.timeframeId,
+        ownerId: req.body.ownerId
+      };
+      
+      const updatedObjective = await storage.updateObjective(objectiveId, updatedData);
+      
+      // Handle key results if provided
+      if (req.body.keyResults && Array.isArray(req.body.keyResults)) {
+        console.log("Updating key results for objective:", objectiveId);
+        
+        // For simplicity, delete existing key results and create new ones
+        // In a production app, you might want to be more sophisticated about updates
+        const existingKeyResults = await storage.getKeyResultsByObjective(objectiveId);
+        for (const kr of existingKeyResults) {
+          await storage.deleteKeyResult(kr.id);
+        }
+        
+        // Create new key results
+        for (const kr of req.body.keyResults) {
+          await storage.createKeyResult({
+            title: kr.title,
+            description: kr.description || "",
+            objectiveId: objectiveId,
+            targetValue: kr.target_value || "100",
+            currentValue: kr.current_value || kr.start_value || "0",
+            startValue: kr.start_value || "0",
+            progress: kr.progress || 0,
+            status: kr.status || "not_started",
+            assignedToId: kr.assigned_to_id,
+            tenantId: tenantId,
+          });
+        }
+      }
+      
+      // Fetch the updated objective with its key results
+      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      const result = {
+        ...updatedObjective,
+        keyResults
+      };
+      
+      console.log("Objective updated successfully:", result);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating objective:", error);
+      next(error);
+    }
+  });
+
+  // POST endpoint for AI analysis of objectives
+  app.post("/api/objectives/analyze", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      console.log("ROUTE HIT: POST /api/objectives/analyze");
+      const { objective } = req.body;
+      const tenantId = req.tenantId;
+      
+      if (!objective) {
+        return res.status(400).json({ error: "Objective data is required" });
+      }
+      
+      console.log("Analyzing objective:", objective.id);
+      
+      // For now, return a mock analysis since the AI service might not be configured
+      // The user can provide API keys if they want real AI analysis
+      const mockAnalysis = {
+        overall: "This objective shows good strategic alignment and clear intent. The key results provide measurable outcomes that support the main objective.",
+        strengths: [
+          "Clear and specific objective statement",
+          "Measurable key results",
+          "Realistic timeline and scope",
+          "Aligned with organizational goals"
+        ],
+        weaknesses: [
+          "Could benefit from more ambitious target values",
+          "Consider adding risk mitigation strategies",
+          "May need more specific success criteria"
+        ],
+        suggestions: [
+          "Add quarterly milestones for better tracking",
+          "Include specific metrics for each key result",
+          "Consider cross-team dependencies",
+          "Add contingency plans for potential obstacles"
+        ],
+        improvedObjective: {
+          title: `Achieve measurable ${objective.title.toLowerCase()} with 25% improvement by Q4 2024`,
+          description: `${objective.description || 'This objective'} focuses on delivering specific, measurable outcomes that drive business value and team performance. Enhanced with clear success criteria and trackable metrics.`,
+          keyResults: [
+            "Increase customer satisfaction score from baseline to 90% by quarter end",
+            "Achieve 95% on-time delivery rate across all projects",
+            "Reduce operational costs by 15% while maintaining quality standards"
+          ]
+        }
+      };
+      
+      res.json(mockAnalysis);
+    } catch (error) {
+      console.error("Error analyzing objective:", error);
       next(error);
     }
   });
@@ -3479,6 +3615,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to recalculate objective progress based on key results
+  async function recalculateObjectiveProgress(objectiveId: string) {
+    try {
+      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      if (keyResults.length === 0) {
+        // No key results, set objective progress to 0
+        await storage.updateObjective(objectiveId, { progress: 0 });
+        return;
+      }
+      
+      // Calculate average progress of all key results
+      const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+      const averageProgress = Math.round(totalProgress / keyResults.length);
+      
+      // Update objective progress
+      await storage.updateObjective(objectiveId, { progress: averageProgress });
+    } catch (error) {
+      console.error('Error recalculating objective progress:', error);
+    }
+  }
+
   app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
@@ -3495,6 +3652,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertKeyResultSchema.partial().parse(req.body);
       const updatedKeyResult = await storage.updateKeyResult(id, validatedData);
+      
+      // If progress was updated, recalculate objective progress
+      if (validatedData.progress !== undefined && keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
       res.json(updatedKeyResult);
     } catch (error) {
       next(error);
@@ -3517,6 +3680,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { progress } = z.object({ progress: z.number().min(0).max(100) }).parse(req.body);
       const updatedKeyResult = await storage.updateKeyResultProgress(id, progress);
+      
+      // Recalculate objective progress since key result progress was updated
+      if (keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
       res.json(updatedKeyResult);
     } catch (error) {
       next(error);
@@ -4652,7 +4821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const feedbackData = {
         ...req.body,
-        senderId: req.user.id,
+        userId: req.user.id, // Schema expects userId, not senderId
         tenantId: tenantId // Add tenant ID to the feedback
       };
       
