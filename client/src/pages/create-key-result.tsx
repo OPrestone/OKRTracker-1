@@ -276,11 +276,19 @@ export default function CreateKeyResult() {
   };
 
   const handleSaveKeyResult = async () => {
-    if (!validateForm()) return;
+    console.log('Save button clicked, form data:', keyResultData);
+    console.log('Objective ID:', objectiveId);
     
+    if (!validateForm()) {
+      console.log('Form validation failed, errors:', errors);
+      return;
+    }
+    
+    console.log('Form validation passed, submitting...');
     setIsSubmitting(true);
     try {
-      await createKeyResultMutation.mutateAsync(keyResultData);
+      const result = await createKeyResultMutation.mutateAsync(keyResultData);
+      console.log('Key result created successfully:', result);
     } catch (error) {
       console.error('Error creating key result:', error);
     } finally {
