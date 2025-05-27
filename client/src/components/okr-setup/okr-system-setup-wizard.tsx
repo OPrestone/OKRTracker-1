@@ -609,9 +609,12 @@ export default function OKRSystemSetupWizard() {
                 body: JSON.stringify({
                   username: user.email.split('@')[0].toLowerCase(),
                   email: user.email.toLowerCase(),
-                  name: user.name || user.email.split('@')[0],
+                  firstName: user.firstName || user.name?.split(' ')[0] || user.email.split('@')[0],
+                  lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+                  name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
                   title: user.department || '',
-                  role: user.role || 'user'
+                  role: user.role || 'user',
+                  tenantId: tenantId  // Ensure tenant ID is included
                 }),
                 credentials: 'include'
               });
@@ -642,6 +645,79 @@ export default function OKRSystemSetupWizard() {
           
           usersCreated = createdCount;
           console.log(`Successfully created ${createdCount} users, ${failedUsers.length} failed`);
+          
+          // Step 2.5: Assign users to their teams with proper team IDs
+          console.log("Step 2.5: Assigning users to teams...");
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for users to be committed
+          
+          // Fetch current teams to get team IDs
+          const teamsResponse = await fetch("/api/teams", {
+            method: "GET",
+            headers: {
+              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+            },
+            credentials: 'include'
+          });
+          
+          if (teamsResponse.ok) {
+            const allTeams = await teamsResponse.json();
+            console.log("Available teams for assignment:", allTeams);
+            
+            // Fetch current users to get user IDs
+            const usersResponse = await fetch("/api/users", {
+              method: "GET",
+              headers: {
+                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+              },
+              credentials: 'include'
+            });
+            
+            if (usersResponse.ok) {
+              const allUsers = await usersResponse.json();
+              console.log("Available users for team assignment:", allUsers);
+              
+              // Assign each CSV user to their team
+              for (const csvUser of csvImportedUsers) {
+                if (csvUser.team && csvUser.team.trim() !== '') {
+                  const matchingTeam = allTeams.find(team => 
+                    team.name.toLowerCase() === csvUser.team.toLowerCase()
+                  );
+                  const matchingUser = allUsers.find(user => 
+                    user.email.toLowerCase() === csvUser.email.toLowerCase()
+                  );
+                  
+                  if (matchingTeam && matchingUser) {
+                    try {
+                      // Assign user to team using the users-to-teams relationship
+                      const assignResponse = await fetch("/api/users-to-teams", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                        },
+                        body: JSON.stringify({
+                          userId: matchingUser.id,
+                          teamId: matchingTeam.id,
+                          tenantId: tenantContext.currentTenant?.id || tenantId
+                        }),
+                        credentials: 'include'
+                      });
+                      
+                      if (assignResponse.ok) {
+                        console.log(`Assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
+                      } else {
+                        console.log(`Failed to assign ${csvUser.email} to team ${csvUser.team}:`, await assignResponse.text());
+                      }
+                    } catch (error) {
+                      console.error(`Error assigning ${csvUser.email} to team:`, error);
+                    }
+                  } else {
+                    console.log(`Could not find matching team or user for ${csvUser.email} -> ${csvUser.team}`);
+                  }
+                }
+              }
+            }
+          }
           
           // Now set managers as team leaders for their respective teams
           const managersToSetAsLeaders = csvImportedUsers.filter(user => 
