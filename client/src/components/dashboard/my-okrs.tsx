@@ -77,13 +77,11 @@ export default function MyOKRs() {
   });
   
   const { data: objectives, isLoading, error } = useQuery({
-    queryKey: ["/api/my-objectives", currentTenant?.id],
+    queryKey: ["/api/my-objectives"],
     enabled: !!currentTenant?.id && !!user,
-    retry: 3,
+    retry: 1,
     retryDelay: 1000,
-    onError: (err) => {
-      console.error("Error fetching objectives:", err);
-    }
+    meta: { requiresTenant: true }
   });
 
   // Submit for approval mutation

@@ -2811,9 +2811,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ownerId = req.user.id;
       const tenantId = req.tenantId;
       
+      console.log(`[MY-OBJECTIVES] Fetching objectives for owner: ${ownerId}, tenant: ${tenantId}`);
+      
       // Get objectives by owner and filter by tenant
       const allOwnerObjectives = await storage.getObjectivesByOwner(ownerId);
+      console.log(`[MY-OBJECTIVES] Found ${allOwnerObjectives.length} total objectives for owner`);
+      
       const objectives = allOwnerObjectives.filter(obj => obj.tenantId === tenantId);
+      console.log(`[MY-OBJECTIVES] Filtered to ${objectives.length} objectives for tenant`);
       
       // Get key results for each objective
       const objectivesWithKeyResults = await Promise.all(
@@ -2826,8 +2831,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
+      console.log(`[MY-OBJECTIVES] Returning ${objectivesWithKeyResults.length} objectives with key results`);
       res.json(objectivesWithKeyResults);
     } catch (error) {
+      console.error("[MY-OBJECTIVES] Error:", error);
       next(error);
     }
   });
