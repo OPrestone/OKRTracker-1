@@ -200,7 +200,7 @@ export default function CreateKeyResult() {
   // Create key result mutation
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/key-results', {
+      const response = await fetch(`/api/objectives/${objectiveId}/key-results`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
