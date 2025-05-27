@@ -540,6 +540,13 @@ export default function OKRSystemSetupWizard() {
       console.log("Teams to save:", csvImportedTeams);
       console.log("Users to save:", csvImportedUsers);
       
+      // Get tenant ID from context
+      const tenantId = tenantContext?.currentTenant?.id;
+      if (!tenantId) {
+        throw new Error("No tenant ID found");
+      }
+      console.log("Using tenant ID:", tenantId);
+      
       let teamsCreated = 0;
       let usersCreated = 0;
       
@@ -586,7 +593,10 @@ export default function OKRSystemSetupWizard() {
             try {
               const response = await fetch("/api/users", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId
+                },
                 body: JSON.stringify({
                   username: user.email.split('@')[0].toLowerCase(),
                   email: user.email.toLowerCase(),
@@ -714,7 +724,10 @@ export default function OKRSystemSetupWizard() {
         try {
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Tenant-ID": tenantId
+            },
             body: JSON.stringify(uniqueTeamNames.map(teamName => ({
               name: teamName,
               description: `Auto-created team from CSV upload`
