@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { z } from 'zod';
-import { okrSystemConfigs, teams, users, insertTeamSchema, insertUserSchema } from '../../shared/schema';
+import { okrSystemConfigs, teams, users, strategicDirections, insertTeamSchema, insertUserSchema } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { hashPassword } from '../auth';
@@ -275,6 +275,40 @@ export function setupConfigRoutes(router: Router) {
         }
       }
       
+      // Process strategic directions if provided
+      if (Array.isArray(req.body.strategic_directions) && req.body.strategic_directions.length > 0) {
+        try {
+          console.log('Creating strategic directions:', req.body.strategic_directions.length);
+          
+          for (const directionData of req.body.strategic_directions) {
+            if (!directionData || !directionData.title) continue;
+            
+            try {
+              // Create a valid strategic direction object
+              const strategicDirectionData = {
+                id: ulid(),
+                title: directionData.title.trim(),
+                description: directionData.description?.trim() || '',
+                priority: directionData.priority || 1,
+                type: directionData.type || 'company',
+                tenant_id: tenantId,
+                created_at: new Date(),
+                updated_at: new Date()
+              };
+              
+              // Insert the strategic direction
+              const newDirection = await db.insert(strategicDirections).values(strategicDirectionData).returning();
+              console.log(`Created strategic direction: ${strategicDirectionData.title} with ID: ${newDirection[0].id}`);
+              
+            } catch (directionError) {
+              console.error(`Error creating strategic direction ${directionData.title}:`, directionError);
+            }
+          }
+        } catch (strategicDirectionsError) {
+          console.error('Error processing strategic directions:', strategicDirectionsError);
+        }
+      }
+      
       return res.json(result[0]);
     } catch (error) {
       console.error('Error saving OKR system config:', error);
@@ -328,6 +362,7 @@ export function setupConfigRoutes(router: Router) {
           companyMission: req.body.generalSettings?.companyMission || '',
           companyVision: req.body.generalSettings?.companyVision || '',
           companyValues: req.body.generalSettings?.companyValues || '',
+          strategicDirections: req.body.generalSettings?.strategicDirections || [],
           trackingFrequency: req.body.generalSettings?.trackingFrequency || 'weekly',
           enableNotifications: req.body.generalSettings?.enableNotifications || false
         },
@@ -374,11 +409,11 @@ export function setupConfigRoutes(router: Router) {
       
       // Check if config already exists for this tenant
       const existingConfig = await db
-							.select()
-							.from(okrSystemConfigs)
-							.where(eq(okrSystemConfigs.tenant_id, tenantId))
-							.limit(1)
-							.then((rows) => rows[0]);
+                                                        .select()
+                                                        .from(okrSystemConfigs)
+                                                        .where(eq(okrSystemConfigs.tenant_id, tenantId))
+                                                        .limit(1)
+                                                        .then((rows) => rows[0]);
       
       let result;
       
@@ -456,6 +491,63 @@ export function setupConfigRoutes(router: Router) {
       } catch (missionError) {
         console.warn('Failed to update organization mission:', missionError);
         // Continue execution, don't fail the main request
+      }
+      
+      // Process and save strategic directions
+      const strategicDirections = okrSystemData.generalSettings.strategicDirections || [];
+      if (Array.isArray(strategicDirections) && strategicDirections.length > 0) {
+        try {
+          console.log('Processing strategic directions:', strategicDirections.length);
+          
+          // First, remove existing strategic directions for this tenant (company level)
+          await db.execute(
+            `DELETE FROM strategic_directions WHERE tenant_id = ? AND type = 'company'`,
+            [tenantId]
+          );
+          
+          // Create new strategic directions
+          for (let index = 0; index < strategicDirections.length; index++) {
+            const direction = strategicDirections[index];
+            if (direction.description && direction.description.trim()) {
+              const directionData = {
+                id: ulid(),
+                title: direction.title || direction.description.substring(0, 50) || `Direction ${index + 1}`,
+                description: direction.description.trim(),
+                priority: direction.priority || (index + 1),
+                type: 'company',
+                tenant_id: tenantId,
+                team_id: null,
+                created_by_id: null, // Could be set to current user if available
+                parent_direction_id: null,
+                created_at: new Date(),
+                updated_at: new Date()
+              };
+              
+              await db.execute(
+                `INSERT INTO strategic_directions (id, title, description, priority, type, tenant_id, team_id, created_by_id, parent_direction_id, created_at, updated_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  directionData.id,
+                  directionData.title,
+                  directionData.description,
+                  directionData.priority,
+                  directionData.type,
+                  directionData.tenant_id,
+                  directionData.team_id,
+                  directionData.created_by_id,
+                  directionData.parent_direction_id,
+                  directionData.created_at,
+                  directionData.updated_at
+                ]
+              );
+              
+              console.log(`Saved strategic direction: ${directionData.title}`);
+            }
+          }
+        } catch (directionsError) {
+          console.error('Error saving strategic directions:', directionsError);
+          // Continue execution, don't fail the main request
+        }
       }
       
       // Process default teams if available - either from the dedicated array or from the teamConfiguration

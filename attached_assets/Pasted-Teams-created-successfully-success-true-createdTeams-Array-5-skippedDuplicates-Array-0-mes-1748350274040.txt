@@ -1,0 +1,202 @@
+Teams created successfully: {success: true, createdTeams: Array(5), skippedDuplicates: Array(0), message: 'Created 5 teams'}createdTeams: Array(5)0: {id: '01JW8WPGBFSZYF8YPXMBE0XHJF', name: 'Cooking Team', description: 'Team created from CSV upload', color: '#3B82F6', icon: 'building', …}1: {id: '01JW8WPGCDZ3H4QP31QDYMSXH3', name: 'Eating Team', description: 'Team created from CSV upload', color: '#3B82F6', icon: 'building', …}2: {id: '01JW8WPGD2RD8D0PR9GRVAJNEF', name: 'Mayai Team', description: 'Team created from CSV upload', color: '#3B82F6', icon: 'building', …}3: {id: '01JW8WPGDQD70XTFP0EJGKF65H', name: 'Asali Team', description: 'Team created from CSV upload', color: '#3B82F6', icon: 'building', …}4: {id: '01JW8WPGEBBYREAS4G350JJ088', name: 'Running Team', description: 'Team created from CSV upload', color: '#3B82F6', icon: 'building', …}length: 5[[Prototype]]: Array(0)message: "Created 5 teams"skippedDuplicates: []success: true[[Prototype]]: Object
+okr-system-setup-wizard.tsx:595 Step 2: Creating users using bulk endpoint...
+okr-system-setup-wizard.tsx:603 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users 409 (Conflict)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:603
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:624 Failed to create user sdsfdds.de@test.co.ke: {"error":"User with this email already exists in this organization","userId":"01JW8WHK95Y2T8WNBSSBWA05E6"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:624
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+use-auth.tsx:111 Set default tenant from user data: monk
+use-auth.tsx:111 Set default tenant from user data: monk
+okr-system-setup-wizard.tsx:603 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users 409 (Conflict)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:603
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:624 Failed to create user jusfddsdyu.sth@exale.co.ke: {"error":"User with this email already exists in this organization","userId":"01JW8WHKZ7TYS0RY4FN5G29VHZ"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:624
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:603 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users 409 (Conflict)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:603
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:624 Failed to create user trddfsskij.wilon@exmple.co.k: {"error":"User with this email already exists in this organization","userId":"01JW8WHMM3VCSTX9YMBXH3BBE1"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:624
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:603 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users 409 (Conflict)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:603
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:624 Failed to create user esdfrsdkiu.brwn@exmple.co.ke: {"error":"User with this email already exists in this organization","userId":"01JW8WHN9TRCTWPT6F9G9PAZR3"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:624
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:603 
+            
+            
+           POST https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/users 409 (Conflict)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:603
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:624 Failed to create user jesfddsrdhsa.dvis@exmple.co.ke: {"error":"User with this email already exists in this organization","userId":"01JW8WHNZ19WSF95FY4PM73C0X"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:624
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=414b3942:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=414b3942:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=414b3942:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=414b3942:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=414b3942:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=414b3942:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=414b3942:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=414b3942:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=414b3942:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=414b3942:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=414b3942:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=414b3942:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=414b3942:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=414b3942:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=414b3942:5449Understand this error
+okr-system-setup-wizard.tsx:634 Successfully created 0 users, 5 failed
+okr-system-setup-wizard.tsx:641 Step 3: Setting managers as team leaders: (2) [{…}, {…}]
+okr-system-setup-wizard.tsx:656 Attempt 1 to fetch teams and users...

@@ -399,19 +399,19 @@ export default function AllUsers() {
       if (uniqueTeams.length > 0) {
         try {
           // Create teams in bulk
-          const teamCreateRes = await apiRequest("POST", "/api/teams/batch", {
-            teams: uniqueTeams.map(teamName => ({
+          const teamCreateRes = await apiRequest("POST", "/api/teams/batch", 
+            uniqueTeams.map(teamName => ({
               name: teamName,
               description: `Auto-created team from CSV upload`
             }))
-          });
+          );
 
           if (teamCreateRes.ok) {
             const teamResults = await teamCreateRes.json();
-            results.teamsCreated = teamResults.teams?.length || 0;
+            results.teamsCreated = teamResults.createdTeams?.length || 0;
             
             // Build mapping of team names to IDs
-            teamResults.teams?.forEach((team: any) => {
+            teamResults.createdTeams?.forEach((team: any) => {
               createdTeams[team.name] = team.id;
             });
             
@@ -1433,7 +1433,7 @@ mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345
                     <SelectItem key={tenant.id} value={tenant.id}>
                       <div className="flex items-center">
                         <Building2 className="h-4 w-4 mr-2 text-primary" />
-                        {tenant.name || tenant.displayName || 'Unnamed Organization'}
+                        {tenant.name || tenant.display_name || 'Unnamed Organization'}
                       </div>
                     </SelectItem>
                   ))}

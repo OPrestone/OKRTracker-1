@@ -23,7 +23,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Create tenant-aware title that shows organization context
   const tenantDisplay = currentTenant 
-    ? `${title} - ${currentTenant.displayName || currentTenant.name}`
+    ? `${title} - ${currentTenant.display_name || currentTenant.name}`
     : title;
 
   return (
@@ -46,7 +46,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Building className="h-4 w-4 text-primary mr-2" />
             <span className="text-sm font-medium text-primary mr-2">Current Organization:</span>
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-              {currentTenant.displayName || currentTenant.name}
+              {currentTenant.display_name || currentTenant.name}
             </Badge>
             <span className="text-xs text-muted-foreground ml-2">ID: {currentTenant.id}</span>
           </div>

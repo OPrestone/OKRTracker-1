@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Store tenant info in session storage (equivalent to TenantProvider.switchTenant)
       sessionStorage.setItem('currentTenantId', tenant.id);
       sessionStorage.setItem('currentTenantSlug', tenant.slug);
-      sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
+      sessionStorage.setItem('currentTenantName', tenant.display_name || tenant.name);
       
       // Navigate to tenant URL
       window.location.href = `/${tenant.id}`;
@@ -158,14 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Update tenant info in session storage
           sessionStorage.setItem('currentTenantId', fullTenant.id);
           sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
-          sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
+          sessionStorage.setItem('currentTenantName', fullTenant.display_name || fullTenant.name);
           
           // Update tenant context
           tenantContext.setCurrentTenant(fullTenant);
           
           toast({
             title: "Login successful",
-            description: `Welcome back to ${fullTenant.displayName || fullTenant.name}!`,
+            description: `Welcome back to ${fullTenant.display_name || fullTenant.name}!`,
           });
           
           // Navigate directly to the tenant's dashboard
@@ -192,14 +192,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Update tenant info in session storage
             sessionStorage.setItem('currentTenantId', fullTenant.id);
             sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
-            sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
+            sessionStorage.setItem('currentTenantName', fullTenant.display_name || fullTenant.name);
             
             // Update tenant context
             tenantContext.setCurrentTenant(fullTenant);
             
             toast({
               title: "Login successful",
-              description: `Welcome back to ${fullTenant.displayName || fullTenant.name}!`,
+              description: `Welcome back to ${fullTenant.display_name || fullTenant.name}!`,
             });
             
             // Navigate directly to the tenant's dashboard
@@ -271,7 +271,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Update tenant info in session storage
           sessionStorage.setItem('currentTenantId', fullTenant.id);
           sessionStorage.setItem('currentTenantSlug', fullTenant.slug);
-          sessionStorage.setItem('currentTenantName', fullTenant.displayName || fullTenant.name);
+          sessionStorage.setItem('currentTenantName', fullTenant.display_name || fullTenant.name);
           
           // Also trigger tenant refresh in tenant context
           tenantContext.setCurrentTenant(fullTenant);

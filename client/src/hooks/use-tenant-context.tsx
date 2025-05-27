@@ -15,7 +15,7 @@ declare global {
 export type Tenant = {
   id: string; // Changed from number to string to match ULID format
   name: string;
-  displayName: string;
+  display_name: string;
   slug: string;
   userRole?: string;
   isDefault?: boolean;
@@ -98,7 +98,7 @@ export function TenantProvider({
         // Update session storage to match URL
         sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
-        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
+        sessionStorage.setItem('currentTenantName', matchedTenant.display_name || matchedTenant.name);
         return;
       }
     }
@@ -112,7 +112,7 @@ export function TenantProvider({
         // Update session storage to match URL
         sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
-        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
+        sessionStorage.setItem('currentTenantName', matchedTenant.display_name || matchedTenant.name);
         return;
       }
     }
@@ -127,7 +127,7 @@ export function TenantProvider({
         // Update session storage to match URL
         sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
-        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
+        sessionStorage.setItem('currentTenantName', matchedTenant.display_name || matchedTenant.name);
         return;
       }
     }
@@ -142,7 +142,7 @@ export function TenantProvider({
         // Update session storage to match URL
         sessionStorage.setItem('currentTenantId', matchedTenant.id);
         sessionStorage.setItem('currentTenantSlug', matchedTenant.slug);
-        sessionStorage.setItem('currentTenantName', matchedTenant.displayName || matchedTenant.name);
+        sessionStorage.setItem('currentTenantName', matchedTenant.display_name || matchedTenant.name);
         return;
       }
     }
@@ -154,7 +154,7 @@ export function TenantProvider({
       // Update session storage with default tenant
       sessionStorage.setItem('currentTenantId', defaultTenant.id); // No need for toString as it's already a string
       sessionStorage.setItem('currentTenantSlug', defaultTenant.slug);
-      sessionStorage.setItem('currentTenantName', defaultTenant.displayName || defaultTenant.name);
+      sessionStorage.setItem('currentTenantName', defaultTenant.display_name || defaultTenant.name);
     }
   }, [tenants, location]);
 
@@ -169,7 +169,7 @@ export function TenantProvider({
     
     // Also store other important tenant data that might be needed before API calls
     sessionStorage.setItem('currentTenantSlug', tenant.slug);
-    sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
+    sessionStorage.setItem('currentTenantName', tenant.display_name || tenant.name);
     
     // Determine the URL to navigate to
     let newUrl = '';
@@ -221,7 +221,7 @@ export function TenantProvider({
       // Update session storage
       sessionStorage.setItem('currentTenantId', tenant.id);
       sessionStorage.setItem('currentTenantSlug', tenant.slug);
-      sessionStorage.setItem('currentTenantName', tenant.displayName || tenant.name);
+      sessionStorage.setItem('currentTenantName', tenant.display_name || tenant.name);
     } else {
       console.warn(`Tenant with ID ${id} not found`);
     }

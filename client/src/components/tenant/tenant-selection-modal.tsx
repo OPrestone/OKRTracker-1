@@ -97,7 +97,7 @@ export function TenantSelectionModal({
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg flex items-center">
-                    {tenant.displayName || tenant.name}
+                    {tenant.display_name || tenant.name}
                     {tenant.isDefault && (
                       <Star className="h-4 w-4 ml-2 text-amber-500 fill-amber-500" />
                     )}

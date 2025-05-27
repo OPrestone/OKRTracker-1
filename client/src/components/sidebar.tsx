@@ -294,7 +294,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         {selectedTenant && (
           <div className="mt-3 px-3 py-2 text-sm font-medium text-indigo-100 flex items-center bg-indigo-900/30 rounded-lg border border-indigo-800/50">
             <Building className="h-4 w-4 mr-2 text-indigo-300" />
-            <span className="truncate">{selectedTenant.displayName || selectedTenant.name}</span>
+            <span className="truncate">{selectedTenant.display_name || selectedTenant.name}</span>
           </div>
         )}
       </div>

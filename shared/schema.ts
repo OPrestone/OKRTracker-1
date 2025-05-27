@@ -419,6 +419,40 @@ export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
   })
 }));
 
+// Strategic Direction table
+export const strategicDirections = pgTableWithUlid("strategic_directions", {
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'company' or 'team'
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  teamId: text("team_id").references(() => teams.id), // null for company-level directions
+  parentDirectionId: text("parent_direction_id").references(() => strategicDirections.id), // team directions derive from company directions
+  createdById: text("created_by_id").references(() => users.id).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const strategicDirectionsRelations = relations(strategicDirections, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [strategicDirections.tenantId],
+    references: [tenants.id]
+  }),
+  team: one(teams, {
+    fields: [strategicDirections.teamId],
+    references: [teams.id]
+  }),
+  createdBy: one(users, {
+    fields: [strategicDirections.createdById],
+    references: [users.id]
+  }),
+  parentDirection: one(strategicDirections, {
+    fields: [strategicDirections.parentDirectionId],
+    references: [strategicDirections.id]
+  }),
+  childDirections: many(strategicDirections)
+}));
+
 export const financialAccounts = pgTableWithUlid("financial_accounts", {
   name: text("name").notNull(),
   description: text("description"),
@@ -968,6 +1002,7 @@ export const insertFinancialAccountSchema = createInsertSchema(financialAccounts
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
+export const insertStrategicDirectionSchema = createInsertSchema(strategicDirections).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertOrganizationMissionSchema = createInsertSchema(organizationMission).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCycleSchema = createInsertSchema(cycles)
   .omit({ id: true, createdAt: true, updatedAt: true })
@@ -1061,6 +1096,9 @@ export type InsertProject = z.infer<typeof insertProjectSchema>;
 
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
+
+export type StrategicDirection = typeof strategicDirections.$inferSelect;
+export type InsertStrategicDirection = z.infer<typeof insertStrategicDirectionSchema>;
 
 export type FinancialAccount = typeof financialAccounts.$inferSelect;
 export type InsertFinancialAccount = z.infer<typeof insertFinancialAccountSchema>;
