@@ -605,7 +605,7 @@ mike.davis@example.com,Mike,Davis,mikedavis,Executive,CEO,owner,,tempPassword345
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'user_upload_template.csv';
+    a.download = 'team_user_upload_template.csv';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
