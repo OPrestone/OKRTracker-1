@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
   Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
-  AlertCircle, UserPlus, ChevronDown, X, Save, Users
+  AlertCircle, UserPlus, ChevronDown, X, Save, Users, Plus
 } from "lucide-react";
 import {
   AlertDialog,
@@ -285,8 +285,12 @@ const formSchema = z.object({
   generalSettings: z.object({
     companyMission: z.string().min(1, "Company mission is required"),
     companyVision: z.string().min(1, "Company vision is required"),
-    strategicDirection: z.string().optional(),
     companyValues: z.string().min(1, "Company values are required"),
+    strategicDirections: z.array(z.object({
+      title: z.string().min(1, "Strategic direction title is required"),
+      description: z.string().min(1, "Strategic direction description is required"),
+      priority: z.number().min(1).max(10).default(1)
+    })).default([]),
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
     enableNotifications: z.boolean().default(true),
   }),
@@ -966,6 +970,7 @@ export default function OKRSystemSetupWizard() {
         companyMission: "",
         companyVision: "",
         companyValues: "",
+        strategicDirections: [],
         trackingFrequency: "weekly",
         enableNotifications: true,
       },
@@ -1953,6 +1958,111 @@ export default function OKRSystemSetupWizard() {
                               <p className="text-sm text-red-500 mt-1">
                                 {form.formState.errors.generalSettings.companyValues.message}
                               </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Strategic Directions Section */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Strategic Directions</label>
+                              <p className="text-xs text-gray-500">Define key strategic priorities that will guide your organization's OKRs</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                form.setValue("generalSettings.strategicDirections", [
+                                  ...currentDirections,
+                                  { title: "", description: "", priority: currentDirections.length + 1 }
+                                ]);
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Direction
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {(form.watch("generalSettings.strategicDirections") || []).map((direction: any, index: number) => (
+                              <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                <div className="flex items-start justify-between mb-3">
+                                  <h4 className="text-sm font-medium text-gray-700">Strategic Direction {index + 1}</h4>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                      const updatedDirections = currentDirections.filter((_: any, i: number) => i !== index);
+                                      form.setValue("generalSettings.strategicDirections", updatedDirections);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  <div className="md:col-span-2">
+                                    <label className="block text-xs font-medium mb-1">Title</label>
+                                    <Input
+                                      placeholder="e.g., Digital Transformation"
+                                      value={direction.title || ""}
+                                      onChange={(e) => {
+                                        const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                        currentDirections[index] = { ...currentDirections[index], title: e.target.value };
+                                        form.setValue("generalSettings.strategicDirections", currentDirections);
+                                      }}
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-xs font-medium mb-1">Priority</label>
+                                    <Select
+                                      value={direction.priority?.toString() || "1"}
+                                      onValueChange={(value) => {
+                                        const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                        currentDirections[index] = { ...currentDirections[index], priority: parseInt(value) };
+                                        form.setValue("generalSettings.strategicDirections", currentDirections);
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                          <SelectItem key={num} value={num.toString()}>Priority {num}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3">
+                                  <label className="block text-xs font-medium mb-1">Description</label>
+                                  <Textarea
+                                    placeholder="Describe this strategic direction and its importance..."
+                                    className="resize-none h-16"
+                                    value={direction.description || ""}
+                                    onChange={(e) => {
+                                      const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                      currentDirections[index] = { ...currentDirections[index], description: e.target.value };
+                                      form.setValue("generalSettings.strategicDirections", currentDirections);
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                            
+                            {(!form.watch("generalSettings.strategicDirections") || form.watch("generalSettings.strategicDirections")?.length === 0) && (
+                              <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                                <Target className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                                <p className="text-sm">No strategic directions defined yet</p>
+                                <p className="text-xs">Click "Add Direction" to create your first strategic priority</p>
+                              </div>
                             )}
                           </div>
                         </div>
