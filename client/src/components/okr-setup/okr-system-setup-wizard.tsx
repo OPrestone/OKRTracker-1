@@ -501,6 +501,11 @@ export default function OKRSystemSetupWizard() {
         description: `Successfully processed ${users.length} users (${users.filter(u => u.isValid).length} valid)`,
       });
       
+      // Create teams and users immediately after processing CSV
+      if (users.length > 0) {
+        createTeamsAndUsersFromCsv(users);
+      }
+      
       // Show preview
       setShowCsvPreview(true);
     } catch (error) {
@@ -512,6 +517,100 @@ export default function OKRSystemSetupWizard() {
       });
     } finally {
       setIsProcessingCsv(false);
+    }
+  };
+  
+  // Function to process CSV data and create teams/users immediately
+  const createTeamsAndUsersFromCsv = async (users: UserImport[]) => {
+    try {
+      console.log("Processing CSV data immediately...", users);
+      
+      // Extract unique team names from CSV data
+      const uniqueTeamNames = Array.from(new Set(
+        users
+          .filter((user: any) => user.team && user.team.trim() !== '')
+          .map((user: any) => user.team.trim())
+      ));
+      
+      console.log("Unique teams to create:", uniqueTeamNames);
+      
+      // Create teams first if there are any
+      if (uniqueTeamNames.length > 0) {
+        try {
+          const teamCreateRes = await fetch("/api/teams/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              teams: uniqueTeamNames.map(teamName => ({
+                name: teamName,
+                description: `Auto-created team from CSV upload`
+              }))
+            }),
+            credentials: 'include'
+          });
+          
+          if (teamCreateRes.ok) {
+            const teamCreateData = await teamCreateRes.json();
+            console.log("Teams created successfully:", teamCreateData);
+            
+            toast({
+              title: "Teams Created",
+              description: `Successfully created ${uniqueTeamNames.length} teams from your CSV file.`,
+            });
+          } else {
+            console.error("Failed to create teams:", await teamCreateRes.text());
+          }
+        } catch (error) {
+          console.error("Error creating teams:", error);
+        }
+      }
+      
+      // Process users - only include valid users
+      const validUsers = users.filter((user: any) => user.isValid && user.email);
+      
+      if (validUsers.length > 0) {
+        try {
+          const userCreateRes = await fetch("/api/users/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              users: validUsers.map(user => ({
+                email: user.email,
+                name: user.name || '',
+                role: user.role || 'user',
+                department: user.department || '',
+                team: user.team || ''
+              }))
+            }),
+            credentials: 'include'
+          });
+          
+          if (userCreateRes.ok) {
+            const userCreateData = await userCreateRes.json();
+            console.log("Users created successfully:", userCreateData);
+            
+            toast({
+              title: "Users Created",
+              description: `Successfully created ${userCreateData.created?.length || validUsers.length} users from your CSV file.`,
+            });
+          } else {
+            console.error("Failed to create users:", await userCreateRes.text());
+          }
+        } catch (error) {
+          console.error("Error creating users:", error);
+        }
+      }
+      
+      // Invalidate teams query to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      
+    } catch (error) {
+      console.error("Error processing CSV data:", error);
+      toast({
+        title: "Error Processing CSV",
+        description: "Failed to create teams and users from CSV file.",
+        variant: "destructive",
+      });
     }
   };
   
