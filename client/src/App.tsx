@@ -53,6 +53,7 @@ const ObjectiveDetail = lazy(() => import("@/pages/objective-detail"));
 const ChatPage = lazy(() => import("@/pages/chat"));
 const StrategyMap = lazy(() => import("@/pages/strategy-map"));
 const CreateObjective = lazy(() => import("@/pages/create-objective"));
+const CreateKeyResult = lazy(() => import("@/pages/create-key-result"));
 const CreateCompanyObjective = lazy(() => import("@/pages/create-company-objective"));
 const FinancePage = lazy(() => import("@/pages/import-financial"));
 const ProjectKanban = lazy(() => import("@/pages/project-kanban"));
@@ -157,6 +158,7 @@ function AppRoutes() {
       />
       <ProtectedRoute path="/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/create-objective" component={CreateObjective} />
+      <ProtectedRoute path="/create-key-result" component={CreateKeyResult} />
       <ProtectedRoute
         path="/create-company-objective"
         component={CreateCompanyObjective}
@@ -269,6 +271,10 @@ function AppRoutes() {
       <ProtectedRoute
         path="/:id([A-Z0-9]{26})/create-objective"
         component={CreateObjective}
+      />
+      <ProtectedRoute
+        path="/:id([A-Z0-9]{26})/create-key-result"
+        component={CreateKeyResult}
       />
       <ProtectedRoute
         path="/:id([A-Z0-9]{26})/create-company-objective"
