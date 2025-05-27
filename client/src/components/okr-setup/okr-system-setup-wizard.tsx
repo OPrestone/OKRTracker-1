@@ -540,12 +540,10 @@ export default function OKRSystemSetupWizard() {
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              teams: uniqueTeamNames.map(teamName => ({
-                name: teamName,
-                description: `Auto-created team from CSV upload`
-              }))
-            }),
+            body: JSON.stringify(uniqueTeamNames.map(teamName => ({
+              name: teamName,
+              description: `Auto-created team from CSV upload`
+            }))),
             credentials: 'include'
           });
           
