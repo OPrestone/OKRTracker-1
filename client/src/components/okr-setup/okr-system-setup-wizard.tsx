@@ -637,14 +637,23 @@ export default function OKRSystemSetupWizard() {
           console.log("Setting managers as team leaders:", managersToSetAsLeaders);
           
           if (managersToSetAsLeaders.length > 0) {
-            // Get fresh team and user data
+            // Wait a moment for data to be fully available
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Get fresh team and user data with proper tenant headers
             const teamsResponse = await fetch("/api/teams", {
               method: "GET",
+              headers: {
+                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+              },
               credentials: 'include'
             });
             
             const usersResponse = await fetch("/api/users", {
-              method: "GET", 
+              method: "GET",
+              headers: {
+                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+              },
               credentials: 'include'
             });
             
@@ -661,7 +670,10 @@ export default function OKRSystemSetupWizard() {
                     // Set the user as team leader
                     const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
                       method: "PUT",
-                      headers: { "Content-Type": "application/json" },
+                      headers: { 
+                        "Content-Type": "application/json",
+                        "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                      },
                       body: JSON.stringify({ leaderId: user.id }),
                       credentials: 'include'
                     });
