@@ -200,23 +200,19 @@ export default function CreateKeyResult() {
   // Create key result mutation
   const createKeyResultMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch(`/api/objectives/${objectiveId}/key-results`, {
+      console.log('=== MAKING API REQUEST ===');
+      console.log('URL:', `/api/objectives/${objectiveId}/key-results`);
+      console.log('Data being sent:', data);
+      
+      return apiRequest({
+        url: `/api/objectives/${objectiveId}/key-results`,
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+        data: {
           ...data,
           objectiveId,
           progress: Math.round(((data.currentValue - data.startValue) / (data.targetValue - data.startValue)) * 100)
-        })
+        }
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create key result');
-      }
-      
-      return response.json();
     },
     onSuccess: (newKeyResult: KeyResult) => {
       setSavedKeyResults(prev => [...prev, newKeyResult]);
