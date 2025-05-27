@@ -3672,6 +3672,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+
+  // Create key result for specific objective
+  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const objectiveId = req.params.objectiveId;
+      const tenantId = req.tenantId;
+      
+      console.log('Creating key result for objective:', objectiveId);
+      console.log('Request body:', req.body);
+      
+      // Verify the objective exists and belongs to the tenant
+      const objective = await storage.getObjective(objectiveId);
+      if (!objective) {
+        return res.status(404).json({ error: "Objective not found" });
+      }
+      
+      if (objective.tenantId !== tenantId) {
+        return res.status(403).json({ error: "Access denied to this objective" });
+      }
+      
+      // Create the key result
+      const keyResultData = {
+        ...req.body,
+        objectiveId,
+        tenantId
+      };
+      
+      const keyResult = await storage.createKeyResult(keyResultData);
+      
+      // Recalculate objective progress
+      await recalculateObjectiveProgress(objectiveId);
+      
+      res.status(201).json(keyResult);
+    } catch (error) {
+      console.error('Error creating key result:', error);
+      next(error);
+    }
+  });
   
   // Get all key results with optional tenant filtering
   app.get("/api/key-results", ensureAuthenticated, withTenant, async (req, res, next) => {
