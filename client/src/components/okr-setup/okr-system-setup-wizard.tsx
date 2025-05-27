@@ -612,6 +612,59 @@ export default function OKRSystemSetupWizard() {
             const userData = JSON.parse(userResponseText);
             usersCreated = userData.users_created?.length || csvImportedUsers.length;
             console.log("Users created successfully:", userData);
+            
+            // Now set managers as team leaders for their respective teams
+            const managersToSetAsLeaders = csvImportedUsers.filter(user => 
+              user.role === 'manager' && user.team && user.team.trim() !== ''
+            );
+            
+            console.log("Setting managers as team leaders:", managersToSetAsLeaders);
+            
+            for (const manager of managersToSetAsLeaders) {
+              try {
+                // Find the team by name to get its ID
+                const teamsResponse = await fetch("/api/teams", {
+                  method: "GET",
+                  credentials: 'include'
+                });
+                
+                if (teamsResponse.ok) {
+                  const teams = await teamsResponse.json();
+                  const team = teams.find((t: any) => t.name === manager.team);
+                  
+                  if (team) {
+                    // Find the user by email to get their ID
+                    const usersResponse = await fetch("/api/users", {
+                      method: "GET", 
+                      credentials: 'include'
+                    });
+                    
+                    if (usersResponse.ok) {
+                      const users = await usersResponse.json();
+                      const user = users.find((u: any) => u.email === manager.email);
+                      
+                      if (user) {
+                        // Set the user as team leader
+                        const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ leaderId: user.id }),
+                          credentials: 'include'
+                        });
+                        
+                        if (leaderResponse.ok) {
+                          console.log(`Set ${manager.name} as leader of team ${manager.team}`);
+                        } else {
+                          console.error(`Failed to set ${manager.name} as team leader:`, await leaderResponse.text());
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error(`Error setting ${manager.name} as team leader:`, error);
+              }
+            }
           } else {
             console.error("User creation failed:", userResponseText);
           }
