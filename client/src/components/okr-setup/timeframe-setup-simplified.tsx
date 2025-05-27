@@ -265,10 +265,12 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
     try {
       console.log("Saving timeframes:", generatedTimeframes);
       let saveCount = 0;
+      let skippedDuplicates = 0;
       
       const defaultCadenceId = getCadenceId(primaryCadence);
       console.log("Using default cadence ID:", defaultCadenceId);
       
+      // Check for duplicates against existing timeframes
       for (const timeframe of generatedTimeframes) {
         const timeframeData = {
           ...timeframe,
@@ -283,6 +285,17 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
           continue;
         }
         
+        // Check if a timeframe with the same name already exists
+        const isDuplicate = existingTimeframes.some(existing => 
+          existing.name === timeframeData.name && existing.tenantId === timeframeData.tenantId
+        );
+        
+        if (isDuplicate) {
+          console.log("Skipping duplicate timeframe:", timeframeData.name);
+          skippedDuplicates++;
+          continue;
+        }
+        
         console.log("Saving timeframe with tenant ID:", timeframeData);
         await createTimeframeMutation.mutateAsync(timeframeData);
         saveCount++;
@@ -291,9 +304,14 @@ function TimeframeSetupSimplified({ tenantId, primaryCadence, startMonth, onTime
       await refetchTimeframes();
       setGeneratedTimeframes([]);
       
+      let message = `${saveCount} timeframes have been saved to the database.`;
+      if (skippedDuplicates > 0) {
+        message += ` ${skippedDuplicates} duplicate${skippedDuplicates > 1 ? 's' : ''} were skipped.`;
+      }
+      
       toast({
         title: "Success!",
-        description: `${saveCount} timeframes have been saved to the database.`
+        description: message
       });
       
       setActiveTab("view");
