@@ -1,0 +1,67 @@
+okr-system-setup-wizard.tsx:816 
+            
+            
+           PUT https://okr.radioafrica.digital/api/teams/01JW9TNX134E6YHB8KADMW7JW5/leader 500 (Internal Server Error)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:816
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=6ffa79c1:3674
+c @ rocket-loader.min.js:1
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=6ffa79c1:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=6ffa79c1:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=6ffa79c1:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=6ffa79c1:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=6ffa79c1:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=6ffa79c1:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=6ffa79c1:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=6ffa79c1:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=6ffa79c1:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=6ffa79c1:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=6ffa79c1:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=6ffa79c1:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5449
+c @ rocket-loader.min.js:1Understand this error
+okr-system-setup-wizard.tsx:829 Failed to set undefined as team leader: {"error":"Failed to update team leader: Cannot read properties of undefined (reading 'findFirst')"}
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:829
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=6ffa79c1:3674
+c @ rocket-loader.min.js:1
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=6ffa79c1:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=6ffa79c1:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=6ffa79c1:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=6ffa79c1:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=6ffa79c1:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=6ffa79c1:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=6ffa79c1:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=6ffa79c1:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=6ffa79c1:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=6ffa79c1:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=6ffa79c1:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=6ffa79c1:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5449
+c @ rocket-loader.min.js:1Understand this error
+okr-system-setup-wizard.tsx:816 
+            
+            
+           PUT https://okr.radioafrica.digital/api/teams/01JW9TNX1MGFWZAFHFAQNKMN54/leader 500 (Internal Server Error)
+saveTeamsAndUsers @ okr-system-setup-wizard.tsx:816
+await in saveTeamsAndUsers
+callCallback2 @ chunk-RPCDYKBN.js?v=6ffa79c1:3674
+c @ rocket-loader.min.js:1
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=6ffa79c1:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=6ffa79c1:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=6ffa79c1:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=6ffa79c1:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=6ffa79c1:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=6ffa79c1:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=6ffa79c1:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=6ffa79c1:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=6ffa79c1:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=6ffa79c1:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=6ffa79c1:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=6ffa79c1:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=6ffa79c1:5449
+c @ rocket-loader.min.js:1Understand this error
+okr-system-setup-wizard.tsx:829 Failed to set undefined as team leader: {"error":"Failed to update team leader: Cannot read properties of undefined (reading 'findFirst')"}
