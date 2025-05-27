@@ -462,12 +462,12 @@ export default function OKRSystemSetupWizard() {
                 user.name = value;
                 break;
               case 'role':
-                // Normalize role values
+                // Normalize role values to support new five-role organization system
                 const normalizedRole = value.toLowerCase();
-                if (['admin', 'member', 'viewer'].includes(normalizedRole)) {
+                if (['user', 'manager', 'executive', 'admin', 'owner'].includes(normalizedRole)) {
                   user.role = normalizedRole;
                 } else {
-                  user.role = 'member'; // Default to member for invalid roles
+                  user.role = 'user'; // Default to user for invalid roles
                 }
                 break;
               case 'department':
@@ -980,8 +980,101 @@ export default function OKRSystemSetupWizard() {
   };
 
   // Submit handler
-  const onSubmitForm = (data: FormValues) => {
+  const onSubmitForm = async (data: FormValues) => {
     console.log("Form submitted with data:", data);
+    setIsSubmitting(true);
+    
+    try {
+      // First, process CSV users and create teams if needed
+      if (data.teamConfiguration.csvUsers && data.teamConfiguration.csvUsers.length > 0) {
+        console.log("Processing CSV users and creating teams...");
+        
+        // Extract unique team names from CSV data
+        const uniqueTeams = Array.from(new Set(
+          data.teamConfiguration.csvUsers
+            .filter((user: any) => user.team && user.team.trim() !== '')
+            .map((user: any) => user.team.trim())
+        ));
+        
+        // Create teams if there are any
+        if (uniqueTeams.length > 0) {
+          try {
+            const teamCreateRes = await fetch("/api/teams/batch", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                teams: uniqueTeams.map(teamName => ({
+                  name: teamName,
+                  description: `Auto-created team from CSV upload`
+                }))
+              })
+            });
+            
+            if (teamCreateRes.ok) {
+              const teamCreateData = await teamCreateRes.json();
+              console.log("Teams created successfully:", teamCreateData);
+            }
+          } catch (error) {
+            console.error("Error creating teams:", error);
+          }
+        }
+        
+        // Process users with the same enhanced approach as All Users page
+        const validUsers = data.teamConfiguration.csvUsers.filter((user: any) => user.isValid);
+        
+        if (validUsers.length > 0) {
+          try {
+            const userCreateRes = await fetch("/api/users/batch", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ users: validUsers })
+            });
+            
+            if (userCreateRes.ok) {
+              const userCreateData = await userCreateRes.json();
+              console.log("Users created successfully:", userCreateData);
+              
+              toast({
+                title: "Users and Teams Created",
+                description: `Successfully created ${userCreateData.created?.length || 0} users and ${uniqueTeams.length} teams.`,
+              });
+            }
+          } catch (error) {
+            console.error("Error creating users:", error);
+          }
+        }
+      }
+      
+      // Make sure teamConfiguration has all required properties to prevent submission errors
+      const validatedData = {
+        ...data,
+        teamConfiguration: {
+          ...data.teamConfiguration,
+          defaultTeams: data.teamConfiguration.defaultTeams || [],
+          csvUsers: data.teamConfiguration.csvUsers || [],
+          // Make sure useDefaultTeams is present and properly set
+          useDefaultTeams: typeof data.teamConfiguration.useDefaultTeams === 'boolean' 
+            ? data.teamConfiguration.useDefaultTeams 
+            : true // Default to true if not present
+        }
+      };
+      
+      // Continue with the OKR system setup
+      setupMutation.mutate(validatedData);
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      setIsSubmitting(false);
+      toast({
+        title: "Error",
+        description: "An error occurred while processing your setup. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Legacy submit handler for the mutation
+  const handleFormSubmit = (data: FormValues) => {
+    console.log("Legacy form submitted with data:", data);
     setIsSubmitting(true);
     
     // Make sure teamConfiguration has all required properties to prevent submission errors
@@ -1950,18 +2043,18 @@ export default function OKRSystemSetupWizard() {
                                   type="button"
                                   variant="outline"
                                   onClick={() => {
-                                    // Download comprehensive CSV template with all required fields
+                                    // Download comprehensive CSV template with all required fields and new roles
                                     const sample = `email,name,role,department,team
-john.doe@company.com,John Doe,member,Marketing,Marketing Team
-jane.smith@company.com,Jane Smith,admin,Engineering,Engineering Team
-mike.johnson@company.com,Mike Johnson,member,Sales,Sales Team
-sarah.williams@company.com,Sarah Williams,viewer,HR,Human Resources
-david.brown@company.com,David Brown,admin,Finance,Finance Team`;
+john.doe@company.com,John Doe,user,Marketing,Marketing Team
+jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Team
+mike.johnson@company.com,Mike Johnson,executive,Sales,Sales Team
+sarah.williams@company.com,Sarah Williams,admin,HR,Human Resources
+david.brown@company.com,David Brown,owner,Finance,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');
                                     a.href = url;
-                                    a.download = 'user_import_template.csv';
+                                    a.download = 'team_user_upload_template.csv';
                                     document.body.appendChild(a);
                                     a.click();
                                     document.body.removeChild(a);
