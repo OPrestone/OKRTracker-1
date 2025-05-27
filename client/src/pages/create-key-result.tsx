@@ -259,9 +259,7 @@ export default function CreateKeyResult() {
       newErrors.title = 'Title is required';
     }
     
-    if (!keyResultData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
+    // Description is optional, so no validation needed
     
     if (keyResultData.targetValue <= keyResultData.startValue) {
       newErrors.targetValue = 'Target value must be greater than start value';
