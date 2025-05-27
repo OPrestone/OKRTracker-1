@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import MonthlyProgressChart from "@/components/dashboard/monthly-progress-chart";
 
 interface DbKeyResult {
   id: string;
@@ -256,6 +257,11 @@ export default function MyOKRs() {
             Create OKR
           </Button>
         </Link>
+      </div>
+      
+      {/* Monthly Progress Chart */}
+      <div className="mb-6">
+        <MonthlyProgressChart />
       </div>
       
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
