@@ -1303,8 +1303,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate role is acceptable
-      if (role !== 'admin' && role !== 'member' && role !== 'viewer') {
-        return res.status(400).json({ error: "Role must be 'admin', 'member', or 'viewer'" });
+      if (!['user', 'manager', 'executive', 'admin', 'owner'].includes(role)) {
+        return res.status(400).json({ error: "Role must be 'user', 'manager', 'executive', 'admin', or 'owner'" });
       }
       
       // Check if user with this email already exists in ANY tenant

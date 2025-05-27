@@ -1,5 +1,5 @@
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Filter, Search, BarChart, ChevronRight, Calendar, Target, 
@@ -93,9 +93,6 @@ export default function CompanyOKRs() {
     enabled: isAuthenticated,
     refetchInterval: 3000, // Auto-refresh every 3 seconds
     refetchIntervalInBackground: true,
-    onSuccess: (data) => {
-      console.log("Objectives data received:", data);
-    }
   });
 
   // Fetch all OKRs to find those linked to company objectives

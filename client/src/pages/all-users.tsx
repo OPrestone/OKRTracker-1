@@ -1111,7 +1111,9 @@ export default function AllUsers() {
     all: filteredUsers.length,
     owner: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'owner').length,
     admin: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'admin').length,
-    member: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'member').length,
+    executive: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'executive').length,
+    manager: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'manager').length,
+    user: filteredUsers.filter(user => user.tenants?.find(t => t.id === tenantId)?.userRole === 'user').length,
   };
 
   return (
