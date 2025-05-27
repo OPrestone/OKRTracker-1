@@ -1370,7 +1370,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const userData = {
           email,
           username: generatedUsername,
-          password: hashedPassword,  // Properly hashed password
           firstName: firstName || '',
           lastName: lastName || '',
           name,
@@ -1381,7 +1380,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           walkthroughCompleted: false,
           introVideoWatched: false,
           onboardingProgress: 0,
-          ...otherData
+          ...otherData,
+          password: hashedPassword,  // Properly hashed password
         };
         
         // Create the user
