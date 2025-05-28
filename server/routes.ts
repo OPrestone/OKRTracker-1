@@ -5344,10 +5344,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tenantId: tenantId // Add tenant ID to the feedback
       };
       
-      // Import the feedback service
-      const { createFeedback } = await import("./services/feedback-service");
+      console.log('Creating feedback with data:', feedbackData);
       
-      const newFeedback = await createFeedback(feedbackData);
+      // Create feedback directly using database
+      const [newFeedback] = await db
+        .insert(feedback)
+        .values({
+          ...feedbackData,
+          isRead: false, // Use isRead instead of read to match schema
+        })
+        .returning();
+
+      console.log('Feedback created successfully:', newFeedback);
       res.status(201).json(newFeedback);
     } catch (error) {
       console.error("Error creating feedback:", error);
