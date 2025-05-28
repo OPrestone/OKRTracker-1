@@ -476,6 +476,20 @@ export default function OKRSystemSetupWizard() {
     }
   }, [existingTeams]);
 
+  // Effect to load existing strategic directions into the form
+  useEffect(() => {
+    if (existingStrategicDirections.length > 0 && !isLoadingDirections) {
+      const formattedDirections = existingStrategicDirections.map((direction: any) => ({
+        title: direction.title,
+        description: direction.description || '',
+        type: direction.type || 'company',
+        priority: direction.priority || 5,
+      }));
+      
+      form.setValue('generalSettings.strategicDirections', formattedDirections);
+    }
+  }, [existingStrategicDirections, isLoadingDirections, form]);
+
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
 
