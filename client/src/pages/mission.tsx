@@ -88,16 +88,10 @@ export default function Mission() {
   // State for editable sections (individual card editing)
   const [editMode, setEditMode] = useState<{
     mission: boolean;
-    vision: boolean;
-    purpose: boolean;
-    values: boolean;
     boundaries: boolean;
     behaviors: boolean;
   }>({
     mission: false,
-    vision: false,
-    purpose: false,
-    values: false,
     boundaries: false,
     behaviors: false,
   });
@@ -128,11 +122,9 @@ export default function Mission() {
   
   // Purpose state (read from company)
   const [purpose, setPurpose] = useState("");
-  const [purposeDraft, setPurposeDraft] = useState("");
   
   // Values state (read from company)
   const [values, setValues] = useState("");
-  const [valuesDraft, setValuesDraft] = useState("");
 
   // Behaviors state
   const [behaviors, setBehaviors] = useState<string[]>([]);
@@ -271,8 +263,6 @@ export default function Mission() {
     mutationFn: async (data: {
       mission: string;
       vision: string;
-      purpose: string;
-      values: string;
       behaviors: string;
       boundaries: string;
       strategicDirection: string;
@@ -337,12 +327,6 @@ export default function Mission() {
       
       setVision(missionData.vision || "");
       setVisionDraft(missionData.vision || "");
-      
-      setPurpose(missionData.purpose || "");
-      setPurposeDraft(missionData.purpose || "");
-      
-      setValues(missionData.values || "");
-      setValuesDraft(missionData.values || "");
       
       setStrategicDirection(missionData.strategicDirection || "");
       setStrategicDirectionDraft(missionData.strategicDirection || "");
@@ -538,74 +522,6 @@ export default function Mission() {
     }
   };
 
-  // Handle purpose save (for individual card edits)
-  const savePurpose = async () => {
-    setIsLoading(true);
-    
-    try {
-      await saveMissionMutation.mutateAsync({
-        mission: missionStatement,
-        vision: vision,
-        purpose: purposeDraft,
-        values: values,
-        strategicDirection: strategicDirection,
-        behaviors: JSON.stringify(behaviors),
-        boundaries: JSON.stringify(boundaries)
-      });
-      
-      setPurpose(purposeDraft);
-      setEditMode({...editMode, purpose: false});
-      
-      toast({
-        title: "Success",
-        description: "Purpose updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update purpose",
-        variant: "destructive"
-      });
-      console.error("Error saving purpose:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle values save (for individual card edits)
-  const saveValues = async () => {
-    setIsLoading(true);
-    
-    try {
-      await saveMissionMutation.mutateAsync({
-        mission: missionStatement,
-        vision: vision,
-        purpose: purpose,
-        values: valuesDraft,
-        strategicDirection: strategicDirection,
-        behaviors: JSON.stringify(behaviors),
-        boundaries: JSON.stringify(boundaries)
-      });
-      
-      setValues(valuesDraft);
-      setEditMode({...editMode, values: false});
-      
-      toast({
-        title: "Success",
-        description: "Values updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update values",
-        variant: "destructive"
-      });
-      console.error("Error saving values:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Handle boundaries save (for individual card edits)
   const saveBoundaries = async () => {
     setIsLoading(true);
@@ -614,8 +530,6 @@ export default function Mission() {
       await saveMissionMutation.mutateAsync({
         mission: missionStatement,
         vision: vision,
-        purpose: purpose,
-        values: values,
         strategicDirection: strategicDirection,
         behaviors: JSON.stringify(behaviors),
         boundaries: JSON.stringify(boundariesDraft)
