@@ -366,15 +366,13 @@ export default function OKRSystemSetupWizard() {
 
         console.log('Auto-saving strategic directions:', value);
 
-        // Use apiRequest from queryClient which handles authentication properly
-        const { apiRequest } = await import('@/lib/queryClient');
-        
-        const response = await apiRequest({
-          url: '/api/organization-mission',
+        // Use fetch with proper credentials for auto-save
+        const response = await fetch('/api/organization-mission', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             strategic_directions: value,
             tenantId: tenantId
