@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { useRealTimeSync } from "@/hooks/use-real-time-sync";
+import { useRealTimeSync } from "@/hooks/use-real-time-sync";
 import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
 import UpcomingCheckIns from "@/components/dashboard/upcoming-checkins";
 
@@ -27,7 +29,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   const tenantId = currentTenant?.id;
   const queryClient = useQueryClient();
   
-  // Auto-refresh dashboard data every 3 seconds
+  // Use real-time sync for instant updates
+  useRealTimeSync();
+  
+  // Enhanced auto-refresh for critical dashboard data
   useEffect(() => {
     if (!tenantId) return;
     
@@ -38,14 +43,22 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
       queryClient.invalidateQueries({ queryKey: ['/api/check-ins'] });
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
-    }, 3000); // 3 seconds
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard-stats'] });
+    }, 2000); // Reduced to 2 seconds for more responsive updates
     
     return () => clearInterval(interval);
   }, [tenantId, queryClient]);
   
-  // Fetch all objectives for this tenant to calculate real stats
+  // Fetch real-time dashboard stats from database
+  const { data: dashboardStats } = useQuery({
+    queryKey: ['/api/dashboard-stats', tenantId],
+    enabled: !!tenantId,
+    refetchInterval: 1000, // Refetch every 1 second for real-time updates
+  });
+
+  // Fetch all objectives for this tenant
   const { data: objectivesData = [] } = useQuery({
-    queryKey: ['/api/my-objectives', tenantId],
+    queryKey: ['/api/objectives', tenantId],
     enabled: !!tenantId
   });
   
@@ -54,21 +67,23 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     queryKey: ['/api/teams-performance', tenantId],
     enabled: !!tenantId
   }) as { data: any[] };
-  
-  // Calculate real stats from objectives data
-  const stats = objectivesData.length > 0 ? {
-    totalObjectives: objectivesData.length,
-    completedObjectives: objectivesData.filter((obj: any) => obj.progress === 100).length,
-    atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 40 && obj.progress < 70).length,
-    teamProgress: Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) || 0,
-    upcomingCheckins: 0
-  } : (overviewStats || {
-    totalObjectives: 0,
-    completedObjectives: 0,
-    atRiskObjectives: 0,
-    teamProgress: 0,
-    upcomingCheckins: 0
+
+  // Fetch check-ins data for real-time updates
+  const { data: checkInsData = [] } = useQuery({
+    queryKey: ['/api/check-ins', tenantId],
+    enabled: !!tenantId
   });
+  
+  // Calculate comprehensive real-time stats from database data
+  const stats = dashboardStats || {
+    totalObjectives: objectivesData.length,
+    completedObjectives: objectivesData.filter((obj: any) => obj.progress >= 100).length,
+    atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 0 && obj.progress < 70).length,
+    teamProgress: objectivesData.length > 0 
+      ? Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) 
+      : 0,
+    upcomingCheckins: checkInsData.length
+  };
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [

@@ -2018,6 +2018,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Real-time dashboard stats endpoint
+  app.get("/api/dashboard-stats", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId;
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Tenant ID is required' });
+      }
+
+      // Get all objectives for this tenant
+      const objectives = await db
+        .select()
+        .from(schema.objectives)
+        .where(eq(schema.objectives.tenant_id, tenantId));
+
+      // Get all key results for this tenant
+      const keyResults = await db
+        .select()
+        .from(schema.keyResults)
+        .where(eq(schema.keyResults.tenant_id, tenantId));
+
+      // Get all check-ins for this tenant
+      const checkIns = await db
+        .select()
+        .from(schema.checkIns)
+        .where(eq(schema.checkIns.tenant_id, tenantId));
+
+      // Calculate comprehensive stats
+      const totalObjectives = objectives.length;
+      const completedObjectives = objectives.filter(obj => obj.progress >= 100).length;
+      const atRiskObjectives = objectives.filter(obj => obj.progress >= 0 && obj.progress < 70).length;
+      
+      // Calculate average team progress
+      const teamProgress = totalObjectives > 0 
+        ? Math.floor(objectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / totalObjectives)
+        : 0;
+
+      // Count upcoming check-ins (recent check-ins in last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const upcomingCheckins = checkIns.filter(checkin => 
+        new Date(checkin.created_at) >= sevenDaysAgo
+      ).length;
+
+      const stats = {
+        totalObjectives,
+        completedObjectives,
+        atRiskObjectives,
+        teamProgress,
+        upcomingCheckins,
+        lastUpdated: new Date().toISOString()
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
+  });
+
   // Key result creation endpoint
   // Key result creation endpoint for objectives
   app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
