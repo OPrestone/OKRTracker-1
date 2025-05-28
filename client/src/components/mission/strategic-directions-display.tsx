@@ -71,9 +71,7 @@ export function StrategicDirectionsDisplay({
     );
   }
 
-  const strategicDirections = config?.strategic_directions;
-
-  if (!strategicDirections || strategicDirections.trim() === '') {
+  if (!directions || directions.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -87,6 +85,9 @@ export function StrategicDirectionsDisplay({
             <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-gray-500">
               No strategic directions have been set yet.
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              Click "Add Direction" to get started.
             </p>
           </div>
         </CardContent>
@@ -103,10 +104,19 @@ export function StrategicDirectionsDisplay({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="prose prose-sm max-w-none">
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {strategicDirections}
-          </p>
+        <div className="space-y-4">
+          {directions.map((direction) => (
+            <div key={direction.id} className="border-l-4 border-l-blue-500 pl-4 py-2">
+              <h4 className="font-medium text-gray-900 mb-1">
+                {direction.title}
+              </h4>
+              {direction.description && (
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {direction.description}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
