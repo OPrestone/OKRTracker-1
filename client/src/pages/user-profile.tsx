@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { StrategicDirectionsDisplay } from "@/components/mission/strategic-directions-display";
 import { 
   User, 
   Mail, 
@@ -466,10 +465,6 @@ export default function UserProfile() {
           <TabsTrigger value="team" className="gap-2">
             <Users className="h-4 w-4" />
             <span>My Team</span>
-          </TabsTrigger>
-          <TabsTrigger value="strategy" className="gap-2">
-            <Target className="h-4 w-4" />
-            <span>Strategy</span>
           </TabsTrigger>
         </TabsList>
         
@@ -948,7 +943,7 @@ export default function UserProfile() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    {teamsLoading ? (
+                    {teamLoading ? (
                       <Skeleton className="h-6 w-32" />
                     ) : userTeam ? (
                       <>{userTeam.name} Team</>
@@ -957,7 +952,7 @@ export default function UserProfile() {
                     )}
                   </CardTitle>
                   <CardDescription>
-                    {teamsLoading ? (
+                    {teamLoading ? (
                       <Skeleton className="h-4 w-48 mt-1" />
                     ) : userTeam ? (
                       <>Your team members and their progress</>
@@ -978,7 +973,7 @@ export default function UserProfile() {
               </div>
             </CardHeader>
             <CardContent>
-              {teamsLoading ? (
+              {teamLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-16 w-full" />
                   <Skeleton className="h-16 w-full" />
@@ -1073,13 +1068,6 @@ export default function UserProfile() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        {/* Strategy Tab */}
-        <TabsContent value="strategy" id="strategy">
-          <div className="space-y-6">
-            <StrategicDirectionsDisplay />
-          </div>
         </TabsContent>
       </Tabs>
     </DashboardLayout>
