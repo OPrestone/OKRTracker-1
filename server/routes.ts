@@ -516,12 +516,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const directions = await db.select().from(strategicDirectionsTable)
-        .where(eq(strategicDirectionsTable.tenantId, tenantId));
+        .where(eq(strategicDirectionsTable.tenantId, tenantId))
+        .orderBy(strategicDirectionsTable.createdAt);
 
       res.json(directions);
     } catch (error) {
       console.error("Error getting strategic directions:", error);
       res.status(500).json({ error: "Failed to get strategic directions" });
+    }
+  });
+
+  // Create a new strategic direction
+  app.post('/api/strategic-directions/create', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      if (!userId) {
+        return res.status(400).json({ error: "User not authenticated" });
+      }
+
+      const { title, description } = req.body;
+
+      if (!title || !title.trim()) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+
+      const newDirection = {
+        id: ulid(),
+        title: title.trim(),
+        description: description?.trim() || '',
+        tenantId,
+        createdById: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const result = await db.insert(strategicDirectionsTable)
+        .values(newDirection)
+        .returning();
+
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating strategic direction:", error);
+      res.status(500).json({ error: "Failed to create strategic direction" });
     }
   });
   
