@@ -576,19 +576,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check user permissions
+      console.log("=== PERMISSION CHECK ===");
+      console.log("User ID:", userId);
+      console.log("Tenant ID:", tenantId);
+      
       const userRole = await db.select()
         .from(usersToTenants)
         .where(and(eq(usersToTenants.userId, userId), eq(usersToTenants.tenantId, tenantId)))
         .limit(1);
 
+      console.log("User role query result:", userRole);
+
       if (!userRole.length) {
+        console.log("ERROR: No role found for user in tenant");
         return res.status(403).json({ error: "Access denied" });
       }
 
       const role = userRole[0].role;
+      console.log("User role:", role);
+      console.log("Checking if role is in allowed list:", ['admin', 'owner', 'executive', 'manager'].includes(role));
+      
       if (!['admin', 'owner', 'executive', 'manager'].includes(role)) {
+        console.log("ERROR: Insufficient permissions for role:", role);
         return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
       }
+      
+      console.log("=== PERMISSION CHECK PASSED ===");
 
       const { title, description, teamId } = req.body;
       console.log("Extracted data - Title:", title, "Description:", description, "TeamId:", teamId);
