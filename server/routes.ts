@@ -488,14 +488,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use strategic_directions if provided, otherwise use strategicDirection
       const finalStrategicDirection = strategic_directions || strategicDirection;
       
-      console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
+      console.log("POST /api/organization-mission - DETAILED DEBUG:", {
         fromMiddleware: req.tenantId,
         fromQuery: req.query.tenantId,
         fromBody: req.body.tenantId,
         resolved: tenantId,
         strategic_directions: strategic_directions,
+        strategicDirection: strategicDirection,
         finalStrategicDirection: finalStrategicDirection,
-        requestBody: req.body
+        finalStrategicDirectionType: typeof finalStrategicDirection,
+        finalStrategicDirectionLength: finalStrategicDirection ? finalStrategicDirection.length : 0,
+        requestBodyKeys: Object.keys(req.body),
+        fullRequestBody: req.body
       });
       
       if (!tenantId) {
