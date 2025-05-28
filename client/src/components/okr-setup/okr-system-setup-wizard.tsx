@@ -1670,10 +1670,11 @@ export default function OKRSystemSetupWizard() {
         mission: generalSettings.companyMission,
         vision: generalSettings.companyVision,
         behaviors: generalSettings.companyValues,
+        strategic_directions: strategicDirections, // Include strategic directions
         tenantId: tenantId
       };
       
-      console.log("Saving mission data:", missionData);
+      console.log("Saving mission data (including strategic directions):", missionData);
       
       // First, check if cadences exist for this tenant
       console.log("Checking if cadences exist for tenant:", tenantId);
