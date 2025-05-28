@@ -277,13 +277,33 @@ const Teams = () => {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate stats from available authentic data
+  // Fetch all users to calculate total members
+  const { data: allUsers } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    enabled: !!teams
+  });
+
+  // Fetch all objectives to calculate active objectives and average progress  
+  const { data: allObjectives } = useQuery<TeamObjective[]>({
+    queryKey: ["/api/objectives"],
+    enabled: !!teams
+  });
+
+  // Calculate stats from authentic database data
   const totalTeams = teams?.length || 0;
+  const totalMembers = allUsers?.length || 0;
   
-  // These stats require additional API endpoints that need to be implemented
-  const totalMembers = null; // Requires working /api/users endpoint
-  const activeObjectives = null; // Requires working /api/objectives endpoint  
-  const averageProgress = null; // Requires team performance data
+  // Filter active objectives (not completed)
+  const activeObjectives = allObjectives?.filter(obj => 
+    obj.status !== 'completed'
+  ).length || 0;
+  
+  // Calculate average progress from all objectives
+  const averageProgress = allObjectives && allObjectives.length > 0
+    ? Math.round(
+        allObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / allObjectives.length
+      )
+    : 0;
 
   const [, setLocation] = useLocation();
   
@@ -669,10 +689,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : totalMembers !== null ? (
-                    totalMembers
                   ) : (
-                    <span className="text-sm text-gray-500">Data unavailable</span>
+                    totalMembers
                   )}
                 </p>
               </div>
@@ -691,10 +709,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : activeObjectives !== null ? (
-                    activeObjectives
                   ) : (
-                    <span className="text-sm text-gray-500">Data unavailable</span>
+                    activeObjectives
                   )}
                 </p>
               </div>
@@ -715,10 +731,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
-                  ) : averageProgress !== null ? (
-                    `${averageProgress}%`
                   ) : (
-                    <span className="text-sm text-gray-500">Data unavailable</span>
+                    `${averageProgress}%`
                   )}
                 </p>
               </div>

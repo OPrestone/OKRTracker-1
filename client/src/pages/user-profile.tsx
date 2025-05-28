@@ -93,14 +93,14 @@ export default function UserProfile() {
     team.leaderId === user?.id
   );
   
-  // Loading states
-  const isLoading = objectivesLoading || checkInsLoading || teamsLoading;
-  
   // Fetch check-ins using the correct endpoint
   const { data: checkIns, isLoading: checkInsLoading } = useQuery<CheckIn[]>({
     queryKey: ["/api/check-ins"],
     enabled: !!user
   });
+  
+  // Loading states
+  const isLoading = objectivesLoading || checkInsLoading || teamsLoading;
   
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number | null | undefined): string => {
