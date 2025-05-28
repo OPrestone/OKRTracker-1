@@ -467,6 +467,10 @@ export default function UserProfile() {
             <Users className="h-4 w-4" />
             <span>My Team</span>
           </TabsTrigger>
+          <TabsTrigger value="strategy" className="gap-2">
+            <Target className="h-4 w-4" />
+            <span>Strategy</span>
+          </TabsTrigger>
         </TabsList>
         
         {/* Overview Tab */}
@@ -1069,6 +1073,13 @@ export default function UserProfile() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        {/* Strategy Tab */}
+        <TabsContent value="strategy" id="strategy">
+          <div className="space-y-6">
+            <StrategicDirectionsDisplay />
+          </div>
         </TabsContent>
       </Tabs>
     </DashboardLayout>
