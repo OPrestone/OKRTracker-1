@@ -337,7 +337,7 @@ const KeyResultSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={confidenceTrends} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+              <AreaChart data={calculatedData.confidenceTrends} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
@@ -361,7 +361,7 @@ const KeyResultSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topKeyResults.map((kr) => (
+              {calculatedData.topKeyResults.map((kr) => (
                 <div key={kr.id} className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center mt-0.5">
                     <div 
