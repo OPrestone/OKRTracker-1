@@ -146,7 +146,7 @@ export function CreateFirstObjectiveCard() {
       
       <SmartCreateObjectiveButton size="lg" />
       
-      {!permissions.canCreateObjectives && (
+      {!permissions?.canCreateObjectives && (
         <div className="mt-4 text-sm text-gray-500">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-4 w-4" />
