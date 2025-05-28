@@ -1577,11 +1577,11 @@ export default function OKRSystemSetupWizard() {
     if (form && form.getValues) {
       fetchExistingConfig();
     }
-  }, [form, toast]);
+  }, [toast]);
 
   // Effect to populate strategic directions with real data from database
   useEffect(() => {
-    if (existingStrategicDirections && existingStrategicDirections.length > 0 && tenantId) {
+    if (existingStrategicDirections && existingStrategicDirections.length > 0 && tenantId && form.setValue) {
       console.log("Populating strategic directions with real data:", existingStrategicDirections);
       
       // Convert database format to form format
@@ -1595,7 +1595,7 @@ export default function OKRSystemSetupWizard() {
       
       console.log("Strategic directions populated in form:", formattedDirections);
     }
-  }, [existingStrategicDirections, tenantId, form]);
+  }, [existingStrategicDirections, tenantId]);
 
   // Using the tenantId state initialized above
 
