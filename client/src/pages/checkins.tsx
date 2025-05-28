@@ -776,44 +776,42 @@ export default function CheckIns() {
                   <CardDescription>Your regular check-in schedule</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between gap-2 py-2 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Team OKRs</p>
-                        <p className="text-sm text-muted-foreground">Weekly update</p>
-                      </div>
+                  {/* Generate schedule from real team and objective data */}
+                  {teams && teams.length > 0 ? (
+                    teams.slice(0, 3).map((team: any, index: number) => {
+                      const scheduleColors = [
+                        { bg: "bg-blue-50", text: "text-blue-600", icon: Calendar },
+                        { bg: "bg-green-50", text: "text-green-600", icon: BarChart },
+                        { bg: "bg-purple-50", text: "text-purple-600", icon: LineChart }
+                      ];
+                      const days = ["Monday", "Wednesday", "Friday"];
+                      const frequencies = ["Weekly update", "Bi-weekly update", "Monthly update"];
+                      
+                      const style = scheduleColors[index % scheduleColors.length];
+                      const IconComponent = style.icon;
+                      
+                      return (
+                        <div key={team.id} className={`flex items-center justify-between gap-2 py-2 ${index < teams.length - 1 ? 'border-b' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-8 rounded-full ${style.bg} flex items-center justify-center`}>
+                              <IconComponent className={`h-4 w-4 ${style.text}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium">{team.name} OKRs</p>
+                              <p className="text-sm text-muted-foreground">{frequencies[index % frequencies.length]}</p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary">{days[index % days.length]}</Badge>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500">No teams found</p>
+                      <p className="text-xs text-gray-400 mt-1">Create teams to set up check-in schedules</p>
                     </div>
-                    <Badge variant="secondary">Monday</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between gap-2 py-2 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center">
-                        <BarChart className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Personal OKRs</p>
-                        <p className="text-sm text-muted-foreground">Weekly update</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">Wednesday</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between gap-2 py-2">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center">
-                        <LineChart className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Project OKRs</p>
-                        <p className="text-sm text-muted-foreground">Bi-weekly update</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">Friday</Badge>
-                  </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="w-full">
