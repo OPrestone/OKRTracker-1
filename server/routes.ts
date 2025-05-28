@@ -7025,6 +7025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add required fields for the database schema
       const dataToValidate = {
         ...req.body,
+        id: `01${ulid().slice(2)}`, // Generate ULID for the project
         created_by_id: req.user.id, // Use the current user ID as creator
         // Set both formats of tenant ID to ensure one is used
         tenant_id: req.tenantId,
