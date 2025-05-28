@@ -15,6 +15,7 @@ import { z } from "zod";
 import CompanyAlignmentMap from "@/components/strategy/company-alignment-map";
 import TeamsOKRView from "@/components/strategy/teams-okr-view";
 import KeyResultSummary from "@/components/strategy/key-results-summary";
+import TableView from "@/components/strategy/table-view";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { apiRequest } from "@/lib/queryClient";
@@ -490,16 +491,7 @@ export default function StrategyMapPage() {
         </TabsContent>
         
         <TabsContent value="table" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Strategy Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-600 mb-4">
-                Tabular view of strategic objectives and their interconnections would be shown here.
-              </p>
-            </CardContent>
-          </Card>
+          <TableView />
         </TabsContent>
       </Tabs>
 
