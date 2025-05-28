@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Smile, Meh, Frown, AlertTriangle, ThumbsUp } from "lucide-react";
 
 const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) => {
@@ -11,6 +12,7 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const moodOptions = [
     { value: 1, icon: <Frown className="w-8 h-8" />, label: "Very Unhappy", color: "text-red-500" },
@@ -35,14 +37,14 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
     try {
       setLoading(true);
       
-      // Format date as yyyy-mm-dd for the database (date type, not timestamp)
+      // Format date as ISO string for proper transmission
       const today = new Date();
-      const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
       const response = await apiRequest("POST", "/api/mood-entries", {
         moodScore: selectedMood,
         notes: notes.trim() || null,
-        date: formattedDate, // Using formatted date string (YYYY-MM-DD)
+        date: today.toISOString(), // Send as ISO string
+        tenantId: user?.defaultTenant, // Include tenant ID
       });
       
       if (response.ok) {

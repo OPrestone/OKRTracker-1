@@ -35,17 +35,7 @@ import {
 
 // This will be loaded from the API
 
-// Mock trend data
-const trendData = [
-  { date: "Week 1", value: 10 },
-  { date: "Week 2", value: 25 },
-  { date: "Week 3", value: 30 },
-  { date: "Week 4", value: 40 },
-  { date: "Week 5", value: 55 },
-  { date: "Week 6", value: 64 },
-  { date: "Week 7", value: 68 },
-  { date: "Week 8", value: 75 },
-];
+
 
 // Team data and needs check-in data will be loaded from the API
 
@@ -776,44 +766,42 @@ export default function CheckIns() {
                   <CardDescription>Your regular check-in schedule</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between gap-2 py-2 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Team OKRs</p>
-                        <p className="text-sm text-muted-foreground">Weekly update</p>
-                      </div>
+                  {/* Generate schedule from real team and objective data */}
+                  {teams && teams.length > 0 ? (
+                    teams.slice(0, 3).map((team: any, index: number) => {
+                      const scheduleColors = [
+                        { bg: "bg-blue-50", text: "text-blue-600", icon: Calendar },
+                        { bg: "bg-green-50", text: "text-green-600", icon: BarChart },
+                        { bg: "bg-purple-50", text: "text-purple-600", icon: LineChart }
+                      ];
+                      const days = ["Monday", "Wednesday", "Friday"];
+                      const frequencies = ["Weekly update", "Bi-weekly update", "Monthly update"];
+                      
+                      const style = scheduleColors[index % scheduleColors.length];
+                      const IconComponent = style.icon;
+                      
+                      return (
+                        <div key={team.id} className={`flex items-center justify-between gap-2 py-2 ${index < teams.length - 1 ? 'border-b' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-8 rounded-full ${style.bg} flex items-center justify-center`}>
+                              <IconComponent className={`h-4 w-4 ${style.text}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium">{team.name} OKRs</p>
+                              <p className="text-sm text-muted-foreground">{frequencies[index % frequencies.length]}</p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary">{days[index % days.length]}</Badge>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500">No teams found</p>
+                      <p className="text-xs text-gray-400 mt-1">Create teams to set up check-in schedules</p>
                     </div>
-                    <Badge variant="secondary">Monday</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between gap-2 py-2 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center">
-                        <BarChart className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Personal OKRs</p>
-                        <p className="text-sm text-muted-foreground">Weekly update</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">Wednesday</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between gap-2 py-2">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-purple-50 flex items-center justify-center">
-                        <LineChart className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Project OKRs</p>
-                        <p className="text-sm text-muted-foreground">Bi-weekly update</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">Friday</Badge>
-                  </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button variant="outline" className="w-full">
@@ -954,10 +942,11 @@ export default function CheckIns() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  <SelectItem value="product">Product Team</SelectItem>
-                  <SelectItem value="marketing">Marketing Team</SelectItem>
-                  <SelectItem value="engineering">Engineering Team</SelectItem>
-                  <SelectItem value="sales">Sales Team</SelectItem>
+                  {teams && Array.isArray(teams) ? teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  )) : null}
                 </SelectContent>
               </Select>
             </div>
@@ -968,7 +957,7 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Check-ins</p>
-                      <p className="text-3xl font-bold">86</p>
+                      <p className="text-3xl font-bold">{checkIns ? checkIns.length : 0}</p>
                     </div>
                     <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center">
                       <ListChecks className="h-6 w-6 text-blue-600" />
@@ -982,7 +971,17 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Avg. Completion</p>
-                      <p className="text-3xl font-bold">67%</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!keyResults || keyResults.length === 0) return "0%";
+                          const totalProgress = keyResults.reduce(
+                            (sum, kr) => sum + parseInt(kr.progress?.toString() || '0'), 
+                            0
+                          );
+                          const avgProgress = Math.round(totalProgress / keyResults.length);
+                          return `${avgProgress}%`;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
                       <BarChart className="h-6 w-6 text-green-600" />
@@ -996,7 +995,18 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">At Risk Items</p>
-                      <p className="text-3xl font-bold">3</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!keyResults || keyResults.length === 0) return 0;
+                          const twoWeeksFromNow = new Date();
+                          twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+                          
+                          return keyResults.filter(kr => 
+                            parseInt(kr.progress?.toString() || '0') < 30 && 
+                            kr.dueDate && new Date(kr.dueDate) < twoWeeksFromNow
+                          ).length;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-amber-50 rounded-full flex items-center justify-center">
                       <AlertCircle className="h-6 w-6 text-amber-600" />
@@ -1010,7 +1020,25 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Engagement</p>
-                      <p className="text-3xl font-bold">92%</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!users || users.length === 0) return "0%";
+                          if (!checkIns || checkIns.length === 0) return "0%";
+                          
+                          // Calculate unique users who have made check-ins in the last 30 days
+                          const thirtyDaysAgo = new Date();
+                          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                          
+                          const recentCheckIns = checkIns.filter(checkIn => 
+                            new Date(checkIn.createdAt) > thirtyDaysAgo
+                          );
+                          
+                          const activeUsers = new Set(recentCheckIns.map(checkIn => checkIn.createdById));
+                          const engagementRate = Math.round((activeUsers.size / users.length) * 100);
+                          
+                          return `${engagementRate}%`;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-purple-50 rounded-full flex items-center justify-center">
                       <Users className="h-6 w-6 text-purple-600" />
@@ -1126,7 +1154,46 @@ export default function CheckIns() {
                 </CardHeader>
                 <CardContent className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart data={trendData}>
+                    <ReLineChart data={(() => {
+                      if (!checkIns || !keyResults || checkIns.length === 0) {
+                        return [{ date: "No Data", value: 0 }];
+                      }
+
+                      // Group check-ins by week
+                      const weeklyData: { [key: string]: number[] } = {};
+                      const now = new Date();
+                      
+                      // Create last 8 weeks of data
+                      for (let i = 7; i >= 0; i--) {
+                        const weekStart = new Date(now);
+                        weekStart.setDate(now.getDate() - (i * 7));
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+                        
+                        const weekKey = `Week ${8 - i}`;
+                        weeklyData[weekKey] = [];
+                        
+                        // Find check-ins for this week
+                        checkIns.forEach(checkIn => {
+                          const checkInDate = new Date(checkIn.createdAt);
+                          if (checkInDate >= weekStart && checkInDate <= weekEnd) {
+                            // Find the related key result to get progress
+                            const relatedKeyResult = keyResults.find(kr => kr.id === checkIn.keyResultId);
+                            if (relatedKeyResult && relatedKeyResult.progress !== null && relatedKeyResult.progress !== undefined) {
+                              weeklyData[weekKey].push(parseInt(relatedKeyResult.progress.toString()));
+                            }
+                          }
+                        });
+                      }
+                      
+                      // Calculate average progress for each week
+                      return Object.entries(weeklyData).map(([week, progressValues]) => ({
+                        date: week,
+                        value: progressValues.length > 0 
+                          ? Math.round(progressValues.reduce((sum, val) => sum + val, 0) / progressValues.length)
+                          : 0
+                      }));
+                    })()}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="date" />
                       <YAxis domain={[0, 100]} />
@@ -1154,16 +1221,46 @@ export default function CheckIns() {
                 <CardContent className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={[
-                        { week: "Week 1", onTrack: 5, atRisk: 3, offTrack: 1 },
-                        { week: "Week 2", onTrack: 6, atRisk: 2, offTrack: 1 },
-                        { week: "Week 3", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 4", onTrack: 7, atRisk: 2, offTrack: 0 },
-                        { week: "Week 5", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 6", onTrack: 9, atRisk: 0, offTrack: 0 },
-                        { week: "Week 7", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 8", onTrack: 7, atRisk: 2, offTrack: 0 },
-                      ]}
+                      data={(() => {
+                        if (!checkIns || checkIns.length === 0) {
+                          return [{ week: "No Data", onTrack: 0, atRisk: 0, offTrack: 0 }];
+                        }
+
+                        // Group confidence levels by week
+                        const weeklyConfidence: { [key: string]: { onTrack: number; atRisk: number; offTrack: number } } = {};
+                        const now = new Date();
+                        
+                        // Create last 8 weeks of data
+                        for (let i = 7; i >= 0; i--) {
+                          const weekStart = new Date(now);
+                          weekStart.setDate(now.getDate() - (i * 7));
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekStart.getDate() + 6);
+                          
+                          const weekKey = `Week ${8 - i}`;
+                          weeklyConfidence[weekKey] = { onTrack: 0, atRisk: 0, offTrack: 0 };
+                          
+                          // Count confidence levels for this week
+                          checkIns.forEach(checkIn => {
+                            const checkInDate = new Date(checkIn.createdAt);
+                            if (checkInDate >= weekStart && checkInDate <= weekEnd) {
+                              const confidence = checkIn.confidence || '';
+                              if (confidence === 'On Track') {
+                                weeklyConfidence[weekKey].onTrack++;
+                              } else if (confidence === 'At Risk') {
+                                weeklyConfidence[weekKey].atRisk++;
+                              } else if (confidence === 'Off Track') {
+                                weeklyConfidence[weekKey].offTrack++;
+                              }
+                            }
+                          });
+                        }
+                        
+                        return Object.entries(weeklyConfidence).map(([week, confidence]) => ({
+                          week,
+                          ...confidence
+                        }));
+                      })()}
                       stackOffset="none"
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -1220,114 +1317,113 @@ export default function CheckIns() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>AM</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Alex Morgan</p>
-                            <p className="text-xs text-muted-foreground">Product Manager</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>24</TableCell>
-                      <TableCell>18</TableCell>
-                      <TableCell>Today</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "90%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>JL</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Jordan Lee</p>
-                            <p className="text-xs text-muted-foreground">Engineering Lead</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>18</TableCell>
-                      <TableCell>12</TableCell>
-                      <TableCell>Yesterday</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "85%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>TS</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Taylor Swift</p>
-                            <p className="text-xs text-muted-foreground">Marketing Director</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>16</TableCell>
-                      <TableCell>23</TableCell>
-                      <TableCell>Yesterday</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "95%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>JT</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Jamie Taylor</p>
-                            <p className="text-xs text-muted-foreground">Sales Director</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>12</TableCell>
-                      <TableCell>8</TableCell>
-                      <TableCell>2 days ago</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-amber-500 rounded-full" 
-                              style={{ width: "65%" }}
-                            />
-                          </div>
-                          <span>Medium</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    {(() => {
+                      if (!users || !checkIns || users.length === 0) {
+                        return (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">
+                              No team member activity data available
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+
+                      // Calculate activity metrics for each user
+                      const userActivity = users.map(user => {
+                        const userCheckIns = checkIns.filter(checkIn => checkIn.userId === user.id);
+                        const checkInCount = userCheckIns.length;
+                        const commentCount = userCheckIns.filter(checkIn => checkIn.comments && checkIn.comments.trim().length > 0).length;
+                        
+                        // Find most recent check-in
+                        const sortedCheckIns = userCheckIns.sort((a, b) => 
+                          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                        );
+                        const lastCheckIn = sortedCheckIns[0];
+                        
+                        // Calculate last active
+                        let lastActive = "Never";
+                        if (lastCheckIn) {
+                          const lastDate = new Date(lastCheckIn.createdAt);
+                          const now = new Date();
+                          const daysDiff = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+                          
+                          if (daysDiff === 0) {
+                            lastActive = "Today";
+                          } else if (daysDiff === 1) {
+                            lastActive = "Yesterday";
+                          } else if (daysDiff < 7) {
+                            lastActive = `${daysDiff} days ago`;
+                          } else {
+                            lastActive = lastDate.toLocaleDateString();
+                          }
+                        }
+                        
+                        // Calculate engagement score based on check-in frequency and recency
+                        let engagementScore = 0;
+                        if (checkInCount > 0) {
+                          const daysAgo = lastCheckIn ? Math.floor((new Date().getTime() - new Date(lastCheckIn.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+                          const recencyScore = Math.max(0, 100 - (daysAgo * 10)); // Lose 10 points per day
+                          const frequencyScore = Math.min(100, checkInCount * 5); // 5 points per check-in, max 100
+                          engagementScore = Math.round((recencyScore + frequencyScore) / 2);
+                        }
+                        
+                        let engagementLevel = "Low";
+                        let engagementColor = "bg-red-500";
+                        if (engagementScore >= 80) {
+                          engagementLevel = "High";
+                          engagementColor = "bg-green-500";
+                        } else if (engagementScore >= 50) {
+                          engagementLevel = "Medium";
+                          engagementColor = "bg-amber-500";
+                        }
+                        
+                        return {
+                          user,
+                          checkInCount,
+                          commentCount,
+                          lastActive,
+                          engagementScore,
+                          engagementLevel,
+                          engagementColor
+                        };
+                      }).sort((a, b) => b.engagementScore - a.engagementScore); // Sort by engagement score
+
+                      return userActivity.slice(0, 10).map((activity, index) => { // Show top 10 most engaged users
+                        const initials = activity.user.name 
+                          ? activity.user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                          : activity.user.username?.substring(0, 2).toUpperCase() || 'U';
+                        
+                        return (
+                          <TableRow key={activity.user.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">{activity.user.name || activity.user.username}</p>
+                                  <p className="text-xs text-muted-foreground">{activity.user.role || 'Team Member'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{activity.checkInCount}</TableCell>
+                            <TableCell>{activity.commentCount}</TableCell>
+                            <TableCell>{activity.lastActive}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                                  <div 
+                                    className={`h-full rounded-full ${activity.engagementColor}`}
+                                    style={{ width: `${activity.engagementScore}%` }}
+                                  />
+                                </div>
+                                <span>{activity.engagementLevel}</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      });
+                    })()}
                   </TableBody>
                 </Table>
               </CardContent>

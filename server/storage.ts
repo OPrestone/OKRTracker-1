@@ -2864,6 +2864,7 @@ export class DatabaseStorage implements IStorage {
       // Handle both camelCase and snake_case field names
       // Prefer snake_case but fall back to camelCase
       const dbFields = {
+        id: projectData.id || `01${require('ulid').ulid().slice(2)}`, // Generate ID if not provided
         title: projectData.title || "Untitled Project",
         description: projectData.description || "",
         status: projectData.status || "todo",
@@ -2954,8 +2955,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Helper method to convert priority strings to numbers
-  private convertPriorityToNumber(priority: string | undefined): number {
+  private convertPriorityToNumber(priority: any): number {
     if (!priority) return 2; // Default to medium
+    
+    // If it's already a number, return it
+    if (typeof priority === 'number') return priority;
+    
+    // If it's not a string, convert to string first
+    const priorityStr = String(priority);
     
     const priorityMap: Record<string, number> = {
       low: 1,
@@ -2964,7 +2971,7 @@ export class DatabaseStorage implements IStorage {
       urgent: 4
     };
     
-    return priorityMap[priority.toLowerCase()] || 2; // Default to medium
+    return priorityMap[priorityStr.toLowerCase()] || 2; // Default to medium
   }
 
   async getProject(id: string): Promise<Project | undefined> {
@@ -2983,33 +2990,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProjectsByTenant(tenantId: string): Promise<Project[]> {
-    // Only select the fields that exist in the database schema
-    // Use snake_case for column names to match the database and camelCase in the output
-    // to match frontend expectations
+    // Query using raw SQL to ensure proper field mapping
     try {
-      // Using simpler query to avoid parameter issues
-      return await db.select()
-        .from(projects)
-        .where(eq(projects.tenant_id, tenantId))
-        .then(rows => {
-          // Transform the results to match the frontend schema
-          return rows.map(row => ({
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            status: row.status,
-            priority: row.priority || 'medium',
-            dueDate: row.due_date,
-            teamId: row.team_id,
-            ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
-            tenantId: row.tenant_id,
-            createdAt: row.created_at,
-            // Add default values for any missing fields that frontend might expect
-            checklistTotal: 0,
-            checklistCompleted: 0,
-            commentsCount: 0
-          }));
-        });
+      const result = await pool.query(`
+        SELECT 
+          id, title, description, status, priority,
+          assigned_to_id, team_id, created_by_id, tenant_id,
+          start_date, due_date, created_at, tags
+        FROM projects 
+        WHERE tenant_id = $1
+        ORDER BY created_at DESC
+      `, [tenantId]);
+      
+      // Transform the results to match the frontend schema
+      return result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        status: row.status,
+        priority: row.priority || 'medium',
+        dueDate: row.due_date,
+        startDate: row.start_date,
+        teamId: row.team_id,
+        assignedToId: row.assigned_to_id,
+        ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
+        tenantId: row.tenant_id,
+        createdAt: row.created_at,
+        tags: row.tags || [],
+        // Add default values for any missing fields that frontend might expect
+        checklistTotal: 0,
+        checklistCompleted: 0,
+        commentsCount: 0,
+        assignees: [], // Add empty assignees array for kanban board
+        comments: 0 // Add comments count for kanban board
+      }));
     } catch (error) {
       console.error("Error fetching projects:", error);
       // Return empty array on error to prevent app from crashing

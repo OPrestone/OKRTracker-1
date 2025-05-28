@@ -73,9 +73,9 @@ export const getQueryFn: <T>(options: {
       // Handle array-based path parameters
       let url = '';
       if (Array.isArray(queryKey)) {
-        // Special case for teams - the second parameter is a tenant ID that should be a query param, not path param
-        if (queryKey[0] === '/api/teams' && queryKey.length === 2 && !queryKey[1].includes('users') && !queryKey[1].includes('objectives')) {
-          // When the query is ['/api/teams', tenantId], we want to use '/api/teams' not '/api/teams/tenantId'
+        // Special case for teams and projects - the second parameter is a tenant ID that should be a query param, not path param
+        if ((queryKey[0] === '/api/teams' || queryKey[0] === '/api/projects') && queryKey.length === 2 && !queryKey[1].includes('users') && !queryKey[1].includes('objectives')) {
+          // When the query is ['/api/teams', tenantId] or ['/api/projects', tenantId], we want to use '/api/teams' or '/api/projects' not '/api/teams/tenantId'
           url = queryKey[0];
         }
         // For team details or nested routes like teams with objectives or users

@@ -49,146 +49,123 @@ export const TeamsOKRView: React.FC = () => {
     queryKey: ['/api/objectives', organizationId],
     enabled: !!organizationId,
   }) as { data: any[] };
+
+  // Fetch key results data from API
+  const { data: keyResultsData = [] } = useQuery({
+    queryKey: ['/api/key-results', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+
+  // Fetch strategic directions data from API
+  const { data: strategicDirections = [] } = useQuery({
+    queryKey: ['/api/strategic-directions', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
   
-  // Create categories based on API data or use sample data if not available
-  const [categories, setCategories] = useState<TeamOKRCategory[]>([
-    {
-      id: 'market-expansion',
-      name: 'Market Expansion & Growth Goals',
-      isExpanded: true,
-      objectives: [
-        {
-          id: 'market-expansion-goal',
-          title: 'Market Expansion & Growth',
-          status: 'on-track',
-          progress: 39,
-          isExpanded: true,
-          keyResults: [
-            {
-              id: 'enhance-website',
-              title: 'Enhance technical website performance to improve conversion rates',
-              status: 'on-track',
-              progress: 39
-            },
-            {
-              id: 'drive-customer-acquisition',
-              title: 'Drive new customer acquisition and revenue growth from inbound channels',
-              status: 'on-track',
-              progress: 37
-            },
-            {
-              id: 'build-outbound-engine',
-              title: 'Build a powerful Outbound engine that drives significant revenue',
-              status: 'on-track',
-              progress: 69
-            },
-            {
-              id: 'fill-pipeline',
-              title: 'Fill the sales pipeline with tons of qualified organic leads',
-              status: 'on-track',
-              progress: 36
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'customer-centricity',
-      name: 'Customer Centricity Goals',
-      isExpanded: true,
-      objectives: [
-        {
-          id: 'customer-centricity-goal',
-          title: 'Customer Centricity',
-          status: 'on-track',
-          progress: 70,
-          isExpanded: true,
-          keyResults: [
-            {
-              id: 'turn-customers-ambassadors',
-              title: 'Turn our customers into ambassadors',
-              status: 'on-track',
-              progress: 70
-            },
-            {
-              id: 'improve-reliability',
-              title: 'Improve our product reliability and performance',
-              status: 'on-track',
-              progress: 47
-            },
-            {
-              id: 'improve-loyalty',
-              title: 'Improve customer loyalty and retention',
-              status: 'on-track',
-              progress: 61
-            },
-            {
-              id: 'deliver-value',
-              title: 'Deliver value faster to our customers by speeding up our release cycles',
-              status: 'on-track',
-              progress: 28
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'operational-excellence',
-      name: 'Operational Excellence Goals',
-      isExpanded: true,
-      objectives: [
-        {
-          id: 'operational-excellence-goal',
-          title: 'Operational Excellence',
-          status: 'on-track',
-          progress: 64,
-          isExpanded: true,
-          keyResults: [
-            {
-              id: 'streamline-talent',
-              title: 'Streamline talent acquisition for a quicker and more effective hiring process',
-              status: 'on-track',
-              progress: 64
-            },
-            {
-              id: 'ensure-compliance',
-              title: 'Ensure compliance with industry standards and regulations',
-              status: 'on-track',
-              progress: 65
-            },
-            {
-              id: 'get-billing',
-              title: 'Get billing and revenue management to a new level',
-              status: 'on-track',
-              progress: 47
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'high-performance',
-      name: 'High-Performance Culture Goals',
-      isExpanded: true,
-      objectives: [
-        {
-          id: 'high-performance-culture',
-          title: 'High-Performance Culture',
-          status: 'on-track',
-          progress: 31,
-          isExpanded: true,
-          keyResults: [
-            {
-              id: 'create-great-place',
-              title: 'Create a great and motivating place to work',
-              status: 'on-track',
-              progress: 31
-            }
-          ]
-        }
-      ]
+  // Helper function to determine status based on progress
+  const getStatusFromProgress = (progress: number): 'on-track' | 'at-risk' | 'behind' => {
+    if (progress >= 70) return 'on-track';
+    if (progress >= 40) return 'at-risk';
+    return 'behind';
+  };
+
+  // Helper function to calculate objective progress from key results
+  const calculateObjectiveProgress = (objectiveId: string): number => {
+    const relatedKeyResults = keyResultsData.filter(kr => kr.objective_id === objectiveId);
+    if (relatedKeyResults.length === 0) return 0;
+    
+    const totalProgress = relatedKeyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+    return Math.round(totalProgress / relatedKeyResults.length);
+  };
+
+  // Create categories based on real API data
+  const [categories, setCategories] = useState<TeamOKRCategory[]>([]);
+
+  // Update categories when data changes
+  useEffect(() => {
+    if (strategicDirections.length === 0 && objectivesData.length === 0) {
+      setCategories([]);
+      return;
     }
-  ]);
+
+    const realCategories: TeamOKRCategory[] = [];
+
+    // Group objectives by strategic direction if available
+    if (strategicDirections.length > 0) {
+      strategicDirections.forEach(direction => {
+        const relatedObjectives = objectivesData.filter(obj => 
+          obj.strategic_direction_id === direction.id
+        );
+
+        if (relatedObjectives.length > 0) {
+          const categoryObjectives: TeamObjective[] = relatedObjectives.map(objective => {
+            const progress = calculateObjectiveProgress(objective.id);
+            const objectiveKeyResults = keyResultsData
+              .filter(kr => kr.objective_id === objective.id)
+              .map(kr => ({
+                id: kr.id,
+                title: kr.title || 'Untitled Key Result',
+                status: getStatusFromProgress(kr.progress || 0),
+                progress: kr.progress || 0
+              }));
+
+            return {
+              id: objective.id,
+              title: objective.title || 'Untitled Objective',
+              status: getStatusFromProgress(progress),
+              progress: progress,
+              isExpanded: false,
+              keyResults: objectiveKeyResults
+            };
+          });
+
+          realCategories.push({
+            id: direction.id,
+            name: `${direction.title} Goals`,
+            isExpanded: true,
+            objectives: categoryObjectives
+          });
+        }
+      });
+    }
+
+    // Add objectives without strategic direction alignment to a general category
+    const unalignedObjectives = objectivesData.filter(obj => 
+      !obj.strategic_direction_id || !strategicDirections.find(sd => sd.id === obj.strategic_direction_id)
+    );
+
+    if (unalignedObjectives.length > 0) {
+      const generalObjectives: TeamObjective[] = unalignedObjectives.map(objective => {
+        const progress = calculateObjectiveProgress(objective.id);
+        const objectiveKeyResults = keyResultsData
+          .filter(kr => kr.objective_id === objective.id)
+          .map(kr => ({
+            id: kr.id,
+            title: kr.title || 'Untitled Key Result',
+            status: getStatusFromProgress(kr.progress || 0),
+            progress: kr.progress || 0
+          }));
+
+        return {
+          id: objective.id,
+          title: objective.title || 'Untitled Objective',
+          status: getStatusFromProgress(progress),
+          progress: progress,
+          isExpanded: false,
+          keyResults: objectiveKeyResults
+        };
+      });
+
+      realCategories.push({
+        id: 'general-objectives',
+        name: 'Company Objectives',
+        isExpanded: true,
+        objectives: generalObjectives
+      });
+    }
+
+    setCategories(realCategories);
+  }, [objectivesData, keyResultsData, strategicDirections]);
 
   // Toggle category expansion
   const toggleCategory = (categoryId: string) => {
@@ -256,6 +233,25 @@ export const TeamsOKRView: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Empty State */}
+      {categories.length === 0 && (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+              <Plus className="h-6 w-6 text-neutral-400" />
+            </div>
+            <h3 className="text-lg font-medium text-neutral-900 mb-1">No Objectives Found</h3>
+            <p className="text-sm text-neutral-600 mb-4 max-w-md mx-auto">
+              Create your first objective to see teams' OKR progress and alignment with strategic directions.
+            </p>
+            <Button variant="outline">
+              <Plus className="h-4 w-4 mr-1" />
+              Create Objective
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Categories */}
       {categories.map(category => (

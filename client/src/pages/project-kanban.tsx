@@ -246,7 +246,7 @@ function ProjectCard({ project }: { project: Project }) {
           {/* Card header with title and dropdown */}
           <div className="flex justify-between items-start mb-3">
             <Badge variant="outline" className={`${priorityColors.text} ${priorityColors.border} ${priorityColors.bg}`}>
-              {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+              {String(project.priority).charAt(0).toUpperCase() + String(project.priority).slice(1)}
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

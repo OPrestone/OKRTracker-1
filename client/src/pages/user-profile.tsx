@@ -69,29 +69,38 @@ export default function UserProfile() {
   const [showCreateObjectiveModal, setShowCreateObjectiveModal] = useState(false);
   const [showCreateCheckInModal, setShowCreateCheckInModal] = useState(false);
   
-  // Fetch user details if needed
+  // Fetch user details from authenticated user endpoint
   const { data: userDetails, isLoading: userLoading } = useQuery<UserType>({
-    queryKey: ["/api/users", user?.id],
+    queryKey: ["/api/user"],
     enabled: !!user
   });
   
-  // Fetch user's objectives
+  // Fetch user's objectives using the my-objectives endpoint
   const { data: userObjectives, isLoading: objectivesLoading } = useQuery<Objective[]>({
-    queryKey: ["/api/users", user?.id, "objectives"],
+    queryKey: ["/api/my-objectives"],
     enabled: !!user
   });
   
-  // Fetch user's team
-  const { data: userTeam, isLoading: teamLoading } = useQuery<Team>({
-    queryKey: ["/api/teams", user?.teamId],
-    enabled: !!user?.teamId
+  // Fetch all teams to find user's team
+  const { data: allTeams, isLoading: teamsLoading } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+    enabled: !!user
   });
   
-  // Fetch check-ins
+  // Find user's team from the teams list
+  const userTeam = allTeams?.find(team => 
+    team.members?.some(member => member.id === user?.id) || 
+    team.leaderId === user?.id
+  );
+  
+  // Fetch check-ins using the correct endpoint
   const { data: checkIns, isLoading: checkInsLoading } = useQuery<CheckIn[]>({
-    queryKey: ["/api/check-ins", "user", user?.id],
+    queryKey: ["/api/check-ins"],
     enabled: !!user
   });
+  
+  // Loading states
+  const isLoading = objectivesLoading || checkInsLoading || teamsLoading;
   
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number | null | undefined): string => {
@@ -193,30 +202,33 @@ export default function UserProfile() {
     role: userDetails?.role || "user"
   });
 
-  // Update form when user details load
+  // Update form when user details load (use auth user data which is already available)
   useEffect(() => {
-    if (userDetails) {
+    if (user) {
       setProfileForm({
-        firstName: userDetails.firstName || "",
-        lastName: userDetails.lastName || "",
-        email: userDetails.email || "",
-        language: userDetails.language || "en",
-        role: userDetails.role || "user"
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        language: user.language || "en",
+        role: user.role || "user"
       });
     }
-  }, [userDetails]);
+  }, [user]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserType>) => {
       if (!user?.id) throw new Error("User ID not found");
       const res = await apiRequest("PUT", `/api/users/${user.id}`, data);
+      if (!res.ok) {
+        throw new Error(`Failed to update profile: ${res.statusText}`);
+      }
       return await res.json();
     },
     onSuccess: (updatedUser) => {
       // Invalidate user queries to refetch the latest data
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
       
       setShowEditProfileModal(false);
       toast({
@@ -934,7 +946,7 @@ export default function UserProfile() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    {teamLoading ? (
+                    {teamsLoading ? (
                       <Skeleton className="h-6 w-32" />
                     ) : userTeam ? (
                       <>{userTeam.name} Team</>
@@ -943,7 +955,7 @@ export default function UserProfile() {
                     )}
                   </CardTitle>
                   <CardDescription>
-                    {teamLoading ? (
+                    {teamsLoading ? (
                       <Skeleton className="h-4 w-48 mt-1" />
                     ) : userTeam ? (
                       <>Your team members and their progress</>
@@ -964,7 +976,7 @@ export default function UserProfile() {
               </div>
             </CardHeader>
             <CardContent>
-              {teamLoading ? (
+              {teamsLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-16 w-full" />
                   <Skeleton className="h-16 w-full" />

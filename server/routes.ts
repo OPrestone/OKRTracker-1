@@ -11,7 +11,8 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
          projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema,
-         strategicDirections, insertStrategicDirectionSchema } from "@shared/schema";
+         strategicDirections as strategicDirectionsTable,
+ } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -313,113 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use the middleware defined above
   // The rest of the routes will use the existing middleware
   
-  // Strategic Directions API
-  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const { type, teamId } = req.query;
-      
-      let query = db.select().from(strategicDirections).where(eq(strategicDirections.tenantId, tenantId));
-      
-      if (type) {
-        query = query.where(eq(strategicDirections.type, type as string));
-      }
-      
-      if (teamId) {
-        query = query.where(eq(strategicDirections.teamId, teamId as string));
-      }
-      
-      const directions = await query;
-      res.json(directions);
-    } catch (error) {
-      next(error);
-    }
-  });
 
-  app.post("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const userId = req.user.id;
-      
-      const validatedData = insertStrategicDirectionSchema.parse({
-        ...req.body,
-        tenantId,
-        createdById: userId
-      });
-      
-      const newDirection = await db.insert(strategicDirections).values({
-        id: ulid(),
-        ...validatedData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      
-      res.status(201).json(newDirection[0]);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.put("/api/strategic-directions/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const directionId = req.params.id;
-      
-      // Verify the direction belongs to the current tenant
-      const existingDirection = await db.select()
-        .from(strategicDirections)
-        .where(and(
-          eq(strategicDirections.id, directionId),
-          eq(strategicDirections.tenantId, tenantId)
-        ))
-        .then(results => results[0]);
-      
-      if (!existingDirection) {
-        return res.status(404).json({ error: "Strategic direction not found" });
-      }
-      
-      const validatedData = insertStrategicDirectionSchema.partial().parse(req.body);
-      
-      const updatedDirection = await db.update(strategicDirections)
-        .set({
-          ...validatedData,
-          updatedAt: new Date()
-        })
-        .where(eq(strategicDirections.id, directionId))
-        .returning();
-      
-      res.json(updatedDirection[0]);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.delete("/api/strategic-directions/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const directionId = req.params.id;
-      
-      // Verify the direction belongs to the current tenant
-      const existingDirection = await db.select()
-        .from(strategicDirections)
-        .where(and(
-          eq(strategicDirections.id, directionId),
-          eq(strategicDirections.tenantId, tenantId)
-        ))
-        .then(results => results[0]);
-      
-      if (!existingDirection) {
-        return res.status(404).json({ error: "Strategic direction not found" });
-      }
-      
-      await db.delete(strategicDirections)
-        .where(eq(strategicDirections.id, directionId));
-      
-      res.status(204).end();
-    } catch (error) {
-      next(error);
-    }
-  });
 
   // OKR System Configuration API Endpoints
   app.get('/api/okr-config', ensureAuthenticated, withTenant, async (req, res) => {
@@ -483,19 +378,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get tenant ID from middleware, query parameter, or request body
       const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
-      const { mission, vision, boundaries, strategicDirection, behaviors, strategic_directions } = req.body;
+      const { mission, vision, boundaries, behaviors } = req.body;
       
-      // Use strategic_directions if provided, otherwise use strategicDirection
-      const finalStrategicDirection = strategic_directions || strategicDirection;
-      
-      console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
+      console.log("POST /api/organization-mission - DETAILED DEBUG:", {
         fromMiddleware: req.tenantId,
         fromQuery: req.query.tenantId,
         fromBody: req.body.tenantId,
         resolved: tenantId,
-        strategic_directions: strategic_directions,
-        finalStrategicDirection: finalStrategicDirection,
-        requestBody: req.body
+        requestBodyKeys: Object.keys(req.body),
+        fullRequestBody: req.body
       });
       
       if (!tenantId) {
@@ -505,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the user has permission to update the tenant
       const userTenant = await db.select().from(usersToTenants)
         .where(and(
-          eq(usersToTenants.userId, req.user.id),
+          eq(usersToTenants.userId, req.user?.id),
           eq(usersToTenants.tenantId, tenantId)
         ))
         .limit(1);
@@ -528,7 +419,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mission,
             vision,
             boundaries,
-            strategicDirection: finalStrategicDirection,
             behaviors,
             updatedAt: new Date()
           })
@@ -538,16 +428,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create new record
         result = await db.insert(organizationMission)
           .values({
-            id: ulid(),
             tenantId,
             mission,
             vision,
             boundaries,
-            strategicDirection: finalStrategicDirection,
             behaviors
           })
           .returning();
       }
+
+
       
       // Make sure we have a result to return
       if (result && result.length > 0) {
@@ -564,6 +454,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating organization mission:", error);
       res.status(500).json({ error: "Failed to update organization mission" });
+    }
+  });
+
+  // Strategic Directions routes
+  app.post('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      const { strategicDirections } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Check if the user has permission to update strategic directions
+      const userTenant = await db.select().from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user?.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+
+      if (userTenant.length === 0 || !['owner', 'admin'].includes(userTenant[0].role)) {
+        return res.status(403).json({ error: "You do not have permission to update strategic directions" });
+      }
+
+      // First, delete existing strategic directions for this tenant
+      await db.delete(strategicDirectionsTable)
+        .where(eq(strategicDirectionsTable.tenantId, tenantId));
+
+      // Then insert new ones
+      if (strategicDirections && strategicDirections.length > 0) {
+        const directionsToInsert = strategicDirections
+          .filter((dir: any) => dir.title && dir.title.trim())
+          .map((direction: any) => ({
+            title: direction.title,
+            description: direction.description || '',
+            tenantId,
+            createdById: req.user?.id
+          }));
+
+        if (directionsToInsert.length > 0) {
+          await db.insert(strategicDirectionsTable)
+            .values(directionsToInsert);
+        }
+      }
+
+      res.json({ success: true, message: "Strategic directions updated successfully" });
+    } catch (error) {
+      console.error("Error updating strategic directions:", error);
+      res.status(500).json({ error: "Failed to update strategic directions" });
+    }
+  });
+
+  app.get('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      if (!userId) {
+        return res.status(400).json({ error: "User not authenticated" });
+      }
+
+      // Get user's team information
+      const user = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user.length) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userTeamId = user[0].teamId;
+
+      // Fetch strategic directions based on visibility rules:
+      // 1. Company-wide directions (teamId is null) - visible to everyone
+      // 2. Team-specific directions - only visible to team members
+      const directions = await db.select().from(strategicDirectionsTable)
+        .where(
+          and(
+            eq(strategicDirectionsTable.tenantId, tenantId),
+            or(
+              isNull(strategicDirectionsTable.teamId), // Company-wide directions
+              userTeamId ? eq(strategicDirectionsTable.teamId, userTeamId) : sql`false` // Team-specific directions for user's team
+            )
+          )
+        )
+        .orderBy(strategicDirectionsTable.createdAt);
+
+      res.json(directions);
+    } catch (error) {
+      console.error("Error getting strategic directions:", error);
+      res.status(500).json({ error: "Failed to get strategic directions" });
+    }
+  });
+
+  // Create a new strategic direction
+  app.post('/api/strategic-directions/create', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      console.log("=== STRATEGIC DIRECTION CREATION ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("User ID:", req.user?.id);
+      console.log("Tenant ID:", req.tenantId);
+      
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      if (!tenantId) {
+        console.log("ERROR: Missing tenantId parameter");
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      if (!userId) {
+        console.log("ERROR: User not authenticated");
+        return res.status(400).json({ error: "User not authenticated" });
+      }
+
+      // Check user permissions
+      const userRole = await db.select()
+        .from(userTenants)
+        .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)))
+        .limit(1);
+
+      if (!userRole.length) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const role = userRole[0].role;
+      if (!['admin', 'owner', 'manager'].includes(role)) {
+        return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
+      }
+
+      const { title, description, teamId } = req.body;
+      console.log("Extracted data - Title:", title, "Description:", description, "TeamId:", teamId);
+
+      if (!title || !title.trim()) {
+        console.log("ERROR: Title is required");
+        return res.status(400).json({ error: "Title is required" });
+      }
+
+      // If teamId is provided, verify user has access to that team
+      if (teamId) {
+        const userTeam = await db.select()
+          .from(users)
+          .where(and(eq(users.id, userId), eq(users.teamId, teamId)))
+          .limit(1);
+
+        if (!userTeam.length && role !== 'admin' && role !== 'owner') {
+          return res.status(403).json({ error: "Access denied to this team" });
+        }
+      }
+
+      const newDirection = {
+        id: ulid(),
+        title: title.trim(),
+        description: description?.trim() || '',
+        tenantId,
+        teamId: teamId || null, // null for company-wide directions
+        createdById: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log("Creating strategic direction with data:", newDirection);
+
+      const result = await db.insert(strategicDirectionsTable)
+        .values(newDirection)
+        .returning();
+
+      console.log("Strategic direction created successfully:", result[0]);
+      console.log("=== END STRATEGIC DIRECTION CREATION ===");
+
+      res.status(201).json(result[0]);
+    } catch (error) {
+      console.error("Error creating strategic direction:", error);
+      res.status(500).json({ error: "Failed to create strategic direction" });
     }
   });
   
@@ -2749,34 +2819,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Strategic Directions API
-  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const type = req.query.type || 'company'; // Default to company level
-      const teamId = req.query.teamId;
-      
-      console.log(`Getting strategic directions for tenant: ${tenantId}, type: ${type}`);
-      
-      // Build the query based on parameters
-      let query = `SELECT * FROM strategic_directions WHERE tenant_id = ? AND type = ?`;
-      let params = [tenantId, type];
-      
-      if (teamId && type === 'team') {
-        query += ` AND team_id = ?`;
-        params.push(teamId);
-      }
-      
-      query += ` ORDER BY priority ASC, created_at ASC`;
-      
-      const result = await db.execute(query, params);
-      const directions = result.rows || [];
-      
-      res.json(directions);
-    } catch (error) {
-      console.error('Error fetching strategic directions:', error);
-      next(error);
-    }
-  });
 
   // Timeframes API
   app.get("/api/timeframes", async (req, res, next) => {
@@ -5305,11 +5347,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback and Recognition System Routes
   
   // Feedback routes
-  app.post("/api/feedback", withTenant, async (req, res, next) => {
+  app.post("/api/feedback", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
       
       const tenantId = req.tenantId;
       
@@ -5361,10 +5400,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tenantId: tenantId // Add tenant ID to the feedback
       };
       
-      // Import the feedback service
-      const { createFeedback } = await import("./services/feedback-service");
+      console.log('Creating feedback with data:', feedbackData);
       
-      const newFeedback = await createFeedback(feedbackData);
+      // Create feedback directly using database
+      const [newFeedback] = await db
+        .insert(feedback)
+        .values({
+          ...feedbackData,
+          isRead: false, // Use isRead instead of read to match schema
+        })
+        .returning();
+
+      console.log('Feedback created successfully:', newFeedback);
       res.status(201).json(newFeedback);
     } catch (error) {
       console.error("Error creating feedback:", error);
@@ -5905,6 +5952,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as User).id;
       const tenantId = req.tenantId;
       
+      console.log('Mood entry submission - userId:', userId, 'tenantId:', tenantId);
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
       // Verify user belongs to this tenant
       const isUserInTenant = await db.select()
         .from(usersToTenants)
@@ -5924,8 +5977,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertMoodEntrySchema.parse({
         ...req.body,
-        userId: userId
-        // Note: tenantId was removed as it doesn't exist in the actual database table
+        userId: userId,
+        tenantId: tenantId // Include tenant ID as required by schema
       });
       
       const moodEntry = await db.insert(moodEntries).values(validatedData).returning();
@@ -7028,6 +7081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add required fields for the database schema
       const dataToValidate = {
         ...req.body,
+        id: `01${ulid().slice(2)}`, // Generate ULID for the project
         created_by_id: req.user.id, // Use the current user ID as creator
         // Set both formats of tenant ID to ensure one is used
         tenant_id: req.tenantId,

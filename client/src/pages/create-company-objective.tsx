@@ -101,6 +101,15 @@ interface Timeframe {
   tenantId: string;
 }
 
+interface StrategicDirection {
+  id: string;
+  title: string;
+  description: string;
+  tenantId: string;
+  createdById: string;
+  createdAt: string;
+}
+
 
 
 // Form schema for creating objectives
@@ -269,14 +278,22 @@ export default function CreateCompanyObjective() {
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
+
+  // Fetch strategic directions from API for alignment
+  const { data: strategicDirections = [], isError: strategicDirectionsError, error: strategicDirectionsErrorData } = useQuery<StrategicDirection[]>({
+    queryKey: ['/api/strategic-directions'],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
+  });
   
   // Check for any data loading errors
-  const hasAuthError = teamsError || usersError || timeframesError || objectivesError;
+  const hasAuthError = teamsError || usersError || timeframesError || objectivesError || strategicDirectionsError;
   const isAuthError = 
     (teamsErrorData instanceof Error && teamsErrorData.message.includes("Unauthorized")) ||
     (usersErrorData instanceof Error && usersErrorData.message.includes("Unauthorized")) ||
     (timeframesErrorData instanceof Error && timeframesErrorData.message.includes("Unauthorized")) ||
-    (objectivesErrorData instanceof Error && objectivesErrorData.message.includes("Unauthorized"));
+    (objectivesErrorData instanceof Error && objectivesErrorData.message.includes("Unauthorized")) ||
+    (strategicDirectionsErrorData instanceof Error && strategicDirectionsErrorData.message.includes("Unauthorized"));
   
   // Filter team members based on the selected team
   const teamMembers = users?.filter((user: User) => 
@@ -752,11 +769,30 @@ export default function CreateCompanyObjective() {
                                   ${alignmentOption === "strategic-pillar" ? "border-primary" : "border-border"}
                                 `}>
                                   <RadioGroupItem value="strategic-pillar" id="strategic-pillar" className="mt-1" />
-                                  <div>
+                                  <div className="flex-1">
                                     <Label htmlFor="strategic-pillar" className="font-medium">Support a Strategic Pillar</Label>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground mb-2">
                                       This objective supports a top-level company strategy
                                     </p>
+                                    <Select
+                                      disabled={alignmentOption !== "strategic-pillar"}
+                                      onValueChange={(value) => form.setValue('parentId', value)}
+                                    >
+                                      <SelectTrigger className={alignmentOption !== "strategic-pillar" ? "opacity-50" : ""}>
+                                        <SelectValue placeholder="Select strategic direction" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {strategicDirections && strategicDirections.length > 0 ? (
+                                          strategicDirections.map((direction: StrategicDirection) => (
+                                            <SelectItem key={direction.id} value={direction.id}>
+                                              {direction.title}
+                                            </SelectItem>
+                                          ))
+                                        ) : (
+                                          <SelectItem value="no-directions" disabled>No strategic directions available</SelectItem>
+                                        )}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                 </div>
                                 <div className={`

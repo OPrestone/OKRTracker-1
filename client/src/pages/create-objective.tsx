@@ -45,6 +45,15 @@ interface Team {
   memberCount: number | null;
 }
 
+interface StrategicDirection {
+  id: string;
+  title: string;
+  description: string;
+  tenantId: string;
+  createdById: string;
+  createdAt: string;
+}
+
 export default function CreateObjective() {
   const [_, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +88,12 @@ export default function CreateObjective() {
   // Fetch objectives for alignment options
   const { data: objectives = [] } = useQuery({
     queryKey: ['/api/objectives'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  // Fetch strategic directions
+  const { data: strategicDirections = [], isLoading: strategicDirectionsLoading } = useQuery<StrategicDirection[]>({
+    queryKey: ['/api/strategic-directions'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -406,12 +421,15 @@ export default function CreateObjective() {
                     </SelectTrigger>
                     <SelectContent>
                       {objectiveData.alignmentType === 'strategic-pillar' && (
-                        <>
-                          <SelectItem value="growth">Growth</SelectItem>
-                          <SelectItem value="customer-satisfaction">Customer Satisfaction</SelectItem>
-                          <SelectItem value="innovation">Innovation</SelectItem>
-                          <SelectItem value="operational-excellence">Operational Excellence</SelectItem>
-                        </>
+                        strategicDirections && strategicDirections.length > 0 ? (
+                          strategicDirections.map((direction: StrategicDirection) => (
+                            <SelectItem key={direction.id} value={direction.id}>
+                              {direction.title}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-directions" disabled>No strategic directions available</SelectItem>
+                        )
                       )}
                       {objectiveData.alignmentType === 'team-objective' && (
                         objectives && objectives.length > 0 ? (

@@ -15,6 +15,7 @@ import { z } from "zod";
 import CompanyAlignmentMap from "@/components/strategy/company-alignment-map";
 import TeamsOKRView from "@/components/strategy/teams-okr-view";
 import KeyResultSummary from "@/components/strategy/key-results-summary";
+import TableView from "@/components/strategy/table-view";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { apiRequest } from "@/lib/queryClient";
@@ -68,6 +69,12 @@ const StrategyMap = () => {
   // Key results for progress calculations
   const { data: keyResults = [] } = useQuery({
     queryKey: ['/api/key-results'],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+
+  // Strategic directions
+  const { data: strategicDirections = [] } = useQuery({
+    queryKey: ['/api/strategic-directions'],
     enabled: !!organizationId,
   }) as { data: any[] };
 
@@ -254,20 +261,20 @@ const StrategyMap = () => {
               )}
             </div>
             
-            {/* Strategic Pillars */}
-            <div className="grid grid-cols-4 gap-8 mb-8 w-full max-w-5xl">
-              <div className="bg-primary-50 p-4 rounded-lg text-center border border-primary-200">
-                <h4 className="font-medium text-primary-900">Financial</h4>
-              </div>
-              <div className="bg-primary-50 p-4 rounded-lg text-center border border-primary-200">
-                <h4 className="font-medium text-primary-900">Customer</h4>
-              </div>
-              <div className="bg-primary-50 p-4 rounded-lg text-center border border-primary-200">
-                <h4 className="font-medium text-primary-900">Internal Process</h4>
-              </div>
-              <div className="bg-primary-50 p-4 rounded-lg text-center border border-primary-200">
-                <h4 className="font-medium text-primary-900">Learning & Growth</h4>
-              </div>
+            {/* Strategic Directions */}
+            <div className={`grid gap-8 mb-8 w-full max-w-5xl ${strategicDirections.length <= 2 ? 'grid-cols-2' : strategicDirections.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+              {strategicDirections.length > 0 ? strategicDirections.map((direction: any) => (
+                <div key={direction.id} className="bg-primary-50 p-4 rounded-lg text-center border border-primary-200">
+                  <h4 className="font-medium text-primary-900">{direction.title}</h4>
+                  {direction.description && (
+                    <p className="text-xs text-primary-700 mt-1">{direction.description}</p>
+                  )}
+                </div>
+              )) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-neutral-500">No strategic directions found. Set up strategic directions to see them in the strategy map.</p>
+                </div>
+              )}
             </div>
             
             {/* Company Objectives */}
@@ -484,16 +491,7 @@ export default function StrategyMapPage() {
         </TabsContent>
         
         <TabsContent value="table" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Strategy Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-600 mb-4">
-                Tabular view of strategic objectives and their interconnections would be shown here.
-              </p>
-            </CardContent>
-          </Card>
+          <TableView />
         </TabsContent>
       </Tabs>
 

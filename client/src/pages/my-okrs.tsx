@@ -11,6 +11,7 @@ import { useUserPermissions } from "@/hooks/use-user-permissions";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { CreateFirstObjectiveCard, SmartCreateObjectiveButton } from "@/components/onboarding/smart-create-objective-button";
 
 // Types to match database schema
 interface KeyResult {
@@ -203,15 +204,7 @@ export default function MyOKRs() {
             </p>
           </div>
           
-          {canCreateObjectives() && (
-            <Button 
-              onClick={() => navigate("/create-objective")}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create OKR
-            </Button>
-          )}
+          <SmartCreateObjectiveButton className="flex items-center gap-2" />
         </div>
         
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
@@ -305,22 +298,7 @@ export default function MyOKRs() {
                 </Card>
               ))
             ) : (
-              <Card className="shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Target className="h-12 w-12 text-neutral-300 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No active OKRs</h3>
-                  <p className="text-neutral-500 mb-6">You don't have any active OKRs at the moment.</p>
-                  {canCreateObjectives() && (
-                    <Button
-                      onClick={() => navigate("/create-objective")}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create OKR
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+              <CreateFirstObjectiveCard />
             )}
           </TabsContent>
           

@@ -32,16 +32,19 @@ import {
   Loader2
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
+import { StrategicDirectionsDisplay } from "@/components/mission/strategic-directions-display";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Mission() {
   const [location] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   // Get tenant ID from multiple sources to ensure it's available
   let extractedTenantId = '';
@@ -106,9 +109,7 @@ export default function Mission() {
   const [strategicDirectionDraft, setStrategicDirectionDraft] = useState("");
 
   // Level mission statements
-  const [oneLevelMission, setOneLevelMission] = useState(
-    "To become the biggest reach, most influential and trusted company in the communication business in order to deliver sustainable profits for shareholders and staff - by providing indispensable information and entertainment that enhances the lives of 15-30-year-old Kenyans."
-  );
+  const [oneLevelMission, setOneLevelMission] = useState("");
   const [twoLevelMission, setTwoLevelMission] = useState("");
   
   // Override toggles
@@ -120,10 +121,10 @@ export default function Mission() {
   const [visionDraft, setVisionDraft] = useState("");
   
   // Purpose state (read from company)
-  const [purpose, setPurpose] = useState("Enter Purpose");
+  const [purpose, setPurpose] = useState("");
   
   // Values state (read from company)
-  const [values, setValues] = useState("Enter Values");
+  const [values, setValues] = useState("");
 
   // Behaviors state
   const [behaviors, setBehaviors] = useState<string[]>([]);
@@ -197,6 +198,65 @@ export default function Mission() {
     enabled: !!tenantId, // Only run query when tenantId is available
     retry: 3 // Retry failed queries up to 3 times
   });
+
+  // Query to fetch strategic directions data
+  const { data: strategicDirectionsData, isLoading: isDirectionsLoading, error: directionsError } = useQuery({
+    queryKey: ['/api/strategic-directions', tenantId],
+    queryFn: async () => {
+      console.log("Fetching strategic directions with tenant ID:", tenantId);
+      
+      if (!tenantId) {
+        throw new Error("No tenant ID available");
+      }
+      
+      const response = await fetch('/api/strategic-directions', { 
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error fetching strategic directions:', errorText);
+        throw new Error('Failed to fetch strategic directions: ' + errorText);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId,
+    retry: 3
+  });
+
+  // Query to get user role for permission-based access
+  const { data: userRole, isLoading: isRoleLoading } = useQuery({
+    queryKey: ['/api/user/role', tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      
+      const response = await fetch(`/api/user/role?tenantId=${tenantId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user role: ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId
+  });
+
+  // Permission checks based on user role
+  const canEditMission = userRole?.role === 'owner' || userRole?.role === 'admin' || userRole?.role === 'executive';
+  const canEditBehaviors = userRole?.role === 'owner' || userRole?.role === 'admin' || userRole?.role === 'manager' || userRole?.role === 'executive';
+  const canViewOnly = userRole?.role === 'user';
 
   // Mutation to save organization mission data
   const saveMissionMutation = useMutation({
@@ -334,15 +394,24 @@ export default function Mission() {
   const saveFullPageEdit = async () => {
     setIsLoading(true);
     
+    console.log("Starting save process...");
+    console.log("Mission draft:", missionDraft);
+    console.log("Tenant ID:", tenantId);
+    
     try {
-      await saveMissionMutation.mutateAsync({
+      const saveData = {
         mission: missionDraft,
         vision: visionDraft, 
         strategicDirection: strategicDirectionDraft,
         behaviors: JSON.stringify(behaviorsDraft),
         boundaries: JSON.stringify(boundariesDraft)
-      });
+      };
       
+      console.log("Saving data:", saveData);
+      
+      await saveMissionMutation.mutateAsync(saveData);
+      
+      // Update local state after successful save
       setMissionStatement(missionDraft);
       setVision(visionDraft);
       setStrategicDirection(strategicDirectionDraft);
@@ -355,15 +424,23 @@ export default function Mission() {
       
       toast({
         title: "Success",
-        description: "Organization mission data saved successfully",
+        description: "Mission data saved successfully",
       });
+      
+      console.log("Save completed successfully");
     } catch (error) {
+      console.error("Save failed with error:", error);
+      
+      let errorMessage = "Failed to save mission data";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to save organization mission data",
+        title: "Save Failed",
+        description: errorMessage,
         variant: "destructive"
       });
-      console.error("Error saving mission data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -826,7 +903,14 @@ export default function Mission() {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
+            {canViewOnly && (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                View Only
+              </span>
+            )}
+          </div>
           <div className="flex space-x-3">
             <Button variant="outline" className="flex items-center gap-2">
               <FileDown className="h-4 w-4" />
@@ -836,23 +920,25 @@ export default function Mission() {
               <Presentation className="h-4 w-4" />
               <span>Present</span>
             </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => {
-                setMissionDraft(missionStatement);
-                setBoundariesDraft({
-                  freedoms: [...boundaries.freedoms],
-                  constraints: [...boundaries.constraints]
-                });
-                setBehaviorsDraft([...behaviors]);
-                setFullPageEditMode(true);
-                setActiveEditTab('strategic');
-              }}
-            >
-              <PenBox className="h-4 w-4" />
-              <span>Edit</span>
-            </Button>
+            {canEditMission && (
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => {
+                  setMissionDraft(missionStatement);
+                  setBoundariesDraft({
+                    freedoms: [...boundaries.freedoms],
+                    constraints: [...boundaries.constraints]
+                  });
+                  setBehaviorsDraft([...behaviors]);
+                  setFullPageEditMode(true);
+                  setActiveEditTab('strategic');
+                }}
+              >
+                <PenBox className="h-4 w-4" />
+                <span>Edit</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -865,62 +951,90 @@ export default function Mission() {
                 <CardDescription>Team mission statement, who are we and what do we do?</CardDescription>
               </div>
               {!editMode.mission ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, mission: true});
-                    setMissionDraft(missionStatement);
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditMission && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, mission: true});
+                      setMissionDraft(missionStatement);
+                    }}
+                    className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={saveMission}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setMissionDraft(missionStatement);
+                      setEditMode({...editMode, mission: false});
+                    }}
+                    disabled={isLoading}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={saveMission}
+                    disabled={isLoading || !missionDraft.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent>
               {!editMode.mission ? (
-                <p className="text-gray-700">{missionStatement}</p>
+                <div className="space-y-2">
+                  <p className="text-gray-700 leading-relaxed">
+                    {missionStatement || "No mission statement defined yet. Click Edit to add one."}
+                  </p>
+                  {!missionStatement && (
+                    <p className="text-sm text-gray-500 italic">
+                      A clear mission statement helps align your team's objectives and goals.
+                    </p>
+                  )}
+                </div>
               ) : (
-                <Textarea 
-                  value={missionDraft} 
-                  onChange={(e) => setMissionDraft(e.target.value)}
-                  className="min-h-[120px]"
-                  placeholder="Enter your team mission statement here"
-                />
+                <div className="space-y-3">
+                  <Textarea 
+                    value={missionDraft} 
+                    onChange={(e) => setMissionDraft(e.target.value)}
+                    className="min-h-[120px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your team mission statement here..."
+                  />
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>{missionDraft.length} characters</span>
+                    <span className="text-xs">
+                      Tip: A good mission statement is clear, concise, and inspiring
+                    </span>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Strategic Direction */}
-          <Card className="border-t-4 border-t-green-600">
-            <CardHeader>
-              <CardTitle>Strategic Direction</CardTitle>
-              <CardDescription>From CEO Mission</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="whitespace-pre-line text-gray-700">{strategicDirection}</div>
-            </CardContent>
-          </Card>
+          {/* Strategic Directions - Real Database Data */}
+          <StrategicDirectionsDisplay className="border-t-4 border-t-green-600" />
 
           {/* Vision, Purpose, and Values */}
           <Card className="border-t-4 border-t-purple-600">
@@ -960,20 +1074,22 @@ export default function Mission() {
                 <CardDescription>Freedoms and constraints that impact our work</CardDescription>
               </div>
               {!editMode.boundaries ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, boundaries: true});
-                    setBoundariesDraft({
-                      freedoms: [...boundaries.freedoms],
-                      constraints: [...boundaries.constraints]
-                    });
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditBehaviors && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, boundaries: true});
+                      setBoundariesDraft({
+                        freedoms: [...boundaries.freedoms],
+                        constraints: [...boundaries.constraints]
+                      });
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <Button 
                   variant="ghost" 
@@ -1117,17 +1233,19 @@ export default function Mission() {
                 <CardDescription>Behaviors we commit to displaying</CardDescription>
               </div>
               {!editMode.behaviors ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, behaviors: true});
-                    setBehaviorsDraft([...behaviors]);
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditBehaviors && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, behaviors: true});
+                      setBehaviorsDraft([...behaviors]);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <Button 
                   variant="ghost" 
