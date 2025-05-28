@@ -1946,16 +1946,18 @@ mike.davis@example.com,Mike,Davis,Executive,CEO,owner,`;
                 <label htmlFor="updateRole" className="text-sm font-medium">Role</label>
                 <Select
                   name="tenantRole"
-                  value={updateUserData.tenantRole || "member"}
+                  value={updateUserData.tenantRole || "user"}
                   onValueChange={(value) => {
-                    setUpdateUserData(prev => ({ ...prev, tenantRole: value as "owner" | "admin" | "member" }));
+                    setUpdateUserData(prev => ({ ...prev, tenantRole: value as "owner" | "admin" | "executive" | "manager" | "user" }));
                   }}
                 >
                   <SelectTrigger id="updateRole">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="owner">Owner</SelectItem>
                   </SelectContent>

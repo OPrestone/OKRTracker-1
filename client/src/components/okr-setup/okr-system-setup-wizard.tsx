@@ -2317,8 +2317,7 @@ export default function OKRSystemSetupWizard() {
           OKR System Setup
         </h1>
         <p className="text-center text-gray-600 max-w-2xl mx-auto">
-          Follow this guided workflow to set up your complete OKR system. You'll
-          configure timeframes, objective settings, and team structure.
+          Follow this step-by-step workflow to fully set up your OKR system, including general Settings, timeframes, objectives, and team alignment.
         </p>
         {isLoading && (
           <div className="flex justify-center mt-4">
@@ -3447,9 +3446,7 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                           Ready to Launch Your OKR System!
                         </h3>
                         <p className="text-gray-600 mb-3">
-                          You've completed setting up your OKR system. Click the
-                          button below to save your configuration and start
-                          tracking your organizational goals.
+                          Your OKR system setup is complete. Click the button below to save your configuration and begin tracking your organizational goals.
                         </p>
                         <p className="text-sm text-gray-500">
                           You can always adjust these settings later from your
