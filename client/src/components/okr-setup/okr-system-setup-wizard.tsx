@@ -349,6 +349,52 @@ export default function OKRSystemSetupWizard() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
 
+  // Auto-save timeout ref for Strategic Directions
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced auto-save function for Strategic Directions
+  const handleStrategicDirectionsAutoSave = async (value: string) => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout to save after 2 seconds of no typing
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        if (!tenantId) return;
+
+        console.log('Auto-saving strategic directions:', value);
+
+        // Use fetch with proper credentials for auto-save
+        const response = await fetch('/api/organization-mission', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            strategic_directions: value,
+            tenantId: tenantId
+          }),
+        });
+
+        console.log('Strategic directions auto-saved successfully:', response);
+      } catch (error) {
+        console.error('Error auto-saving strategic directions:', error);
+      }
+    }, 2000);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Fetch existing teams to preselect corresponding default templates
   const { data: existingTeams = [] } = useQuery({
     queryKey: ['/api/teams', tenantId],
@@ -1622,10 +1668,11 @@ export default function OKRSystemSetupWizard() {
         mission: generalSettings.companyMission,
         vision: generalSettings.companyVision,
         behaviors: generalSettings.companyValues,
+        strategic_directions: generalSettings.strategicDirections, // Include strategic directions from form
         tenantId: tenantId
       };
       
-      console.log("Saving mission data:", missionData);
+      console.log("Saving mission data (including strategic directions):", missionData);
       
       // First, check if cadences exist for this tenant
       console.log("Checking if cadences exist for tenant:", tenantId);
@@ -2049,7 +2096,10 @@ export default function OKRSystemSetupWizard() {
                             className="resize-none h-20"
                             defaultValue={form.getValues("generalSettings.strategicDirections")}
                             onChange={(e) => {
-                              form.setValue("generalSettings.strategicDirections", e.target.value);
+                              const value = e.target.value;
+                              form.setValue("generalSettings.strategicDirections", value);
+                              // Auto-save with debounce
+                              handleStrategicDirectionsAutoSave(value);
                             }}
                           />
                           {form.formState.errors.generalSettings?.strategicDirections && (

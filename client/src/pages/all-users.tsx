@@ -60,6 +60,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 import { Progress } from "@/components/ui/progress";
 
 export default function AllUsers() {
@@ -111,6 +112,7 @@ export default function AllUsers() {
   });
   const { toast } = useToast();
   const { tenantId } = useTenantContext();
+  const permissions = useUserPermissions();
   
   // Fetch users with optimized caching
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<UserSchema[]>({
@@ -1189,14 +1191,18 @@ mike.davis@example.com,Mike,Davis,Executive,CEO,owner,`;
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsBulkUploadDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Bulk Upload
-            </Button>
-            <Button onClick={openAddUserDialog} size="sm">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
+            {permissions.canManageUsers() && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setIsBulkUploadDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Bulk Upload
+                </Button>
+                <Button onClick={openAddUserDialog} size="sm">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add User
+                </Button>
+              </>
+            )}
           </div>
         </div>
         

@@ -344,6 +344,87 @@ export function setupConfigRoutes(router: Router) {
       return res.status(500).json({ error: 'Failed to fetch OKR system configuration' });
     }
   });
+
+  // Update Strategic Directions only
+  router.post('/api/strategic-directions', async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenant_id;
+      const { strategic_directions } = req.body;
+
+      console.log("POST /api/strategic-directions - Tenant ID:", tenantId);
+      console.log("Strategic Directions:", strategic_directions);
+
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Missing tenantId parameter' });
+      }
+
+      // Check if config already exists for this tenant
+      const existingConfig = await db.select()
+        .from(okrSystemConfigs)
+        .where(eq(okrSystemConfigs.tenant_id, tenantId))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      let result;
+
+      if (existingConfig) {
+        // Update existing configuration with just strategic directions
+        result = await db
+          .update(okrSystemConfigs)
+          .set({ 
+            strategic_directions: strategic_directions,
+            updated_at: new Date()
+          })
+          .where(eq(okrSystemConfigs.id, existingConfig.id))
+          .returning();
+        
+        console.log('Updated strategic directions in existing config:', result);
+      } else {
+        // Create new minimal configuration with strategic directions
+        const configData = {
+          id: ulid(),
+          tenant_id: tenantId,
+          strategic_directions: strategic_directions,
+          tracking_frequency: 'weekly',
+          primary_cadence: 'quarterly',
+          start_month: 'january',
+          max_objectives_per_team: 5,
+          max_key_results_per_objective: 3,
+          require_objective_approval: true,
+          enable_objective_alignment: true,
+          org_structure_type: 'functional',
+          enable_cross_team_objectives: true,
+          default_visibility: 'public',
+          enable_notifications: true,
+          enable_quarterly_cadence: true,
+          enable_annual_cadence: true,
+          enable_calendar_sync: false,
+          enable_analytics_reporting: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+
+        result = await db
+          .insert(okrSystemConfigs)
+          .values(configData)
+          .returning();
+        
+        console.log('Created new config with strategic directions:', result);
+      }
+
+      return res.json({ 
+        success: true, 
+        strategic_directions: strategic_directions,
+        config: result[0] 
+      });
+    } catch (error) {
+      console.error('Error updating strategic directions:', error);
+      return res.status(500).json({ 
+        error: 'Failed to update strategic directions',
+        details: error
+      });
+    }
+  });
   
   // Save OKR system configuration
   router.post('/api/okr-system-setup', async (req: Request, res: Response) => {

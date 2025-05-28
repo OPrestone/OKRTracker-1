@@ -129,21 +129,41 @@ export function useUserPermissions() {
     return 'user';
   };
 
-  // Permission checks for specific actions
-  const canCreateObjectives = (): boolean => isManagerOrAbove();
-  const canEditObjectives = (): boolean => isManagerOrAbove();
+  // Permission checks for specific actions - Updated per user requirements
+  const canCreateObjectives = (): boolean => {
+    // Only managers can create "My OKRs"
+    const role = getUserRole();
+    return role === 'manager';
+  };
+  const canEditObjectives = (): boolean => isManagerOrAbove() || isTeamLeader();
   const canDeleteObjectives = (): boolean => isAdminOrOwner();
-  const canCreateTeams = (): boolean => isAdminOrOwner();
-  const canEditTeams = (): boolean => isManagerOrAbove();
+  const canCreateTeams = (): boolean => {
+    // Manager, owner and admin can create teams
+    const role = getUserRole();
+    return ['manager', 'admin', 'owner'].includes(role) || user?.isAdmin;
+  };
+  const canEditTeams = (): boolean => {
+    // Team leaders, executives, owners and admins can add members to teams
+    const role = getUserRole();
+    return ['executive', 'admin', 'owner'].includes(role) || user?.isAdmin || isTeamLeader();
+  };
   const canDeleteTeams = (): boolean => isAdminOrOwner();
-  const canManageUsers = (): boolean => isAdminOrOwner();
+  const canManageUsers = (): boolean => {
+    // Manager, owner and admin can create users
+    const role = getUserRole();
+    return ['manager', 'admin', 'owner'].includes(role) || user?.isAdmin;
+  };
   const canViewReports = (): boolean => isManagerOrAbove();
   const canAccessConfiguration = (): boolean => isAdminOrOwner();
   const canManageIntegrations = (): boolean => isAdminOrOwner();
   const canExportData = (): boolean => isExecutiveOrAbove();
   const canViewFinancials = (): boolean => isExecutiveOrAbove();
   const canAssignTeamLeaders = (): boolean => isAdminOrOwner();
-  const canCreateCompanyObjectives = (): boolean => isExecutiveOrAbove();
+  const canCreateCompanyObjectives = (): boolean => {
+    // Only executive, owner and admin can create company OKRs
+    const role = getUserRole();
+    return ['executive', 'admin', 'owner'].includes(role) || user?.isAdmin;
+  };
   const canApproveObjectives = (): boolean => isManagerOrAbove();
   
   return {
