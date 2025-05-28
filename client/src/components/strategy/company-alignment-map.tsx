@@ -45,96 +45,68 @@ export function CompanyAlignmentMap() {
     enabled: !!organizationId,
   }) as { data: any[] };
 
-  // Create a sample map data structure based on the image
-  // In a real application, this would be constructed from API data
-  const mapNodes: MapNode[] = [
-    {
-      id: 'market-expansion',
-      title: 'Market Expansion & Growth',
-      level: 'company',
-      progress: 35,
-      teams: [{ name: 'ICT Team', bgColor: 'bg-blue-100' }],
-      children: [
-        {
-          id: 'customer-acquisition',
-          title: 'Drive new customer acquisition and revenue growth from inbound channels',
-          level: 'department',
-          progress: 37,
-          teams: [
-            { name: 'Operations', bgColor: 'bg-green-100' }, 
-            { name: 'Sales', bgColor: 'bg-orange-100' },
-            { name: 'ICT Team', bgColor: 'bg-blue-100' }
-          ],
-          users: [{ name: 'Sophie Hansen', initials: 'SH' }],
-          parent: 'market-expansion',
-          children: [
-            {
-              id: 'increase-deal-size',
-              title: 'Achieve a 10% increase in average deal size',
-              level: 'team',
-              progress: 3,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'customer-acquisition'
-            },
-            {
-              id: 'smb-inbound-leads',
-              title: 'Generate $5M in new SMB from inbound leads',
-              level: 'team',
-              progress: 1,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'customer-acquisition'
-            }
-          ]
-        },
-        {
-          id: 'outbound-engine',
-          title: 'Build a powerful Outbound engine that drives significant revenue',
-          level: 'department',
-          progress: 80,
-          teams: [
-            { name: 'Operations', bgColor: 'bg-green-100' }, 
-            { name: 'ICT Team', bgColor: 'bg-blue-100' }
-          ],
-          users: [{ name: 'Sophie Hansen', initials: 'SH' }],
-          parent: 'market-expansion',
-          children: [
-            {
-              id: 'convert-mqls',
-              title: 'Convert 12% of MQLs into Opportunities',
-              level: 'team',
-              progress: 6,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'outbound-engine'
-            },
-            {
-              id: 'prospect-volume',
-              title: 'Increase prospect volume through cold email by 35%',
-              level: 'team',
-              progress: 27,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'outbound-engine'
-            },
-            {
-              id: 'cold-email-open-rate',
-              title: 'Achieve average cold email open rate of 40% or higher',
-              level: 'team',
-              progress: 45,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'outbound-engine'
-            },
-            {
-              id: 'generate-smb',
-              title: 'Generate $2M in new SMB ARR through Outbound',
-              level: 'team',
-              progress: 90,
-              teams: [{ name: 'Sales', bgColor: 'bg-orange-100' }],
-              parent: 'outbound-engine'
-            }
-          ]
-        }
-      ]
+  // Strategic directions
+  const { data: strategicDirections = [] } = useQuery({
+    queryKey: ['/api/strategic-directions'],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+
+  // Create map data structure from real strategic directions and objectives
+  const mapNodes: MapNode[] = React.useMemo(() => {
+    if (strategicDirections.length === 0) {
+      return [];
     }
-  ];
+
+    // Map strategic directions to company-level nodes
+    return strategicDirections.map((direction: any) => {
+      // Find objectives that align with this strategic direction
+      const alignedObjectives = objectivesData.filter((obj: any) => 
+        obj.strategicDirectionId === direction.id
+      );
+
+      // Calculate average progress for this strategic direction
+      const totalProgress = alignedObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
+      const averageProgress = alignedObjectives.length > 0 ? Math.round(totalProgress / alignedObjectives.length) : 0;
+
+      return {
+        id: direction.id,
+        title: direction.title,
+        level: 'company' as const,
+        progress: averageProgress,
+        teams: [], // Will be populated from objectives
+        children: alignedObjectives.map((objective: any) => ({
+          id: objective.id,
+          title: objective.title,
+          level: 'department' as const,
+          progress: objective.progress || 0,
+          teams: objective.teamName ? [{ 
+            name: objective.teamName, 
+            bgColor: 'bg-blue-100' 
+          }] : [],
+          users: objective.ownerName ? [{ 
+            name: objective.ownerName, 
+            initials: objective.ownerName.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+          }] : [],
+          parent: direction.id,
+          children: [] // Key results could be added here if needed
+        }))
+      };
+    });
+  }, [strategicDirections, objectivesData]);
+
+  // If no strategic directions exist, show empty state
+  if (mapNodes.length === 0) {
+    return (
+      <div className="p-8 bg-slate-50 rounded-lg border">
+        <div className="text-center py-12">
+          <p className="text-neutral-500 text-lg">No strategic directions found.</p>
+          <p className="text-neutral-400 text-sm mt-2">Set up strategic directions to see the company alignment map.</p>
+        </div>
+      </div>
+    );
+  }
+
+
 
   // Function to render a node
   const renderNode = (node: MapNode) => {
