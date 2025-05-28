@@ -2990,7 +2990,7 @@ export class DatabaseStorage implements IStorage {
       // Using simpler query to avoid parameter issues
       return await db.select()
         .from(projects)
-        .where(eq(projects.tenant_id, tenantId))
+        .where(eq(projects.tenantId, tenantId))
         .then(rows => {
           // Transform the results to match the frontend schema
           return rows.map(row => ({
@@ -2999,15 +2999,17 @@ export class DatabaseStorage implements IStorage {
             description: row.description,
             status: row.status,
             priority: row.priority || 'medium',
-            dueDate: row.due_date,
-            teamId: row.team_id,
-            ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
-            tenantId: row.tenant_id,
-            createdAt: row.created_at,
+            dueDate: row.dueDate,
+            teamId: row.teamId,
+            ownerId: row.createdById, // Map createdById to ownerId for frontend 
+            tenantId: row.tenantId,
+            createdAt: row.createdAt,
             // Add default values for any missing fields that frontend might expect
             checklistTotal: 0,
             checklistCompleted: 0,
-            commentsCount: 0
+            commentsCount: 0,
+            assignees: [], // Add empty assignees array for kanban board
+            comments: 0 // Add comments count for kanban board
           }));
         });
     } catch (error) {
