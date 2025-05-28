@@ -590,24 +590,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
       }
 
-      const { title, description, teamId } = req.body;
-      console.log("Extracted data - Title:", title, "Description:", description, "TeamId:", teamId);
+      const { title, description } = req.body;
+      console.log("Extracted data - Title:", title, "Description:", description);
 
       if (!title || !title.trim()) {
         console.log("ERROR: Title is required");
         return res.status(400).json({ error: "Title is required" });
       }
 
-      // If teamId is provided, verify user has access to that team
-      if (teamId) {
-        const userTeam = await db.select()
-          .from(users)
-          .where(and(eq(users.id, userId), eq(users.teamId, teamId)))
-          .limit(1);
+      // Get user's team information
+      const user = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
 
-        if (!userTeam.length && role !== 'admin' && role !== 'owner') {
-          return res.status(403).json({ error: "Access denied to this team" });
+      if (!user.length) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userTeamId = user[0].teamId;
+      const isExecutiveLevel = ['admin', 'owner'].includes(role);
+      const isManager = role === 'manager';
+
+      // Check if there's already a company-wide strategic direction
+      const existingCompanyDirection = await db.select()
+        .from(strategicDirectionsTable)
+        .where(
+          and(
+            eq(strategicDirectionsTable.tenantId, tenantId),
+            isNull(strategicDirectionsTable.teamId)
+          )
+        )
+        .limit(1);
+
+      // Determine what type of direction this should be
+      let finalTeamId = null;
+      
+      if (isExecutiveLevel) {
+        // Executives can create company-wide directions if none exists
+        if (existingCompanyDirection.length > 0) {
+          return res.status(400).json({ error: "Only one company-wide strategic direction is allowed" });
         }
+        // Create as company-wide (teamId = null)
+        finalTeamId = null;
+      } else if (isManager && userTeamId) {
+        // Managers create team-specific directions
+        finalTeamId = userTeamId;
+      } else {
+        return res.status(403).json({ error: "Managers must be assigned to a team to create strategic directions" });
       }
 
       const newDirection = {
@@ -615,7 +645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: title.trim(),
         description: description?.trim() || '',
         tenantId,
-        teamId: teamId || null, // null for company-wide directions
+        teamId: finalTeamId,
         createdById: userId,
         createdAt: new Date(),
         updatedAt: new Date()

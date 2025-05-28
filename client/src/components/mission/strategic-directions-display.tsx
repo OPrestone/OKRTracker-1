@@ -79,10 +79,13 @@ export function StrategicDirectionsDisplay({
   // Check if there's already a company-wide strategic direction
   const hasCompanyDirection = directions?.some((direction: StrategicDirection) => !direction.teamId);
   
-  // Only allow creating team directions if there's already a company direction, or allow creating company direction if there isn't one
+  // CEO/Owner/Admin can create company-wide directions, Managers can create team directions
+  const isExecutiveLevel = userRole?.role === 'admin' || userRole?.role === 'owner';
+  const isManager = userRole?.role === 'manager';
+  
   const canCreateDirection = canAddDirections && (
-    (userTeams && userTeams.length > 0) || // Can create team direction if user has a team
-    !hasCompanyDirection // Can create company direction if none exists
+    (isExecutiveLevel && !hasCompanyDirection) || // Executives can create company direction if none exists
+    (isManager && userTeams && userTeams.length > 0) // Managers can create team directions if they have a team
   );
 
   const createMutation = useMutation({
@@ -353,15 +356,22 @@ export function StrategicDirectionsDisplay({
                     <h4 className="font-medium text-gray-900">
                       {direction.title}
                     </h4>
-                    {direction.teamId && (
-                      <Badge 
-                        variant="secondary" 
-                        className="text-xs flex items-center gap-1"
-                      >
-                        <Users className="h-3 w-3" />
-                        Team Direction
-                      </Badge>
-                    )}
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs flex items-center gap-1"
+                    >
+                      {direction.teamId ? (
+                        <>
+                          <Users className="h-3 w-3" />
+                          Team Direction
+                        </>
+                      ) : (
+                        <>
+                          <Building2 className="h-3 w-3" />
+                          From CEO
+                        </>
+                      )}
+                    </Badge>
                   </div>
                   {direction.description && (
                     <p className="text-sm text-gray-700 leading-relaxed">
