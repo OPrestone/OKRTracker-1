@@ -76,6 +76,15 @@ export function StrategicDirectionsDisplay({
   // Check if user can add strategic directions (admin or manager)
   const canAddDirections = userRole?.role === 'admin' || userRole?.role === 'owner' || userRole?.role === 'manager';
 
+  // Check if there's already a company-wide strategic direction
+  const hasCompanyDirection = directions?.some((direction: StrategicDirection) => !direction.teamId);
+  
+  // Only allow creating team directions if there's already a company direction, or allow creating company direction if there isn't one
+  const canCreateDirection = canAddDirections && (
+    (userTeams && userTeams.length > 0) || // Can create team direction if user has a team
+    !hasCompanyDirection // Can create company direction if none exists
+  );
+
   const createMutation = useMutation({
     mutationFn: async (data: { title: string; description: string }) => {
       console.log("=== FRONTEND: Creating strategic direction ===");
@@ -267,7 +276,7 @@ export function StrategicDirectionsDisplay({
             <Target className="h-5 w-5" />
             Strategic Directions
           </div>
-          {canAddDirections && (
+          {canCreateDirection && (
             <Button
               onClick={() => setShowForm(true)}
               size="sm"
@@ -344,22 +353,15 @@ export function StrategicDirectionsDisplay({
                     <h4 className="font-medium text-gray-900">
                       {direction.title}
                     </h4>
-                    <Badge 
-                      variant="secondary" 
-                      className="text-xs flex items-center gap-1"
-                    >
-                      {direction.teamId ? (
-                        <>
-                          <Users className="h-3 w-3" />
-                          Team Direction
-                        </>
-                      ) : (
-                        <>
-                          <Building2 className="h-3 w-3" />
-                          From CEO
-                        </>
-                      )}
-                    </Badge>
+                    {direction.teamId && (
+                      <Badge 
+                        variant="secondary" 
+                        className="text-xs flex items-center gap-1"
+                      >
+                        <Users className="h-3 w-3" />
+                        Team Direction
+                      </Badge>
+                    )}
                   </div>
                   {direction.description && (
                     <p className="text-sm text-gray-700 leading-relaxed">
