@@ -9,7 +9,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTenantContext } from "@/hooks/use-tenant-context";
 import { useRealTimeSync } from "@/hooks/use-real-time-sync";
-import { useRealTimeSync } from "@/hooks/use-real-time-sync";
 import ObjectivesProgressChart from "@/components/dashboard/objectives-progress-chart";
 import UpcomingCheckIns from "@/components/dashboard/upcoming-checkins";
 
