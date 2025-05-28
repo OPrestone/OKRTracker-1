@@ -492,7 +492,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fromMiddleware: req.tenantId,
         fromQuery: req.query.tenantId,
         fromBody: req.body.tenantId,
-        resolved: tenantId
+        resolved: tenantId,
+        strategic_directions: strategic_directions,
+        finalStrategicDirection: finalStrategicDirection,
+        requestBody: req.body
       });
       
       if (!tenantId) {
