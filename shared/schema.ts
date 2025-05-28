@@ -35,6 +35,18 @@ export const organizationMission = pgTableWithUlid("organization_mission", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const strategicDirections = pgTableWithUlid("strategic_directions", {
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: strategicDirectionTypeEnum("type").notNull().default("company"),
+  priority: integer("priority").notNull().default(1),
+  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
+  teamId: text("team_id").references(() => teams.id),
+  createdById: text("created_by_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const cycles = pgTableWithUlid("cycles", {
   name: text("name").notNull(),
   description: text("description"),
