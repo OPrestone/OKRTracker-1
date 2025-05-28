@@ -259,7 +259,7 @@ const KeyResultSummary: React.FC = () => {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-4 w-full max-w-[180px]">
-              {confidenceData.map((item, index) => (
+              {calculatedData.confidenceData.map((item, index) => (
                 <div key={index} className="flex items-center text-xs">
                   <div
                     className="w-3 h-3 rounded-full mr-1"
