@@ -97,6 +97,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { NotificationToastContainer } from "@/components/notifications/notification-toast";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { RealTimeSyncProvider } from "@/hooks/use-real-time-sync";
 
 // Location tracker component to monitor navigation for proper redirects
 function LocationTracker() {
