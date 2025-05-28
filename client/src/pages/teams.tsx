@@ -277,16 +277,18 @@ const Teams = () => {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Fetch all users to calculate total members
-  const { data: allUsers } = useQuery<User[]>({
+  // Fetch all users to calculate total members (requires authentication)
+  const { data: allUsers, isError: usersError } = useQuery<User[]>({
     queryKey: ["/api/users"],
-    enabled: !!teams
+    enabled: !!teams,
+    retry: false
   });
 
-  // Fetch all objectives to calculate active objectives and average progress  
-  const { data: allObjectives } = useQuery<TeamObjective[]>({
+  // Fetch all objectives to calculate active objectives and average progress (requires authentication)
+  const { data: allObjectives, isError: objectivesError } = useQuery<TeamObjective[]>({
     queryKey: ["/api/objectives"],
-    enabled: !!teams
+    enabled: !!teams,
+    retry: false
   });
 
   // Calculate stats from authentic database data
@@ -304,6 +306,9 @@ const Teams = () => {
         allObjectives.reduce((sum, obj) => sum + (obj.progress || 0), 0) / allObjectives.length
       )
     : 0;
+
+  // Check if user needs to log in for full analytics
+  const needsAuth = usersError || objectivesError;
 
   const [, setLocation] = useLocation();
   
@@ -689,6 +694,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
+                  ) : needsAuth ? (
+                    <span className="text-sm text-gray-500">Login required</span>
                   ) : (
                     totalMembers
                   )}
@@ -709,6 +716,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
+                  ) : needsAuth ? (
+                    <span className="text-sm text-gray-500">Login required</span>
                   ) : (
                     activeObjectives
                   )}
@@ -731,6 +740,8 @@ const Teams = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {teamsLoading ? (
                     <Skeleton className="h-8 w-12" />
+                  ) : needsAuth ? (
+                    <span className="text-sm text-gray-500">Login required</span>
                   ) : (
                     `${averageProgress}%`
                   )}
