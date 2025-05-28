@@ -678,16 +678,11 @@ export default function TenantOnboardingWizard() {
 
               {/* Organization Details */}
               <TabsContent value="organization" className="mt-0 space-y-6">
-                <div className="m-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Organization Details</h2>
-                  <p className="text-gray-500">Tell us about your organization</p>
-                </div>
-
                 <Card>
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-8">
-                    <CardTitle>Basic Information</CardTitle>
+                  <CardHeader className="pb-4 border-b">
+                    <CardTitle>Organization Details</CardTitle>
                     <CardDescription>
-                      Enter the basic details of your organization
+                      Tell us about your organization
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6">
