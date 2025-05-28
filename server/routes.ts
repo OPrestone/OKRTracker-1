@@ -11,7 +11,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
          projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema,
-         strategicDirections, insertStrategicDirectionSchema } from "@shared/schema";
+ } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
 import { or, sql, and, eq, inArray } from "drizzle-orm";
@@ -314,38 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // The rest of the routes will use the existing middleware
   
   // Strategic Directions API
-  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const { type, teamId } = req.query;
-      
-      let query = db.select().from(strategicDirections).where(eq(strategicDirections.tenantId, tenantId));
-      
-      if (type) {
-        query = query.where(eq(strategicDirections.type, type as string));
-      }
-      
-      if (teamId) {
-        query = query.where(eq(strategicDirections.teamId, teamId as string));
-      }
-      
-      const directions = await query;
-      res.json(directions);
-    } catch (error) {
-      next(error);
-    }
-  });
 
-  app.post("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const userId = req.user.id;
-      
-      const validatedData = insertStrategicDirectionSchema.parse({
-        ...req.body,
-        tenantId,
-        createdById: userId
-      });
       
       const newDirection = await db.insert(strategicDirections).values({
         id: ulid(),
@@ -2753,34 +2722,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Strategic Directions API
-  app.get("/api/strategic-directions", ensureAuthenticated, withTenant, async (req, res, next) => {
-    try {
-      const tenantId = req.tenantId;
-      const type = req.query.type || 'company'; // Default to company level
-      const teamId = req.query.teamId;
-      
-      console.log(`Getting strategic directions for tenant: ${tenantId}, type: ${type}`);
-      
-      // Build the query based on parameters
-      let query = `SELECT * FROM strategic_directions WHERE tenant_id = ? AND type = ?`;
-      let params = [tenantId, type];
-      
-      if (teamId && type === 'team') {
-        query += ` AND team_id = ?`;
-        params.push(teamId);
-      }
-      
-      query += ` ORDER BY priority ASC, created_at ASC`;
-      
-      const result = await db.execute(query, params);
-      const directions = result.rows || [];
-      
-      res.json(directions);
-    } catch (error) {
-      console.error('Error fetching strategic directions:', error);
-      next(error);
-    }
-  });
 
   // Timeframes API
   app.get("/api/timeframes", async (req, res, next) => {

@@ -72,16 +72,7 @@ interface Team {
 }
 
 // Strategic Direction interface
-interface StrategicDirection {
-  id?: string;
-  title: string;
-  description: string;
-  type: "company" | "team";
-  priority: number;
-  tenantId?: string;
-  teamId?: string | null;
-  createdById?: string;
-}
+
 
 // User interface for CSV upload
 interface UserImport {
@@ -1631,23 +1622,7 @@ export default function OKRSystemSetupWizard() {
               }))
           : [],
 
-        // Include strategic directions for saving
-        strategic_directions: Array.isArray(
-          data.generalSettings.strategicDirections,
-        )
-          ? data.generalSettings.strategicDirections
-              .filter(
-                (direction) =>
-                  direction && direction.title && direction.title.trim() !== "",
-              )
-              .map((direction) => ({
-                title: direction.title?.trim() || "bhbhjbjhh",
-                description: direction.description?.trim() || "bjkbjkbjk",
-                priority: direction.priority || 1,
-                type: "company",
-                tenant_id: tenantId,
-              }))
-          : [],
+
       };
 
       // Log the full data being sent
@@ -1905,7 +1880,7 @@ export default function OKRSystemSetupWizard() {
         mission: generalSettings.companyMission,
         vision: generalSettings.companyVision,
         behaviors: generalSettings.companyValues,
-        strategic_directions: generalSettings.strategicDirections, // Include strategic directions from form
+
         tenantId: tenantId,
       };
 
