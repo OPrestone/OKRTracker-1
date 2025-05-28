@@ -2955,8 +2955,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Helper method to convert priority strings to numbers
-  private convertPriorityToNumber(priority: string | undefined): number {
+  private convertPriorityToNumber(priority: any): number {
     if (!priority) return 2; // Default to medium
+    
+    // If it's already a number, return it
+    if (typeof priority === 'number') return priority;
+    
+    // If it's not a string, convert to string first
+    const priorityStr = String(priority);
     
     const priorityMap: Record<string, number> = {
       low: 1,
@@ -2965,7 +2971,7 @@ export class DatabaseStorage implements IStorage {
       urgent: 4
     };
     
-    return priorityMap[priority.toLowerCase()] || 2; // Default to medium
+    return priorityMap[priorityStr.toLowerCase()] || 2; // Default to medium
   }
 
   async getProject(id: string): Promise<Project | undefined> {
