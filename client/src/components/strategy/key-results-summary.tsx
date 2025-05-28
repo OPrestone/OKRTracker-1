@@ -399,7 +399,7 @@ const KeyResultSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bottomKeyResults.map((kr) => (
+              {calculatedData.bottomKeyResults.map((kr) => (
                 <div key={kr.id} className="flex items-start">
                   <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center mt-0.5">
                     <div 
