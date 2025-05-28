@@ -332,15 +332,24 @@ export default function Mission() {
   const saveFullPageEdit = async () => {
     setIsLoading(true);
     
+    console.log("Starting save process...");
+    console.log("Mission draft:", missionDraft);
+    console.log("Tenant ID:", tenantId);
+    
     try {
-      await saveMissionMutation.mutateAsync({
+      const saveData = {
         mission: missionDraft,
         vision: visionDraft, 
         strategicDirection: strategicDirectionDraft,
         behaviors: JSON.stringify(behaviorsDraft),
         boundaries: JSON.stringify(boundariesDraft)
-      });
+      };
       
+      console.log("Saving data:", saveData);
+      
+      await saveMissionMutation.mutateAsync(saveData);
+      
+      // Update local state after successful save
       setMissionStatement(missionDraft);
       setVision(visionDraft);
       setStrategicDirection(strategicDirectionDraft);
@@ -353,15 +362,23 @@ export default function Mission() {
       
       toast({
         title: "Success",
-        description: "Organization mission data saved successfully",
+        description: "Mission data saved successfully",
       });
+      
+      console.log("Save completed successfully");
     } catch (error) {
+      console.error("Save failed with error:", error);
+      
+      let errorMessage = "Failed to save mission data";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to save organization mission data",
+        title: "Save Failed",
+        description: errorMessage,
         variant: "destructive"
       });
-      console.error("Error saving mission data:", error);
     } finally {
       setIsLoading(false);
     }
