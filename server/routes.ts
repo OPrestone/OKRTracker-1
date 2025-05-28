@@ -456,6 +456,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to update organization mission" });
     }
   });
+
+  // Strategic Directions routes
+  app.post('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      const { strategicDirections } = req.body;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      // Check if the user has permission to update strategic directions
+      const userTenant = await db.select().from(usersToTenants)
+        .where(and(
+          eq(usersToTenants.userId, req.user?.id),
+          eq(usersToTenants.tenantId, tenantId)
+        ))
+        .limit(1);
+
+      if (userTenant.length === 0 || !['owner', 'admin'].includes(userTenant[0].role)) {
+        return res.status(403).json({ error: "You do not have permission to update strategic directions" });
+      }
+
+      // First, delete existing strategic directions for this tenant
+      await db.delete(strategicDirectionsTable)
+        .where(eq(strategicDirectionsTable.tenantId, tenantId));
+
+      // Then insert new ones
+      if (strategicDirections && strategicDirections.length > 0) {
+        const directionsToInsert = strategicDirections
+          .filter((dir: any) => dir.title && dir.title.trim())
+          .map((direction: any) => ({
+            title: direction.title,
+            description: direction.description || '',
+            tenantId,
+            createdById: req.user?.id
+          }));
+
+        if (directionsToInsert.length > 0) {
+          await db.insert(strategicDirectionsTable)
+            .values(directionsToInsert);
+        }
+      }
+
+      res.json({ success: true, message: "Strategic directions updated successfully" });
+    } catch (error) {
+      console.error("Error updating strategic directions:", error);
+      res.status(500).json({ error: "Failed to update strategic directions" });
+    }
+  });
+
+  app.get('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
+    try {
+      const tenantId = req.tenantId;
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Missing tenantId parameter" });
+      }
+
+      const directions = await db.select().from(strategicDirectionsTable)
+        .where(eq(strategicDirectionsTable.tenantId, tenantId));
+
+      res.json(directions);
+    } catch (error) {
+      console.error("Error getting strategic directions:", error);
+      res.status(500).json({ error: "Failed to get strategic directions" });
+    }
+  });
   
   // Multi-tenancy API Endpoints
   

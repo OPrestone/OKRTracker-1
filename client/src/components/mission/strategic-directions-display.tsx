@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target } from "lucide-react";
 
-interface OKRConfig {
+interface StrategicDirection {
   id: string;
-  strategic_directions: string;
-  company_mission: string;
-  company_vision: string;
-  company_values: string;
-  tenant_id: string;
+  title: string;
+  description: string;
+  tenantId: string;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface StrategicDirectionsDisplayProps {
@@ -18,14 +19,14 @@ interface StrategicDirectionsDisplayProps {
 export function StrategicDirectionsDisplay({ 
   className = "" 
 }: StrategicDirectionsDisplayProps) {
-  const { data: config, isLoading, error } = useQuery({
-    queryKey: ['okr-config'],
+  const { data: directions, isLoading, error } = useQuery({
+    queryKey: ['strategic-directions'],
     queryFn: async () => {
-      const response = await fetch('/api/okr-config');
+      const response = await fetch('/api/strategic-directions');
       if (!response.ok) {
-        throw new Error('Failed to fetch OKR configuration');
+        throw new Error('Failed to fetch strategic directions');
       }
-      return response.json() as OKRConfig;
+      return response.json() as StrategicDirection[];
     },
   });
 
