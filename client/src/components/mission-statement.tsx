@@ -83,15 +83,174 @@ export function MissionStatement({ className, tenantId: propTenantId }: MissionS
     );
   }
   
+  // Parse behaviors and boundaries from JSON strings
+  const behaviors = (() => {
+    try {
+      return missionData?.behaviors ? JSON.parse(missionData.behaviors) : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const boundaries = (() => {
+    try {
+      return missionData?.boundaries ? JSON.parse(missionData.boundaries) : { freedoms: [], constraints: [] };
+    } catch {
+      return { freedoms: [], constraints: [] };
+    }
+  })();
+
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-800">Mission</h2>
-          <ChevronDown className="h-5 w-5 text-gray-500" />
-        </div>
-        
+    <div className={cn("space-y-6", className)}>
+      {/* Main Mission Statement */}
+      <Card className="border-l-4 border-l-blue-500">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="bg-blue-600 bg-opacity-10 p-3 rounded-full">
+              <Target className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Our Mission</h3>
+              {missionData?.mission ? (
+                <p className="text-gray-700 leading-relaxed">
+                  {missionData.mission}
+                </p>
+              ) : (
+                <p className="text-gray-500 italic">No mission statement defined yet. Click edit to add one.</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Strategic Direction */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center gap-2">
+              <div className="bg-primary bg-opacity-10 p-1.5 rounded-full">
+                <CheckCircle className="h-4 w-4 text-primary" />
+              </div>
+              <CardTitle className="text-base font-medium">Strategic Direction</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-3">
+            <p className="text-sm text-gray-600">
+              {missionData?.strategic_direction || "Define your organization's strategic direction."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Vision */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center gap-2">
+              <div className="bg-purple-100 p-1.5 rounded-full">
+                <Target className="h-4 w-4 text-purple-600" />
+              </div>
+              <CardTitle className="text-base font-medium">Vision</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-3">
+            <p className="text-sm text-gray-600">
+              {missionData?.vision || "Define your organization's vision."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Purpose */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-orange-400">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-100 p-1.5 rounded-full">
+                <Lightbulb className="h-4 w-4 text-orange-600" />
+              </div>
+              <CardTitle className="text-base font-medium">Purpose</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-3">
+            <p className="text-sm text-gray-600">
+              {missionData?.purpose || "To transform how people connect through technology and digital solutions."}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Boundaries */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center gap-2">
+              <div className="bg-gray-200 p-1.5 rounded-full">
+                <Circle className="h-4 w-4 text-gray-400" />
+              </div>
+              <CardTitle className="text-base font-medium">Boundaries</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-3 space-y-4">
+            <div>
+              <h4 className="font-medium text-sm text-green-600 mb-2">Freedoms</h4>
+              {boundaries.freedoms && boundaries.freedoms.length > 0 ? (
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {boundaries.freedoms.map((freedom: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Unlock className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{freedom}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Define the freedoms your team has.</p>
+              )}
+            </div>
+            
+            <div>
+              <h4 className="font-medium text-sm text-red-600 mb-2">Constraints</h4>
+              {boundaries.constraints && boundaries.constraints.length > 0 ? (
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {boundaries.constraints.map((constraint: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <AlertTriangle className="h-3 w-3 text-red-500 mt-0.5 flex-shrink-0" />
+                      <span>{constraint}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Define the constraints your team works within.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Behaviors */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-green-400">
+          <CardHeader className="pb-2 border-b">
+            <div className="flex items-center gap-2">
+              <UserCog className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-base font-medium">Behaviors</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-3">
+            {Array.isArray(behaviors) && behaviors.length > 0 ? (
+              <div className="space-y-3">
+                {behaviors.map((behavior: any, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">{behavior.title || `Behavior ${index + 1}`}</h4>
+                    <p className="text-sm text-gray-600">{behavior.description || behavior}</p>
+                  </div>
+                ))}
+              </div>
+            ) : missionData?.behaviors && typeof missionData.behaviors === 'string' ? (
+              <p className="text-sm text-gray-600">{missionData.behaviors}</p>
+            ) : (
+              <p className="text-sm text-gray-500 italic">Define the behaviors that will drive success.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between pt-4 border-t">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="flex items-center gap-1">
             <Download className="h-4 w-4" />
@@ -101,15 +260,20 @@ export function MissionStatement({ className, tenantId: propTenantId }: MissionS
             <Presentation className="h-4 w-4" />
             <span>Present</span>
           </Button>
-          {tenantId && (
-            <Button variant="outline" size="sm" className="flex items-center gap-1" asChild>
-              <Link href={`/${tenantId}/mission`}>
-                <FileEdit className="h-4 w-4" />
-                <span>Edit</span>
-              </Link>
-            </Button>
-          )}
         </div>
+        
+        {tenantId && (
+          <Link to={`/${tenantId}/mission`}>
+            <Button size="sm" className="flex items-center gap-1">
+              <FileEdit className="h-4 w-4" />
+              <span>Edit Mission</span>
+            </Button>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
       </div>
       
       {/* Mission statement */}
