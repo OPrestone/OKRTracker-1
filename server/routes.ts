@@ -524,8 +524,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User not authenticated" });
       }
 
-      // Get user's team information
-      const user = await db.select()
+      // Get user's team information from the users table (which has teamId)
+      const user = await db.select({ teamId: users.teamId })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);

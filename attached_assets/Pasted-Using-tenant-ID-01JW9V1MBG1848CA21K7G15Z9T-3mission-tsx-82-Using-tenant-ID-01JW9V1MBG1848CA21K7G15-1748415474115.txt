@@ -1,0 +1,34 @@
+Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+3mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+7mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:280 Saving mission data with tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:293 Complete request data: {"mission":"Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n","vision":"Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n","purpose":"klnkjlnlkj","values":"","strategicDirection":"","behaviors":"[]","boundaries":"{\"freedoms\":[],\"constraints\":[]}","tenantId":"01JW9V1MBG1848CA21K7G15Z9T"}
+mission.tsx:169 Fetching mission data with tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+mission.tsx:192 Response status: 200
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+5mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+7mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:280 Saving mission data with tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:293 Complete request data: {"mission":"Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n","vision":"Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n","purpose":"","values":"lhbkjnkjhnkl","strategicDirection":"","behaviors":"[]","boundaries":"{\"freedoms\":[],\"constraints\":[]}","tenantId":"01JW9V1MBG1848CA21K7G15Z9T"}
+mission.tsx:169 Fetching mission data with tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+mission.tsx:192 Response status: 200
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+2mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 
