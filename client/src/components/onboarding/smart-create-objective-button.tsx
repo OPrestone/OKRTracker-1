@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 import { useLocation } from "wouter";
 import { 
   Target, 
@@ -27,7 +27,7 @@ export function SmartCreateObjectiveButton({
   showIcon = true,
   children
 }: SmartCreateObjectiveButtonProps) {
-  const { permissions } = useAuth();
+  const permissions = useUserPermissions();
   const [_, setLocation] = useLocation();
   const [showLearningTour, setShowLearningTour] = useState(false);
 
@@ -110,7 +110,7 @@ export function SmartCreateObjectiveButton({
 
 // Convenience components for different contexts
 export function CreateFirstObjectiveCard() {
-  const { permissions } = useAuth();
+  const permissions = useUserPermissions();
   
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
