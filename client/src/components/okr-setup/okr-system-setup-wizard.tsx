@@ -427,18 +427,7 @@ export default function OKRSystemSetupWizard() {
   const { data: existingStrategicDirections = [], isLoading: isLoadingDirections } = useQuery({
     queryKey: ["/api/strategic-directions", tenantId],
     enabled: !!tenantId,
-    queryFn: async () => {
-      const response = await fetch('/api/strategic-directions', {
-        credentials: 'include',
-        headers: {
-          'X-Tenant-ID': tenantId,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch strategic directions');
-      }
-      return response.json();
-    },
+    meta: { requiresTenant: true },
   });
 
   // Effect to preselect teams that already exist in the tenant's organization
