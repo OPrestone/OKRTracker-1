@@ -483,7 +483,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get tenant ID from middleware, query parameter, or request body
       const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
-      const { mission, vision, boundaries, strategicDirection, behaviors } = req.body;
+      const { mission, vision, boundaries, strategicDirection, behaviors, strategic_directions } = req.body;
+      
+      // Use strategic_directions if provided, otherwise use strategicDirection
+      const finalStrategicDirection = strategic_directions || strategicDirection;
       
       console.log("POST /api/organization-mission - Tenant ID from multiple sources:", {
         fromMiddleware: req.tenantId,
@@ -522,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mission,
             vision,
             boundaries,
-            strategicDirection,
+            strategicDirection: finalStrategicDirection,
             behaviors,
             updatedAt: new Date()
           })
@@ -537,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mission,
             vision,
             boundaries,
-            strategicDirection,
+            strategicDirection: finalStrategicDirection,
             behaviors
           })
           .returning();

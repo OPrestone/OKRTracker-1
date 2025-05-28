@@ -364,26 +364,21 @@ export default function OKRSystemSetupWizard() {
       try {
         if (!tenantId) return;
 
-        // Update only the strategic directions using the dedicated endpoint
-        const response = await fetch('/api/strategic-directions', {
+        // Simple POST request to update strategic directions
+        const response = await fetch('/api/organization-mission', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Tenant-ID': tenantId
           },
           credentials: 'include',
           body: JSON.stringify({
             strategic_directions: value,
-            tenant_id: tenantId
+            tenantId: tenantId
           }),
         });
 
         if (response.ok) {
-          const result = await response.json();
-          // Invalidate related queries to refresh displays
-          queryClient.invalidateQueries({ queryKey: ['/api/okr-system-config'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/okr-system'] });
-          console.log('Strategic directions auto-saved successfully:', result);
+          console.log('Strategic directions auto-saved successfully');
         } else {
           console.error('Failed to auto-save strategic directions:', response.status);
         }
