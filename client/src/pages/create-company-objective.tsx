@@ -121,6 +121,7 @@ const objectiveFormSchema = z.object({
   timeframeId: z.string(), // Making timeframeId required
   status: z.enum(["draft", "active", "completed", "archived"]).default("draft"),
   parentId: z.string().optional(),
+  strategyId: z.string().optional(),
   // Tags and contributors will be handled separately
 });
 
@@ -171,6 +172,7 @@ export default function CreateCompanyObjective() {
       ownerId: undefined,
       timeframeId: '', // Using empty string as initial value until user selects a timeframe
       parentId: undefined,
+      strategyId: undefined,
     }
   });
 
@@ -776,7 +778,7 @@ export default function CreateCompanyObjective() {
                                     </p>
                                     <Select
                                       disabled={alignmentOption !== "strategic-pillar"}
-                                      onValueChange={(value) => form.setValue('parentId', value)}
+                                      onValueChange={(value) => form.setValue('strategyId', value)}
                                     >
                                       <SelectTrigger className={alignmentOption !== "strategic-pillar" ? "opacity-50" : ""}>
                                         <SelectValue placeholder="Select strategic direction" />

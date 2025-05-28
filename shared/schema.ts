@@ -156,6 +156,7 @@ export const objectives = pgTableWithUlid("objectives", {
   // statusReason is removed as it doesn't exist in the DB
   progress: integer("progress").default(0).notNull(), // 0-100 percentage
   parentId: text("parent_id").references(() => objectives.id),
+  strategyId: text("strategy_id").references(() => strategicDirections.id),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   level: text("level").notNull(), // Required field per database schema
   isApproved: boolean("is_approved").default(false).notNull(),

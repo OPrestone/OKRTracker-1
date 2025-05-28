@@ -1392,6 +1392,7 @@ export class DatabaseStorage implements IStorage {
       status: objectives.status,
       progress: objectives.progress,
       parentId: objectives.parentId,
+      strategyId: objectives.strategyId,
       tenantId: objectives.tenantId,
       level: objectives.level, // Include the level field
       createdAt: objectives.createdAt,
