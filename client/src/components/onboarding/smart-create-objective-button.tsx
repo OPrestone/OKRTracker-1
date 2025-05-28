@@ -33,7 +33,7 @@ export function SmartCreateObjectiveButton({
 
   const handleCreateObjective = () => {
     // Check if user has permission to create objectives
-    if (permissions.canCreateObjectives) {
+    if (permissions?.canCreateObjectives) {
       // Route to appropriate creation page based on role
       if (permissions.isAdmin || permissions.role === 'owner' || permissions.role === 'executive') {
         // High-level users can create company objectives
@@ -54,7 +54,7 @@ export function SmartCreateObjectiveButton({
   const getButtonText = () => {
     if (children) return children;
     
-    if (permissions.canCreateObjectives) {
+    if (permissions?.canCreateObjectives) {
       if (permissions.isAdmin || permissions.role === 'owner') {
         return "Create Company Objective";
       } else if (permissions.role === 'manager') {
@@ -70,7 +70,7 @@ export function SmartCreateObjectiveButton({
   const getButtonIcon = () => {
     if (!showIcon) return null;
     
-    if (permissions.canCreateObjectives) {
+    if (permissions?.canCreateObjectives) {
       if (permissions.isAdmin || permissions.role === 'owner') {
         return <Building className="h-4 w-4" />;
       } else if (permissions.role === 'manager') {
@@ -84,7 +84,7 @@ export function SmartCreateObjectiveButton({
   };
 
   const getTooltipText = () => {
-    if (permissions.canCreateObjectives) {
+    if (permissions?.canCreateObjectives) {
       if (permissions.isAdmin || permissions.role === 'owner') {
         return "Create strategic objectives for your organization";
       } else if (permissions.role === 'manager') {
@@ -126,7 +126,7 @@ export function CreateFirstObjectiveCard() {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
       <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        {permissions.canCreateObjectives ? (
+        {permissions?.canCreateObjectives ? (
           <Target className="h-8 w-8 text-blue-600" />
         ) : (
           <GraduationCap className="h-8 w-8 text-blue-600" />
@@ -134,11 +134,11 @@ export function CreateFirstObjectiveCard() {
       </div>
       
       <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        {permissions.canCreateObjectives ? "Ready to Set Your First Objective?" : "Ready to Learn About OKRs?"}
+        {permissions?.canCreateObjectives ? "Ready to Set Your First Objective?" : "Ready to Learn About OKRs?"}
       </h3>
       
       <p className="text-gray-600 mb-6 max-w-md mx-auto">
-        {permissions.canCreateObjectives 
+        {permissions?.canCreateObjectives 
           ? "Start driving results by creating your first strategic objective with measurable key results."
           : "Discover how Objectives and Key Results can transform your productivity and goal achievement."
         }
@@ -146,7 +146,7 @@ export function CreateFirstObjectiveCard() {
       
       <SmartCreateObjectiveButton size="lg" />
       
-      {!permissions.canCreateObjectives && (
+      {!permissions?.canCreateObjectives && (
         <div className="mt-4 text-sm text-gray-500">
           <div className="flex items-center justify-center gap-2">
             <Shield className="h-4 w-4" />

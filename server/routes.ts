@@ -5089,9 +5089,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).send("Unauthorized");
       }
       
-      const roomId = parseInt(req.params.roomId);
+      const roomId = req.params.roomId; // Keep as string for ULID
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const before = req.query.before ? parseInt(req.query.before as string) : undefined;
+      const before = req.query.before as string | undefined;
       const tenantId = req.tenantId;
       
       if (!tenantId) {
@@ -5130,7 +5130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).send("Unauthorized");
       }
       
-      const roomId = parseInt(req.params.roomId);
+      const roomId = req.params.roomId; // Keep as string for ULID
       const tenantId = req.tenantId;
       
       if (!tenantId) {

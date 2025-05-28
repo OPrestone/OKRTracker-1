@@ -149,10 +149,18 @@ function useWebSocket(url: string, onMessage: (data: any) => void) {
   }, [url, onMessage, user]);
 
   const send = useCallback((data: any) => {
-    if (socketRef.current && isConnected) {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(data));
+    } else {
+      console.warn('WebSocket not ready, message queued:', data);
+      // Queue the message to be sent when connection is ready
+      setTimeout(() => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          socketRef.current.send(JSON.stringify(data));
+        }
+      }, 1000);
     }
-  }, [isConnected]);
+  }, []);
 
   return { send, isConnected };
 }

@@ -430,7 +430,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
         </div>
 
         {/* Manage OKRs Menu - Show based on permissions */}
-        {(permissions.canCreateObjectives || permissions.canEditObjectives || permissions.canViewReports) && (
+        {(permissions?.canCreateObjectives || permissions?.canEditObjectives || permissions?.canViewReports) && (
           <button
             onClick={() => setOkrsExpanded(!okrsExpanded)}
             className={cn(
@@ -450,7 +450,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </button>
         )}
 
-        {okrsExpanded && (permissions.canCreateObjectives || permissions.canEditObjectives || permissions.canViewReports) && (
+        {okrsExpanded && (permissions?.canCreateObjectives || permissions?.canEditObjectives || permissions?.canViewReports) && (
           <div className="pl-8 mt-1 mb-1 space-y-1 py-1 ml-4 mr-4 bg-indigo-950/30 rounded-lg">
             {/* Company OKRs - Only for executives and above */}
             {permissions.canCreateCompanyObjectives && (
@@ -483,7 +483,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
             </div>
 
             {/* Draft OKRs - Only for users who can create/edit objectives */}
-            {(permissions.canCreateObjectives || permissions.canEditObjectives) && (
+            {(permissions?.canCreateObjectives || permissions?.canEditObjectives) && (
               <div
                 className={cn(
                   "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
