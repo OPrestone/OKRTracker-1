@@ -423,6 +423,24 @@ export default function OKRSystemSetupWizard() {
     meta: { requiresTenant: true },
   });
 
+  // Fetch existing strategic directions from database
+  const { data: existingStrategicDirections = [], isLoading: isLoadingDirections } = useQuery({
+    queryKey: ["/api/strategic-directions", tenantId],
+    enabled: !!tenantId,
+    queryFn: async () => {
+      const response = await fetch('/api/strategic-directions', {
+        credentials: 'include',
+        headers: {
+          'X-Tenant-ID': tenantId,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch strategic directions');
+      }
+      return response.json();
+    },
+  });
+
   // Effect to preselect teams that already exist in the tenant's organization
   useEffect(() => {
     if (existingTeams.length > 0) {
@@ -1325,6 +1343,7 @@ export default function OKRSystemSetupWizard() {
             companyMission: "",
             companyVision: "",
             companyValues: "",
+            strategicDirections: [],
             trackingFrequency: "weekly",
             enableNotifications: true,
           },
@@ -1581,6 +1600,24 @@ export default function OKRSystemSetupWizard() {
 
     fetchExistingConfig();
   }, [form, toast]);
+
+  // Effect to populate strategic directions with real data from database
+  useEffect(() => {
+    if (existingStrategicDirections && existingStrategicDirections.length > 0 && tenantId) {
+      console.log("Populating strategic directions with real data:", existingStrategicDirections);
+      
+      // Convert database format to form format
+      const formattedDirections = existingStrategicDirections.map((direction: any) => ({
+        title: direction.title || '',
+        description: direction.description || ''
+      }));
+
+      // Update form with real strategic directions data
+      form.setValue('generalSettings.strategicDirections', formattedDirections);
+      
+      console.log("Strategic directions populated in form:", formattedDirections);
+    }
+  }, [existingStrategicDirections, tenantId, form]);
 
   // Using the tenantId state initialized above
 
