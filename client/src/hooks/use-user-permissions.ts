@@ -131,9 +131,9 @@ export function useUserPermissions() {
 
   // Permission checks for specific actions - Updated per user requirements
   const canCreateObjectives = (): boolean => {
-    // Only managers can create "My OKRs"
+    // Manager, executive, and admin can create "My OKRs"
     const role = getUserRole();
-    return role === 'manager';
+    return ['manager', 'executive', 'admin', 'owner'].includes(role) || user?.isAdmin;
   };
   const canEditObjectives = (): boolean => isManagerOrAbove() || isTeamLeader();
   const canDeleteObjectives = (): boolean => isAdminOrOwner();
@@ -160,9 +160,9 @@ export function useUserPermissions() {
   const canViewFinancials = (): boolean => isExecutiveOrAbove();
   const canAssignTeamLeaders = (): boolean => isAdminOrOwner();
   const canCreateCompanyObjectives = (): boolean => {
-    // Only executive, owner and admin can create company OKRs
+    // Manager, executive, admin, and owner can create company OKRs
     const role = getUserRole();
-    return ['executive', 'admin', 'owner'].includes(role) || user?.isAdmin;
+    return ['manager', 'executive', 'admin', 'owner'].includes(role) || user?.isAdmin;
   };
   const canApproveObjectives = (): boolean => isManagerOrAbove();
   
