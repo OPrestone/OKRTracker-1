@@ -34,13 +34,10 @@ export function SmartCreateObjectiveButton({
   const handleCreateObjective = () => {
     // Check if user has permission to create objectives
     if (permissions?.canCreateObjectives) {
-      // Route to appropriate creation page based on role
-      if (permissions.isAdmin || permissions.role === 'owner' || permissions.role === 'executive') {
-        // High-level users can create company objectives
+      // Route to appropriate creation page based on permissions
+      if (permissions.canCreateCompanyObjectives) {
+        // Users who can create company objectives (managers, executives, admins, owners)
         setLocation('/create-company-objective');
-      } else if (permissions.role === 'manager') {
-        // Managers can create team objectives
-        setLocation('/create-objective');
       } else {
         // Regular users can create personal objectives
         setLocation('/create-objective');
@@ -55,10 +52,8 @@ export function SmartCreateObjectiveButton({
     if (children) return children;
     
     if (permissions?.canCreateObjectives) {
-      if (permissions.isAdmin || permissions.role === 'owner') {
-        return "Create Company Objective";
-      } else if (permissions.role === 'manager') {
-        return "Create Team Objective";
+      if (permissions.canCreateCompanyObjectives) {
+        return "Create Objective";
       } else {
         return "Create Objective";
       }
@@ -71,13 +66,7 @@ export function SmartCreateObjectiveButton({
     if (!showIcon) return null;
     
     if (permissions?.canCreateObjectives) {
-      if (permissions.isAdmin || permissions.role === 'owner') {
-        return <Building className="h-4 w-4" />;
-      } else if (permissions.role === 'manager') {
-        return <Users className="h-4 w-4" />;
-      } else {
-        return <Target className="h-4 w-4" />;
-      }
+      return <Target className="h-4 w-4" />;
     } else {
       return <GraduationCap className="h-4 w-4" />;
     }
