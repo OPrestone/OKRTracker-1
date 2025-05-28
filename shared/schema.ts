@@ -20,6 +20,7 @@ export const paymentStatusEnum = pgEnum("payment_status", ["succeeded", "pending
 export const projectStatusEnum = pgEnum("project_status", ["backlog", "todo", "in-progress", "review", "done"]);
 export const meetingStatusEnum = pgEnum("meeting_status", ["scheduled", "completed", "cancelled", "upcoming"]);
 export const meetingPlatformEnum = pgEnum("meeting_platform", ["google_meet", "zoom", "microsoft_teams", "in_person", "other"]);
+export const strategicDirectionTypeEnum = pgEnum("strategic_direction_type", ["company", "team"]);
 
 // TABLE SCHEMAS
 

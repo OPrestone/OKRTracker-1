@@ -72,6 +72,16 @@ interface Team {
 }
 
 // Strategic Direction interface
+interface StrategicDirection {
+  id?: string;
+  title: string;
+  description: string;
+  type: "company" | "team";
+  priority: number;
+  tenantId?: string;
+  teamId?: string | null;
+  createdById?: string;
+}
 
 
 // User interface for CSV upload
@@ -318,6 +328,12 @@ const formSchema = z.object({
     companyMission: z.string().min(1, "Company mission is required"),
     companyVision: z.string().min(1, "Company vision is required"),
     companyValues: z.string().min(1, "Company values are required"),
+    strategicDirections: z.array(z.object({
+      title: z.string().min(1, "Strategic direction title is required"),
+      description: z.string().min(1, "Strategic direction description is required"),
+      type: z.enum(["company", "team"]).default("company"),
+      priority: z.number().min(1).max(10),
+    })).optional().default([]),
 
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
     enableNotifications: z.boolean().default(true),
@@ -2395,6 +2411,145 @@ export default function OKRSystemSetupWizard() {
                                 }
                               </p>
                             )}
+                          </div>
+
+                          {/* Strategic Directions Section */}
+                          <div className="mt-6 border-t pt-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1">
+                                  Strategic Directions
+                                </label>
+                                <p className="text-sm text-gray-600">
+                                  Define key strategic directions that will guide your organization's OKRs
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                  form.setValue("generalSettings.strategicDirections", [
+                                    ...currentDirections,
+                                    {
+                                      title: "",
+                                      description: "",
+                                      type: "company" as const,
+                                      priority: currentDirections.length + 1,
+                                    }
+                                  ]);
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add Direction
+                              </Button>
+                            </div>
+
+                            <div className="space-y-4">
+                              {(form.watch("generalSettings.strategicDirections") || []).map((_, index) => (
+                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      Strategic Direction #{index + 1}
+                                    </span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const currentDirections = form.getValues("generalSettings.strategicDirections") || [];
+                                        const updated = currentDirections.filter((_, i) => i !== index);
+                                        form.setValue("generalSettings.strategicDirections", updated);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Title
+                                      </label>
+                                      <Input
+                                        placeholder="e.g., Digital Transformation"
+                                        {...form.register(`generalSettings.strategicDirections.${index}.title`)}
+                                      />
+                                      {form.formState.errors.generalSettings?.strategicDirections?.[index]?.title && (
+                                        <p className="text-sm text-red-500 mt-1">
+                                          {form.formState.errors.generalSettings.strategicDirections[index]?.title?.message}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Type
+                                      </label>
+                                      <Select
+                                        value={form.watch(`generalSettings.strategicDirections.${index}.type`)}
+                                        onValueChange={(value) => 
+                                          form.setValue(`generalSettings.strategicDirections.${index}.type`, value as "company" | "team")
+                                        }
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="company">Company-wide</SelectItem>
+                                          <SelectItem value="team">Team-specific</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                      Description
+                                    </label>
+                                    <Textarea
+                                      placeholder="Describe this strategic direction and its importance..."
+                                      {...form.register(`generalSettings.strategicDirections.${index}.description`)}
+                                      className="resize-none h-20"
+                                    />
+                                    {form.formState.errors.generalSettings?.strategicDirections?.[index]?.description && (
+                                      <p className="text-sm text-red-500 mt-1">
+                                        {form.formState.errors.generalSettings.strategicDirections[index]?.description?.message}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                      Priority (1-10)
+                                    </label>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      max="10"
+                                      placeholder="5"
+                                      {...form.register(`generalSettings.strategicDirections.${index}.priority`, {
+                                        valueAsNumber: true
+                                      })}
+                                    />
+                                    {form.formState.errors.generalSettings?.strategicDirections?.[index]?.priority && (
+                                      <p className="text-sm text-red-500 mt-1">
+                                        {form.formState.errors.generalSettings.strategicDirections[index]?.priority?.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+
+                              {(!form.watch("generalSettings.strategicDirections") || form.watch("generalSettings.strategicDirections")?.length === 0) && (
+                                <div className="text-center py-8 text-gray-500">
+                                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                  <p>No strategic directions defined yet.</p>
+                                  <p className="text-sm">Click "Add Direction" to get started.</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 
