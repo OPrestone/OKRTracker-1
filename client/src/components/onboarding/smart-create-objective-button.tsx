@@ -126,7 +126,7 @@ export function CreateFirstObjectiveCard() {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-8 text-center">
       <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        {permissions.canCreateObjectives ? (
+        {permissions?.canCreateObjectives ? (
           <Target className="h-8 w-8 text-blue-600" />
         ) : (
           <GraduationCap className="h-8 w-8 text-blue-600" />
