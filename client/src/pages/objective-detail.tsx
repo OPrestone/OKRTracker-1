@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation, useRoute, useParams } from "wouter";
+import { useLocation, useRoute, useParams, useRouter } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useTenantContext } from "@/hooks/use-tenant-context";
@@ -945,7 +945,7 @@ export default function ObjectiveDetail() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setLocation(`/create-key-result/${objectiveId}`)}
+                      onClick={() => navigate(`/create-key-result/${objectiveId}`)}
                     >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add Key Result
