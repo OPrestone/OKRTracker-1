@@ -76,10 +76,7 @@ interface StrategicDirection {
   id?: string;
   title: string;
   description: string;
-  type: "company" | "team";
-  priority: number;
   tenantId?: string;
-  teamId?: string | null;
   createdById?: string;
 }
 
@@ -2435,8 +2432,6 @@ export default function OKRSystemSetupWizard() {
                                     {
                                       title: "",
                                       description: "",
-                                      type: "company" as const,
-                                      priority: currentDirections.length + 1,
                                     }
                                   ]);
                                 }}
@@ -2467,41 +2462,19 @@ export default function OKRSystemSetupWizard() {
                                     </Button>
                                   </div>
 
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                      <label className="block text-sm font-medium mb-1">
-                                        Title
-                                      </label>
-                                      <Input
-                                        placeholder="e.g., Digital Transformation"
-                                        {...form.register(`generalSettings.strategicDirections.${index}.title`)}
-                                      />
-                                      {form.formState.errors.generalSettings?.strategicDirections?.[index]?.title && (
-                                        <p className="text-sm text-red-500 mt-1">
-                                          {form.formState.errors.generalSettings.strategicDirections[index]?.title?.message}
-                                        </p>
-                                      )}
-                                    </div>
-
-                                    <div>
-                                      <label className="block text-sm font-medium mb-1">
-                                        Type
-                                      </label>
-                                      <Select
-                                        value={form.watch(`generalSettings.strategicDirections.${index}.type`)}
-                                        onValueChange={(value) => 
-                                          form.setValue(`generalSettings.strategicDirections.${index}.type`, value as "company" | "team")
-                                        }
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="company">Company-wide</SelectItem>
-                                          <SelectItem value="team">Team-specific</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                  <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                      Title
+                                    </label>
+                                    <Input
+                                      placeholder="e.g., Digital Transformation"
+                                      {...form.register(`generalSettings.strategicDirections.${index}.title`)}
+                                    />
+                                    {form.formState.errors.generalSettings?.strategicDirections?.[index]?.title && (
+                                      <p className="text-sm text-red-500 mt-1">
+                                        {form.formState.errors.generalSettings.strategicDirections[index]?.title?.message}
+                                      </p>
+                                    )}
                                   </div>
 
                                   <div>
@@ -2516,26 +2489,6 @@ export default function OKRSystemSetupWizard() {
                                     {form.formState.errors.generalSettings?.strategicDirections?.[index]?.description && (
                                       <p className="text-sm text-red-500 mt-1">
                                         {form.formState.errors.generalSettings.strategicDirections[index]?.description?.message}
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                      Priority (1-10)
-                                    </label>
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      max="10"
-                                      placeholder="5"
-                                      {...form.register(`generalSettings.strategicDirections.${index}.priority`, {
-                                        valueAsNumber: true
-                                      })}
-                                    />
-                                    {form.formState.errors.generalSettings?.strategicDirections?.[index]?.priority && (
-                                      <p className="text-sm text-red-500 mt-1">
-                                        {form.formState.errors.generalSettings.strategicDirections[index]?.priority?.message}
                                       </p>
                                     )}
                                   </div>
