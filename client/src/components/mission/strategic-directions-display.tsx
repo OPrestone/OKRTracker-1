@@ -73,8 +73,8 @@ export function StrategicDirectionsDisplay({
     },
   });
 
-  // Check if user can add strategic directions (admin or manager)
-  const canAddDirections = userRole?.role === 'admin' || userRole?.role === 'owner' || userRole?.role === 'manager';
+  // Check if user can add strategic directions (admin, owner, or executive)
+  const canAddDirections = userRole?.role === 'admin' || userRole?.role === 'owner' || userRole?.role === 'executive';
 
   const createMutation = useMutation({
     mutationFn: async (data: { title: string; description: string }) => {

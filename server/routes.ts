@@ -586,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const role = userRole[0].role;
-      if (!['admin', 'owner', 'manager'].includes(role)) {
+      if (!['admin', 'owner', 'executive'].includes(role)) {
         return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
       }
 
