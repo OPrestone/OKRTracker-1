@@ -510,13 +510,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/strategic-directions', ensureAuthenticated, withTenant, async (req, res) => {
     try {
       const tenantId = req.tenantId;
+      const userId = req.user?.id;
       
       if (!tenantId) {
         return res.status(400).json({ error: "Missing tenantId parameter" });
       }
 
+      if (!userId) {
+        return res.status(400).json({ error: "User not authenticated" });
+      }
+
+      // Get user's team information
+      const user = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user.length) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userTeamId = user[0].teamId;
+
+      // Fetch strategic directions based on visibility rules:
+      // 1. Company-wide directions (teamId is null) - visible to everyone
+      // 2. Team-specific directions - only visible to team members
       const directions = await db.select().from(strategicDirectionsTable)
-        .where(eq(strategicDirectionsTable.tenantId, tenantId))
+        .where(
+          and(
+            eq(strategicDirectionsTable.tenantId, tenantId),
+            or(
+              isNull(strategicDirectionsTable.teamId), // Company-wide directions
+              userTeamId ? eq(strategicDirectionsTable.teamId, userTeamId) : sql`false` // Team-specific directions for user's team
+            )
+          )
+        )
         .orderBy(strategicDirectionsTable.createdAt);
 
       res.json(directions);
@@ -547,12 +575,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User not authenticated" });
       }
 
-      const { title, description } = req.body;
-      console.log("Extracted data - Title:", title, "Description:", description);
+      // Check user permissions
+      const userRole = await db.select()
+        .from(userTenants)
+        .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)))
+        .limit(1);
+
+      if (!userRole.length) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const role = userRole[0].role;
+      if (!['admin', 'owner', 'manager'].includes(role)) {
+        return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
+      }
+
+      const { title, description, teamId } = req.body;
+      console.log("Extracted data - Title:", title, "Description:", description, "TeamId:", teamId);
 
       if (!title || !title.trim()) {
         console.log("ERROR: Title is required");
         return res.status(400).json({ error: "Title is required" });
+      }
+
+      // If teamId is provided, verify user has access to that team
+      if (teamId) {
+        const userTeam = await db.select()
+          .from(users)
+          .where(and(eq(users.id, userId), eq(users.teamId, teamId)))
+          .limit(1);
+
+        if (!userTeam.length && role !== 'admin' && role !== 'owner') {
+          return res.status(403).json({ error: "Access denied to this team" });
+        }
       }
 
       const newDirection = {
@@ -560,6 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: title.trim(),
         description: description?.trim() || '',
         tenantId,
+        teamId: teamId || null, // null for company-wide directions
         createdById: userId,
         createdAt: new Date(),
         updatedAt: new Date()

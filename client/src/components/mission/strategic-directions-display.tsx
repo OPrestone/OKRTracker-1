@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Target, Plus, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Target, Plus, X, Building2, Users } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface StrategicDirection {
@@ -12,6 +13,8 @@ interface StrategicDirection {
   title: string;
   description: string;
   tenantId: string;
+  teamId?: string;
+  type?: string;
   createdById?: string;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +33,33 @@ export function StrategicDirectionsDisplay({
   
   const queryClient = useQueryClient();
   
+  // Get user role and team information
+  const { data: userRole } = useQuery({
+    queryKey: ['api', 'user', 'role'],
+    queryFn: async () => {
+      const response = await fetch('/api/user/role', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user role');
+      }
+      return response.json();
+    },
+  });
+
+  const { data: userTeams } = useQuery({
+    queryKey: ['api', 'teams'],
+    queryFn: async () => {
+      const response = await fetch('/api/teams', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
+      return response.json();
+    },
+  });
+  
   const { data: directions, isLoading, error } = useQuery({
     queryKey: ['api', 'strategic-directions'],
     queryFn: async () => {
@@ -42,6 +72,9 @@ export function StrategicDirectionsDisplay({
       return response.json();
     },
   });
+
+  // Check if user can add strategic directions (admin or manager)
+  const canAddDirections = userRole?.role === 'admin' || userRole?.role === 'owner' || userRole?.role === 'manager';
 
   const createMutation = useMutation({
     mutationFn: async (data: { title: string; description: string }) => {
@@ -209,28 +242,142 @@ export function StrategicDirectionsDisplay({
     );
   }
 
+  // Filter directions based on user's team and company-wide visibility
+  const filteredDirections = directions?.filter((direction: StrategicDirection) => {
+    // Show company-wide directions (no teamId) to everyone
+    if (!direction.teamId) return true;
+    
+    // Show team-specific directions only to team members
+    if (userTeams?.some((team: any) => team.id === direction.teamId)) return true;
+    
+    return false;
+  }) || [];
+
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5" />
-          Strategic Directions
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Strategic Directions
+          </div>
+          {canAddDirections && (
+            <Button
+              onClick={() => setShowForm(true)}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Direction
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Title *
+              </label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Digital Transformation"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Description
+              </label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the strategic direction..."
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                type="submit" 
+                disabled={createMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {createMutation.isPending ? (
+                  <>Loading...</>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Add Direction
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowForm(false);
+                  setTitle("");
+                  setDescription("");
+                }}
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+        
         <div className="space-y-4">
-          {directions.map((direction) => (
-            <div key={direction.id} className="border-l-4 border-l-blue-500 pl-4 py-2">
-              <h4 className="font-medium text-gray-900 mb-1">
-                {direction.title}
-              </h4>
-              {direction.description && (
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {direction.description}
+          {filteredDirections.map((direction: StrategicDirection) => (
+            <div key={direction.id} className="border-l-4 border-l-green-500 pl-4 py-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-gray-900">
+                      {direction.title}
+                    </h4>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs flex items-center gap-1"
+                    >
+                      {direction.teamId ? (
+                        <>
+                          <Users className="h-3 w-3" />
+                          Team Direction
+                        </>
+                      ) : (
+                        <>
+                          <Building2 className="h-3 w-3" />
+                          From CEO
+                        </>
+                      )}
+                    </Badge>
+                  </div>
+                  {direction.description && (
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {direction.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {filteredDirections.length === 0 && (
+            <div className="text-center py-6">
+              <Target className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-500">
+                No strategic directions available for your team.
+              </p>
+              {canAddDirections && (
+                <p className="text-sm text-gray-400 mt-1">
+                  Click "Add Direction" to create team strategic directions.
                 </p>
               )}
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>
