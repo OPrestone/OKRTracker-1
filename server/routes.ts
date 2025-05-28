@@ -5915,8 +5915,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertMoodEntrySchema.parse({
         ...req.body,
-        userId: userId
-        // Note: tenantId was removed as it doesn't exist in the actual database table
+        userId: userId,
+        tenantId: tenantId // Include tenant ID as required by schema
       });
       
       const moodEntry = await db.insert(moodEntries).values(validatedData).returning();

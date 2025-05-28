@@ -35,14 +35,13 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
     try {
       setLoading(true);
       
-      // Format date as yyyy-mm-dd for the database (date type, not timestamp)
+      // Use Date object for proper validation
       const today = new Date();
-      const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
       const response = await apiRequest("POST", "/api/mood-entries", {
         moodScore: selectedMood,
         notes: notes.trim() || null,
-        date: formattedDate, // Using formatted date string (YYYY-MM-DD)
+        date: today, // Send as Date object
       });
       
       if (response.ok) {
