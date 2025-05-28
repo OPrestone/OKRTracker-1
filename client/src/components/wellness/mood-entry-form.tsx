@@ -35,13 +35,13 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
     try {
       setLoading(true);
       
-      // Use Date object for proper validation
+      // Format date as ISO string for proper transmission
       const today = new Date();
       
       const response = await apiRequest("POST", "/api/mood-entries", {
         moodScore: selectedMood,
         notes: notes.trim() || null,
-        date: today, // Send as Date object
+        date: today.toISOString(), // Send as ISO string
       });
       
       if (response.ok) {

@@ -5896,6 +5896,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as User).id;
       const tenantId = req.tenantId;
       
+      console.log('Mood entry submission - userId:', userId, 'tenantId:', tenantId);
+      
+      if (!tenantId) {
+        return res.status(400).json({ error: "Tenant ID is required" });
+      }
+      
       // Verify user belongs to this tenant
       const isUserInTenant = await db.select()
         .from(usersToTenants)
