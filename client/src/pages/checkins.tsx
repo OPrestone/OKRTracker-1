@@ -1317,114 +1317,113 @@ export default function CheckIns() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>AM</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Alex Morgan</p>
-                            <p className="text-xs text-muted-foreground">Product Manager</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>24</TableCell>
-                      <TableCell>18</TableCell>
-                      <TableCell>Today</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "90%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>JL</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Jordan Lee</p>
-                            <p className="text-xs text-muted-foreground">Engineering Lead</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>18</TableCell>
-                      <TableCell>12</TableCell>
-                      <TableCell>Yesterday</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "85%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>TS</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Taylor Swift</p>
-                            <p className="text-xs text-muted-foreground">Marketing Director</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>16</TableCell>
-                      <TableCell>23</TableCell>
-                      <TableCell>Yesterday</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full" 
-                              style={{ width: "95%" }}
-                            />
-                          </div>
-                          <span>High</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>JT</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">Jamie Taylor</p>
-                            <p className="text-xs text-muted-foreground">Sales Director</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>12</TableCell>
-                      <TableCell>8</TableCell>
-                      <TableCell>2 days ago</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
-                            <div 
-                              className="h-full bg-amber-500 rounded-full" 
-                              style={{ width: "65%" }}
-                            />
-                          </div>
-                          <span>Medium</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    {(() => {
+                      if (!users || !checkIns || users.length === 0) {
+                        return (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">
+                              No team member activity data available
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+
+                      // Calculate activity metrics for each user
+                      const userActivity = users.map(user => {
+                        const userCheckIns = checkIns.filter(checkIn => checkIn.userId === user.id);
+                        const checkInCount = userCheckIns.length;
+                        const commentCount = userCheckIns.filter(checkIn => checkIn.comments && checkIn.comments.trim().length > 0).length;
+                        
+                        // Find most recent check-in
+                        const sortedCheckIns = userCheckIns.sort((a, b) => 
+                          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                        );
+                        const lastCheckIn = sortedCheckIns[0];
+                        
+                        // Calculate last active
+                        let lastActive = "Never";
+                        if (lastCheckIn) {
+                          const lastDate = new Date(lastCheckIn.createdAt);
+                          const now = new Date();
+                          const daysDiff = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+                          
+                          if (daysDiff === 0) {
+                            lastActive = "Today";
+                          } else if (daysDiff === 1) {
+                            lastActive = "Yesterday";
+                          } else if (daysDiff < 7) {
+                            lastActive = `${daysDiff} days ago`;
+                          } else {
+                            lastActive = lastDate.toLocaleDateString();
+                          }
+                        }
+                        
+                        // Calculate engagement score based on check-in frequency and recency
+                        let engagementScore = 0;
+                        if (checkInCount > 0) {
+                          const daysAgo = lastCheckIn ? Math.floor((new Date().getTime() - new Date(lastCheckIn.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+                          const recencyScore = Math.max(0, 100 - (daysAgo * 10)); // Lose 10 points per day
+                          const frequencyScore = Math.min(100, checkInCount * 5); // 5 points per check-in, max 100
+                          engagementScore = Math.round((recencyScore + frequencyScore) / 2);
+                        }
+                        
+                        let engagementLevel = "Low";
+                        let engagementColor = "bg-red-500";
+                        if (engagementScore >= 80) {
+                          engagementLevel = "High";
+                          engagementColor = "bg-green-500";
+                        } else if (engagementScore >= 50) {
+                          engagementLevel = "Medium";
+                          engagementColor = "bg-amber-500";
+                        }
+                        
+                        return {
+                          user,
+                          checkInCount,
+                          commentCount,
+                          lastActive,
+                          engagementScore,
+                          engagementLevel,
+                          engagementColor
+                        };
+                      }).sort((a, b) => b.engagementScore - a.engagementScore); // Sort by engagement score
+
+                      return userActivity.slice(0, 10).map((activity, index) => { // Show top 10 most engaged users
+                        const initials = activity.user.name 
+                          ? activity.user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+                          : activity.user.username?.substring(0, 2).toUpperCase() || 'U';
+                        
+                        return (
+                          <TableRow key={activity.user.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>{initials}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">{activity.user.name || activity.user.username}</p>
+                                  <p className="text-xs text-muted-foreground">{activity.user.role || 'Team Member'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{activity.checkInCount}</TableCell>
+                            <TableCell>{activity.commentCount}</TableCell>
+                            <TableCell>{activity.lastActive}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <div className="h-2 bg-gray-100 rounded-full w-24 overflow-hidden">
+                                  <div 
+                                    className={`h-full rounded-full ${activity.engagementColor}`}
+                                    style={{ width: `${activity.engagementScore}%` }}
+                                  />
+                                </div>
+                                <span>{activity.engagementLevel}</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      });
+                    })()}
                   </TableBody>
                 </Table>
               </CardContent>
