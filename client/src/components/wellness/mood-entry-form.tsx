@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Smile, Meh, Frown, AlertTriangle, ThumbsUp } from "lucide-react";
 
 const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) => {
@@ -11,6 +12,7 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const moodOptions = [
     { value: 1, icon: <Frown className="w-8 h-8" />, label: "Very Unhappy", color: "text-red-500" },
@@ -42,6 +44,7 @@ const MoodEntryForm = ({ onSubmitSuccess }: { onSubmitSuccess?: () => void }) =>
         moodScore: selectedMood,
         notes: notes.trim() || null,
         date: today.toISOString(), // Send as ISO string
+        tenantId: user?.defaultTenant, // Include tenant ID
       });
       
       if (response.ok) {
