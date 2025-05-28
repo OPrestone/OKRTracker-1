@@ -32,6 +32,7 @@ import {
   Loader2
 } from "lucide-react";
 import { TeamsOkrsView } from "@/components/mission/teams-okrs-view";
+import { StrategicDirectionsDisplay } from "@/components/mission/strategic-directions-display";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -196,6 +197,37 @@ export default function Mission() {
     },
     enabled: !!tenantId, // Only run query when tenantId is available
     retry: 3 // Retry failed queries up to 3 times
+  });
+
+  // Query to fetch strategic directions data
+  const { data: strategicDirectionsData, isLoading: isDirectionsLoading, error: directionsError } = useQuery({
+    queryKey: ['/api/strategic-directions', tenantId],
+    queryFn: async () => {
+      console.log("Fetching strategic directions with tenant ID:", tenantId);
+      
+      if (!tenantId) {
+        throw new Error("No tenant ID available");
+      }
+      
+      const response = await fetch('/api/strategic-directions', { 
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error fetching strategic directions:', errorText);
+        throw new Error('Failed to fetch strategic directions: ' + errorText);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId,
+    retry: 3
   });
 
   // Query to get user role for permission-based access
@@ -1001,16 +1033,8 @@ export default function Mission() {
             </CardContent>
           </Card>
 
-          {/* Strategic Direction */}
-          <Card className="border-t-4 border-t-green-600">
-            <CardHeader>
-              <CardTitle>Strategic Direction</CardTitle>
-              <CardDescription>From CEO Mission</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="whitespace-pre-line text-gray-700">{strategicDirection}</div>
-            </CardContent>
-          </Card>
+          {/* Strategic Directions - Real Database Data */}
+          <StrategicDirectionsDisplay className="border-t-4 border-t-green-600" />
 
           {/* Vision, Purpose, and Values */}
           <Card className="border-t-4 border-t-purple-600">
