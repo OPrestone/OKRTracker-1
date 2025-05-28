@@ -529,20 +529,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new strategic direction
   app.post('/api/strategic-directions/create', ensureAuthenticated, withTenant, async (req, res) => {
     try {
+      console.log("=== STRATEGIC DIRECTION CREATION ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("User ID:", req.user?.id);
+      console.log("Tenant ID:", req.tenantId);
+      
       const tenantId = req.tenantId;
       const userId = req.user?.id;
       
       if (!tenantId) {
+        console.log("ERROR: Missing tenantId parameter");
         return res.status(400).json({ error: "Missing tenantId parameter" });
       }
 
       if (!userId) {
+        console.log("ERROR: User not authenticated");
         return res.status(400).json({ error: "User not authenticated" });
       }
 
       const { title, description } = req.body;
+      console.log("Extracted data - Title:", title, "Description:", description);
 
       if (!title || !title.trim()) {
+        console.log("ERROR: Title is required");
         return res.status(400).json({ error: "Title is required" });
       }
 
@@ -556,9 +565,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: new Date()
       };
 
+      console.log("Creating strategic direction with data:", newDirection);
+
       const result = await db.insert(strategicDirectionsTable)
         .values(newDirection)
         .returning();
+
+      console.log("Strategic direction created successfully:", result[0]);
+      console.log("=== END STRATEGIC DIRECTION CREATION ===");
 
       res.status(201).json(result[0]);
     } catch (error) {

@@ -36,26 +36,45 @@ export function StrategicDirectionsDisplay({
 
   const createMutation = useMutation({
     mutationFn: async (data: { title: string; description: string }) => {
-      return apiRequest('/api/strategic-directions/create', {
+      console.log("=== FRONTEND: Creating strategic direction ===");
+      console.log("Form data being sent:", data);
+      
+      const response = await apiRequest('/api/strategic-directions/create', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      
+      console.log("API response:", response);
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Strategic direction created successfully:", data);
       queryClient.invalidateQueries({ queryKey: ['api', 'strategic-directions'] });
       setShowForm(false);
       setTitle("");
       setDescription("");
     },
+    onError: (error) => {
+      console.error("Error creating strategic direction:", error);
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("=== FORM SUBMISSION ===");
+    console.log("Title:", title);
+    console.log("Description:", description);
+    console.log("Title trimmed:", title.trim());
+    console.log("Description trimmed:", description.trim());
+    
     if (title.trim()) {
+      console.log("Submitting form with data:", { title: title.trim(), description: description.trim() });
       createMutation.mutate({ title: title.trim(), description: description.trim() });
+    } else {
+      console.log("Form not submitted - title is empty");
     }
   };
 

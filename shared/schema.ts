@@ -425,11 +425,15 @@ export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
 // Strategic Direction table - simplified version
 export const strategicDirections = pgTableWithUlid("strategic_directions", {
   title: text("title").notNull(),
-  description: text("description").notNull(),
+  description: text("description"),
+  priority: integer("priority"),
+  type: text("type"),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  createdById: text("created_by_id").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  teamId: text("team_id").references(() => teams.id),
+  createdById: text("created_by_id").references(() => users.id),
+  parentDirectionId: text("parent_direction_id").references(() => strategicDirections.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const strategicDirectionsRelations = relations(strategicDirections, ({ one }) => ({
