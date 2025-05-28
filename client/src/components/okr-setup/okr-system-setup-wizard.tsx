@@ -329,7 +329,6 @@ const formSchema = z.object({
       title: z.string().min(1, "Strategic direction title is required"),
       description: z.string().min(1, "Strategic direction description is required"),
       type: z.enum(["company", "team"]).default("company"),
-      priority: z.number().min(1).max(10),
     })).optional().default([]),
 
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),

@@ -160,6 +160,7 @@ function AppRoutes() {
       <ProtectedRoute path="/strategy-map" component={StrategyMap} />
       <ProtectedRoute path="/create-objective" component={CreateObjective} />
       <ProtectedRoute path="/create-key-result" component={CreateKeyResult} />
+      <ProtectedRoute path="/create-key-result/:objectiveId" component={CreateKeyResult} />
       <ProtectedRoute
         path="/create-company-objective"
         component={CreateCompanyObjective}

@@ -43,7 +43,7 @@ import {
   CheckCircle,
   ToggleRight
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
@@ -87,9 +87,9 @@ export default function CreateKeyResult() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Get objective ID from URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const objectiveId = urlParams.get('objectiveId');
+  // Get objective ID from URL path parameter
+  const [match, params] = useRoute("/create-key-result/:objectiveId");
+  const objectiveId = params?.objectiveId;
   
   const [keyResultData, setKeyResultData] = useState({
     title: '',
