@@ -364,24 +364,23 @@ export default function OKRSystemSetupWizard() {
       try {
         if (!tenantId) return;
 
-        // Simple POST request to update strategic directions
-        const response = await fetch('/api/organization-mission', {
+        console.log('Auto-saving strategic directions:', value);
+
+        // Use apiRequest from queryClient which handles authentication properly
+        const { apiRequest } = await import('@/lib/queryClient');
+        
+        const response = await apiRequest('/api/organization-mission', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
           body: JSON.stringify({
             strategic_directions: value,
             tenantId: tenantId
           }),
         });
 
-        if (response.ok) {
-          console.log('Strategic directions auto-saved successfully');
-        } else {
-          console.error('Failed to auto-save strategic directions:', response.status);
-        }
+        console.log('Strategic directions auto-saved successfully:', response);
       } catch (error) {
         console.error('Error auto-saving strategic directions:', error);
       }
