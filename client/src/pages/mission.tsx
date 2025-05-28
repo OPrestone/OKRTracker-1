@@ -417,9 +417,7 @@ export default function Mission() {
     try {
       const saveData = {
         mission: missionDraft,
-        vision: visionDraft,
-        purpose: purposeDraft,
-        values: valuesDraft,
+        vision: visionDraft, 
         strategicDirection: strategicDirectionDraft,
         behaviors: JSON.stringify(behaviorsDraft),
         boundaries: JSON.stringify(boundariesDraft)
@@ -483,8 +481,6 @@ export default function Mission() {
       await saveMissionMutation.mutateAsync({
         mission: missionDraft,
         vision: vision,
-        purpose: purpose,
-        values: values,
         strategicDirection: strategicDirection,
         behaviors: JSON.stringify(behaviors),
         boundaries: JSON.stringify(boundaries)
