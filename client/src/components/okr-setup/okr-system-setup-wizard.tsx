@@ -3573,11 +3573,6 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                 </div>
               </TabsContent>
             </Tabs>
-            <div>
-
-                            {form.formState.errors ? JSON.stringify(form.formState.errors) : "No Errors"}
-                            Woeoe
-            </div>
 
             {/* Navigation buttons */}
             <div className="flex justify-between mt-8">
