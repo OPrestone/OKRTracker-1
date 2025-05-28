@@ -995,7 +995,13 @@ export const insertProjectSchema = createInsertSchema(projects)
 export const insertFinancialAccountSchema = createInsertSchema(financialAccounts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFinancialBudgetSchema = createInsertSchema(financialBudgets).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({ id: true, createdAt: true });
+export const insertMoodEntrySchema = createInsertSchema(moodEntries)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    date: z.string().or(z.date()).transform(val => 
+      typeof val === 'string' ? new Date(val) : val
+    )
+  });
 export const insertStrategicDirectionSchema = createInsertSchema(strategicDirections).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertOrganizationMissionSchema = createInsertSchema(organizationMission).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCycleSchema = createInsertSchema(cycles)
