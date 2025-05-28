@@ -106,9 +106,7 @@ export default function Mission() {
   const [strategicDirectionDraft, setStrategicDirectionDraft] = useState("");
 
   // Level mission statements
-  const [oneLevelMission, setOneLevelMission] = useState(
-    "To become the biggest reach, most influential and trusted company in the communication business in order to deliver sustainable profits for shareholders and staff - by providing indispensable information and entertainment that enhances the lives of 15-30-year-old Kenyans."
-  );
+  const [oneLevelMission, setOneLevelMission] = useState("");
   const [twoLevelMission, setTwoLevelMission] = useState("");
   
   // Override toggles
@@ -120,10 +118,10 @@ export default function Mission() {
   const [visionDraft, setVisionDraft] = useState("");
   
   // Purpose state (read from company)
-  const [purpose, setPurpose] = useState("Enter Purpose");
+  const [purpose, setPurpose] = useState("");
   
   // Values state (read from company)
-  const [values, setValues] = useState("Enter Values");
+  const [values, setValues] = useState("");
 
   // Behaviors state
   const [behaviors, setBehaviors] = useState<string[]>([]);
