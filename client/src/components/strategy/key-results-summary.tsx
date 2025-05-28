@@ -225,7 +225,7 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#5bb498"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[0].count / keyResultsData.length)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - (calculatedData.confidenceData[0]?.count || 0) / Math.max(keyResultsData.length, 1))}
                   transform="rotate(-90 60 60)"
                 />
                 <circle
@@ -236,7 +236,7 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#f0c268"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[1].count / keyResultsData.length) + 2 * Math.PI * 54 * (calculatedData.confidenceData[0].count / keyResultsData.length)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - (calculatedData.confidenceData[1]?.count || 0) / Math.max(keyResultsData.length, 1)) + 2 * Math.PI * 54 * ((calculatedData.confidenceData[0]?.count || 0) / Math.max(keyResultsData.length, 1))}
                   transform="rotate(-90 60 60)"
                 />
                 <circle
@@ -247,13 +247,13 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#e05d5d"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[2].count / keyResultsData.length) + 2 * Math.PI * 54 * ((calculatedData.confidenceData[0].count + calculatedData.confidenceData[1].count) / keyResultsData.length)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - (calculatedData.confidenceData[2]?.count || 0) / Math.max(keyResultsData.length, 1)) + 2 * Math.PI * 54 * (((calculatedData.confidenceData[0]?.count || 0) + (calculatedData.confidenceData[1]?.count || 0)) / Math.max(keyResultsData.length, 1))}
                   transform="rotate(-90 60 60)"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-gray-700">36</div>
+                  <div className="text-4xl font-bold text-gray-700">{calculatedData.netConfidenceScore}</div>
                   <div className="text-xs text-gray-500">NCS</div>
                 </div>
               </div>
