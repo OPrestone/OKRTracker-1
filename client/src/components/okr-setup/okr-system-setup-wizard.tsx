@@ -11,13 +11,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ArrowRight, ArrowLeft, CheckCircle2, Settings2, Target, Calendar, 
-  Users2, Layers, Zap, Loader2, Check, User, Upload, FileText, 
-  AlertCircle, UserPlus, ChevronDown, X, Save, Users, Plus
+import {
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  Settings2,
+  Target,
+  Calendar,
+  Users2,
+  Layers,
+  Zap,
+  Loader2,
+  Check,
+  User,
+  Upload,
+  FileText,
+  AlertCircle,
+  UserPlus,
+  ChevronDown,
+  X,
+  Save,
+  Users,
+  Plus,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -29,7 +53,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import TimeframeSetupSimplified from "./timeframe-setup-simplified";
 
 // Team interface
@@ -79,7 +108,8 @@ const defaultTeamTemplates: TeamTemplate[] = [
   {
     id: "marketing",
     name: "Marketing Team",
-    description: "Team responsible for brand, communications and marketing campaigns",
+    description:
+      "Team responsible for brand, communications and marketing campaigns",
     icon: "megaphone",
     color: "#3B82F6", // Blue
   },
@@ -93,7 +123,8 @@ const defaultTeamTemplates: TeamTemplate[] = [
   {
     id: "engineering",
     name: "Engineering Team",
-    description: "Team responsible for product development and technical operations",
+    description:
+      "Team responsible for product development and technical operations",
     icon: "code",
     color: "#8B5CF6", // Purple
   },
@@ -114,7 +145,8 @@ const defaultTeamTemplates: TeamTemplate[] = [
   {
     id: "hr",
     name: "Human Resources",
-    description: "Team responsible for talent acquisition and employee development",
+    description:
+      "Team responsible for talent acquisition and employee development",
     icon: "users",
     color: "#EC4899", // Pink
   },
@@ -135,20 +167,24 @@ const defaultTeamTemplates: TeamTemplate[] = [
 ];
 
 // Team Selection Component
-const TeamSelectionSection = ({ 
-  tenantId, 
-  value = [], 
-  onChange 
-}: { 
-  tenantId: string; 
-  value?: string[]; 
+const TeamSelectionSection = ({
+  tenantId,
+  value = [],
+  onChange,
+}: {
+  tenantId: string;
+  value?: string[];
   onChange?: (selectedTeams: string[]) => void;
 }) => {
   const [selectedTeams, setSelectedTeams] = useState<string[]>(value);
-  
+
   // Fetch teams from the API - use the built-in query client
-  const { data: teams = [] as Team[], isLoading, error } = useQuery<Team[]>({
-    queryKey: ['/api/teams', tenantId],
+  const {
+    data: teams = [] as Team[],
+    isLoading,
+    error,
+  } = useQuery<Team[]>({
+    queryKey: ["/api/teams", tenantId],
     enabled: !!tenantId,
     meta: { requiresTenant: true },
   });
@@ -156,11 +192,11 @@ const TeamSelectionSection = ({
   // Toggle team selection
   const toggleTeamSelection = (teamId: string) => {
     const updatedTeams = selectedTeams.includes(teamId)
-      ? selectedTeams.filter(id => id !== teamId)
+      ? selectedTeams.filter((id) => id !== teamId)
       : [...selectedTeams, teamId];
-    
+
     setSelectedTeams(updatedTeams);
-    
+
     // Call the onChange handler if provided
     if (onChange) {
       onChange(updatedTeams);
@@ -186,7 +222,7 @@ const TeamSelectionSection = ({
     );
   }
 
-  // If loading, show loading indicator 
+  // If loading, show loading indicator
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,7 +254,10 @@ const TeamSelectionSection = ({
   if (!teams || (Array.isArray(teams) && teams.length === 0)) {
     return (
       <div className="bg-yellow-50 p-4 rounded-md">
-        <p className="text-yellow-700">No teams found. Please create teams first in the Team Management section.</p>
+        <p className="text-yellow-700">
+          No teams found. Please create teams first in the Team Management
+          section.
+        </p>
       </div>
     );
   }
@@ -229,26 +268,26 @@ const TeamSelectionSection = ({
         {teams.map((team: Team) => {
           // Get team initials for the avatar
           const initials = team.name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
             .substring(0, 2)
             .toUpperCase();
-            
+
           return (
-            <div 
+            <div
               key={team.id}
               className={`border rounded-md p-4 cursor-pointer transition-all ${
-                selectedTeams.includes(team.id) 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-gray-200 hover:border-gray-300'
+                selectedTeams.includes(team.id)
+                  ? "border-primary bg-primary/5"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
               onClick={() => toggleTeamSelection(team.id)}
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                  style={{ backgroundColor: team.color || '#6366F1' }}
+                  style={{ backgroundColor: team.color || "#6366F1" }}
                 >
                   {team.icon ? (
                     <span className="text-lg">{team.icon}</span>
@@ -256,12 +295,14 @@ const TeamSelectionSection = ({
                     <span>{initials}</span>
                   )}
                 </div>
-                
+
                 <div className="flex-1">
                   <h4 className="font-medium">{team.name}</h4>
-                  <p className="text-sm text-gray-500">{team.description || `Team in ${team.name} department`}</p>
+                  <p className="text-sm text-gray-500">
+                    {team.description || `Team in ${team.name} department`}
+                  </p>
                 </div>
-                
+
                 <div className="flex-shrink-0">
                   {selectedTeams.includes(team.id) ? (
                     <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
@@ -286,7 +327,7 @@ const formSchema = z.object({
     companyMission: z.string().min(1, "Company mission is required"),
     companyVision: z.string().min(1, "Company vision is required"),
     companyValues: z.string().min(1, "Company values are required"),
-    strategicDirections: z.string().optional(),
+
     trackingFrequency: z.enum(["weekly", "biweekly", "monthly"]),
     enableNotifications: z.boolean().default(true),
   }),
@@ -295,7 +336,22 @@ const formSchema = z.object({
     enableQuarterlyCadence: z.boolean().default(true),
     enableAnnualCadence: z.boolean().default(true),
     customCadence: z.string().optional(),
-    startMonth: z.enum(["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]).default("january"),
+    startMonth: z
+      .enum([
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ])
+      .default("january"),
   }),
   objectiveSettings: z.object({
     maxObjectivesPerTeam: z.enum(["3", "4", "5", "6", "7", "8"]).default("5"),
@@ -304,7 +360,13 @@ const formSchema = z.object({
     enableObjectiveAlignment: z.boolean().default(true),
   }),
   teamConfiguration: z.object({
-    orgStructureType: z.enum(["functional", "divisional", "matrix", "flat", "hierarchical"]),
+    orgStructureType: z.enum([
+      "functional",
+      "divisional",
+      "matrix",
+      "flat",
+      "hierarchical",
+    ]),
     enableCrossTeamObjectives: z.boolean().default(true),
     defaultVisibility: z.enum(["public", "team", "private"]).default("public"),
     selectedTeams: z.array(z.string()).default([]),
@@ -312,7 +374,6 @@ const formSchema = z.object({
     csvUsers: z.array(z.any()).default([]),
     useDefaultTeams: z.boolean().default(true),
   }),
-
 });
 
 // Type for the form values
@@ -326,8 +387,6 @@ const steps = [
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
-
-
 export default function OKRSystemSetupWizard() {
   const [activePage, setActivePage] = useState("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -339,7 +398,9 @@ export default function OKRSystemSetupWizard() {
   const [csvData, setCsvData] = useState<UserImport[]>([]);
   const [showCsvPreview, setShowCsvPreview] = useState(false);
   const [isProcessingCsv, setIsProcessingCsv] = useState(false);
-  const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>([]);
+  const [selectedDefaultTeams, setSelectedDefaultTeams] = useState<string[]>(
+    [],
+  );
   const [csvImportedTeams, setCsvImportedTeams] = useState<string[]>([]);
   const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
   const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
@@ -349,55 +410,11 @@ export default function OKRSystemSetupWizard() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
 
-  // Auto-save timeout ref for Strategic Directions
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Debounced auto-save function for Strategic Directions
-  const handleStrategicDirectionsAutoSave = async (value: string) => {
-    // Clear existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    // Set new timeout to save after 2 seconds of no typing
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      try {
-        if (!tenantId) return;
-
-        console.log('Auto-saving strategic directions:', value);
-
-        // Use fetch with proper credentials for auto-save
-        const response = await fetch('/api/organization-mission', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            strategic_directions: value,
-            tenantId: tenantId
-          }),
-        });
-
-        console.log('Strategic directions auto-saved successfully:', response);
-      } catch (error) {
-        console.error('Error auto-saving strategic directions:', error);
-      }
-    }, 2000);
-  };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Fetch existing teams to preselect corresponding default templates
   const { data: existingTeams = [] } = useQuery({
-    queryKey: ['/api/teams', tenantId],
+    queryKey: ["/api/teams", tenantId],
     enabled: !!tenantId,
     meta: { requiresTenant: true },
   });
@@ -406,39 +423,47 @@ export default function OKRSystemSetupWizard() {
   useEffect(() => {
     if (existingTeams.length > 0) {
       const matchingTemplates: string[] = [];
-      
+
       existingTeams.forEach((team: any) => {
         const teamName = team.name.toLowerCase();
-        
+
         // Find matching default template based on team name
-        const matchingTemplate = defaultTeamTemplates.find(template => {
+        const matchingTemplate = defaultTeamTemplates.find((template) => {
           const templateName = template.name.toLowerCase();
-          return teamName.includes(template.id) || 
-                 templateName.includes(teamName) ||
-                 (template.id === 'engineering' && (teamName.includes('dev') || teamName.includes('tech'))) ||
-                 (template.id === 'customer-success' && teamName.includes('customer')) ||
-                 (template.id === 'hr' && (teamName.includes('human') || teamName.includes('people')));
+          return (
+            teamName.includes(template.id) ||
+            templateName.includes(teamName) ||
+            (template.id === "engineering" &&
+              (teamName.includes("dev") || teamName.includes("tech"))) ||
+            (template.id === "customer-success" &&
+              teamName.includes("customer")) ||
+            (template.id === "hr" &&
+              (teamName.includes("human") || teamName.includes("people")))
+          );
         });
-        
-        if (matchingTemplate && !matchingTemplates.includes(matchingTemplate.id)) {
+
+        if (
+          matchingTemplate &&
+          !matchingTemplates.includes(matchingTemplate.id)
+        ) {
           matchingTemplates.push(matchingTemplate.id);
         }
       });
-      
+
       setSelectedDefaultTeams(matchingTemplates);
     }
   }, [existingTeams]);
-  
+
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
-  
+
   // Function to handle CSV file upload
   const handleCsvUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     setIsProcessingCsv(true);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -446,11 +471,11 @@ export default function OKRSystemSetupWizard() {
         setIsProcessingCsv(false);
         return;
       }
-      
+
       // Process CSV data
       processCsvData(text);
     };
-    
+
     reader.onerror = () => {
       toast({
         title: "Error",
@@ -459,137 +484,152 @@ export default function OKRSystemSetupWizard() {
       });
       setIsProcessingCsv(false);
     };
-    
+
     reader.readAsText(file);
   };
-  
+
   // Function to process CSV data
   const processCsvData = (csvText: string) => {
     try {
       // Split by newlines and handle different newline formats
-      const lines = csvText.split(/\r\n|\n|\r/).filter(line => line.trim() !== '');
-      
+      const lines = csvText
+        .split(/\r\n|\n|\r/)
+        .filter((line) => line.trim() !== "");
+
       if (lines.length === 0) {
         throw new Error("CSV file is empty");
       }
-      
+
       // Get headers from first line
-      const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
-      
+      const headers = lines[0]
+        .split(",")
+        .map((header) => header.trim().toLowerCase());
+
       // Validate required headers
-      const requiredHeaders = ['email'];
-      const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-      
+      const requiredHeaders = ["email"];
+      const missingHeaders = requiredHeaders.filter(
+        (h) => !headers.includes(h),
+      );
+
       if (missingHeaders.length > 0) {
-        throw new Error(`Missing required headers: ${missingHeaders.join(', ')}`);
+        throw new Error(
+          `Missing required headers: ${missingHeaders.join(", ")}`,
+        );
       }
-      
+
       // Process each line to extract user data
       const users: UserImport[] = [];
-      
+
       for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(val => val.trim());
-        
+        const values = lines[i].split(",").map((val) => val.trim());
+
         // Skip empty lines
-        if (values.every(val => val === '')) continue;
-        
+        if (values.every((val) => val === "")) continue;
+
         // Create user object
         const user: UserImport = {
-          email: '',
-          role: 'user', // Default role updated to match new system
+          email: "",
+          role: "user", // Default role updated to match new system
           isValid: true,
           error: undefined,
         };
-        
+
         // Map CSV values to user object
         headers.forEach((header, index) => {
           if (index < values.length) {
             const value = values[index];
-            
+
             switch (header) {
-              case 'email':
+              case "email":
                 // Basic email validation
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 user.email = value;
                 if (!emailRegex.test(value)) {
                   user.isValid = false;
-                  user.error = 'Invalid email format';
+                  user.error = "Invalid email format";
                 }
                 break;
-              case 'firstname':
-              case 'first_name':
+              case "firstname":
+              case "first_name":
                 user.firstName = value;
                 break;
-              case 'lastname':
-              case 'last_name':
+              case "lastname":
+              case "last_name":
                 user.lastName = value;
                 break;
-              case 'name':
+              case "name":
                 user.name = value;
                 break;
-              case 'title':
+              case "title":
                 user.title = value;
                 break;
-              case 'role':
+              case "role":
                 // Normalize role values to support new five-role organization system
                 const normalizedRole = value.toLowerCase();
-                if (['user', 'manager', 'executive', 'admin', 'owner'].includes(normalizedRole)) {
+                if (
+                  ["user", "manager", "executive", "admin", "owner"].includes(
+                    normalizedRole,
+                  )
+                ) {
                   user.role = normalizedRole;
                 } else {
-                  user.role = 'user'; // Default to user for invalid roles
+                  user.role = "user"; // Default to user for invalid roles
                 }
                 break;
-              case 'department':
+              case "department":
                 user.department = value;
                 break;
-              case 'team':
+              case "team":
                 user.team = value;
                 break;
             }
           }
         });
-        
+
         // Check if email is empty
         if (!user.email) {
           user.isValid = false;
-          user.error = 'Email is required';
+          user.error = "Email is required";
         }
-        
+
         users.push(user);
       }
-      
+
       // Update state with processed data
       setCsvData(users);
-      
+
       // Update form state
       form.setValue("teamConfiguration.csvUsers", users);
-      
+
       // Show toast notification
       toast({
         title: "CSV Processed",
-        description: `Successfully processed ${users.length} users (${users.filter(u => u.isValid).length} valid)`,
+        description: `Successfully processed ${users.length} users (${users.filter((u) => u.isValid).length} valid)`,
       });
-      
+
       // Store teams and users for later saving
       if (users.length > 0) {
-        const validUsers = users.filter(user => user.isValid);
-        const uniqueTeamNames = Array.from(new Set(
-          users
-            .filter((user: any) => user.team && user.team.trim() !== '')
-            .map((user: any) => user.team.trim())
-        ));
-        
+        const validUsers = users.filter((user) => user.isValid);
+        const uniqueTeamNames = Array.from(
+          new Set(
+            users
+              .filter((user: any) => user.team && user.team.trim() !== "")
+              .map((user: any) => user.team.trim()),
+          ),
+        );
+
         setCsvImportedTeams(uniqueTeamNames);
         setCsvImportedUsers(validUsers);
       }
-      
+
       // Show preview
       setShowCsvPreview(true);
     } catch (error) {
       console.error("CSV Processing Error:", error);
       toast({
         title: "CSV Processing Error",
-        description: error instanceof Error ? error.message : "Failed to process CSV file",
+        description:
+          error instanceof Error ? error.message : "Failed to process CSV file",
         variant: "destructive",
       });
     } finally {
@@ -600,50 +640,53 @@ export default function OKRSystemSetupWizard() {
   // Function to save teams and users to the database
   const saveTeamsAndUsers = async () => {
     setIsSavingUsersAndTeams(true);
-    
+
     try {
       console.log("Starting save process...");
       console.log("Teams to save:", csvImportedTeams);
       console.log("Users to save:", csvImportedUsers);
-      
+
       // Get tenant ID from context
       const tenantId = tenantContext?.currentTenant?.id;
       if (!tenantId) {
         throw new Error("No tenant ID found");
       }
       console.log("Using tenant ID:", tenantId);
-      
+
       let teamsCreated = 0;
       let usersCreated = 0;
-      
+
       // Step 1: Create teams first if needed
       if (csvImportedTeams.length > 0) {
         try {
           console.log("Step 1: Creating teams via batch endpoint...");
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
             },
-            body: JSON.stringify(csvImportedTeams.map(teamName => ({
-              name: teamName,
-              description: `Team created from CSV upload`
-            }))),
-            credentials: 'include'
+            body: JSON.stringify(
+              csvImportedTeams.map((teamName) => ({
+                name: teamName,
+                description: `Team created from CSV upload`,
+              })),
+            ),
+            credentials: "include",
           });
-          
+
           console.log("Team creation response status:", teamCreateRes.status);
           const teamResponseText = await teamCreateRes.text();
           console.log("Team creation response:", teamResponseText);
-          
+
           if (teamCreateRes.ok) {
             const teamCreateData = JSON.parse(teamResponseText);
-            teamsCreated = teamCreateData.createdTeams?.length || csvImportedTeams.length;
+            teamsCreated =
+              teamCreateData.createdTeams?.length || csvImportedTeams.length;
             console.log("Teams created successfully:", teamCreateData);
-            
+
             // Wait a moment for teams to be fully committed to database
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           } else {
             console.error("Team creation failed:", teamResponseText);
           }
@@ -651,39 +694,48 @@ export default function OKRSystemSetupWizard() {
           console.error("Error creating teams:", error);
         }
       }
-      
+
       // Step 2: Create users using the bulk user creation endpoint
       if (csvImportedUsers.length > 0) {
         try {
           console.log("Step 2: Creating users using bulk endpoint...");
-          
+
           // Create users one by one using the working approach from All Users page
           let createdCount = 0;
           const failedUsers = [];
-          
+
           for (const user of csvImportedUsers) {
             try {
               const response = await fetch("/api/users", {
                 method: "POST",
-                headers: { 
+                headers: {
                   "Content-Type": "application/json",
-                  "X-Tenant-ID": tenantId
+                  "X-Tenant-ID": tenantId,
                 },
                 body: JSON.stringify({
-                  username: user.email.split('@')[0].toLowerCase(),
+                  username: user.email.split("@")[0].toLowerCase(),
                   email: user.email.toLowerCase(),
-                  firstName: user.firstName || user.name?.split(' ')[0] || user.email.split('@')[0],
-                  lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
-                  name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
-                  title: user.title || user.department || '',
-                  role: user.role || 'user',
+                  firstName:
+                    user.firstName ||
+                    user.name?.split(" ")[0] ||
+                    user.email.split("@")[0],
+                  lastName:
+                    user.lastName ||
+                    user.name?.split(" ").slice(1).join(" ") ||
+                    "",
+                  name:
+                    user.name ||
+                    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+                    user.email.split("@")[0],
+                  title: user.title || user.department || "",
+                  role: user.role || "user",
                   password: user.email.toLowerCase(), // Set password to email initially
                   requirePasswordReset: true, // Flag to require password reset on first login
-                  tenantId: tenantId  // Ensure tenant ID is included
+                  tenantId: tenantId, // Ensure tenant ID is included
                 }),
-                credentials: 'include'
+                credentials: "include",
               });
-              
+
               if (response.ok) {
                 createdCount++;
                 console.log(`Created user: ${user.email}`);
@@ -691,7 +743,9 @@ export default function OKRSystemSetupWizard() {
                 // User already exists - this is okay, we can still assign them to teams
                 try {
                   const errorData = await response.json();
-                  console.log(`User already exists: ${user.email} (ID: ${errorData.userId})`);
+                  console.log(
+                    `User already exists: ${user.email} (ID: ${errorData.userId})`,
+                  );
                   createdCount++; // Count as successful since user exists
                 } catch {
                   console.log(`User already exists: ${user.email}`);
@@ -699,7 +753,10 @@ export default function OKRSystemSetupWizard() {
                 }
               } else {
                 const errorText = await response.text();
-                console.error(`Failed to create user ${user.email}:`, errorText);
+                console.error(
+                  `Failed to create user ${user.email}:`,
+                  errorText,
+                );
                 failedUsers.push(user.email);
               }
             } catch (error) {
@@ -707,66 +764,83 @@ export default function OKRSystemSetupWizard() {
               failedUsers.push(user.email);
             }
           }
-          
+
           usersCreated = createdCount;
-          console.log(`Successfully created ${createdCount} users, ${failedUsers.length} failed`);
-          
+          console.log(
+            `Successfully created ${createdCount} users, ${failedUsers.length} failed`,
+          );
+
           // Step 2.5: Assign users to their teams with proper team IDs
           console.log("Step 2.5: Assigning users to teams...");
-          console.log("Users to assign:", csvImportedUsers.map(u => ({ email: u.email, team: u.team })));
-          
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for users to be committed
-          
+          console.log(
+            "Users to assign:",
+            csvImportedUsers.map((u) => ({ email: u.email, team: u.team })),
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for users to be committed
+
           // Fetch current teams to get team IDs
           const teamsResponse = await fetch("/api/teams", {
             method: "GET",
             headers: {
-              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
             },
-            credentials: 'include'
+            credentials: "include",
           });
-          
+
           if (teamsResponse.ok) {
             const allTeams = await teamsResponse.json();
-            console.log("Available teams for assignment:", allTeams.map(t => ({ id: t.id, name: t.name })));
-            
+            console.log(
+              "Available teams for assignment:",
+              allTeams.map((t) => ({ id: t.id, name: t.name })),
+            );
+
             // Fetch current users to get user IDs
             const usersResponse = await fetch("/api/users", {
               method: "GET",
               headers: {
-                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
               },
-              credentials: 'include'
+              credentials: "include",
             });
-            
+
             if (usersResponse.ok) {
               const allUsers = await usersResponse.json();
-              console.log("Available users for team assignment:", allUsers.map(u => ({ id: u.id, email: u.email })));
-              
+              console.log(
+                "Available users for team assignment:",
+                allUsers.map((u) => ({ id: u.id, email: u.email })),
+              );
+
               // Enhanced team assignment with comprehensive tracking
               const teamAssignmentResults = {
                 successful: 0,
                 failed: 0,
                 skipped: 0,
-                errors: [] as string[]
+                errors: [] as string[],
               };
-              
-              console.log(`Starting team assignments for ${csvImportedUsers.length} users...`);
-              
+
+              console.log(
+                `Starting team assignments for ${csvImportedUsers.length} users...`,
+              );
+
               for (const csvUser of csvImportedUsers) {
-                if (!csvUser.team || csvUser.team.trim() === '') {
+                if (!csvUser.team || csvUser.team.trim() === "") {
                   teamAssignmentResults.skipped++;
                   console.log(`Skipping ${csvUser.email} - no team specified`);
                   continue;
                 }
-                
-                const matchingTeam = allTeams.find(team => 
-                  team.name.toLowerCase().trim() === csvUser.team.toLowerCase().trim()
+
+                const matchingTeam = allTeams.find(
+                  (team) =>
+                    team.name.toLowerCase().trim() ===
+                    csvUser.team.toLowerCase().trim(),
                 );
-                const matchingUser = allUsers.find(user => 
-                  user.email.toLowerCase().trim() === csvUser.email.toLowerCase().trim()
+                const matchingUser = allUsers.find(
+                  (user) =>
+                    user.email.toLowerCase().trim() ===
+                    csvUser.email.toLowerCase().trim(),
                 );
-                
+
                 if (!matchingTeam) {
                   teamAssignmentResults.failed++;
                   const error = `Team "${csvUser.team}" not found for user ${csvUser.email}`;
@@ -774,7 +848,7 @@ export default function OKRSystemSetupWizard() {
                   console.error(error);
                   continue;
                 }
-                
+
                 if (!matchingUser) {
                   teamAssignmentResults.failed++;
                   const error = `User "${csvUser.email}" not found in system`;
@@ -782,50 +856,64 @@ export default function OKRSystemSetupWizard() {
                   console.error(error);
                   continue;
                 }
-                
+
                 try {
                   // Enhanced team assignment with retry logic
                   let assignmentSuccess = false;
                   let attempts = 0;
                   const maxAttempts = 3;
-                  
+
                   while (!assignmentSuccess && attempts < maxAttempts) {
                     attempts++;
-                    console.log(`Assignment attempt ${attempts} for ${csvUser.email} -> ${csvUser.team}`);
-                    
+                    console.log(
+                      `Assignment attempt ${attempts} for ${csvUser.email} -> ${csvUser.team}`,
+                    );
+
                     const assignResponse = await fetch("/api/users-to-teams", {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
-                        "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                        "X-Tenant-ID":
+                          tenantContext.currentTenant?.id || tenantId,
                       },
                       body: JSON.stringify({
                         userId: matchingUser.id,
                         teamId: matchingTeam.id,
-                        tenantId: tenantContext.currentTenant?.id || tenantId
+                        tenantId: tenantContext.currentTenant?.id || tenantId,
                       }),
-                      credentials: 'include'
+                      credentials: "include",
                     });
-                    
+
                     if (assignResponse.ok) {
                       assignmentSuccess = true;
                       teamAssignmentResults.successful++;
-                      console.log(`✓ Successfully assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
+                      console.log(
+                        `✓ Successfully assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`,
+                      );
                     } else if (assignResponse.status === 409) {
                       // User already assigned to team - count as success
                       assignmentSuccess = true;
                       teamAssignmentResults.successful++;
-                      console.log(`✓ ${csvUser.email} already assigned to team ${csvUser.team}`);
+                      console.log(
+                        `✓ ${csvUser.email} already assigned to team ${csvUser.team}`,
+                      );
                     } else {
                       const errorText = await assignResponse.text();
-                      console.error(`Attempt ${attempts} failed for ${csvUser.email}:`, errorText);
-                      
+                      console.error(
+                        `Attempt ${attempts} failed for ${csvUser.email}:`,
+                        errorText,
+                      );
+
                       if (attempts === maxAttempts) {
                         teamAssignmentResults.failed++;
-                        teamAssignmentResults.errors.push(`Failed to assign ${csvUser.email} to ${csvUser.team}: ${errorText}`);
+                        teamAssignmentResults.errors.push(
+                          `Failed to assign ${csvUser.email} to ${csvUser.team}: ${errorText}`,
+                        );
                       } else {
                         // Wait before retry
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        await new Promise((resolve) =>
+                          setTimeout(resolve, 1000),
+                        );
                       }
                     }
                   }
@@ -836,132 +924,192 @@ export default function OKRSystemSetupWizard() {
                   console.error(errorMsg);
                 }
               }
-              
+
               // Report team assignment results
               console.log("Team Assignment Summary:", teamAssignmentResults);
-              
+
               if (teamAssignmentResults.successful > 0) {
                 toast({
                   title: "Team Assignments Complete",
                   description: `Successfully assigned ${teamAssignmentResults.successful} users to teams. ${teamAssignmentResults.failed} failed, ${teamAssignmentResults.skipped} skipped.`,
-                  variant: teamAssignmentResults.failed > 0 ? "destructive" : "default"
+                  variant:
+                    teamAssignmentResults.failed > 0
+                      ? "destructive"
+                      : "default",
                 });
               }
-              
+
               if (teamAssignmentResults.errors.length > 0) {
-                console.error("Team assignment errors:", teamAssignmentResults.errors);
+                console.error(
+                  "Team assignment errors:",
+                  teamAssignmentResults.errors,
+                );
               }
             }
           }
-          
+
           // Now set managers as team leaders for their respective teams
-          const managersToSetAsLeaders = csvImportedUsers.filter(user => 
-            user.role === 'manager' && user.team && user.team.trim() !== ''
+          const managersToSetAsLeaders = csvImportedUsers.filter(
+            (user) =>
+              user.role === "manager" && user.team && user.team.trim() !== "",
           );
-          
-          console.log("Step 3: Setting managers as team leaders:", managersToSetAsLeaders);
-          
+
+          console.log(
+            "Step 3: Setting managers as team leaders:",
+            managersToSetAsLeaders,
+          );
+
           if (managersToSetAsLeaders.length > 0) {
             // Wait longer for database transactions to complete
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
             // Retry logic to ensure teams and users are fully available
             let attempts = 0;
             const maxAttempts = 5;
             let teams: any[] = [];
             let users: any[] = [];
             let allDataFound = false;
-            
+
             while (attempts < maxAttempts && !allDataFound) {
               try {
-                console.log(`Attempt ${attempts + 1} to fetch teams and users...`);
-                
+                console.log(
+                  `Attempt ${attempts + 1} to fetch teams and users...`,
+                );
+
                 const teamsResponse = await fetch("/api/teams", {
                   method: "GET",
                   headers: {
-                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
                   },
-                  credentials: 'include'
+                  credentials: "include",
                 });
-                
+
                 const usersResponse = await fetch("/api/users", {
                   method: "GET",
                   headers: {
-                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                    "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
                   },
-                  credentials: 'include'
+                  credentials: "include",
                 });
-                
+
                 if (teamsResponse.ok && usersResponse.ok) {
                   teams = await teamsResponse.json();
                   users = await usersResponse.json();
-                  
+
                   // Check if all required teams and users are available
-                  const requiredTeams = [...new Set(managersToSetAsLeaders.map(m => m.team))];
-                  const requiredUsers = managersToSetAsLeaders.map(m => m.email);
-                  
-                  const foundTeams = requiredTeams.filter(teamName => 
-                    teams.some((t: any) => t.name.toLowerCase() === teamName.toLowerCase())
+                  const requiredTeams = [
+                    ...new Set(managersToSetAsLeaders.map((m) => m.team)),
+                  ];
+                  const requiredUsers = managersToSetAsLeaders.map(
+                    (m) => m.email,
                   );
-                  const foundUsers = requiredUsers.filter(email => 
-                    users.some((u: any) => u.email.toLowerCase() === email.toLowerCase())
+
+                  const foundTeams = requiredTeams.filter((teamName) =>
+                    teams.some(
+                      (t: any) =>
+                        t.name.toLowerCase() === teamName.toLowerCase(),
+                    ),
                   );
-                  
-                  console.log(`Found ${foundTeams.length}/${requiredTeams.length} teams and ${foundUsers.length}/${requiredUsers.length} users`);
-                  
-                  if (foundTeams.length === requiredTeams.length && foundUsers.length === requiredUsers.length) {
+                  const foundUsers = requiredUsers.filter((email) =>
+                    users.some(
+                      (u: any) => u.email.toLowerCase() === email.toLowerCase(),
+                    ),
+                  );
+
+                  console.log(
+                    `Found ${foundTeams.length}/${requiredTeams.length} teams and ${foundUsers.length}/${requiredUsers.length} users`,
+                  );
+
+                  if (
+                    foundTeams.length === requiredTeams.length &&
+                    foundUsers.length === requiredUsers.length
+                  ) {
                     allDataFound = true;
                     console.log("✓ All required teams and users found!");
                     break;
                   }
                 }
-                
+
                 attempts++;
                 if (attempts < maxAttempts) {
-                  console.log(`Waiting 3 seconds before retry ${attempts + 1}...`);
-                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  console.log(
+                    `Waiting 3 seconds before retry ${attempts + 1}...`,
+                  );
+                  await new Promise((resolve) => setTimeout(resolve, 3000));
                 }
               } catch (error) {
                 console.error(`Error in attempt ${attempts + 1}:`, error);
                 attempts++;
                 if (attempts < maxAttempts) {
-                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  await new Promise((resolve) => setTimeout(resolve, 3000));
                 }
               }
             }
-            
+
             if (allDataFound) {
-              console.log("Available teams:", teams.map((t: any) => ({ id: t.id, name: t.name })));
-              console.log("Available users:", users.map((u: any) => ({ id: u.id, email: u.email })));
-              console.log("Looking for managers:", managersToSetAsLeaders.map(m => ({ email: m.email, team: m.team })));
-              
+              console.log(
+                "Available teams:",
+                teams.map((t: any) => ({ id: t.id, name: t.name })),
+              );
+              console.log(
+                "Available users:",
+                users.map((u: any) => ({ id: u.id, email: u.email })),
+              );
+              console.log(
+                "Looking for managers:",
+                managersToSetAsLeaders.map((m) => ({
+                  email: m.email,
+                  team: m.team,
+                })),
+              );
+
               for (const manager of managersToSetAsLeaders) {
                 try {
-                  const team = teams.find((t: any) => t.name.toLowerCase() === manager.team.toLowerCase());
-                  const user = users.find((u: any) => u.email.toLowerCase() === manager.email.toLowerCase());
-                  
+                  const team = teams.find(
+                    (t: any) =>
+                      t.name.toLowerCase() === manager.team.toLowerCase(),
+                  );
+                  const user = users.find(
+                    (u: any) =>
+                      u.email.toLowerCase() === manager.email.toLowerCase(),
+                  );
+
                   if (team && user) {
                     // Set the user as team leader
-                    const leaderResponse = await fetch(`/api/teams/${team.id}/leader`, {
-                      method: "PUT",
-                      headers: { 
-                        "Content-Type": "application/json",
-                        "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                    const leaderResponse = await fetch(
+                      `/api/teams/${team.id}/leader`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "X-Tenant-ID":
+                            tenantContext.currentTenant?.id || tenantId,
+                        },
+                        body: JSON.stringify({ leaderId: user.id }),
+                        credentials: "include",
                       },
-                      body: JSON.stringify({ leaderId: user.id }),
-                      credentials: 'include'
-                    });
-                    
+                    );
+
                     if (leaderResponse.ok) {
-                      console.log(`Set ${manager.name} as leader of team ${manager.team}`);
+                      console.log(
+                        `Set ${manager.name} as leader of team ${manager.team}`,
+                      );
                     } else {
-                      console.error(`Failed to set ${manager.name} as team leader:`, await leaderResponse.text());
+                      console.error(
+                        `Failed to set ${manager.name} as team leader:`,
+                        await leaderResponse.text(),
+                      );
                     }
                   } else {
-                    console.error(`Could not find team "${manager.team}" or user "${manager.email}" for leadership assignment`);
+                    console.error(
+                      `Could not find team "${manager.team}" or user "${manager.email}" for leadership assignment`,
+                    );
                   }
                 } catch (error) {
-                  console.error(`Error setting ${manager.name} as team leader:`, error);
+                  console.error(
+                    `Error setting ${manager.name} as team leader:`,
+                    error,
+                  );
                 }
               }
             }
@@ -970,93 +1118,99 @@ export default function OKRSystemSetupWizard() {
           console.error("Error creating users:", error);
         }
       }
-      
+
       // Refresh queries
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      
+
       toast({
         title: "Save Complete!",
         description: `Successfully saved ${teamsCreated} teams and ${usersCreated} users to your organization.`,
       });
-      
+
       // Clear the imported data
       setCsvImportedTeams([]);
       setCsvImportedUsers([]);
-      
     } catch (error) {
       console.error("Error saving teams and users:", error);
       toast({
         title: "Save Failed",
-        description: "There was an error saving your teams and users. Please try again.",
-        variant: "destructive"
+        description:
+          "There was an error saving your teams and users. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSavingUsersAndTeams(false);
     }
   };
-  
+
   // Function to process CSV data and create teams/users immediately
   const createTeamsAndUsersFromCsv = async (users: UserImport[]) => {
     try {
       console.log("Processing CSV data immediately...", users);
-      
+
       // Extract unique team names from CSV data
-      const uniqueTeamNames = Array.from(new Set(
-        users
-          .filter((user: any) => user.team && user.team.trim() !== '')
-          .map((user: any) => user.team.trim())
-      ));
-      
+      const uniqueTeamNames = Array.from(
+        new Set(
+          users
+            .filter((user: any) => user.team && user.team.trim() !== "")
+            .map((user: any) => user.team.trim()),
+        ),
+      );
+
       console.log("Unique teams to create:", uniqueTeamNames);
-      
+
       // Create teams first if there are any
       if (uniqueTeamNames.length > 0) {
         try {
           const teamCreateRes = await fetch("/api/teams/batch", {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "X-Tenant-ID": tenantId
+              "X-Tenant-ID": tenantId,
             },
             body: JSON.stringify({
-              teams: uniqueTeamNames.map(teamName => ({
+              teams: uniqueTeamNames.map((teamName) => ({
                 name: teamName,
-                description: `Auto-created team from CSV upload`
-              }))
+                description: `Auto-created team from CSV upload`,
+              })),
             }),
-            credentials: 'include'
+            credentials: "include",
           });
-          
+
           if (teamCreateRes.ok) {
             const teamCreateData = await teamCreateRes.json();
             console.log("Teams created successfully:", teamCreateData);
-            
+
             toast({
               title: "Teams Created",
               description: `Successfully created ${teamCreateData.createdTeams?.length || uniqueTeamNames.length} teams from your CSV file.`,
             });
           } else {
-            console.error("Failed to create teams:", await teamCreateRes.text());
+            console.error(
+              "Failed to create teams:",
+              await teamCreateRes.text(),
+            );
           }
         } catch (error) {
           console.error("Error creating teams:", error);
         }
       }
-      
+
       // Process users - since teams are created, just show success message
-      const validUsers = users.filter((user: any) => user.isValid && user.email);
-      
+      const validUsers = users.filter(
+        (user: any) => user.isValid && user.email,
+      );
+
       if (validUsers.length > 0) {
         toast({
           title: "CSV Upload Complete",
           description: `Successfully created ${uniqueTeamNames.length} teams. ${validUsers.length} users processed and ready for import.`,
         });
       }
-      
+
       // Invalidate teams query to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-      
     } catch (error) {
       console.error("Error processing CSV data:", error);
       toast({
@@ -1066,15 +1220,15 @@ export default function OKRSystemSetupWizard() {
       });
     }
   };
-  
+
   // Function to handle default team selection
   const handleDefaultTeamSelection = (templateId: string) => {
-    setSelectedDefaultTeams(prev => {
+    setSelectedDefaultTeams((prev) => {
       // Toggle selection
       const newSelection = prev.includes(templateId)
-        ? prev.filter(id => id !== templateId)
+        ? prev.filter((id) => id !== templateId)
         : [...prev, templateId];
-      
+
       // Update form state
       form.setValue("teamConfiguration.defaultTeams", newSelection);
       return newSelection;
@@ -1089,7 +1243,7 @@ export default function OKRSystemSetupWizard() {
         companyMission: "",
         companyVision: "",
         companyValues: "",
-        strategicDirections: "",
+
         trackingFrequency: "weekly",
         enableNotifications: true,
       },
@@ -1115,47 +1269,52 @@ export default function OKRSystemSetupWizard() {
         csvUsers: [] as any[],
         useDefaultTeams: true, // Check this by default
       },
-
     },
   });
-  
+
   // Fetch existing OKR system configuration
   useEffect(() => {
     const fetchExistingConfig = async () => {
       try {
         setIsLoading(true);
         // Get active tenant ID from session if available
-        const userResponse = await fetch('/api/user', {
-          credentials: 'include'
+        const userResponse = await fetch("/api/user", {
+          credentials: "include",
         });
-        
+
         if (!userResponse.ok) {
           console.error("Failed to get user information");
           setIsLoading(false);
           return;
         }
-        
+
         const userData = await userResponse.json();
         console.log("User data received:", userData);
-        
+
         // First try to get default tenant, then first tenant from array if available
-        const currentTenantId = userData.defaultTenant || 
-                               (userData.tenants && userData.tenants.length > 0 && userData.tenants[0].id);
-        
+        const currentTenantId =
+          userData.defaultTenant ||
+          (userData.tenants &&
+            userData.tenants.length > 0 &&
+            userData.tenants[0].id);
+
         console.log("Detected tenant ID:", currentTenantId);
-        
+
         if (!currentTenantId) {
           console.error("No tenant ID available");
           setIsLoading(false);
           return;
         }
-        
+
         // Set tenant ID for later use in the submit function
         setTenantId(currentTenantId);
-        
+
         // First, fetch organization mission data to prefill mission and vision fields
-        console.log("Fetching organization mission data for tenant:", currentTenantId);
-        
+        console.log(
+          "Fetching organization mission data for tenant:",
+          currentTenantId,
+        );
+
         // Create a FormValues object to store our form data
         const formValues: FormValues = {
           generalSettings: {
@@ -1191,301 +1350,363 @@ export default function OKRSystemSetupWizard() {
             enableAnalyticsReporting: true,
           },
         };
-        
+
         // Prioritize mission data from the organization-mission API
-        const missionResponse = await fetch(`/api/organization-mission?tenantId=${currentTenantId}`, {
-          method: 'GET',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Tenant-ID': currentTenantId
+        const missionResponse = await fetch(
+          `/api/organization-mission?tenantId=${currentTenantId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Tenant-ID": currentTenantId,
+            },
+            credentials: "include",
           },
-          credentials: 'include'
-        });
-        
+        );
+
         // If mission data is available, use it for mission, vision, and values
         if (missionResponse.ok) {
           const missionData = await missionResponse.json();
           console.log("Organization mission data loaded:", missionData);
-          
+
           // Check if data exists by checking for mission, id, or mission string
           if (missionData && (missionData.id || missionData.mission)) {
             // Populate the mission and vision fields from organization mission data
-            formValues.generalSettings.companyMission = missionData.mission || "";
+            formValues.generalSettings.companyMission =
+              missionData.mission || "";
             formValues.generalSettings.companyVision = missionData.vision || "";
-            
+
             // If behaviors is a JSON string, parse it; otherwise, use as is
             if (missionData.behaviors) {
               try {
                 // Check if it's a JSON string that needs parsing
-                if (typeof missionData.behaviors === 'string' && 
-                    (missionData.behaviors.startsWith('[') || missionData.behaviors.startsWith('{'))) {
+                if (
+                  typeof missionData.behaviors === "string" &&
+                  (missionData.behaviors.startsWith("[") ||
+                    missionData.behaviors.startsWith("{"))
+                ) {
                   const parsedBehaviors = JSON.parse(missionData.behaviors);
-                  
+
                   // If it's an array, join with commas
                   if (Array.isArray(parsedBehaviors)) {
-                    formValues.generalSettings.companyValues = parsedBehaviors.join(', ');
+                    formValues.generalSettings.companyValues =
+                      parsedBehaviors.join(", ");
                   } else {
-                    formValues.generalSettings.companyValues = missionData.behaviors;
+                    formValues.generalSettings.companyValues =
+                      missionData.behaviors;
                   }
                 } else {
-                  formValues.generalSettings.companyValues = missionData.behaviors;
+                  formValues.generalSettings.companyValues =
+                    missionData.behaviors;
                 }
               } catch (e) {
                 // If parsing fails, use the raw string
-                formValues.generalSettings.companyValues = missionData.behaviors;
+                formValues.generalSettings.companyValues =
+                  missionData.behaviors;
               }
             }
-            
+
             console.log("Prefilled form with mission data:", {
               mission: formValues.generalSettings.companyMission,
               vision: formValues.generalSettings.companyVision,
-              values: formValues.generalSettings.companyValues
+              values: formValues.generalSettings.companyValues,
             });
           }
         }
-        
+
         // Then fetch OKR system config for remaining form fields
-        console.log("Fetching OKR system config with tenant ID:", currentTenantId);
-        
-        const systemResponse = await fetch(`/api/okr-system?tenantId=${currentTenantId}`, {
-          method: 'GET',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Tenant-ID': currentTenantId
+        console.log(
+          "Fetching OKR system config with tenant ID:",
+          currentTenantId,
+        );
+
+        const systemResponse = await fetch(
+          `/api/okr-system?tenantId=${currentTenantId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Tenant-ID": currentTenantId,
+            },
+            credentials: "include",
           },
-          credentials: 'include'
-        });
-        
+        );
+
         // If OKR system config is available, use it to populate remaining fields
         if (systemResponse.ok) {
           const systemConfig = await systemResponse.json();
           console.log("Loaded existing OKR system config:", systemConfig);
-          
+
           // Map database fields to form fields
           if (systemConfig) {
             // Only override mission/vision if not already set from mission API
-            if (!formValues.generalSettings.companyMission && systemConfig.company_mission) {
-              formValues.generalSettings.companyMission = systemConfig.company_mission;
+            if (
+              !formValues.generalSettings.companyMission &&
+              systemConfig.company_mission
+            ) {
+              formValues.generalSettings.companyMission =
+                systemConfig.company_mission;
             }
-            
-            if (!formValues.generalSettings.companyVision && systemConfig.company_vision) {
-              formValues.generalSettings.companyVision = systemConfig.company_vision;
+
+            if (
+              !formValues.generalSettings.companyVision &&
+              systemConfig.company_vision
+            ) {
+              formValues.generalSettings.companyVision =
+                systemConfig.company_vision;
             }
-            
-            if (!formValues.generalSettings.companyValues && systemConfig.company_values) {
-              formValues.generalSettings.companyValues = systemConfig.company_values;
+
+            if (
+              !formValues.generalSettings.companyValues &&
+              systemConfig.company_values
+            ) {
+              formValues.generalSettings.companyValues =
+                systemConfig.company_values;
             }
-            
+
             // Map remaining fields
             if (systemConfig.tracking_frequency) {
-              formValues.generalSettings.trackingFrequency = systemConfig.tracking_frequency;
+              formValues.generalSettings.trackingFrequency =
+                systemConfig.tracking_frequency;
             }
-            
-            formValues.generalSettings.enableNotifications = systemConfig.enable_notifications !== false;
-            
+
+            formValues.generalSettings.enableNotifications =
+              systemConfig.enable_notifications !== false;
+
             if (systemConfig.primary_cadence) {
-              formValues.timeframes.primaryCadence = systemConfig.primary_cadence;
+              formValues.timeframes.primaryCadence =
+                systemConfig.primary_cadence;
             }
-            
-            formValues.timeframes.enableQuarterlyCadence = systemConfig.enable_quarterly_cadence !== false;
-            formValues.timeframes.enableAnnualCadence = systemConfig.enable_annual_cadence !== false;
-            
+
+            formValues.timeframes.enableQuarterlyCadence =
+              systemConfig.enable_quarterly_cadence !== false;
+            formValues.timeframes.enableAnnualCadence =
+              systemConfig.enable_annual_cadence !== false;
+
             if (systemConfig.custom_cadence) {
               formValues.timeframes.customCadence = systemConfig.custom_cadence;
             }
-            
+
             if (systemConfig.start_month) {
               formValues.timeframes.startMonth = systemConfig.start_month;
             }
-            
+
             if (systemConfig.default_objective_category) {
-              formValues.objectiveSettings.defaultObjectiveCategory = systemConfig.default_objective_category;
+              formValues.objectiveSettings.defaultObjectiveCategory =
+                systemConfig.default_objective_category;
             }
-            
+
             if (systemConfig.max_objectives_per_team) {
-              formValues.objectiveSettings.maxObjectivesPerTeam = systemConfig.max_objectives_per_team.toString();
+              formValues.objectiveSettings.maxObjectivesPerTeam =
+                systemConfig.max_objectives_per_team.toString();
             }
-            
+
             if (systemConfig.max_key_results_per_objective) {
-              formValues.objectiveSettings.maxKeyResultsPerObjective = 
+              formValues.objectiveSettings.maxKeyResultsPerObjective =
                 systemConfig.max_key_results_per_objective.toString();
             }
-            
-            formValues.objectiveSettings.requireObjectiveApproval = 
+
+            formValues.objectiveSettings.requireObjectiveApproval =
               systemConfig.require_objective_approval !== false;
-            
-            formValues.objectiveSettings.enableObjectiveAlignment = 
+
+            formValues.objectiveSettings.enableObjectiveAlignment =
               systemConfig.enable_objective_alignment !== false;
-            
+
             if (systemConfig.org_structure_type) {
-              formValues.teamConfiguration.orgStructureType = systemConfig.org_structure_type;
+              formValues.teamConfiguration.orgStructureType =
+                systemConfig.org_structure_type;
             }
-            
-            formValues.teamConfiguration.enableCrossTeamObjectives = 
+
+            formValues.teamConfiguration.enableCrossTeamObjectives =
               systemConfig.enable_cross_team_objectives !== false;
-            
+
             if (systemConfig.default_visibility) {
-              formValues.teamConfiguration.defaultVisibility = systemConfig.default_visibility;
+              formValues.teamConfiguration.defaultVisibility =
+                systemConfig.default_visibility;
             }
-            
+
             // If there are selected teams in the config, use them
-            if (systemConfig.selected_teams && Array.isArray(systemConfig.selected_teams)) {
-              formValues.teamConfiguration.selectedTeams = systemConfig.selected_teams;
+            if (
+              systemConfig.selected_teams &&
+              Array.isArray(systemConfig.selected_teams)
+            ) {
+              formValues.teamConfiguration.selectedTeams =
+                systemConfig.selected_teams;
             } else {
               formValues.teamConfiguration.selectedTeams = [];
             }
-            
-            formValues.integrations.enableSlackIntegration = 
+
+            formValues.integrations.enableSlackIntegration =
               systemConfig.enable_slack_integration === true;
-            
-            formValues.integrations.enableEmailNotifications = 
+
+            formValues.integrations.enableEmailNotifications =
               systemConfig.enable_email_notifications !== false;
-            
-            formValues.integrations.enableCalendarSync = 
+
+            formValues.integrations.enableCalendarSync =
               systemConfig.enable_calendar_sync === true;
-            
-            formValues.integrations.enableAnalyticsReporting = 
+
+            formValues.integrations.enableAnalyticsReporting =
               systemConfig.enable_analytics_reporting !== false;
           }
         }
-        
+
         // Finally, reset the form with all the collected data
         console.log("Resetting form with data:", formValues);
         form.reset(formValues);
-        
+
         // Update internal state to match the loaded data
         setActivePage("general"); // Start on the general page where mission data is displayed
-        
+
         // Show notification that data was loaded if mission or vision is available
-        if (formValues.generalSettings.companyMission || formValues.generalSettings.companyVision) {
+        if (
+          formValues.generalSettings.companyMission ||
+          formValues.generalSettings.companyVision
+        ) {
           toast({
             title: "Configuration Loaded",
-            description: "Your existing mission and vision data has been loaded. You can edit and save changes using the Complete Mission Setup button.",
+            description:
+              "Your existing mission and vision data has been loaded. You can edit and save changes using the Complete Mission Setup button.",
           });
         }
-        
       } catch (error) {
         console.error("Error fetching configuration data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchExistingConfig();
   }, [form, toast]);
 
   // Using the tenantId state initialized above
-  
+
   // Create mutation for saving OKR system setup
   const saveOKRSystemMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       console.log("Saving OKR system setup:", data);
-      
+
       if (!tenantId) {
-        throw new Error("No tenant ID available. Please refresh the page and try again.");
+        throw new Error(
+          "No tenant ID available. Please refresh the page and try again.",
+        );
       }
-      
+
       // Make API request to save OKR system setup
       console.log("Using tenant ID for save:", tenantId);
-      
-      // Get selected default teams 
+
+      // Get selected default teams
       const selectedDefaultTeamIds = data.teamConfiguration.defaultTeams || [];
-      
+
       // Create a new object with tenant_id property
       const formDataWithTenant = {
         ...data,
         tenant_id: tenantId, // Add tenant ID to the request body
-        
+
         // Process default teams if enabled
-        default_teams: data.teamConfiguration.useDefaultTeams ? 
-          defaultTeamTemplates
-            .filter(template => selectedDefaultTeamIds.includes(template.id))
-            .map(template => ({
-              name: template.name,
-              description: template.description,
-              color: template.color,
-              icon: template.icon,
-              tenant_id: tenantId
-            })) 
+        default_teams: data.teamConfiguration.useDefaultTeams
+          ? defaultTeamTemplates
+              .filter((template) =>
+                selectedDefaultTeamIds.includes(template.id),
+              )
+              .map((template) => ({
+                name: template.name,
+                description: template.description,
+                color: template.color,
+                icon: template.icon,
+                tenant_id: tenantId,
+              }))
           : [],
-          
+
         // Include CSV users - make sure to process only valid users
-        csv_users: Array.isArray(data.teamConfiguration.csvUsers) ? 
-          data.teamConfiguration.csvUsers
-            .filter(user => user && user.email && (user.isValid !== false)) // Only include valid users or those without explicit validation
-            .map(user => ({
-              email: user.email,
-              name: user.name || '',
-              role: user.role || 'user',
-              department: user.department || '',
-              team: user.team || '',
-              tenant_id: tenantId
-            }))
+        csv_users: Array.isArray(data.teamConfiguration.csvUsers)
+          ? data.teamConfiguration.csvUsers
+              .filter((user) => user && user.email && user.isValid !== false) // Only include valid users or those without explicit validation
+              .map((user) => ({
+                email: user.email,
+                name: user.name || "",
+                role: user.role || "user",
+                department: user.department || "",
+                team: user.team || "",
+                tenant_id: tenantId,
+              }))
           : [],
-          
+
         // Include strategic directions for saving
-        strategic_directions: Array.isArray(data.generalSettings.strategicDirections) ?
-          data.generalSettings.strategicDirections
-            .filter(direction => direction && direction.title && direction.title.trim() !== '')
-            .map(direction => ({
-              title: direction.title.trim(),
-              description: direction.description?.trim() || '',
-              priority: direction.priority || 1,
-              type: 'company',
-              tenant_id: tenantId
-            }))
-          : []
+        strategic_directions: Array.isArray(
+          data.generalSettings.strategicDirections,
+        )
+          ? data.generalSettings.strategicDirections
+              .filter(
+                (direction) =>
+                  direction && direction.title && direction.title.trim() !== "",
+              )
+              .map((direction) => ({
+                title: direction.title?.trim() || "bhbhjbjhh",
+                description: direction.description?.trim() || "bjkbjkbjk",
+                priority: direction.priority || 1,
+                type: "company",
+                tenant_id: tenantId,
+              }))
+          : [],
       };
-      
+
       // Log the full data being sent
       console.log("Sending data with tenant:", formDataWithTenant);
-      
+
       console.log("Sending OKR system config with tenant ID:", tenantId);
-      
+
       // Format the data properly to avoid JSON parsing errors
       const safeFormData = JSON.parse(JSON.stringify(formDataWithTenant));
-      
+
       // Use our new simplified endpoint which has more flexible validation
-      const response = await fetch(`/api/okr-system-setup-simple?tenantId=${tenantId}`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId // Add tenant ID in header for middleware
+      const response = await fetch(
+        `/api/okr-system-setup-simple?tenantId=${tenantId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId, // Add tenant ID in header for middleware
+          },
+          body: JSON.stringify(safeFormData),
+          credentials: "include",
         },
-        body: JSON.stringify(safeFormData),
-        credentials: 'include'
-      });
-      
+      );
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to save OKR system setup:", response.status, errorData);
+        console.error(
+          "Failed to save OKR system setup:",
+          response.status,
+          errorData,
+        );
         throw new Error(errorData.error || "Failed to save OKR system setup");
       }
-      
+
       return await response.json();
     },
     onSuccess: async (data) => {
       console.log("OKR system setup saved successfully:", data);
       setSetupComplete(true);
-      
+
       // Show success message
       toast({
         title: "OKR System Setup Complete!",
         description: "Your OKR system has been configured successfully.",
       });
-      
+
       // Invalidate any relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/okr-system"] });
-      
+
       // Show completion message and redirect
       setTimeout(() => {
         console.log("Setup complete");
-        
+
         toast({
           title: "Ready to Launch your OKR Platform!",
-          description: "Your OKR system is ready to use. You will now be redirected to create your first company objective.",
+          description:
+            "Your OKR system is ready to use. You will now be redirected to create your first company objective.",
         });
-        
+
         // Navigate to the create company objective page
         setTimeout(() => {
           navigate("/create-company-objective");
@@ -1495,46 +1716,49 @@ export default function OKRSystemSetupWizard() {
     onError: (error: any) => {
       console.error("Error in OKR system setup submission:", error);
       setIsSubmitting(false);
-      
+
       // Show more detailed error information
       toast({
         title: "Error Saving OKR System",
-        description: error.message || "An unexpected error occurred. Please try again.",
+        description:
+          error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      
+
       // Log the current form values for debugging
       console.log("Current form values:", form.getValues());
-    }
+    },
   });
 
   // Function to check if current step is valid
   const isCurrentStepValid = () => {
     const currentStep = steps[activeIndex];
-    
+
     if (currentStep.id === "general") {
       const { generalSettings } = form.getValues();
-      return !!generalSettings.companyMission && 
-             !!generalSettings.companyVision && 
-             !!generalSettings.companyValues;
+      return (
+        !!generalSettings.companyMission &&
+        !!generalSettings.companyVision &&
+        !!generalSettings.companyValues
+      );
     }
-    
+
     if (currentStep.id === "timeframes") {
       return true; // All fields have defaults
     }
-    
+
     if (currentStep.id === "objectives") {
       return true; // All fields have defaults
     }
-    
+
     if (currentStep.id === "teams") {
       return true; // All fields have defaults
     }
-    
+
     if (currentStep.id === "integrations") {
       return true; // All fields have defaults
     }
-    
+
     return true;
   };
 
@@ -1542,19 +1766,24 @@ export default function OKRSystemSetupWizard() {
   const onSubmitForm = async (data: FormValues) => {
     console.log("Form submitted with data:", data);
     setIsSubmitting(true);
-    
+
     try {
       // First, process CSV users and create teams if needed
-      if (data.teamConfiguration.csvUsers && data.teamConfiguration.csvUsers.length > 0) {
+      if (
+        data.teamConfiguration.csvUsers &&
+        data.teamConfiguration.csvUsers.length > 0
+      ) {
         console.log("Processing CSV users and creating teams...");
-        
+
         // Extract unique team names from CSV data
-        const uniqueTeams = Array.from(new Set(
-          data.teamConfiguration.csvUsers
-            .filter((user: any) => user.team && user.team.trim() !== '')
-            .map((user: any) => user.team.trim())
-        ));
-        
+        const uniqueTeams = Array.from(
+          new Set(
+            data.teamConfiguration.csvUsers
+              .filter((user: any) => user.team && user.team.trim() !== "")
+              .map((user: any) => user.team.trim()),
+          ),
+        );
+
         // Create teams if there are any
         if (uniqueTeams.length > 0) {
           try {
@@ -1562,13 +1791,13 @@ export default function OKRSystemSetupWizard() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                teams: uniqueTeams.map(teamName => ({
+                teams: uniqueTeams.map((teamName) => ({
                   name: teamName,
-                  description: `Auto-created team from CSV upload`
-                }))
-              })
+                  description: `Auto-created team from CSV upload`,
+                })),
+              }),
             });
-            
+
             if (teamCreateRes.ok) {
               const teamCreateData = await teamCreateRes.json();
               console.log("Teams created successfully:", teamCreateData);
@@ -1577,15 +1806,19 @@ export default function OKRSystemSetupWizard() {
             console.error("Error creating teams:", error);
           }
         }
-        
+
         // Teams are already created during CSV upload, just show success
-        const validUsers = data.teamConfiguration.csvUsers.filter((user: any) => user.isValid);
-        
+        const validUsers = data.teamConfiguration.csvUsers.filter(
+          (user: any) => user.isValid,
+        );
+
         if (validUsers.length > 0) {
-          console.log(`CSV upload complete: ${uniqueTeams.length} teams created, ${validUsers.length} users processed`);
+          console.log(
+            `CSV upload complete: ${uniqueTeams.length} teams created, ${validUsers.length} users processed`,
+          );
         }
       }
-      
+
       // Make sure teamConfiguration has all required properties to prevent submission errors
       const validatedData = {
         ...data,
@@ -1594,12 +1827,13 @@ export default function OKRSystemSetupWizard() {
           defaultTeams: data.teamConfiguration.defaultTeams || [],
           csvUsers: data.teamConfiguration.csvUsers || [],
           // Make sure useDefaultTeams is present and properly set
-          useDefaultTeams: typeof data.teamConfiguration.useDefaultTeams === 'boolean' 
-            ? data.teamConfiguration.useDefaultTeams 
-            : true // Default to true if not present
-        }
+          useDefaultTeams:
+            typeof data.teamConfiguration.useDefaultTeams === "boolean"
+              ? data.teamConfiguration.useDefaultTeams
+              : true, // Default to true if not present
+        },
       };
-      
+
       // Continue with the OKR system setup
       saveOKRSystemMutation.mutate(validatedData);
     } catch (error) {
@@ -1607,7 +1841,8 @@ export default function OKRSystemSetupWizard() {
       setIsSubmitting(false);
       toast({
         title: "Error",
-        description: "An error occurred while processing your setup. Please try again.",
+        description:
+          "An error occurred while processing your setup. Please try again.",
         variant: "destructive",
       });
     }
@@ -1617,7 +1852,7 @@ export default function OKRSystemSetupWizard() {
   const handleFormSubmit = (data: FormValues) => {
     console.log("Legacy form submitted with data:", data);
     setIsSubmitting(true);
-    
+
     // Make sure teamConfiguration has all required properties to prevent submission errors
     const validatedData = {
       ...data,
@@ -1626,31 +1861,33 @@ export default function OKRSystemSetupWizard() {
         defaultTeams: data.teamConfiguration.defaultTeams || [],
         csvUsers: data.teamConfiguration.csvUsers || [],
         // Make sure useDefaultTeams is present and properly set
-        useDefaultTeams: typeof data.teamConfiguration.useDefaultTeams === 'boolean' 
-          ? data.teamConfiguration.useDefaultTeams 
-          : true // Default to true if not present
-      }
+        useDefaultTeams:
+          typeof data.teamConfiguration.useDefaultTeams === "boolean"
+            ? data.teamConfiguration.useDefaultTeams
+            : true, // Default to true if not present
+      },
     };
-    
+
     console.log("Validated form data:", validatedData);
     saveOKRSystemMutation.mutate(validatedData);
   };
-  
+
   // Handle saving just the mission data
   const saveMissionData = async () => {
     try {
       // Get values from the form
       const { generalSettings } = form.getValues();
-      
+
       if (!tenantId) {
         toast({
           title: "Error",
-          description: "No tenant ID available. Please refresh the page and try again.",
+          description:
+            "No tenant ID available. Please refresh the page and try again.",
           variant: "destructive",
         });
         return;
       }
-      
+
       if (!generalSettings.companyMission || !generalSettings.companyVision) {
         toast({
           title: "Validation Error",
@@ -1659,89 +1896,101 @@ export default function OKRSystemSetupWizard() {
         });
         return;
       }
-      
+
       // Show loading state
       setIsSubmitting(true);
-      
+
       // Prepare the data for the mission API
       const missionData = {
         mission: generalSettings.companyMission,
         vision: generalSettings.companyVision,
         behaviors: generalSettings.companyValues,
         strategic_directions: generalSettings.strategicDirections, // Include strategic directions from form
-        tenantId: tenantId
+        tenantId: tenantId,
       };
-      
-      console.log("Saving mission data (including strategic directions):", missionData);
-      
+
+      console.log(
+        "Saving mission data (including strategic directions):",
+        missionData,
+      );
+
       // First, check if cadences exist for this tenant
       console.log("Checking if cadences exist for tenant:", tenantId);
-      
+
       // Check for existing cadences
-      const cadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId
+      const cadenceResponse = await fetch(
+        `/api/cadences?tenantId=${tenantId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId,
+          },
+          credentials: "include",
         },
-        credentials: 'include'
-      });
-      
+      );
+
       const cadencesData = await cadenceResponse.json();
       console.log("Existing cadences:", cadencesData);
-      
+
       // If no cadences exist, create default ones
       if (!cadencesData.length || cadencesData.length === 0) {
         console.log("No cadences found, creating default cadences");
-        
+
         // Create default annual cadence
         const annualCadence = {
           name: "Annual",
           description: "Yearly planning cycle",
           period: "annual",
-          tenantId: tenantId
+          tenantId: tenantId,
         };
-        
+
         // Create default quarterly cadence
         const quarterlyCadence = {
           name: "Quarterly",
           description: "Quarterly planning cycle",
           period: "quarterly",
-          tenantId: tenantId
+          tenantId: tenantId,
         };
-        
+
         try {
           // First create the cadences
-          const annualCadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Tenant-ID': tenantId
+          const annualCadenceResponse = await fetch(
+            `/api/cadences?tenantId=${tenantId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Tenant-ID": tenantId,
+              },
+              body: JSON.stringify(annualCadence),
+              credentials: "include",
             },
-            body: JSON.stringify(annualCadence),
-            credentials: 'include'
-          });
-          
-          const quarterlyCadenceResponse = await fetch(`/api/cadences?tenantId=${tenantId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Tenant-ID': tenantId
+          );
+
+          const quarterlyCadenceResponse = await fetch(
+            `/api/cadences?tenantId=${tenantId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Tenant-ID": tenantId,
+              },
+              body: JSON.stringify(quarterlyCadence),
+              credentials: "include",
             },
-            body: JSON.stringify(quarterlyCadence),
-            credentials: 'include'
-          });
-          
+          );
+
           if (annualCadenceResponse.ok && quarterlyCadenceResponse.ok) {
             console.log("Default cadences created successfully");
-            
+
             // Get the created cadence IDs
             const annualCadenceData = await annualCadenceResponse.json();
             const quarterlyCadenceData = await quarterlyCadenceResponse.json();
-            
+
             // Now create timeframes for each cadence
             const currentDate = new Date();
-            
+
             // Create annual timeframe for the current year
             const annualTimeframe = {
               name: `${currentDate.getFullYear()} Annual`,
@@ -1749,94 +1998,120 @@ export default function OKRSystemSetupWizard() {
               startDate: new Date(currentDate.getFullYear(), 0, 1), // Jan 1 of current year
               endDate: new Date(currentDate.getFullYear(), 11, 31), // Dec 31 of current year
               cadenceId: annualCadenceData.id,
-              tenantId: tenantId
+              tenantId: tenantId,
             };
-            
+
             // Get current quarter
             const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
             const quarterStartMonth = (currentQuarter - 1) * 3;
             const quarterEndMonth = quarterStartMonth + 2;
-            
+
             // Create quarterly timeframe for the current quarter
             const quarterlyTimeframe = {
               name: `Q${currentQuarter} ${currentDate.getFullYear()}`,
               description: `Q${currentQuarter} objectives for ${currentDate.getFullYear()}`,
-              startDate: new Date(currentDate.getFullYear(), quarterStartMonth, 1),
-              endDate: new Date(currentDate.getFullYear(), quarterEndMonth + 1, 0), // Last day of end month
+              startDate: new Date(
+                currentDate.getFullYear(),
+                quarterStartMonth,
+                1,
+              ),
+              endDate: new Date(
+                currentDate.getFullYear(),
+                quarterEndMonth + 1,
+                0,
+              ), // Last day of end month
               cadenceId: quarterlyCadenceData.id,
-              tenantId: tenantId
+              tenantId: tenantId,
             };
-            
+
             // Create the timeframes
-            const annualTimeframeResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Tenant-ID': tenantId
+            const annualTimeframeResponse = await fetch(
+              `/api/timeframes?tenantId=${tenantId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId,
+                },
+                body: JSON.stringify(annualTimeframe),
+                credentials: "include",
               },
-              body: JSON.stringify(annualTimeframe),
-              credentials: 'include'
-            });
-            
-            const quarterlyTimeframeResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Tenant-ID': tenantId
+            );
+
+            const quarterlyTimeframeResponse = await fetch(
+              `/api/timeframes?tenantId=${tenantId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId,
+                },
+                body: JSON.stringify(quarterlyTimeframe),
+                credentials: "include",
               },
-              body: JSON.stringify(quarterlyTimeframe),
-              credentials: 'include'
-            });
-            
+            );
+
             if (annualTimeframeResponse.ok && quarterlyTimeframeResponse.ok) {
               console.log("Default timeframes created successfully");
             } else {
-              console.error("Failed to create default timeframes:", 
-                await annualTimeframeResponse.text(), 
-                await quarterlyTimeframeResponse.text()
+              console.error(
+                "Failed to create default timeframes:",
+                await annualTimeframeResponse.text(),
+                await quarterlyTimeframeResponse.text(),
               );
             }
           } else {
-            console.error("Failed to create default cadences:", 
-              await annualCadenceResponse.text(), 
-              await quarterlyCadenceResponse.text()
+            console.error(
+              "Failed to create default cadences:",
+              await annualCadenceResponse.text(),
+              await quarterlyCadenceResponse.text(),
             );
           }
         } catch (error) {
-          console.error("Error creating default cadences and timeframes:", error);
+          console.error(
+            "Error creating default cadences and timeframes:",
+            error,
+          );
         }
       } else {
         // Check if there are any timeframes
-        const timeframesResponse = await fetch(`/api/timeframes?tenantId=${tenantId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Tenant-ID': tenantId
+        const timeframesResponse = await fetch(
+          `/api/timeframes?tenantId=${tenantId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Tenant-ID": tenantId,
+            },
+            credentials: "include",
           },
-          credentials: 'include'
-        });
-        
+        );
+
         const timeframesData = await timeframesResponse.json();
         console.log("Existing timeframes:", timeframesData);
-        
+
         // If cadences exist but no timeframes, create default timeframes
         if (!timeframesData.length || timeframesData.length === 0) {
-          console.log("No timeframes found, creating default timeframes for existing cadences");
-          
+          console.log(
+            "No timeframes found, creating default timeframes for existing cadences",
+          );
+
           try {
             // Find annual and quarterly cadences
-            const annualCadence = cadencesData.find(c => 
-              c.name.toLowerCase().includes('annual') || 
-              c.period?.toLowerCase().includes('annual')
+            const annualCadence = cadencesData.find(
+              (c) =>
+                c.name.toLowerCase().includes("annual") ||
+                c.period?.toLowerCase().includes("annual"),
             );
-            
-            const quarterlyCadence = cadencesData.find(c => 
-              c.name.toLowerCase().includes('quarter') || 
-              c.period?.toLowerCase().includes('quarter')
+
+            const quarterlyCadence = cadencesData.find(
+              (c) =>
+                c.name.toLowerCase().includes("quarter") ||
+                c.period?.toLowerCase().includes("quarter"),
             );
-            
+
             const currentDate = new Date();
-            
+
             // Create timeframes if cadences are found
             if (annualCadence) {
               const annualTimeframe = {
@@ -1845,104 +2120,124 @@ export default function OKRSystemSetupWizard() {
                 startDate: new Date(currentDate.getFullYear(), 0, 1), // Jan 1 of current year
                 endDate: new Date(currentDate.getFullYear(), 11, 31), // Dec 31 of current year
                 cadenceId: annualCadence.id,
-                tenantId: tenantId
+                tenantId: tenantId,
               };
-              
+
               await fetch(`/api/timeframes?tenantId=${tenantId}`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
-                  'X-Tenant-ID': tenantId
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId,
                 },
                 body: JSON.stringify(annualTimeframe),
-                credentials: 'include'
+                credentials: "include",
               });
             }
-            
+
             if (quarterlyCadence) {
               // Get current quarter
               const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
               const quarterStartMonth = (currentQuarter - 1) * 3;
               const quarterEndMonth = quarterStartMonth + 2;
-              
+
               const quarterlyTimeframe = {
                 name: `Q${currentQuarter} ${currentDate.getFullYear()}`,
                 description: `Q${currentQuarter} objectives for ${currentDate.getFullYear()}`,
-                startDate: new Date(currentDate.getFullYear(), quarterStartMonth, 1),
-                endDate: new Date(currentDate.getFullYear(), quarterEndMonth + 1, 0), // Last day of end month
+                startDate: new Date(
+                  currentDate.getFullYear(),
+                  quarterStartMonth,
+                  1,
+                ),
+                endDate: new Date(
+                  currentDate.getFullYear(),
+                  quarterEndMonth + 1,
+                  0,
+                ), // Last day of end month
                 cadenceId: quarterlyCadence.id,
-                tenantId: tenantId
+                tenantId: tenantId,
               };
-              
+
               await fetch(`/api/timeframes?tenantId=${tenantId}`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
-                  'X-Tenant-ID': tenantId
+                  "Content-Type": "application/json",
+                  "X-Tenant-ID": tenantId,
                 },
                 body: JSON.stringify(quarterlyTimeframe),
-                credentials: 'include'
+                credentials: "include",
               });
             }
-            
+
             console.log("Default timeframes created for existing cadences");
           } catch (error) {
-            console.error("Error creating timeframes for existing cadences:", error);
+            console.error(
+              "Error creating timeframes for existing cadences:",
+              error,
+            );
           }
         } else {
-          console.log("Timeframes already exist for this tenant:", timeframesData.length);
+          console.log(
+            "Timeframes already exist for this tenant:",
+            timeframesData.length,
+          );
         }
       }
-      
+
       // Send the request to the mission API
-      const response = await fetch(`/api/organization-mission?tenantId=${tenantId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId
+      const response = await fetch(
+        `/api/organization-mission?tenantId=${tenantId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId,
+          },
+          body: JSON.stringify(missionData),
+          credentials: "include",
         },
-        body: JSON.stringify(missionData),
-        credentials: 'include'
-      });
-      
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to save mission data: ${errorText}`);
       }
-      
+
       // Show success message
       toast({
         title: "Mission Setup Complete!",
-        description: "Your company mission, vision, and values have been saved.",
+        description:
+          "Your company mission, vision, and values have been saved.",
       });
-      
+
       // Move to the next step automatically
       goToNextStep();
-      
     } catch (error) {
       console.error("Error saving mission data:", error);
       toast({
         title: "Error Saving Mission",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleSubmit = form.handleSubmit(onSubmitForm);
 
   // Navigation handlers
   const goToNextStep = () => {
-    const currentIndex = steps.findIndex(step => step.id === activePage);
+    const currentIndex = steps.findIndex((step) => step.id === activePage);
     if (currentIndex < steps.length - 1) {
       setActivePage(steps[currentIndex + 1].id);
     }
   };
 
   const goToPreviousStep = () => {
-    const currentIndex = steps.findIndex(step => step.id === activePage);
+    const currentIndex = steps.findIndex((step) => step.id === activePage);
     if (currentIndex > 0) {
       setActivePage(steps[currentIndex - 1].id);
     }
@@ -1955,10 +2250,12 @@ export default function OKRSystemSetupWizard() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-center mb-2 text-primary">OKR System Setup</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 text-primary">
+          OKR System Setup
+        </h1>
         <p className="text-center text-gray-600 max-w-2xl mx-auto">
-          Follow this guided workflow to set up your complete OKR system. 
-          You'll configure timeframes, objective settings, and team structure.
+          Follow this guided workflow to set up your complete OKR system. You'll
+          configure timeframes, objective settings, and team structure.
         </p>
         {isLoading && (
           <div className="flex justify-center mt-4">
@@ -1974,29 +2271,34 @@ export default function OKRSystemSetupWizard() {
         {/* Progress indicator */}
         <div className="hidden sm:flex items-center justify-between mb-8">
           {steps.map((step, index) => (
-            <div 
-              key={step.id} 
-              className="flex flex-col items-center"
-            >
+            <div key={step.id} className="flex flex-col items-center">
               <button
                 onClick={() => goToStep(step.id)}
                 disabled={setupComplete}
                 className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 
-                  ${activeIndex === index 
-                    ? 'border-primary bg-primary text-white' 
-                    : index < activeIndex 
-                      ? 'border-primary bg-primary/10 text-primary' 
-                      : 'border-gray-300 bg-white text-gray-400'}`}
+                  ${
+                    activeIndex === index
+                      ? "border-primary bg-primary text-white"
+                      : index < activeIndex
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-gray-300 bg-white text-gray-400"
+                  }`}
               >
                 <step.icon className="w-5 h-5" />
               </button>
-              <span className={`mt-2 text-xs font-medium ${activeIndex === index ? 'text-primary' : 'text-gray-500'}`}>
+              <span
+                className={`mt-2 text-xs font-medium ${activeIndex === index ? "text-primary" : "text-gray-500"}`}
+              >
                 {step.label}
               </span>
               {index < steps.length - 1 && (
-                <div className={`absolute left-0 right-0 top-5 h-0.5 -z-10 
-                  ${index < activeIndex ? 'bg-primary' : 'bg-gray-200'}`}
-                  style={{ left: "calc(50% + 1rem)", right: "calc(-50% + 1rem)" }}
+                <div
+                  className={`absolute left-0 right-0 top-5 h-0.5 -z-10 
+                  ${index < activeIndex ? "bg-primary" : "bg-gray-200"}`}
+                  style={{
+                    left: "calc(50% + 1rem)",
+                    right: "calc(-50% + 1rem)",
+                  }}
                 />
               )}
             </div>
@@ -2011,11 +2313,13 @@ export default function OKRSystemSetupWizard() {
               onClick={() => goToStep(step.id)}
               disabled={setupComplete}
               className={`flex items-center min-w-max px-4 py-2 mx-1 rounded-full text-sm font-medium whitespace-nowrap
-                ${activeIndex === index 
-                  ? 'bg-primary text-white' 
-                  : index < activeIndex 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'bg-gray-100 text-gray-700'}`}
+                ${
+                  activeIndex === index
+                    ? "bg-primary text-white"
+                    : index < activeIndex
+                      ? "bg-primary/10 text-primary"
+                      : "bg-gray-100 text-gray-700"
+                }`}
             >
               <step.icon className="w-4 h-4 mr-1.5" />
               {step.label}
@@ -2037,99 +2341,122 @@ export default function OKRSystemSetupWizard() {
                         General Settings
                       </h2>
                       <p className="text-gray-600 mb-4">
-                        Define your organization's mission, vision, and values to align your OKRs with your strategic goals.
+                        Define your organization's mission, vision, and values
+                        to align your OKRs with your strategic goals.
                       </p>
-                      
+
                       <div className="space-y-4">
                         <div className="grid gap-4">
                           <div>
-                            <label className="block text-sm font-medium mb-1">Company Mission</label>
+                            <label className="block text-sm font-medium mb-1">
+                              Company Mission
+                            </label>
                             <Textarea
                               placeholder="Our company's mission is to..."
-                              {...form.register("generalSettings.companyMission")}
+                              {...form.register(
+                                "generalSettings.companyMission",
+                              )}
                               className="resize-none h-20"
-                              defaultValue={form.getValues("generalSettings.companyMission")}
+                              defaultValue={form.getValues(
+                                "generalSettings.companyMission",
+                              )}
                             />
-                            {form.formState.errors.generalSettings?.companyMission && (
+                            {form.formState.errors.generalSettings
+                              ?.companyMission && (
                               <p className="text-sm text-red-500 mt-1">
-                                {form.formState.errors.generalSettings.companyMission.message}
+                                {
+                                  form.formState.errors.generalSettings
+                                    .companyMission.message
+                                }
                               </p>
                             )}
                           </div>
-                          
+
                           <div>
-                            <label className="block text-sm font-medium mb-1">Company Vision</label>
+                            <label className="block text-sm font-medium mb-1">
+                              Company Vision
+                            </label>
                             <Textarea
                               placeholder="Our vision for the future is..."
-                              {...form.register("generalSettings.companyVision")}
+                              {...form.register(
+                                "generalSettings.companyVision",
+                              )}
                               className="resize-none h-20"
-                              defaultValue={form.getValues("generalSettings.companyVision")}
+                              defaultValue={form.getValues(
+                                "generalSettings.companyVision",
+                              )}
                             />
-                            {form.formState.errors.generalSettings?.companyVision && (
+                            {form.formState.errors.generalSettings
+                              ?.companyVision && (
                               <p className="text-sm text-red-500 mt-1">
-                                {form.formState.errors.generalSettings.companyVision.message}
+                                {
+                                  form.formState.errors.generalSettings
+                                    .companyVision.message
+                                }
                               </p>
                             )}
                           </div>
-                          
+
                           <div>
-                            <label className="block text-sm font-medium mb-1">Company Values</label>
+                            <label className="block text-sm font-medium mb-1">
+                              Company Values
+                            </label>
                             <Textarea
                               placeholder="Our core values include..."
-                              {...form.register("generalSettings.companyValues")}
+                              {...form.register(
+                                "generalSettings.companyValues",
+                              )}
                               className="resize-none h-20"
-                              defaultValue={form.getValues("generalSettings.companyValues")}
+                              defaultValue={form.getValues(
+                                "generalSettings.companyValues",
+                              )}
                             />
-                            {form.formState.errors.generalSettings?.companyValues && (
+                            {form.formState.errors.generalSettings
+                              ?.companyValues && (
                               <p className="text-sm text-red-500 mt-1">
-                                {form.formState.errors.generalSettings.companyValues.message}
+                                {
+                                  form.formState.errors.generalSettings
+                                    .companyValues.message
+                                }
                               </p>
                             )}
                           </div>
                         </div>
-                        
-                        {/* Strategic Directions Section */}
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Strategic Directions</label>
-                          <Textarea
-                            placeholder="Define key strategic priorities that will guide your organization's OKRs..."
-                            className="resize-none h-20"
-                            defaultValue={form.getValues("generalSettings.strategicDirections")}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              form.setValue("generalSettings.strategicDirections", value);
-                              // Auto-save with debounce
-                              handleStrategicDirectionsAutoSave(value);
-                            }}
-                          />
-                          {form.formState.errors.generalSettings?.strategicDirections && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {form.formState.errors.generalSettings.strategicDirections.message}
-                            </p>
-                          )}
-                        </div>
-                        
+
+
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium mb-1">OKR Tracking Frequency</label>
+                            <label className="block text-sm font-medium mb-1">
+                              OKR Tracking Frequency
+                            </label>
                             <Select
-                              defaultValue={form.getValues("generalSettings.trackingFrequency")}
-                              onValueChange={(value) => form.setValue("generalSettings.trackingFrequency", value as "weekly" | "biweekly" | "monthly")}
+                              defaultValue={form.getValues(
+                                "generalSettings.trackingFrequency",
+                              )}
+                              onValueChange={(value) =>
+                                form.setValue(
+                                  "generalSettings.trackingFrequency",
+                                  value as "weekly" | "biweekly" | "monthly",
+                                )
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select tracking frequency" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="biweekly">Biweekly</SelectItem>
+                                <SelectItem value="biweekly">
+                                  Biweekly
+                                </SelectItem>
                                 <SelectItem value="monthly">Monthly</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
-                          
+
                           {/* Complete Mission Setup button */}
                           <div className="col-span-1 md:col-span-2 mt-6">
-                            <Button 
+                            <Button
                               type="button"
                               onClick={saveMissionData}
                               disabled={isSubmitting}
@@ -2141,22 +2468,25 @@ export default function OKRSystemSetupWizard() {
                                   Saving...
                                 </>
                               ) : (
-                                <>
-                                  Complete Mission Setup
-                                </>
+                                <>Complete Mission Setup</>
                               )}
                             </Button>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2 pt-6">
                             <Checkbox
                               id="enableNotifications"
-                              checked={form.getValues("generalSettings.enableNotifications")}
-                              onCheckedChange={(checked) => 
-                                form.setValue("generalSettings.enableNotifications", checked as boolean)
+                              checked={form.getValues(
+                                "generalSettings.enableNotifications",
+                              )}
+                              onCheckedChange={(checked) =>
+                                form.setValue(
+                                  "generalSettings.enableNotifications",
+                                  checked as boolean,
+                                )
                               }
                             />
-                            <label 
+                            <label
                               htmlFor="enableNotifications"
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
@@ -2169,7 +2499,7 @@ export default function OKRSystemSetupWizard() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Timeframes */}
               <TabsContent value="timeframes">
                 <Card>
@@ -2180,36 +2510,79 @@ export default function OKRSystemSetupWizard() {
                         OKR Timeframes
                       </h2>
                       <p className="text-gray-600 mb-4">
-                        Configure your OKR planning cycles and timeframes to establish your organization's rhythm.
+                        Configure your OKR planning cycles and timeframes to
+                        establish your organization's rhythm.
                       </p>
-                      
+
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-medium mb-1">Primary OKR Cadence</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Primary OKR Cadence
+                          </label>
                           <Select
-                            defaultValue={form.getValues("timeframes.primaryCadence")}
-                            onValueChange={(value) => form.setValue("timeframes.primaryCadence", value as "quarterly" | "trimester" | "halfYearly" | "annual")}
+                            defaultValue={form.getValues(
+                              "timeframes.primaryCadence",
+                            )}
+                            onValueChange={(value) =>
+                              form.setValue(
+                                "timeframes.primaryCadence",
+                                value as
+                                  | "quarterly"
+                                  | "trimester"
+                                  | "halfYearly"
+                                  | "annual",
+                              )
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select primary cadence" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
-                              <SelectItem value="trimester">Trimester (4 months)</SelectItem>
-                              <SelectItem value="halfYearly">Half-yearly (6 months)</SelectItem>
-                              <SelectItem value="annual">Annual (12 months)</SelectItem>
+                              <SelectItem value="quarterly">
+                                Quarterly (3 months)
+                              </SelectItem>
+                              <SelectItem value="trimester">
+                                Trimester (4 months)
+                              </SelectItem>
+                              <SelectItem value="halfYearly">
+                                Half-yearly (6 months)
+                              </SelectItem>
+                              <SelectItem value="annual">
+                                Annual (12 months)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-gray-500 mt-1">This will be your main planning cycle length</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            This will be your main planning cycle length
+                          </p>
                         </div>
-                        
 
-                        
                         <div>
-                          <label className="block text-sm font-medium mb-1">OKR Year Start Month</label>
+                          <label className="block text-sm font-medium mb-1">
+                            OKR Year Start Month
+                          </label>
                           <Select
-                            defaultValue={form.getValues("timeframes.startMonth")}
-                            onValueChange={(value) => form.setValue("timeframes.startMonth", value as "january" | "february" | "march" | "april" | "may" | "june" | "july" | "august" | "september" | "october" | "november" | "december")}
+                            defaultValue={form.getValues(
+                              "timeframes.startMonth",
+                            )}
+                            onValueChange={(value) =>
+                              form.setValue(
+                                "timeframes.startMonth",
+                                value as
+                                  | "january"
+                                  | "february"
+                                  | "march"
+                                  | "april"
+                                  | "may"
+                                  | "june"
+                                  | "july"
+                                  | "august"
+                                  | "september"
+                                  | "october"
+                                  | "november"
+                                  | "december",
+                              )
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select start month" />
@@ -2223,20 +2596,26 @@ export default function OKRSystemSetupWizard() {
                               <SelectItem value="june">June</SelectItem>
                               <SelectItem value="july">July</SelectItem>
                               <SelectItem value="august">August</SelectItem>
-                              <SelectItem value="september">September</SelectItem>
+                              <SelectItem value="september">
+                                September
+                              </SelectItem>
                               <SelectItem value="october">October</SelectItem>
                               <SelectItem value="november">November</SelectItem>
                               <SelectItem value="december">December</SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-gray-500 mt-1">When your OKR year begins</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            When your OKR year begins
+                          </p>
                         </div>
 
                         {tenantId && (
                           <div className="pt-6 border-t mt-6">
                             <TimeframeSetupSimplified
                               tenantId={tenantId}
-                              primaryCadence={form.watch("timeframes.primaryCadence")}
+                              primaryCadence={form.watch(
+                                "timeframes.primaryCadence",
+                              )}
                               startMonth={form.watch("timeframes.startMonth")}
                               onTimeframesSaved={goToNextStep}
                             />
@@ -2247,7 +2626,7 @@ export default function OKRSystemSetupWizard() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Objective Settings */}
               <TabsContent value="objectives">
                 <Card>
@@ -2258,18 +2637,26 @@ export default function OKRSystemSetupWizard() {
                         Objective Settings
                       </h2>
                       <p className="text-gray-600 mb-4">
-                        Configure how objectives and key results will be structured in your organization.
+                        Configure how objectives and key results will be
+                        structured in your organization.
                       </p>
-                      
-                      <div className="space-y-6">
 
-                        
+                      <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium mb-1">Max Objectives Per Team</label>
+                            <label className="block text-sm font-medium mb-1">
+                              Max Objectives Per Team
+                            </label>
                             <Select
-                              defaultValue={form.getValues("objectiveSettings.maxObjectivesPerTeam")}
-                              onValueChange={(value) => form.setValue("objectiveSettings.maxObjectivesPerTeam", value as "3" | "4" | "5" | "6" | "7" | "8")}
+                              defaultValue={form.getValues(
+                                "objectiveSettings.maxObjectivesPerTeam",
+                              )}
+                              onValueChange={(value) =>
+                                form.setValue(
+                                  "objectiveSettings.maxObjectivesPerTeam",
+                                  value as "3" | "4" | "5" | "6" | "7" | "8",
+                                )
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select maximum" />
@@ -2283,14 +2670,25 @@ export default function OKRSystemSetupWizard() {
                                 <SelectItem value="8">8 objectives</SelectItem>
                               </SelectContent>
                             </Select>
-                            <p className="text-xs text-gray-500 mt-1">Recommended: 3-5 for focus</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Recommended: 3-5 for focus
+                            </p>
                           </div>
-                          
+
                           <div>
-                            <label className="block text-sm font-medium mb-1">Max Key Results Per Objective</label>
+                            <label className="block text-sm font-medium mb-1">
+                              Max Key Results Per Objective
+                            </label>
                             <Select
-                              defaultValue={form.getValues("objectiveSettings.maxKeyResultsPerObjective")}
-                              onValueChange={(value) => form.setValue("objectiveSettings.maxKeyResultsPerObjective", value as "3" | "4" | "5" | "6")}
+                              defaultValue={form.getValues(
+                                "objectiveSettings.maxKeyResultsPerObjective",
+                              )}
+                              onValueChange={(value) =>
+                                form.setValue(
+                                  "objectiveSettings.maxKeyResultsPerObjective",
+                                  value as "3" | "4" | "5" | "6",
+                                )
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select maximum" />
@@ -2302,36 +2700,48 @@ export default function OKRSystemSetupWizard() {
                                 <SelectItem value="6">6 key results</SelectItem>
                               </SelectContent>
                             </Select>
-                            <p className="text-xs text-gray-500 mt-1">Recommended: 3-4 for clarity</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Recommended: 3-4 for clarity
+                            </p>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="requireObjectiveApproval"
-                              checked={form.getValues("objectiveSettings.requireObjectiveApproval")}
-                              onCheckedChange={(checked) => 
-                                form.setValue("objectiveSettings.requireObjectiveApproval", checked as boolean)
+                              checked={form.getValues(
+                                "objectiveSettings.requireObjectiveApproval",
+                              )}
+                              onCheckedChange={(checked) =>
+                                form.setValue(
+                                  "objectiveSettings.requireObjectiveApproval",
+                                  checked as boolean,
+                                )
                               }
                             />
-                            <label 
+                            <label
                               htmlFor="requireObjectiveApproval"
                               className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
                               Require Approval for New Objectives
                             </label>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="enableObjectiveAlignment"
-                              checked={form.getValues("objectiveSettings.enableObjectiveAlignment")}
-                              onCheckedChange={(checked) => 
-                                form.setValue("objectiveSettings.enableObjectiveAlignment", checked as boolean)
+                              checked={form.getValues(
+                                "objectiveSettings.enableObjectiveAlignment",
+                              )}
+                              onCheckedChange={(checked) =>
+                                form.setValue(
+                                  "objectiveSettings.enableObjectiveAlignment",
+                                  checked as boolean,
+                                )
                               }
                             />
-                            <label 
+                            <label
                               htmlFor="enableObjectiveAlignment"
                               className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
@@ -2344,7 +2754,7 @@ export default function OKRSystemSetupWizard() {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Teams Configuration */}
               <TabsContent value="teams">
                 <Card>
@@ -2355,63 +2765,108 @@ export default function OKRSystemSetupWizard() {
                         Team Configuration
                       </h2>
                       <p className="text-gray-600 mb-4">
-                        Configure how teams will collaborate and organize their OKRs within your system.
+                        Configure how teams will collaborate and organize their
+                        OKRs within your system.
                       </p>
-                      
+
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-medium mb-1">Organization Structure Type</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Organization Structure Type
+                          </label>
                           <Select
-                            defaultValue={form.getValues("teamConfiguration.orgStructureType")}
-                            onValueChange={(value) => form.setValue("teamConfiguration.orgStructureType", value as "functional" | "divisional" | "matrix" | "flat" | "hierarchical")}
+                            defaultValue={form.getValues(
+                              "teamConfiguration.orgStructureType",
+                            )}
+                            onValueChange={(value) =>
+                              form.setValue(
+                                "teamConfiguration.orgStructureType",
+                                value as
+                                  | "functional"
+                                  | "divisional"
+                                  | "matrix"
+                                  | "flat"
+                                  | "hierarchical",
+                              )
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select organization structure" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="functional">Functional (Marketing, Sales, Engineering)</SelectItem>
-                              <SelectItem value="divisional">Divisional (Product Lines, Geographic)</SelectItem>
-                              <SelectItem value="matrix">Matrix (Dual Reporting)</SelectItem>
-                              <SelectItem value="flat">Flat (Few Hierarchical Layers)</SelectItem>
-                              <SelectItem value="hierarchical">Hierarchical (Traditional)</SelectItem>
+                              <SelectItem value="functional">
+                                Functional (Marketing, Sales, Engineering)
+                              </SelectItem>
+                              <SelectItem value="divisional">
+                                Divisional (Product Lines, Geographic)
+                              </SelectItem>
+                              <SelectItem value="matrix">
+                                Matrix (Dual Reporting)
+                              </SelectItem>
+                              <SelectItem value="flat">
+                                Flat (Few Hierarchical Layers)
+                              </SelectItem>
+                              <SelectItem value="hierarchical">
+                                Hierarchical (Traditional)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-gray-500 mt-1">How your organization is structured</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            How your organization is structured
+                          </p>
                         </div>
-                        
+
                         <div>
-                          <label className="block text-sm font-medium mb-1">Default OKR Visibility</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Default OKR Visibility
+                          </label>
                           <Select
-                            defaultValue={form.getValues("teamConfiguration.defaultVisibility")}
-                            onValueChange={(value) => form.setValue("teamConfiguration.defaultVisibility", value as "public" | "team" | "private")}
+                            defaultValue={form.getValues(
+                              "teamConfiguration.defaultVisibility",
+                            )}
+                            onValueChange={(value) =>
+                              form.setValue(
+                                "teamConfiguration.defaultVisibility",
+                                value as "public" | "team" | "private",
+                              )
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select default visibility" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="public">Public (Entire Organization)</SelectItem>
+                              <SelectItem value="public">
+                                Public (Entire Organization)
+                              </SelectItem>
                               <SelectItem value="team">Team Only</SelectItem>
-                              <SelectItem value="private">Private (Individual/Manager Only)</SelectItem>
+                              <SelectItem value="private">
+                                Private (Individual/Manager Only)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="enableCrossTeamObjectives"
-                            checked={form.getValues("teamConfiguration.enableCrossTeamObjectives")}
-                            onCheckedChange={(checked) => 
-                              form.setValue("teamConfiguration.enableCrossTeamObjectives", checked as boolean)
+                            checked={form.getValues(
+                              "teamConfiguration.enableCrossTeamObjectives",
+                            )}
+                            onCheckedChange={(checked) =>
+                              form.setValue(
+                                "teamConfiguration.enableCrossTeamObjectives",
+                                checked as boolean,
+                              )
                             }
                           />
-                          <label 
+                          <label
                             htmlFor="enableCrossTeamObjectives"
                             className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
                             Enable Cross-Team Objectives
                           </label>
                         </div>
-                        
+
                         {/* Default Team Templates Section */}
                         <div className="mt-6 border-t pt-6">
                           <div className="flex items-center space-x-2 mb-4">
@@ -2422,68 +2877,96 @@ export default function OKRSystemSetupWizard() {
                                 setShowDefaultTeams(checked as boolean);
                                 if (!checked) {
                                   setSelectedDefaultTeams([]);
-                                  form.setValue("teamConfiguration.defaultTeams", []);
+                                  form.setValue(
+                                    "teamConfiguration.defaultTeams",
+                                    [],
+                                  );
                                 }
                               }}
                             />
-                            <label 
+                            <label
                               htmlFor="useDefaultTeams"
                               className="text-lg font-medium cursor-pointer"
                             >
                               Quick Start with Default Teams
                             </label>
                           </div>
-                          
+
                           {showDefaultTeams && (
                             <>
                               <p className="text-sm text-gray-600 mb-4">
-                                Select pre-configured team templates to quickly set up your organization structure. 
-                                These teams will be created automatically when you save your OKR system setup.
+                                Select pre-configured team templates to quickly
+                                set up your organization structure. These teams
+                                will be created automatically when you save your
+                                OKR system setup.
                               </p>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                              {defaultTeamTemplates.map((template) => (
-                                <div 
-                                  key={template.id}
-                                  className={`border rounded-md p-4 cursor-pointer transition-all ${
-                                    selectedDefaultTeams.includes(template.id) 
-                                      ? 'border-primary bg-primary/5' 
-                                      : 'border-gray-200 hover:border-gray-300'
-                                  }`}
-                                  onClick={() => handleDefaultTeamSelection(template.id)}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div 
-                                      className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0"
-                                      style={{ backgroundColor: template.color }}
-                                    >
-                                      <span className="text-lg">{template.icon === 'megaphone' ? '📣' : 
-                                                                 template.icon === 'code' ? '💻' :
-                                                                 template.icon === 'briefcase' ? '💼' :
-                                                                 template.icon === 'layers' ? '📚' :
-                                                                 template.icon === 'settings' ? '⚙️' :
-                                                                 template.icon === 'users' ? '👥' :
-                                                                 template.icon === 'dollar-sign' ? '💰' :
-                                                                 template.icon === 'heart' ? '❤️' : '📋'}</span>
-                                    </div>
-                                    
-                                    <div className="flex-1">
-                                      <h4 className="font-medium">{template.name}</h4>
-                                      <p className="text-sm text-gray-500">{template.description}</p>
-                                    </div>
-                                    
-                                    <div className="flex-shrink-0">
-                                      {selectedDefaultTeams.includes(template.id) ? (
-                                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                                          <Check className="h-4 w-4 text-white" />
-                                        </div>
-                                      ) : (
-                                        <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
-                                      )}
+                                {defaultTeamTemplates.map((template) => (
+                                  <div
+                                    key={template.id}
+                                    className={`border rounded-md p-4 cursor-pointer transition-all ${
+                                      selectedDefaultTeams.includes(template.id)
+                                        ? "border-primary bg-primary/5"
+                                        : "border-gray-200 hover:border-gray-300"
+                                    }`}
+                                    onClick={() =>
+                                      handleDefaultTeamSelection(template.id)
+                                    }
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0"
+                                        style={{
+                                          backgroundColor: template.color,
+                                        }}
+                                      >
+                                        <span className="text-lg">
+                                          {template.icon === "megaphone"
+                                            ? "📣"
+                                            : template.icon === "code"
+                                              ? "💻"
+                                              : template.icon === "briefcase"
+                                                ? "💼"
+                                                : template.icon === "layers"
+                                                  ? "📚"
+                                                  : template.icon === "settings"
+                                                    ? "⚙️"
+                                                    : template.icon === "users"
+                                                      ? "👥"
+                                                      : template.icon ===
+                                                          "dollar-sign"
+                                                        ? "💰"
+                                                        : template.icon ===
+                                                            "heart"
+                                                          ? "❤️"
+                                                          : "📋"}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex-1">
+                                        <h4 className="font-medium">
+                                          {template.name}
+                                        </h4>
+                                        <p className="text-sm text-gray-500">
+                                          {template.description}
+                                        </p>
+                                      </div>
+
+                                      <div className="flex-shrink-0">
+                                        {selectedDefaultTeams.includes(
+                                          template.id,
+                                        ) ? (
+                                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                            <Check className="h-4 w-4 text-white" />
+                                          </div>
+                                        ) : (
+                                          <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                               </div>
                             </>
                           )}
@@ -2491,20 +2974,32 @@ export default function OKRSystemSetupWizard() {
 
                         {/* CSV User Upload Section */}
                         <div className="mt-6 border-t pt-6">
-                          <h3 className="text-lg font-medium mb-4">Upload Users via CSV</h3>
+                          <h3 className="text-lg font-medium mb-4">
+                            Upload Users via CSV
+                          </h3>
                           <p className="text-sm text-gray-600 mb-4">
-                            Upload a CSV file with user information to add multiple users at once. 
+                            Upload a CSV file with user information to add
+                            multiple users at once.
                             <br />
-                            <strong>Required columns:</strong> email (must be unique)
+                            <strong>Required columns:</strong> email (must be
+                            unique)
                             <br />
-                            <strong>Optional columns:</strong> name, role (admin/member/viewer), department, team
+                            <strong>Optional columns:</strong> name, role
+                            (admin/member/viewer), department, team
                             <br />
-                            <em>Users will be created with secure temporary passwords and added to your organization automatically.</em>
+                            <em>
+                              Users will be created with secure temporary
+                              passwords and added to your organization
+                              automatically.
+                            </em>
                           </p>
-                          
+
                           <div className="space-y-4">
                             <div className="flex flex-col space-y-2">
-                              <label htmlFor="csv-upload" className="text-sm font-medium text-gray-700">
+                              <label
+                                htmlFor="csv-upload"
+                                className="text-sm font-medium text-gray-700"
+                              >
                                 Upload CSV File
                               </label>
                               <input
@@ -2535,7 +3030,7 @@ export default function OKRSystemSetupWizard() {
                                     </>
                                   )}
                                 </Button>
-                                
+
                                 <Button
                                   type="button"
                                   variant="outline"
@@ -2547,11 +3042,14 @@ jane.smith@company.com,Jane,Smith,Engineering,Software Engineer,manager,Engineer
 mike.johnson@company.com,Mike,Johnson,Sales,Sales Director,executive,Sales Team
 sarah.williams@company.com,Sarah,Williams,HR,HR Manager,admin,Human Resources
 david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
-                                    const blob = new Blob([sample], { type: 'text/csv' });
+                                    const blob = new Blob([sample], {
+                                      type: "text/csv",
+                                    });
                                     const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
+                                    const a = document.createElement("a");
                                     a.href = url;
-                                    a.download = 'team_user_upload_template.csv';
+                                    a.download =
+                                      "team_user_upload_template.csv";
                                     document.body.appendChild(a);
                                     a.click();
                                     document.body.removeChild(a);
@@ -2564,21 +3062,27 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                 </Button>
                               </div>
                             </div>
-                            
+
                             {/* CSV Data Preview */}
                             {showCsvPreview && csvData.length > 0 && (
                               <div className="mt-4 border rounded-md overflow-hidden">
                                 <div className="bg-gray-50 p-3 border-b flex justify-between items-center">
-                                  <h4 className="font-medium">CSV Preview - {csvData.length} users</h4>
+                                  <h4 className="font-medium">
+                                    CSV Preview - {csvData.length} users
+                                  </h4>
                                   <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                       setCsvData([]);
-                                      form.setValue("teamConfiguration.csvUsers", []);
+                                      form.setValue(
+                                        "teamConfiguration.csvUsers",
+                                        [],
+                                      );
                                       setShowCsvPreview(false);
-                                      if (fileInputRef.current) fileInputRef.current.value = '';
+                                      if (fileInputRef.current)
+                                        fileInputRef.current.value = "";
                                     }}
                                   >
                                     <X className="h-4 w-4" />
@@ -2588,17 +3092,34 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                   <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                       <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Status
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Email
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Name
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Role
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Department
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                          Team
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                       {csvData.map((user, index) => (
-                                        <tr key={index} className={!user.isValid ? 'bg-red-50' : ''}>
+                                        <tr
+                                          key={index}
+                                          className={
+                                            !user.isValid ? "bg-red-50" : ""
+                                          }
+                                        >
                                           <td className="px-4 py-2 whitespace-nowrap">
                                             {user.isValid ? (
                                               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -2615,11 +3136,21 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                               </TooltipProvider>
                                             )}
                                           </td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.email}</td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.name || '-'}</td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.role}</td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.department || '-'}</td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm">{user.team || '-'}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                            {user.email}
+                                          </td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                            {user.name || "-"}
+                                          </td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                            {user.role}
+                                          </td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                            {user.department || "-"}
+                                          </td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                            {user.team || "-"}
+                                          </td>
                                         </tr>
                                       ))}
                                     </tbody>
@@ -2629,10 +3160,13 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                             )}
 
                             {/* Imported Teams and Users Display */}
-                            {(csvImportedTeams.length > 0 || csvImportedUsers.length > 0) && (
+                            {(csvImportedTeams.length > 0 ||
+                              csvImportedUsers.length > 0) && (
                               <div className="mt-6 border rounded-lg p-4 bg-blue-50 border-blue-200">
                                 <div className="flex items-center justify-between mb-4">
-                                  <h4 className="font-semibold text-blue-900">Ready to Save</h4>
+                                  <h4 className="font-semibold text-blue-900">
+                                    Ready to Save
+                                  </h4>
                                   <Button
                                     type="button"
                                     onClick={saveTeamsAndUsers}
@@ -2652,50 +3186,65 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                     )}
                                   </Button>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {/* Teams to be created */}
                                   {csvImportedTeams.length > 0 && (
                                     <div>
                                       <h5 className="font-medium text-blue-800 mb-2">
-                                        Teams to Create ({csvImportedTeams.length})
+                                        Teams to Create (
+                                        {csvImportedTeams.length})
                                       </h5>
                                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                                        {csvImportedTeams.map((teamName, index) => (
-                                          <div key={index} className="flex items-center text-sm text-blue-700">
-                                            <Users2 className="mr-2 h-3 w-3" />
-                                            {teamName}
-                                          </div>
-                                        ))}
+                                        {csvImportedTeams.map(
+                                          (teamName, index) => (
+                                            <div
+                                              key={index}
+                                              className="flex items-center text-sm text-blue-700"
+                                            >
+                                              <Users2 className="mr-2 h-3 w-3" />
+                                              {teamName}
+                                            </div>
+                                          ),
+                                        )}
                                       </div>
                                     </div>
                                   )}
-                                  
+
                                   {/* Users to be created */}
                                   {csvImportedUsers.length > 0 && (
                                     <div>
                                       <h5 className="font-medium text-blue-800 mb-2">
-                                        Users to Create ({csvImportedUsers.length})
+                                        Users to Create (
+                                        {csvImportedUsers.length})
                                       </h5>
                                       <div className="space-y-1 max-h-32 overflow-y-auto">
-                                        {csvImportedUsers.slice(0, 5).map((user, index) => (
-                                          <div key={index} className="flex items-center text-sm text-blue-700">
-                                            <User className="mr-2 h-3 w-3" />
-                                            {user.name} ({user.email})
-                                          </div>
-                                        ))}
+                                        {csvImportedUsers
+                                          .slice(0, 5)
+                                          .map((user, index) => (
+                                            <div
+                                              key={index}
+                                              className="flex items-center text-sm text-blue-700"
+                                            >
+                                              <User className="mr-2 h-3 w-3" />
+                                              {user.name} ({user.email})
+                                            </div>
+                                          ))}
                                         {csvImportedUsers.length > 5 && (
                                           <div className="text-sm text-blue-600 italic">
-                                            ... and {csvImportedUsers.length - 5} more users
+                                            ... and{" "}
+                                            {csvImportedUsers.length - 5} more
+                                            users
                                           </div>
                                         )}
                                       </div>
                                     </div>
                                   )}
                                 </div>
-                                
+
                                 <p className="text-sm text-blue-700 mt-3">
-                                  Click "Save Teams & Users" to add these to your organization permanently.
+                                  Click "Save Teams & Users" to add these to
+                                  your organization permanently.
                                 </p>
                               </div>
                             )}
@@ -2724,7 +3273,7 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               {/* Integrations */}
 
               {/* Review */}
@@ -2736,67 +3285,140 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-xl mb-2 text-gray-800">Ready to Launch Your OKR System!</h3>
+                        <h3 className="font-semibold text-xl mb-2 text-gray-800">
+                          Ready to Launch Your OKR System!
+                        </h3>
                         <p className="text-gray-600 mb-3">
-                          You've completed setting up your OKR system. Click the button below to save your configuration and start tracking your organizational goals.
+                          You've completed setting up your OKR system. Click the
+                          button below to save your configuration and start
+                          tracking your organizational goals.
                         </p>
                         <p className="text-sm text-gray-500">
-                          You can always adjust these settings later from your organization's admin panel.
+                          You can always adjust these settings later from your
+                          organization's admin panel.
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <div className="mt-6 space-y-4">
                   <h3 className="font-medium text-lg">Configuration Summary</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-lg border p-4">
                       <h4 className="font-medium text-primary mb-2 flex items-center">
                         <Settings2 className="w-4 h-4 mr-1" /> General Settings
                       </h4>
                       <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Tracking Frequency:</span> {form.getValues("generalSettings.trackingFrequency")}</li>
-                        <li><span className="font-medium">Notifications:</span> {form.getValues("generalSettings.enableNotifications") ? "Enabled" : "Disabled"}</li>
+                        <li>
+                          <span className="font-medium">
+                            Tracking Frequency:
+                          </span>{" "}
+                          {form.getValues("generalSettings.trackingFrequency")}
+                        </li>
+                        <li>
+                          <span className="font-medium">Notifications:</span>{" "}
+                          {form.getValues("generalSettings.enableNotifications")
+                            ? "Enabled"
+                            : "Disabled"}
+                        </li>
                       </ul>
                     </div>
-                    
+
                     <div className="bg-white rounded-lg border p-4">
                       <h4 className="font-medium text-primary mb-2 flex items-center">
                         <Calendar className="w-4 h-4 mr-1" /> Timeframes
                       </h4>
                       <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Primary Cadence:</span> {form.getValues("timeframes.primaryCadence")}</li>
-                        <li><span className="font-medium">Start Month:</span> {form.getValues("timeframes.startMonth")}</li>
-                        <li><span className="font-medium">Additional Cadences:</span> {[
-                          form.getValues("timeframes.enableQuarterlyCadence") ? "Quarterly" : "",
-                          form.getValues("timeframes.enableAnnualCadence") ? "Annual" : "",
-                          form.getValues("timeframes.customCadence") || ""
-                        ].filter(Boolean).join(", ") || "None"}</li>
+                        <li>
+                          <span className="font-medium">Primary Cadence:</span>{" "}
+                          {form.getValues("timeframes.primaryCadence")}
+                        </li>
+                        <li>
+                          <span className="font-medium">Start Month:</span>{" "}
+                          {form.getValues("timeframes.startMonth")}
+                        </li>
+                        <li>
+                          <span className="font-medium">
+                            Additional Cadences:
+                          </span>{" "}
+                          {[
+                            form.getValues("timeframes.enableQuarterlyCadence")
+                              ? "Quarterly"
+                              : "",
+                            form.getValues("timeframes.enableAnnualCadence")
+                              ? "Annual"
+                              : "",
+                            form.getValues("timeframes.customCadence") || "",
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "None"}
+                        </li>
                       </ul>
                     </div>
-                    
+
                     <div className="bg-white rounded-lg border p-4">
                       <h4 className="font-medium text-primary mb-2 flex items-center">
                         <Target className="w-4 h-4 mr-1" /> Objective Settings
                       </h4>
                       <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Max Objectives/Team:</span> {form.getValues("objectiveSettings.maxObjectivesPerTeam")}</li>
-                        <li><span className="font-medium">Max KRs/Objective:</span> {form.getValues("objectiveSettings.maxKeyResultsPerObjective")}</li>
-                        <li><span className="font-medium">Approval Required:</span> {form.getValues("objectiveSettings.requireObjectiveApproval") ? "Yes" : "No"}</li>
-
+                        <li>
+                          <span className="font-medium">
+                            Max Objectives/Team:
+                          </span>{" "}
+                          {form.getValues(
+                            "objectiveSettings.maxObjectivesPerTeam",
+                          )}
+                        </li>
+                        <li>
+                          <span className="font-medium">
+                            Max KRs/Objective:
+                          </span>{" "}
+                          {form.getValues(
+                            "objectiveSettings.maxKeyResultsPerObjective",
+                          )}
+                        </li>
+                        <li>
+                          <span className="font-medium">
+                            Approval Required:
+                          </span>{" "}
+                          {form.getValues(
+                            "objectiveSettings.requireObjectiveApproval",
+                          )
+                            ? "Yes"
+                            : "No"}
+                        </li>
                       </ul>
                     </div>
-                    
+
                     <div className="bg-white rounded-lg border p-4">
                       <h4 className="font-medium text-primary mb-2 flex items-center">
                         <Users2 className="w-4 h-4 mr-1" /> Team Configuration
                       </h4>
                       <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">Org Structure:</span> {form.getValues("teamConfiguration.orgStructureType")}</li>
-                        <li><span className="font-medium">Default Visibility:</span> {form.getValues("teamConfiguration.defaultVisibility")}</li>
-                        <li><span className="font-medium">Cross-Team Objectives:</span> {form.getValues("teamConfiguration.enableCrossTeamObjectives") ? "Enabled" : "Disabled"}</li>
+                        <li>
+                          <span className="font-medium">Org Structure:</span>{" "}
+                          {form.getValues("teamConfiguration.orgStructureType")}
+                        </li>
+                        <li>
+                          <span className="font-medium">
+                            Default Visibility:
+                          </span>{" "}
+                          {form.getValues(
+                            "teamConfiguration.defaultVisibility",
+                          )}
+                        </li>
+                        <li>
+                          <span className="font-medium">
+                            Cross-Team Objectives:
+                          </span>{" "}
+                          {form.getValues(
+                            "teamConfiguration.enableCrossTeamObjectives",
+                          )
+                            ? "Enabled"
+                            : "Disabled"}
+                        </li>
                       </ul>
                     </div>
                   </div>
