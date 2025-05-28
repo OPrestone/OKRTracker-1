@@ -952,10 +952,11 @@ export default function CheckIns() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  <SelectItem value="product">Product Team</SelectItem>
-                  <SelectItem value="marketing">Marketing Team</SelectItem>
-                  <SelectItem value="engineering">Engineering Team</SelectItem>
-                  <SelectItem value="sales">Sales Team</SelectItem>
+                  {teams && Array.isArray(teams) ? teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  )) : null}
                 </SelectContent>
               </Select>
             </div>
@@ -966,7 +967,7 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Total Check-ins</p>
-                      <p className="text-3xl font-bold">86</p>
+                      <p className="text-3xl font-bold">{checkIns ? checkIns.length : 0}</p>
                     </div>
                     <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center">
                       <ListChecks className="h-6 w-6 text-blue-600" />
@@ -980,7 +981,17 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Avg. Completion</p>
-                      <p className="text-3xl font-bold">67%</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!keyResults || keyResults.length === 0) return "0%";
+                          const totalProgress = keyResults.reduce(
+                            (sum, kr) => sum + parseInt(kr.progress?.toString() || '0'), 
+                            0
+                          );
+                          const avgProgress = Math.round(totalProgress / keyResults.length);
+                          return `${avgProgress}%`;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
                       <BarChart className="h-6 w-6 text-green-600" />
@@ -994,7 +1005,18 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">At Risk Items</p>
-                      <p className="text-3xl font-bold">3</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!keyResults || keyResults.length === 0) return 0;
+                          const twoWeeksFromNow = new Date();
+                          twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+                          
+                          return keyResults.filter(kr => 
+                            parseInt(kr.progress?.toString() || '0') < 30 && 
+                            kr.dueDate && new Date(kr.dueDate) < twoWeeksFromNow
+                          ).length;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-amber-50 rounded-full flex items-center justify-center">
                       <AlertCircle className="h-6 w-6 text-amber-600" />
@@ -1008,7 +1030,25 @@ export default function CheckIns() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Engagement</p>
-                      <p className="text-3xl font-bold">92%</p>
+                      <p className="text-3xl font-bold">
+                        {(() => {
+                          if (!users || users.length === 0) return "0%";
+                          if (!checkIns || checkIns.length === 0) return "0%";
+                          
+                          // Calculate unique users who have made check-ins in the last 30 days
+                          const thirtyDaysAgo = new Date();
+                          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                          
+                          const recentCheckIns = checkIns.filter(checkIn => 
+                            new Date(checkIn.createdAt) > thirtyDaysAgo
+                          );
+                          
+                          const activeUsers = new Set(recentCheckIns.map(checkIn => checkIn.createdById));
+                          const engagementRate = Math.round((activeUsers.size / users.length) * 100);
+                          
+                          return `${engagementRate}%`;
+                        })()}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-purple-50 rounded-full flex items-center justify-center">
                       <Users className="h-6 w-6 text-purple-600" />
