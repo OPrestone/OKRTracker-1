@@ -945,7 +945,7 @@ export default function ObjectiveDetail() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setIsAddKeyResultModalOpen(true)}
+                      onClick={() => setLocation(`/create-key-result/${objectiveId}`)}
                     >
                       <PlusCircle className="h-4 w-4 mr-2" />
                       Add Key Result

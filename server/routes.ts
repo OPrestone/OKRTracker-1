@@ -577,8 +577,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check user permissions
       const userRole = await db.select()
-        .from(userTenants)
-        .where(and(eq(userTenants.userId, userId), eq(userTenants.tenantId, tenantId)))
+        .from(usersToTenants)
+        .where(and(eq(usersToTenants.userId, userId), eq(usersToTenants.tenantId, tenantId)))
         .limit(1);
 
       if (!userRole.length) {
