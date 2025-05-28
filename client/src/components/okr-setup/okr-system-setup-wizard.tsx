@@ -1265,7 +1265,7 @@ export default function OKRSystemSetupWizard() {
         companyMission: "",
         companyVision: "",
         companyValues: "",
-
+        strategicDirections: [],
         trackingFrequency: "weekly",
         enableNotifications: true,
       },
