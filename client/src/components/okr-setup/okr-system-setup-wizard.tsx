@@ -1340,7 +1340,13 @@ export default function OKRSystemSetupWizard() {
           currentTenantId,
         );
 
-        // Use the existing form for data updates
+        // Use the existing form for data updates - ensure form is initialized
+        if (!form) {
+          console.error("Form not yet initialized");
+          setIsLoading(false);
+          return;
+        }
+        
         const currentFormValues = form.getValues();
 
         // Prioritize mission data from the organization-mission API
@@ -1498,22 +1504,22 @@ export default function OKRSystemSetupWizard() {
                 systemConfig.max_key_results_per_objective.toString();
             }
 
-            formValues.objectiveSettings.requireObjectiveApproval =
+            currentFormValues.objectiveSettings.requireObjectiveApproval =
               systemConfig.require_objective_approval !== false;
 
-            formValues.objectiveSettings.enableObjectiveAlignment =
+            currentFormValues.objectiveSettings.enableObjectiveAlignment =
               systemConfig.enable_objective_alignment !== false;
 
             if (systemConfig.org_structure_type) {
-              formValues.teamConfiguration.orgStructureType =
+              currentFormValues.teamConfiguration.orgStructureType =
                 systemConfig.org_structure_type;
             }
 
-            formValues.teamConfiguration.enableCrossTeamObjectives =
+            currentFormValues.teamConfiguration.enableCrossTeamObjectives =
               systemConfig.enable_cross_team_objectives !== false;
 
             if (systemConfig.default_visibility) {
-              formValues.teamConfiguration.defaultVisibility =
+              currentFormValues.teamConfiguration.defaultVisibility =
                 systemConfig.default_visibility;
             }
 
@@ -1522,37 +1528,37 @@ export default function OKRSystemSetupWizard() {
               systemConfig.selected_teams &&
               Array.isArray(systemConfig.selected_teams)
             ) {
-              formValues.teamConfiguration.selectedTeams =
+              currentFormValues.teamConfiguration.selectedTeams =
                 systemConfig.selected_teams;
             } else {
-              formValues.teamConfiguration.selectedTeams = [];
+              currentFormValues.teamConfiguration.selectedTeams = [];
             }
 
-            formValues.integrations.enableSlackIntegration =
+            currentFormValues.integrations.enableSlackIntegration =
               systemConfig.enable_slack_integration === true;
 
-            formValues.integrations.enableEmailNotifications =
+            currentFormValues.integrations.enableEmailNotifications =
               systemConfig.enable_email_notifications !== false;
 
-            formValues.integrations.enableCalendarSync =
+            currentFormValues.integrations.enableCalendarSync =
               systemConfig.enable_calendar_sync === true;
 
-            formValues.integrations.enableAnalyticsReporting =
+            currentFormValues.integrations.enableAnalyticsReporting =
               systemConfig.enable_analytics_reporting !== false;
           }
         }
 
         // Finally, reset the form with all the collected data
-        console.log("Resetting form with data:", formValues);
-        form.reset(formValues);
+        console.log("Resetting form with data:", currentFormValues);
+        form.reset(currentFormValues);
 
         // Update internal state to match the loaded data
         setActivePage("general"); // Start on the general page where mission data is displayed
 
         // Show notification that data was loaded if mission or vision is available
         if (
-          formValues.generalSettings.companyMission ||
-          formValues.generalSettings.companyVision
+          currentFormValues.generalSettings.companyMission ||
+          currentFormValues.generalSettings.companyVision
         ) {
           toast({
             title: "Configuration Loaded",
@@ -1567,7 +1573,10 @@ export default function OKRSystemSetupWizard() {
       }
     };
 
-    fetchExistingConfig();
+    // Only run if form is properly initialized
+    if (form && form.getValues) {
+      fetchExistingConfig();
+    }
   }, [form, toast]);
 
   // Effect to populate strategic directions with real data from database
