@@ -2541,14 +2541,15 @@ export default function OKRSystemSetupWizard() {
                                         }
 
                                         try {
-                                          const response = await fetch("/api/strategic-directions", {
+                                          const response = await fetch("/api/strategic-directions/create", {
                                             method: "POST",
                                             headers: {
                                               "Content-Type": "application/json",
                                               "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
                                             },
                                             body: JSON.stringify({ 
-                                              strategicDirections: [direction]
+                                              title: direction.title,
+                                              description: direction.description
                                             }),
                                             credentials: "include",
                                           });
