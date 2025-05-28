@@ -15,7 +15,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
  } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
-import { or, sql, and, eq, inArray } from "drizzle-orm";
+import { or, sql, and, eq, inArray, isNull } from "drizzle-orm";
 import { ulid } from "ulid";
 import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";

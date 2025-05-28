@@ -1,0 +1,89 @@
+mission.tsx:220 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/strategic-directions 500 (Internal Server Error)
+queryFn @ mission.tsx:220
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+mission.tsx:231 Error fetching strategic directions: {"error":"Failed to get strategic directions"}
+queryFn @ mission.tsx:231
+await in queryFn
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+executeFetch_fn @ @tanstack_react-query.js?v=e46b1212:2244
+onSubscribe @ @tanstack_react-query.js?v=e46b1212:1942
+subscribe @ @tanstack_react-query.js?v=e46b1212:24
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:3099
+subscribeToStore @ chunk-RPCDYKBN.js?v=e46b1212:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+mission.tsx:82 Using tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
