@@ -28,6 +28,7 @@ import {
   Target,
   Calendar,
   Users2,
+  Save,
   Layers,
   Zap,
   Loader2,
@@ -39,7 +40,6 @@ import {
   UserPlus,
   ChevronDown,
   X,
-  Save,
   Users,
   Plus,
 } from "lucide-react";
@@ -2520,6 +2520,61 @@ export default function OKRSystemSetupWizard() {
                                         {form.formState.errors.generalSettings.strategicDirections[index]?.description?.message}
                                       </p>
                                     )}
+                                  </div>
+
+                                  {/* Save Direction Button */}
+                                  <div className="flex justify-end pt-2 border-t">
+                                    <Button
+                                      type="button"
+                                      variant="default"
+                                      size="sm"
+                                      onClick={async () => {
+                                        const direction = form.getValues(`generalSettings.strategicDirections.${index}`);
+                                        
+                                        if (!direction.title || !direction.description) {
+                                          toast({
+                                            title: "Missing Information",
+                                            description: "Please fill in both title and description before saving.",
+                                            variant: "destructive",
+                                          });
+                                          return;
+                                        }
+
+                                        try {
+                                          const response = await fetch("/api/strategic-directions", {
+                                            method: "POST",
+                                            headers: {
+                                              "Content-Type": "application/json",
+                                              "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId,
+                                            },
+                                            body: JSON.stringify({ 
+                                              strategicDirections: [direction]
+                                            }),
+                                            credentials: "include",
+                                          });
+
+                                          if (response.ok) {
+                                            toast({
+                                              title: "Strategic Direction Saved",
+                                              description: `"${direction.title}" has been saved successfully.`,
+                                            });
+                                          } else {
+                                            throw new Error('Failed to save strategic direction');
+                                          }
+                                        } catch (error) {
+                                          console.error('Error saving strategic direction:', error);
+                                          toast({
+                                            title: "Save Failed",
+                                            description: "Unable to save strategic direction. Please try again.",
+                                            variant: "destructive",
+                                          });
+                                        }
+                                      }}
+                                      className="bg-primary hover:bg-primary/90"
+                                    >
+                                      <Save className="h-4 w-4 mr-1" />
+                                      Save Direction
+                                    </Button>
                                   </div>
                                 </div>
                               ))}
