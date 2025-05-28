@@ -35,17 +35,7 @@ import {
 
 // This will be loaded from the API
 
-// Mock trend data
-const trendData = [
-  { date: "Week 1", value: 10 },
-  { date: "Week 2", value: 25 },
-  { date: "Week 3", value: 30 },
-  { date: "Week 4", value: 40 },
-  { date: "Week 5", value: 55 },
-  { date: "Week 6", value: 64 },
-  { date: "Week 7", value: 68 },
-  { date: "Week 8", value: 75 },
-];
+
 
 // Team data and needs check-in data will be loaded from the API
 
@@ -1164,7 +1154,46 @@ export default function CheckIns() {
                 </CardHeader>
                 <CardContent className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart data={trendData}>
+                    <ReLineChart data={(() => {
+                      if (!checkIns || !keyResults || checkIns.length === 0) {
+                        return [{ date: "No Data", value: 0 }];
+                      }
+
+                      // Group check-ins by week
+                      const weeklyData: { [key: string]: number[] } = {};
+                      const now = new Date();
+                      
+                      // Create last 8 weeks of data
+                      for (let i = 7; i >= 0; i--) {
+                        const weekStart = new Date(now);
+                        weekStart.setDate(now.getDate() - (i * 7));
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+                        
+                        const weekKey = `Week ${8 - i}`;
+                        weeklyData[weekKey] = [];
+                        
+                        // Find check-ins for this week
+                        checkIns.forEach(checkIn => {
+                          const checkInDate = new Date(checkIn.createdAt);
+                          if (checkInDate >= weekStart && checkInDate <= weekEnd) {
+                            // Find the related key result to get progress
+                            const relatedKeyResult = keyResults.find(kr => kr.id === checkIn.keyResultId);
+                            if (relatedKeyResult && relatedKeyResult.progress !== null && relatedKeyResult.progress !== undefined) {
+                              weeklyData[weekKey].push(parseInt(relatedKeyResult.progress.toString()));
+                            }
+                          }
+                        });
+                      }
+                      
+                      // Calculate average progress for each week
+                      return Object.entries(weeklyData).map(([week, progressValues]) => ({
+                        date: week,
+                        value: progressValues.length > 0 
+                          ? Math.round(progressValues.reduce((sum, val) => sum + val, 0) / progressValues.length)
+                          : 0
+                      }));
+                    })()}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="date" />
                       <YAxis domain={[0, 100]} />
@@ -1192,16 +1221,46 @@ export default function CheckIns() {
                 <CardContent className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={[
-                        { week: "Week 1", onTrack: 5, atRisk: 3, offTrack: 1 },
-                        { week: "Week 2", onTrack: 6, atRisk: 2, offTrack: 1 },
-                        { week: "Week 3", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 4", onTrack: 7, atRisk: 2, offTrack: 0 },
-                        { week: "Week 5", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 6", onTrack: 9, atRisk: 0, offTrack: 0 },
-                        { week: "Week 7", onTrack: 8, atRisk: 1, offTrack: 0 },
-                        { week: "Week 8", onTrack: 7, atRisk: 2, offTrack: 0 },
-                      ]}
+                      data={(() => {
+                        if (!checkIns || checkIns.length === 0) {
+                          return [{ week: "No Data", onTrack: 0, atRisk: 0, offTrack: 0 }];
+                        }
+
+                        // Group confidence levels by week
+                        const weeklyConfidence: { [key: string]: { onTrack: number; atRisk: number; offTrack: number } } = {};
+                        const now = new Date();
+                        
+                        // Create last 8 weeks of data
+                        for (let i = 7; i >= 0; i--) {
+                          const weekStart = new Date(now);
+                          weekStart.setDate(now.getDate() - (i * 7));
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekStart.getDate() + 6);
+                          
+                          const weekKey = `Week ${8 - i}`;
+                          weeklyConfidence[weekKey] = { onTrack: 0, atRisk: 0, offTrack: 0 };
+                          
+                          // Count confidence levels for this week
+                          checkIns.forEach(checkIn => {
+                            const checkInDate = new Date(checkIn.createdAt);
+                            if (checkInDate >= weekStart && checkInDate <= weekEnd) {
+                              const confidence = checkIn.confidence || '';
+                              if (confidence === 'On Track') {
+                                weeklyConfidence[weekKey].onTrack++;
+                              } else if (confidence === 'At Risk') {
+                                weeklyConfidence[weekKey].atRisk++;
+                              } else if (confidence === 'Off Track') {
+                                weeklyConfidence[weekKey].offTrack++;
+                              }
+                            }
+                          });
+                        }
+                        
+                        return Object.entries(weeklyConfidence).map(([week, confidence]) => ({
+                          week,
+                          ...confidence
+                        }));
+                      })()}
                       stackOffset="none"
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
