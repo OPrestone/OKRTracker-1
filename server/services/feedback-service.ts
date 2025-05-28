@@ -14,16 +14,24 @@ import {
 } from "@shared/schema";
 
 export async function createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
-  const [newFeedback] = await db
-    .insert(feedback)
-    .values({
-      ...feedbackData,
-      isRead: false, // Use isRead instead of read to match schema
-      // Don't manually set createdAt as it's handled by the DB
-    })
-    .returning();
+  try {
+    console.log('Creating feedback with data:', feedbackData);
+    
+    const [newFeedback] = await db
+      .insert(feedback)
+      .values({
+        ...feedbackData,
+        isRead: false, // Use isRead instead of read to match schema
+        // Don't manually set createdAt as it's handled by the DB
+      })
+      .returning();
 
-  return newFeedback;
+    console.log('Feedback created successfully:', newFeedback);
+    return newFeedback;
+  } catch (error) {
+    console.error('Error in createFeedback service:', error);
+    throw error;
+  }
 }
 
 export async function getFeedbackById(id: number): Promise<(Feedback & { sender: any; receiver: any }) | undefined> {

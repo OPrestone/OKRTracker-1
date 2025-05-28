@@ -5291,11 +5291,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback and Recognition System Routes
   
   // Feedback routes
-  app.post("/api/feedback", withTenant, async (req, res, next) => {
+  app.post("/api/feedback", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
       
       const tenantId = req.tenantId;
       
