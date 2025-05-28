@@ -2864,6 +2864,7 @@ export class DatabaseStorage implements IStorage {
       // Handle both camelCase and snake_case field names
       // Prefer snake_case but fall back to camelCase
       const dbFields = {
+        id: projectData.id || `01${require('ulid').ulid().slice(2)}`, // Generate ID if not provided
         title: projectData.title || "Untitled Project",
         description: projectData.description || "",
         status: projectData.status || "todo",
