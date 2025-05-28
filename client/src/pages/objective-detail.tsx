@@ -1299,16 +1299,20 @@ export default function ObjectiveDetail() {
                   <p className="text-xs text-gray-500">Key Results</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.initiatives?.length || 0}</p>
-                  <p className="text-xs text-gray-500">Initiatives</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-md text-center">
                   <p className="text-2xl font-bold">{objective?.checkIns?.length || 0}</p>
                   <p className="text-xs text-gray-500">Check-ins</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">0/0</p>
-                  <p className="text-xs text-gray-500">To-Dos Completed</p>
+                  <p className="text-2xl font-bold">
+                    {objective?.keyResults?.filter(kr => kr.status === 'completed').length || 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Completed KRs</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-md text-center">
+                  <p className="text-2xl font-bold">
+                    {objective?.createdAt ? Math.ceil((new Date().getTime() - new Date(objective.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Days Active</p>
                 </div>
               </div>
             </CardContent>
