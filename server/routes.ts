@@ -15,7 +15,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
  } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
-import { or, sql, and, eq, inArray, isNull } from "drizzle-orm";
+import { or, sql, and, eq, inArray } from "drizzle-orm";
 import { ulid } from "ulid";
 import { openAIService } from "./services/openai-service";
 import { slackService } from "./services/slack-service";
@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get tenant ID from middleware, query parameter, or request body
       const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
-      const { mission, vision, purpose, values, boundaries, behaviors } = req.body;
+      const { mission, vision, boundaries, behaviors } = req.body;
       
       console.log("POST /api/organization-mission - DETAILED DEBUG:", {
         fromMiddleware: req.tenantId,
@@ -418,8 +418,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .set({
             mission,
             vision,
-            purpose,
-            values,
             boundaries,
             behaviors,
             updatedAt: new Date()
@@ -433,8 +431,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tenantId,
             mission,
             vision,
-            purpose,
-            values,
             boundaries,
             behaviors
           })
@@ -524,8 +520,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User not authenticated" });
       }
 
-      // Get user's team information from the users table (which has teamId)
-      const user = await db.select({ teamId: users.teamId })
+      // Get user's team information
+      const user = await db.select()
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
