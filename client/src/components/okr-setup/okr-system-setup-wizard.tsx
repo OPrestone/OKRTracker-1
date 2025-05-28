@@ -369,7 +369,8 @@ export default function OKRSystemSetupWizard() {
         // Use apiRequest from queryClient which handles authentication properly
         const { apiRequest } = await import('@/lib/queryClient');
         
-        const response = await apiRequest('/api/organization-mission', {
+        const response = await apiRequest({
+          url: '/api/organization-mission',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
