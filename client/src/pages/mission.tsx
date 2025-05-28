@@ -37,11 +37,13 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Mission() {
   const [location] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   // Get tenant ID from multiple sources to ensure it's available
   let extractedTenantId = '';
@@ -195,6 +197,34 @@ export default function Mission() {
     enabled: !!tenantId, // Only run query when tenantId is available
     retry: 3 // Retry failed queries up to 3 times
   });
+
+  // Query to get user role for permission-based access
+  const { data: userRole, isLoading: isRoleLoading } = useQuery({
+    queryKey: ['/api/user/role', tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      
+      const response = await fetch(`/api/user/role?tenantId=${tenantId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user role: ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!tenantId
+  });
+
+  // Permission checks based on user role
+  const canEditMission = userRole?.role === 'owner' || userRole?.role === 'admin' || userRole?.role === 'executive';
+  const canEditBehaviors = userRole?.role === 'owner' || userRole?.role === 'admin' || userRole?.role === 'manager' || userRole?.role === 'executive';
+  const canViewOnly = userRole?.role === 'user';
 
   // Mutation to save organization mission data
   const saveMissionMutation = useMutation({
@@ -880,18 +910,20 @@ export default function Mission() {
                 <CardDescription>Team mission statement, who are we and what do we do?</CardDescription>
               </div>
               {!editMode.mission ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, mission: true});
-                    setMissionDraft(missionStatement);
-                  }}
-                  className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditMission && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, mission: true});
+                      setMissionDraft(missionStatement);
+                    }}
+                    className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <div className="flex gap-2">
                   <Button 
@@ -1009,20 +1041,22 @@ export default function Mission() {
                 <CardDescription>Freedoms and constraints that impact our work</CardDescription>
               </div>
               {!editMode.boundaries ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, boundaries: true});
-                    setBoundariesDraft({
-                      freedoms: [...boundaries.freedoms],
-                      constraints: [...boundaries.constraints]
-                    });
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditBehaviors && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, boundaries: true});
+                      setBoundariesDraft({
+                        freedoms: [...boundaries.freedoms],
+                        constraints: [...boundaries.constraints]
+                      });
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <Button 
                   variant="ghost" 
@@ -1166,17 +1200,19 @@ export default function Mission() {
                 <CardDescription>Behaviors we commit to displaying</CardDescription>
               </div>
               {!editMode.behaviors ? (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditMode({...editMode, behaviors: true});
-                    setBehaviorsDraft([...behaviors]);
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                canEditBehaviors && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditMode({...editMode, behaviors: true});
+                      setBehaviorsDraft([...behaviors]);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )
               ) : (
                 <Button 
                   variant="ghost" 
