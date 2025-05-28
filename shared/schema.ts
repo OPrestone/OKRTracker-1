@@ -28,6 +28,8 @@ export const organizationMission = pgTableWithUlid("organization_mission", {
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   mission: text("mission"),
   vision: text("vision"),
+  purpose: text("purpose"),
+  values: text("values"),
   boundaries: text("boundaries"),
   strategicDirection: text("strategic_direction"),
   behaviors: text("behaviors"),

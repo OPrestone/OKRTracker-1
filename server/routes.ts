@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get tenant ID from middleware, query parameter, or request body
       const tenantId = req.tenantId || req.query.tenantId as string || req.body.tenantId;
-      const { mission, vision, boundaries, behaviors } = req.body;
+      const { mission, vision, purpose, values, boundaries, behaviors } = req.body;
       
       console.log("POST /api/organization-mission - DETAILED DEBUG:", {
         fromMiddleware: req.tenantId,
@@ -418,6 +418,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .set({
             mission,
             vision,
+            purpose,
+            values,
             boundaries,
             behaviors,
             updatedAt: new Date()
@@ -431,6 +433,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tenantId,
             mission,
             vision,
+            purpose,
+            values,
             boundaries,
             behaviors
           })
