@@ -1340,42 +1340,8 @@ export default function OKRSystemSetupWizard() {
           currentTenantId,
         );
 
-        // Create a FormValues object to store our form data
-        const formValues: FormValues = {
-          generalSettings: {
-            companyMission: "",
-            companyVision: "",
-            companyValues: "",
-            strategicDirections: [],
-            trackingFrequency: "weekly",
-            enableNotifications: true,
-          },
-          timeframes: {
-            primaryCadence: "quarterly",
-            enableQuarterlyCadence: true,
-            enableAnnualCadence: true,
-            customCadence: "",
-            startMonth: "january",
-          },
-          objectiveSettings: {
-            maxObjectivesPerTeam: "5",
-            maxKeyResultsPerObjective: "3",
-            requireObjectiveApproval: true,
-            enableObjectiveAlignment: true,
-          },
-          teamConfiguration: {
-            orgStructureType: "functional",
-            enableCrossTeamObjectives: true,
-            defaultVisibility: "public",
-            selectedTeams: [],
-          },
-          integrations: {
-            enableSlackIntegration: false,
-            enableEmailNotifications: true,
-            enableCalendarSync: false,
-            enableAnalyticsReporting: true,
-          },
-        };
+        // Use the existing form for data updates
+        const currentFormValues = form.getValues();
 
         // Prioritize mission data from the organization-mission API
         const missionResponse = await fetch(
@@ -1433,9 +1399,9 @@ export default function OKRSystemSetupWizard() {
             }
 
             console.log("Prefilled form with mission data:", {
-              mission: formValues.generalSettings.companyMission,
-              vision: formValues.generalSettings.companyVision,
-              values: formValues.generalSettings.companyValues,
+              mission: currentFormValues.generalSettings.companyMission,
+              vision: currentFormValues.generalSettings.companyVision,
+              values: currentFormValues.generalSettings.companyValues,
             });
           }
         }
@@ -1467,68 +1433,68 @@ export default function OKRSystemSetupWizard() {
           if (systemConfig) {
             // Only override mission/vision if not already set from mission API
             if (
-              !formValues.generalSettings.companyMission &&
+              !currentFormValues.generalSettings.companyMission &&
               systemConfig.company_mission
             ) {
-              formValues.generalSettings.companyMission =
+              currentFormValues.generalSettings.companyMission =
                 systemConfig.company_mission;
             }
 
             if (
-              !formValues.generalSettings.companyVision &&
+              !currentFormValues.generalSettings.companyVision &&
               systemConfig.company_vision
             ) {
-              formValues.generalSettings.companyVision =
+              currentFormValues.generalSettings.companyVision =
                 systemConfig.company_vision;
             }
 
             if (
-              !formValues.generalSettings.companyValues &&
+              !currentFormValues.generalSettings.companyValues &&
               systemConfig.company_values
             ) {
-              formValues.generalSettings.companyValues =
+              currentFormValues.generalSettings.companyValues =
                 systemConfig.company_values;
             }
 
             // Map remaining fields
             if (systemConfig.tracking_frequency) {
-              formValues.generalSettings.trackingFrequency =
+              currentFormValues.generalSettings.trackingFrequency =
                 systemConfig.tracking_frequency;
             }
 
-            formValues.generalSettings.enableNotifications =
+            currentFormValues.generalSettings.enableNotifications =
               systemConfig.enable_notifications !== false;
 
             if (systemConfig.primary_cadence) {
-              formValues.timeframes.primaryCadence =
+              currentFormValues.timeframes.primaryCadence =
                 systemConfig.primary_cadence;
             }
 
-            formValues.timeframes.enableQuarterlyCadence =
+            currentFormValues.timeframes.enableQuarterlyCadence =
               systemConfig.enable_quarterly_cadence !== false;
-            formValues.timeframes.enableAnnualCadence =
+            currentFormValues.timeframes.enableAnnualCadence =
               systemConfig.enable_annual_cadence !== false;
 
             if (systemConfig.custom_cadence) {
-              formValues.timeframes.customCadence = systemConfig.custom_cadence;
+              currentFormValues.timeframes.customCadence = systemConfig.custom_cadence;
             }
 
             if (systemConfig.start_month) {
-              formValues.timeframes.startMonth = systemConfig.start_month;
+              currentFormValues.timeframes.startMonth = systemConfig.start_month;
             }
 
             if (systemConfig.default_objective_category) {
-              formValues.objectiveSettings.defaultObjectiveCategory =
+              currentFormValues.objectiveSettings.defaultObjectiveCategory =
                 systemConfig.default_objective_category;
             }
 
             if (systemConfig.max_objectives_per_team) {
-              formValues.objectiveSettings.maxObjectivesPerTeam =
+              currentFormValues.objectiveSettings.maxObjectivesPerTeam =
                 systemConfig.max_objectives_per_team.toString();
             }
 
             if (systemConfig.max_key_results_per_objective) {
-              formValues.objectiveSettings.maxKeyResultsPerObjective =
+              currentFormValues.objectiveSettings.maxKeyResultsPerObjective =
                 systemConfig.max_key_results_per_objective.toString();
             }
 
