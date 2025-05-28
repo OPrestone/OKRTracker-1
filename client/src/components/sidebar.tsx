@@ -47,6 +47,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useTeamLeader } from "@/hooks/use-team-leader";
+import { useUserPermissions } from "@/hooks/use-user-permissions";
 import { Separator } from "@/components/ui/separator";
 import TenantSwitcher from "@/components/tenant/tenant-switcher";
 import { Tenant } from "@/hooks/use-tenant-context";
@@ -61,6 +62,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
   const { user } = useAuth();
   const { userRole } = useUserRole();
   const { isTeamLeader } = useTeamLeader();
+  const permissions = useUserPermissions();
 
   // Determine which dashboard to show based on user role
   const getDashboardInfo = () => {
@@ -427,42 +429,46 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
-        {/* Manage OKRs Menu */}
-        <button
-          onClick={() => setOkrsExpanded(!okrsExpanded)}
-          className={cn(
-            "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-            isOkrPathActive
-              ? "bg-indigo-950 text-white shadow-sm border border-indigo-800/50"
-              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
-          )}
-        >
-          <Flag className="mr-3 h-4 w-4 text-indigo-400" />
-          <span>Manage OKRs</span>
-          {okrsExpanded ? (
-            <ChevronUp className="ml-auto h-4 w-4 text-indigo-300" />
-          ) : (
-            <ChevronDown className="ml-auto h-4 w-4 text-indigo-300" />
-          )}
-        </button>
+        {/* Manage OKRs Menu - Show based on permissions */}
+        {(permissions.canCreateObjectives || permissions.canEditObjectives || permissions.canViewReports) && (
+          <button
+            onClick={() => setOkrsExpanded(!okrsExpanded)}
+            className={cn(
+              "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+              isOkrPathActive
+                ? "bg-indigo-950 text-white shadow-sm border border-indigo-800/50"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
+            )}
+          >
+            <Flag className="mr-3 h-4 w-4 text-indigo-400" />
+            <span>Manage OKRs</span>
+            {okrsExpanded ? (
+              <ChevronUp className="ml-auto h-4 w-4 text-indigo-300" />
+            ) : (
+              <ChevronDown className="ml-auto h-4 w-4 text-indigo-300" />
+            )}
+          </button>
+        )}
 
-        {okrsExpanded && (
+        {okrsExpanded && (permissions.canCreateObjectives || permissions.canEditObjectives || permissions.canViewReports) && (
           <div className="pl-8 mt-1 mb-1 space-y-1 py-1 ml-4 mr-4 bg-indigo-950/30 rounded-lg">
-            {/* Organization Level First */}
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/company-okrs"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/company-okrs")} className="w-full">
-                Company OKRs
-              </Link>
-            </div>
+            {/* Company OKRs - Only for executives and above */}
+            {permissions.canCreateCompanyObjectives && (
+              <div
+                className={cn(
+                  "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
+                  location === "/company-okrs"
+                    ? "text-white font-medium bg-indigo-900/60 shadow-sm"
+                    : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
+                )}
+              >
+                <Link href={getLink("/company-okrs")} className="w-full">
+                  Company OKRs
+                </Link>
+              </div>
+            )}
 
-            {/* Personal Level */}
+            {/* My OKRs - Available to all users */}
             <div
               className={cn(
                 "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
@@ -476,72 +482,79 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
               </Link>
             </div>
 
-            {/* Workflow-based Items */}
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/draft-okrs"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/draft-okrs")} className="w-full">
-                Draft OKRs
-              </Link>
-            </div>
-
+            {/* Draft OKRs - Only for users who can create/edit objectives */}
+            {(permissions.canCreateObjectives || permissions.canEditObjectives) && (
+              <div
+                className={cn(
+                  "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
+                  location === "/draft-okrs"
+                    ? "text-white font-medium bg-indigo-900/60 shadow-sm"
+                    : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
+                )}
+              >
+                <Link href={getLink("/draft-okrs")} className="w-full">
+                  Draft OKRs
+                </Link>
+              </div>
+            )}
 
           </div>
         )}
 
-        {/* User Management Menu */}
-        <button
-          onClick={() => setUserManagementExpanded(!userManagementExpanded)}
-          className={cn(
-            "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-            isUserManagementPathActive
-              ? "bg-indigo-950 text-white shadow-sm border border-indigo-800/50"
-              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
-          )}
-        >
-          <Users className="mr-3 h-4 w-4 text-indigo-400" />
-          <span>User Management</span>
-          {userManagementExpanded ? (
-            <ChevronUp className="ml-auto h-4 w-4 text-indigo-300" />
-          ) : (
-            <ChevronDown className="ml-auto h-4 w-4 text-indigo-300" />
-          )}
-        </button>
+        {/* User Management Menu - Show based on permissions */}
+        {(permissions.canManageUsers || permissions.canEditTeams || permissions.canCreateTeams) && (
+          <button
+            onClick={() => setUserManagementExpanded(!userManagementExpanded)}
+            className={cn(
+              "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+              isUserManagementPathActive
+                ? "bg-indigo-950 text-white shadow-sm border border-indigo-800/50"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
+            )}
+          >
+            <Users className="mr-3 h-4 w-4 text-indigo-400" />
+            <span>User Management</span>
+            {userManagementExpanded ? (
+              <ChevronUp className="ml-auto h-4 w-4 text-indigo-300" />
+            ) : (
+              <ChevronDown className="ml-auto h-4 w-4 text-indigo-300" />
+            )}
+          </button>
+        )}
 
-        {userManagementExpanded && (
+        {userManagementExpanded && (permissions.canManageUsers || permissions.canEditTeams || permissions.canCreateTeams) && (
           <div className="pl-8 mt-1 mb-1 space-y-1 py-1 ml-4 mr-4 bg-indigo-950/30 rounded-lg">
-            {/* Organization Structure */}
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/teams"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/teams")} className="w-full">
-                Teams
-              </Link>
-            </div>
+            {/* Teams - Show for managers and above */}
+            {(permissions.canEditTeams || permissions.canCreateTeams) && (
+              <div
+                className={cn(
+                  "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
+                  location === "/teams"
+                    ? "text-white font-medium bg-indigo-900/60 shadow-sm"
+                    : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
+                )}
+              >
+                <Link href={getLink("/teams")} className="w-full">
+                  Teams
+                </Link>
+              </div>
+            )}
             
-            {/* User Management */}
-            <div
-              className={cn(
-                "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-                location === "/all-users"
-                  ? "text-white font-medium bg-indigo-900/60 shadow-sm"
-                  : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
-              )}
-            >
-              <Link href={getLink("/all-users")} className="w-full">
-                Users
-              </Link>
-            </div>
+            {/* User Management - Only for admins/owners */}
+            {permissions.canManageUsers && (
+              <div
+                className={cn(
+                  "flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
+                  location === "/all-users"
+                    ? "text-white font-medium bg-indigo-900/60 shadow-sm"
+                    : "text-indigo-200 hover:text-white hover:bg-indigo-900/40",
+                )}
+              >
+                <Link href={getLink("/all-users")} className="w-full">
+                  Users
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -628,16 +641,16 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
         
-        {/* Administrative Section - Always visible to admins/owners in the tenant */}
-        {(isCurrentUserAdmin() || user?.isAdmin) && (
+        {/* Administrative Section - Show based on permissions */}
+        {(permissions.canAccessConfiguration || permissions.canManageIntegrations || permissions.canViewReports) && (
           <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
             <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
             Administration
           </div>
         )}
 
-        {/* Organizations Menu - Always visible to admins/owners in the tenant */}
-        {(isCurrentUserAdmin() || user?.isAdmin) && (
+        {/* Organizations Menu - Only for admins/owners */}
+        {permissions.isAdminOrOwner && (
           <button
             onClick={() => setTenantsExpanded(!tenantsExpanded)}
             className={cn(
@@ -657,7 +670,7 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </button>
         )}
 
-        {tenantsExpanded && (isCurrentUserAdmin() || user?.isAdmin) && (
+        {tenantsExpanded && permissions.isAdminOrOwner && (
           <div className="pl-11 mt-1 mb-1">
             {/* Organization Management Section */}
             <div className="mb-2">
@@ -785,30 +798,32 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </Link>
         </div>
 
-        {/* Reports Menu */}
-        <button
-          onClick={() => setReportsExpanded(!reportsExpanded)}
-          className={cn(
-            "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-            location === "/reports" ||
-              location === "/okr-reports" ||
-              location === "/export-reports" ||
-              location === "/team-performance" ||
-              location === "/ai-recommendations"
-              ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
-              : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
-          )}
-        >
-          <PieChart className="mr-3 h-4 w-4 text-indigo-200" />
-          <span>Reports & Analytics</span>
-          {reportsExpanded ? (
-            <ChevronUp className="ml-auto h-4 w-4 text-indigo-200" />
-          ) : (
-            <ChevronDown className="ml-auto h-4 w-4 text-indigo-200" />
-          )}
-        </button>
+        {/* Reports Menu - Show for managers and above */}
+        {permissions.canViewReports && (
+          <button
+            onClick={() => setReportsExpanded(!reportsExpanded)}
+            className={cn(
+              "w-full flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+              location === "/reports" ||
+                location === "/okr-reports" ||
+                location === "/export-reports" ||
+                location === "/team-performance" ||
+                location === "/ai-recommendations"
+                ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-200 hover:bg-indigo-900/30 hover:text-white",
+            )}
+          >
+            <PieChart className="mr-3 h-4 w-4 text-indigo-200" />
+            <span>Reports & Analytics</span>
+            {reportsExpanded ? (
+              <ChevronUp className="ml-auto h-4 w-4 text-indigo-200" />
+            ) : (
+              <ChevronDown className="ml-auto h-4 w-4 text-indigo-200" />
+            )}
+          </button>
+        )}
 
-        {reportsExpanded && (
+        {reportsExpanded && permissions.canViewReports && (
           <div className="pl-10 pr-4 mt-2 mb-2 space-y-1">
             <div
               className={cn(
@@ -899,15 +914,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
 
-        {/* Admin section - Only visible to admins/owners */}
-        {(isCurrentUserAdmin() || user?.isAdmin) && (
-          <div className="px-4 pt-5 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center">
-            <span className="bg-indigo-500 h-1.5 w-1.5 rounded-full mr-2 shadow-sm shadow-indigo-500/50"></span>
-            Administration
-          </div>
-        )}
-        {/* Configurations link - Only visible to admins/owners */}
-        {(isCurrentUserAdmin() || user?.isAdmin) && (
+        {/* Configuration link - Only for admins/owners with access */}
+        {permissions.canAccessConfiguration && (
           <div
             className={cn(
               "flex items-center mx-4 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
@@ -923,8 +931,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </div>
         )}
 
-        {/* Configure button - Only visible to admins/owners */}
-        {(isCurrentUserAdmin() || user?.isAdmin) && (
+        {/* Configure button - Only for admins/owners with access */}
+        {permissions.canAccessConfiguration && (
           <button
             onClick={() => setConfigExpanded(!configExpanded)}
             className={cn(
@@ -944,8 +952,8 @@ const Sidebar = ({ open, onOpenChange }: SidebarProps) => {
           </button>
         )}
 
-        {/* Configuration submenu - Only for admins/owners */}
-        {configExpanded && (isCurrentUserAdmin() || user?.isAdmin) && (
+        {/* Configuration submenu - Only for admins/owners with access */}
+        {configExpanded && permissions.canAccessConfiguration && (
           <div className="pl-8 mt-1 mb-1 space-y-1">
             <div
               className={cn(

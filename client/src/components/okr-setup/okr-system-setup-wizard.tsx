@@ -470,8 +470,19 @@ export default function OKRSystemSetupWizard() {
                   user.error = 'Invalid email format';
                 }
                 break;
+              case 'firstname':
+              case 'first_name':
+                user.firstName = value;
+                break;
+              case 'lastname':
+              case 'last_name':
+                user.lastName = value;
+                break;
               case 'name':
                 user.name = value;
+                break;
+              case 'title':
+                user.title = value;
                 break;
               case 'role':
                 // Normalize role values to support new five-role organization system
@@ -618,8 +629,10 @@ export default function OKRSystemSetupWizard() {
                   firstName: user.firstName || user.name?.split(' ')[0] || user.email.split('@')[0],
                   lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
                   name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0],
-                  title: user.department || '',
+                  title: user.title || user.department || '',
                   role: user.role || 'user',
+                  password: user.email.toLowerCase(), // Set password to email initially
+                  requirePasswordReset: true, // Flag to require password reset on first login
                   tenantId: tenantId  // Ensure tenant ID is included
                 }),
                 credentials: 'include'
@@ -654,6 +667,8 @@ export default function OKRSystemSetupWizard() {
           
           // Step 2.5: Assign users to their teams with proper team IDs
           console.log("Step 2.5: Assigning users to teams...");
+          console.log("Users to assign:", csvImportedUsers.map(u => ({ email: u.email, team: u.team })));
+          
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for users to be committed
           
           // Fetch current teams to get team IDs
@@ -667,7 +682,7 @@ export default function OKRSystemSetupWizard() {
           
           if (teamsResponse.ok) {
             const allTeams = await teamsResponse.json();
-            console.log("Available teams for assignment:", allTeams);
+            console.log("Available teams for assignment:", allTeams.map(t => ({ id: t.id, name: t.name })));
             
             // Fetch current users to get user IDs
             const usersResponse = await fetch("/api/users", {
@@ -680,47 +695,115 @@ export default function OKRSystemSetupWizard() {
             
             if (usersResponse.ok) {
               const allUsers = await usersResponse.json();
-              console.log("Available users for team assignment:", allUsers);
+              console.log("Available users for team assignment:", allUsers.map(u => ({ id: u.id, email: u.email })));
               
-              // Assign each CSV user to their team
+              // Enhanced team assignment with comprehensive tracking
+              const teamAssignmentResults = {
+                successful: 0,
+                failed: 0,
+                skipped: 0,
+                errors: [] as string[]
+              };
+              
+              console.log(`Starting team assignments for ${csvImportedUsers.length} users...`);
+              
               for (const csvUser of csvImportedUsers) {
-                if (csvUser.team && csvUser.team.trim() !== '') {
-                  const matchingTeam = allTeams.find(team => 
-                    team.name.toLowerCase() === csvUser.team.toLowerCase()
-                  );
-                  const matchingUser = allUsers.find(user => 
-                    user.email.toLowerCase() === csvUser.email.toLowerCase()
-                  );
-                  
-                  if (matchingTeam && matchingUser) {
-                    try {
-                      // Assign user to team using the users-to-teams relationship
-                      const assignResponse = await fetch("/api/users-to-teams", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
-                        },
-                        body: JSON.stringify({
-                          userId: matchingUser.id,
-                          teamId: matchingTeam.id,
-                          tenantId: tenantContext.currentTenant?.id || tenantId
-                        }),
-                        credentials: 'include'
-                      });
-                      
-                      if (assignResponse.ok) {
-                        console.log(`Assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
-                      } else {
-                        console.log(`Failed to assign ${csvUser.email} to team ${csvUser.team}:`, await assignResponse.text());
-                      }
-                    } catch (error) {
-                      console.error(`Error assigning ${csvUser.email} to team:`, error);
-                    }
-                  } else {
-                    console.log(`Could not find matching team or user for ${csvUser.email} -> ${csvUser.team}`);
-                  }
+                if (!csvUser.team || csvUser.team.trim() === '') {
+                  teamAssignmentResults.skipped++;
+                  console.log(`Skipping ${csvUser.email} - no team specified`);
+                  continue;
                 }
+                
+                const matchingTeam = allTeams.find(team => 
+                  team.name.toLowerCase().trim() === csvUser.team.toLowerCase().trim()
+                );
+                const matchingUser = allUsers.find(user => 
+                  user.email.toLowerCase().trim() === csvUser.email.toLowerCase().trim()
+                );
+                
+                if (!matchingTeam) {
+                  teamAssignmentResults.failed++;
+                  const error = `Team "${csvUser.team}" not found for user ${csvUser.email}`;
+                  teamAssignmentResults.errors.push(error);
+                  console.error(error);
+                  continue;
+                }
+                
+                if (!matchingUser) {
+                  teamAssignmentResults.failed++;
+                  const error = `User "${csvUser.email}" not found in system`;
+                  teamAssignmentResults.errors.push(error);
+                  console.error(error);
+                  continue;
+                }
+                
+                try {
+                  // Enhanced team assignment with retry logic
+                  let assignmentSuccess = false;
+                  let attempts = 0;
+                  const maxAttempts = 3;
+                  
+                  while (!assignmentSuccess && attempts < maxAttempts) {
+                    attempts++;
+                    console.log(`Assignment attempt ${attempts} for ${csvUser.email} -> ${csvUser.team}`);
+                    
+                    const assignResponse = await fetch("/api/users-to-teams", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Tenant-ID": tenantContext.currentTenant?.id || tenantId
+                      },
+                      body: JSON.stringify({
+                        userId: matchingUser.id,
+                        teamId: matchingTeam.id,
+                        tenantId: tenantContext.currentTenant?.id || tenantId
+                      }),
+                      credentials: 'include'
+                    });
+                    
+                    if (assignResponse.ok) {
+                      assignmentSuccess = true;
+                      teamAssignmentResults.successful++;
+                      console.log(`✓ Successfully assigned ${csvUser.email} to team ${csvUser.team} (ID: ${matchingTeam.id})`);
+                    } else if (assignResponse.status === 409) {
+                      // User already assigned to team - count as success
+                      assignmentSuccess = true;
+                      teamAssignmentResults.successful++;
+                      console.log(`✓ ${csvUser.email} already assigned to team ${csvUser.team}`);
+                    } else {
+                      const errorText = await assignResponse.text();
+                      console.error(`Attempt ${attempts} failed for ${csvUser.email}:`, errorText);
+                      
+                      if (attempts === maxAttempts) {
+                        teamAssignmentResults.failed++;
+                        teamAssignmentResults.errors.push(`Failed to assign ${csvUser.email} to ${csvUser.team}: ${errorText}`);
+                      } else {
+                        // Wait before retry
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                      }
+                    }
+                  }
+                } catch (error) {
+                  teamAssignmentResults.failed++;
+                  const errorMsg = `Error assigning ${csvUser.email} to team: ${error}`;
+                  teamAssignmentResults.errors.push(errorMsg);
+                  console.error(errorMsg);
+                }
+              }
+              
+              // Report team assignment results
+              console.log("Team Assignment Summary:", teamAssignmentResults);
+              
+              if (teamAssignmentResults.successful > 0) {
+                toast({
+                  title: "Team Assignments Complete",
+                  description: `Successfully assigned ${teamAssignmentResults.successful} users to teams. ${teamAssignmentResults.failed} failed, ${teamAssignmentResults.skipped} skipped.`,
+                  variant: teamAssignmentResults.failed > 0 ? "destructive" : "default"
+                });
+              }
+              
+              if (teamAssignmentResults.errors.length > 0) {
+                console.error("Team assignment errors:", teamAssignmentResults.errors);
               }
             }
           }
@@ -2408,12 +2491,12 @@ export default function OKRSystemSetupWizard() {
                                   variant="outline"
                                   onClick={() => {
                                     // Download comprehensive CSV template with all required fields and new roles
-                                    const sample = `email,name,role,department,team
-john.doe@company.com,John Doe,user,Marketing,Marketing Team
-jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Team
-mike.johnson@company.com,Mike Johnson,executive,Sales,Sales Team
-sarah.williams@company.com,Sarah Williams,admin,HR,Human Resources
-david.brown@company.com,David Brown,owner,Finance,Finance Team`;
+                                    const sample = `email,firstName,lastName,department,title,role,team
+john.doe@company.com,John,Doe,Marketing,Marketing Specialist,user,Marketing Team
+jane.smith@company.com,Jane,Smith,Engineering,Software Engineer,manager,Engineering Team
+mike.johnson@company.com,Mike,Johnson,Sales,Sales Director,executive,Sales Team
+sarah.williams@company.com,Sarah,Williams,HR,HR Manager,admin,Human Resources
+david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                                     const blob = new Blob([sample], { type: 'text/csv' });
                                     const url = URL.createObjectURL(blob);
                                     const a = document.createElement('a');

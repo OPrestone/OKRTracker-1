@@ -271,6 +271,43 @@ export class DatabaseStorage implements IStorage {
     return undefined;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    console.log(`Looking up user with case-insensitive email: ${email}`);
+    
+    // Select specific columns to avoid issues with missing columns
+    const results = await db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      email: users.email,
+      name: users.name,
+      title: users.title,
+      bio: users.bio,
+      teamId: users.teamId,
+      level: users.level,
+      timezone: users.timezone,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      tenantId: users.tenantId,
+      defaultTenantId: users.defaultTenantId,
+      isEnabled: users.isEnabled,
+      isAdmin: users.isAdmin,
+      lastLoginAt: users.lastLoginAt,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId
+    }).from(users).where(
+      sql`LOWER(${users.email}) = LOWER(${email})`
+    );
+    
+    if (results.length > 0) {
+      console.log(`Found user by case-insensitive email match: ${email}`);
+      return results[0];
+    }
+    
+    console.log(`No user found with email: ${email} (case-insensitive)`);
+    return undefined;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
       // Since we've updated the schema to match the database, we don't need to transform field names anymore
