@@ -378,6 +378,11 @@ export default function ObjectiveDetail() {
   const [keyResultProgressValue, setKeyResultProgressValue] = useState<string>("0");
   const [keyResultNotes, setKeyResultNotes] = useState("");
   
+  // Edit objective states
+  const [editObjectiveDialogOpen, setEditObjectiveDialogOpen] = useState(false);
+  const [editObjectiveTitle, setEditObjectiveTitle] = useState("");
+  const [editObjectiveDescription, setEditObjectiveDescription] = useState("");
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { currentTenant } = useTenantContext();
@@ -530,6 +535,14 @@ export default function ObjectiveDetail() {
     // Use the calculated display progress (aggregate from key results) instead of stored progress
     setProgressValue(displayProgress.toString());
   }, [displayProgress]);
+
+  // Update edit form when objective data changes
+  useEffect(() => {
+    if (objective) {
+      setEditObjectiveTitle(objective.title || "");
+      setEditObjectiveDescription(objective.description || "");
+    }
+  }, [objective]);
 
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number): string => {
@@ -802,6 +815,39 @@ export default function ObjectiveDetail() {
     navigate("/my-okrs");
   };
 
+  // Handle edit objective submission
+  const handleEditObjectiveSubmit = async () => {
+    if (!objective || !currentTenant) return;
+
+    try {
+      await apiRequest(`/api/objectives/${objective.id}`, {
+        method: "PUT",
+        body: {
+          title: editObjectiveTitle,
+          description: editObjectiveDescription
+        }
+      });
+
+      toast({
+        title: "Objective Updated",
+        description: "Objective has been updated successfully."
+      });
+
+      // Reset state
+      setEditObjectiveDialogOpen(false);
+
+      // Trigger data refresh through real-time sync
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+    } catch (error) {
+      console.error("Error updating objective:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update objective. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Combine all loading states
   const isLoading = objectiveLoading || keyResultsLoading || teamsLoading || usersLoading || checkInsLoading;
 
@@ -853,6 +899,10 @@ export default function ObjectiveDetail() {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => setEditObjectiveDialogOpen(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Objective
+            </Button>
             <Button variant="outline" onClick={() => setCheckInDialogOpen(true)}>
               <MessageSquare className="h-4 w-4 mr-2" />
               New Check-in
