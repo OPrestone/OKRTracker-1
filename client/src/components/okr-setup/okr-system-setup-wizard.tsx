@@ -1646,7 +1646,7 @@ export default function OKRSystemSetupWizard() {
       // Format the data properly to avoid JSON parsing errors
       const safeFormData = JSON.parse(JSON.stringify(formDataWithTenant));
 
-      // Use our new simplified endpoint which has more flexible validation
+      // First save the main OKR system configuration
       const response = await fetch(
         `/api/okr-system-setup-simple?tenantId=${tenantId}`,
         {
@@ -1670,7 +1670,36 @@ export default function OKRSystemSetupWizard() {
         throw new Error(errorData.error || "Failed to save OKR system setup");
       }
 
-      return await response.json();
+      const result = await response.json();
+
+      // Then save strategic directions separately if they exist
+      if (data.generalSettings.strategicDirections && data.generalSettings.strategicDirections.length > 0) {
+        const validDirections = data.generalSettings.strategicDirections.filter(
+          (dir: any) => dir.title && dir.title.trim()
+        );
+
+        if (validDirections.length > 0) {
+          console.log("Saving strategic directions:", validDirections);
+          
+          const directionsResponse = await fetch("/api/strategic-directions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Tenant-ID": tenantId,
+            },
+            body: JSON.stringify({ strategicDirections: validDirections }),
+            credentials: "include",
+          });
+
+          if (directionsResponse.ok) {
+            console.log("Strategic directions saved successfully");
+          } else {
+            console.warn("Failed to save strategic directions, but continuing...");
+          }
+        }
+      }
+
+      return result;
     },
     onSuccess: async (data) => {
       console.log("OKR system setup saved successfully:", data);
