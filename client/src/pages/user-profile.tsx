@@ -93,6 +93,9 @@ export default function UserProfile() {
     team.leaderId === user?.id
   );
   
+  // Loading states
+  const isLoading = objectivesLoading || checkInsLoading || teamsLoading;
+  
   // Fetch check-ins using the correct endpoint
   const { data: checkIns, isLoading: checkInsLoading } = useQuery<CheckIn[]>({
     queryKey: ["/api/check-ins"],
