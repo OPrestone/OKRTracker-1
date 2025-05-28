@@ -1514,6 +1514,45 @@ export default function ObjectiveDetail() {
           onOpenChange={setIsAddKeyResultModalOpen}
         />
       )}
+
+      {/* Edit Objective Dialog */}
+      <Dialog open={editObjectiveDialogOpen} onOpenChange={setEditObjectiveDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Objective</DialogTitle>
+            <DialogDescription>
+              Update the title and description of this objective.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editObjectiveTitle}
+                onChange={(e) => setEditObjectiveTitle(e.target.value)}
+                placeholder="Enter objective title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editObjectiveDescription}
+                onChange={(e) => setEditObjectiveDescription(e.target.value)}
+                placeholder="Enter objective description"
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditObjectiveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditObjectiveSubmit}>Update Objective</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
