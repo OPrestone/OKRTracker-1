@@ -871,7 +871,14 @@ export default function Mission() {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-900">Mission</h1>
+            {canViewOnly && (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                View Only
+              </span>
+            )}
+          </div>
           <div className="flex space-x-3">
             <Button variant="outline" className="flex items-center gap-2">
               <FileDown className="h-4 w-4" />
@@ -881,23 +888,25 @@ export default function Mission() {
               <Presentation className="h-4 w-4" />
               <span>Present</span>
             </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => {
-                setMissionDraft(missionStatement);
-                setBoundariesDraft({
-                  freedoms: [...boundaries.freedoms],
-                  constraints: [...boundaries.constraints]
-                });
-                setBehaviorsDraft([...behaviors]);
-                setFullPageEditMode(true);
-                setActiveEditTab('strategic');
-              }}
-            >
-              <PenBox className="h-4 w-4" />
-              <span>Edit</span>
-            </Button>
+            {canEditMission && (
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => {
+                  setMissionDraft(missionStatement);
+                  setBoundariesDraft({
+                    freedoms: [...boundaries.freedoms],
+                    constraints: [...boundaries.constraints]
+                  });
+                  setBehaviorsDraft([...behaviors]);
+                  setFullPageEditMode(true);
+                  setActiveEditTab('strategic');
+                }}
+              >
+                <PenBox className="h-4 w-4" />
+                <span>Edit</span>
+              </Button>
+            )}
           </div>
         </div>
 
