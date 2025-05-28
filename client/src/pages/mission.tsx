@@ -1122,294 +1122,33 @@ export default function Mission() {
           {/* Strategic Directions - Real Database Data */}
           <StrategicDirectionsDisplay className="border-t-4 border-t-green-600" />
 
-          {/* Vision */}
+          {/* Vision, Purpose, and Values */}
           <Card className="border-t-4 border-t-purple-600">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Vision</CardTitle>
-                <CardDescription>Our vision for the future</CardDescription>
-              </div>
-              {!editMode.vision ? (
-                canEditMission && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, vision: true});
-                      setVisionDraft(vision);
-                    }}
-                    className="hover:bg-purple-50 hover:text-purple-700 transition-colors"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                )
-              ) : (
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, vision: false});
-                      setVisionDraft(vision);
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={async () => {
-                      setIsLoading(true);
-                      try {
-                        await saveMissionMutation.mutateAsync({
-                          mission: missionStatement,
-                          vision: visionDraft,
-                          purpose: purpose,
-                          values: values,
-                          strategicDirection: strategicDirection,
-                          behaviors: JSON.stringify(behaviors),
-                          boundaries: JSON.stringify(boundaries)
-                        });
-                        setVision(visionDraft);
-                        setEditMode({...editMode, vision: false});
-                        toast({
-                          title: "Success",
-                          description: "Vision updated successfully",
-                        });
-                      } catch (error) {
-                        toast({
-                          title: "Error",
-                          description: "Failed to update vision",
-                          variant: "destructive"
-                        });
-                      } finally {
-                        setIsLoading(false);
-                      }
-                    }}
-                    disabled={isLoading || !visionDraft.trim()}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
+            <CardHeader>
+              <CardTitle>Company Strategy</CardTitle>
+              <CardDescription>Company vision, purpose and values</CardDescription>
             </CardHeader>
             <CardContent>
-              {!editMode.vision ? (
-                <div className="space-y-2">
-                  <p className="text-gray-700 leading-relaxed">
-                    {vision || "No vision statement defined yet. Click Edit to add one."}
-                  </p>
-                  {!vision && (
-                    <p className="text-sm text-gray-500 italic">
-                      A compelling vision statement inspires and guides your organization toward the future.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Textarea 
-                    value={visionDraft} 
-                    onChange={(e) => setVisionDraft(e.target.value)}
-                    className="min-h-[120px] focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Enter your vision statement here..."
-                  />
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{visionDraft.length} characters</span>
-                    <span className="text-xs">
-                      Tip: A vision statement should be inspiring and future-focused
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Purpose */}
-          <Card className="border-t-4 border-t-indigo-600">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Purpose</CardTitle>
-                <CardDescription>Why we exist and what drives us</CardDescription>
-              </div>
-              {!editMode.purpose ? (
-                canEditMission && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, purpose: true});
-                      setPurposeDraft(purpose);
-                    }}
-                    className="hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                )
-              ) : (
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, purpose: false});
-                      setPurposeDraft(purpose);
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={savePurpose}
-                    disabled={isLoading || !purposeDraft.trim()}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {!editMode.purpose ? (
-                <div className="space-y-2">
-                  <p className="text-gray-700 leading-relaxed">
-                    {purpose || "No purpose statement defined yet. Click Edit to add one."}
-                  </p>
-                  {!purpose && (
-                    <p className="text-sm text-gray-500 italic">
-                      A clear purpose statement explains why your organization exists.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Textarea 
-                    value={purposeDraft} 
-                    onChange={(e) => setPurposeDraft(e.target.value)}
-                    className="min-h-[120px] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Enter your purpose statement here..."
-                  />
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{purposeDraft.length} characters</span>
-                    <span className="text-xs">
-                      Tip: A purpose statement should explain why your organization exists
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Values */}
-          <Card className="border-t-4 border-t-teal-600">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Values</CardTitle>
-                <CardDescription>Core principles that guide our behavior</CardDescription>
-              </div>
-              {!editMode.values ? (
-                canEditMission && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, values: true});
-                      setValuesDraft(values);
-                    }}
-                    className="hover:bg-teal-50 hover:text-teal-700 transition-colors"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                )
-              ) : (
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditMode({...editMode, values: false});
-                      setValuesDraft(values);
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={saveValues}
-                    disabled={isLoading || !valuesDraft.trim()}
-                    className="bg-teal-600 hover:bg-teal-700"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {!editMode.values ? (
-                <div className="space-y-2">
-                  <p className="text-gray-700 leading-relaxed">
-                    {values || "No values defined yet. Click Edit to add them."}
-                  </p>
-                  {!values && (
-                    <p className="text-sm text-gray-500 italic">
-                      Values represent the core principles that guide your organization's behavior.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Textarea 
-                    value={valuesDraft} 
-                    onChange={(e) => setValuesDraft(e.target.value)}
-                    className="min-h-[120px] focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    placeholder="Enter your core values here..."
-                  />
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>{valuesDraft.length} characters</span>
-                    <span className="text-xs">
-                      Tip: Values should be clear, actionable principles that guide decisions
-                    </span>
-                  </div>
-                </div>
-              )}
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="vision">
+                  <AccordionTrigger>Vision</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-gray-700">{vision}</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="purpose">
+                  <AccordionTrigger>Purpose</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-gray-700">{purpose}</p>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="values">
+                  <AccordionTrigger>Values</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-gray-700">{values}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
 
