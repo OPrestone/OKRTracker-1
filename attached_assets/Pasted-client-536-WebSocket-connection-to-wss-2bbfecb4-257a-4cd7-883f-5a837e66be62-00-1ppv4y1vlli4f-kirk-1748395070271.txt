@@ -1,0 +1,44 @@
+client:536 WebSocket connection to 'wss://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/?token=ZJ0AKVLNGV-K' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531Understand this error
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=ZJ0AKVLNGV-K' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555Understand this error
+chunk-RPCDYKBN.js?v=e46b1212:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+use-auth.tsx:84 Attempting to fetch user authentication status
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-tenant-context.tsx:63 Found stored tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+use-auth.tsx:88 User authenticated successfully: 01JW9V0PJYGKTMHX7CQA41SBAJ
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+okr-system-setup-wizard.tsx:1296 User data received: {id: '01JW9V0PJYGKTMHX7CQA41SBAJ', username: 'Welcome', email: 'Welcome@gmail.com', name: 'kilol Welcome', title: null, …}
+okr-system-setup-wizard.tsx:1305 Detected tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+okr-system-setup-wizard.tsx:1317 Fetching organization mission data for tenant: 01JW9V1MBG1848CA21K7G15Z9T
+okr-system-setup-wizard.tsx:1374 Organization mission data loaded: {id: '01JW9V78WTS6WXQR3T72Y66CJE', tenantId: '01JW9V1MBG1848CA21K7G15Z9T', mission: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", vision: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", boundaries: null, …}
+okr-system-setup-wizard.tsx:1413 Prefilled form with mission data: {mission: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", vision: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", values: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n"}
+okr-system-setup-wizard.tsx:1422 Fetching OKR system config with tenant ID: 01JW9V1MBG1848CA21K7G15Z9T
+okr-system-setup-wizard.tsx:1442 Loaded existing OKR system config: {id: '01JW9V9JVQ6AMQ9QG8GHAYD1ZA', tenant_id: '01JW9V1MBG1848CA21K7G15Z9T', tracking_frequency: 'weekly', primary_cadence: 'quarterly', start_month: 'january', …}
+okr-system-setup-wizard.tsx:1558 Resetting form with data: {generalSettings: {…}, timeframes: {…}, objectiveSettings: {…}, teamConfiguration: {…}, integrations: {…}}
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+okr-system-setup-wizard.tsx:1900 Saving mission data (including strategic directions): {mission: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", vision: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", behaviors: "Define your organization's mission, vision, and va…s to align your OKRs with your strategic goals.\n\n", tenantId: '01JW9V1MBG1848CA21K7G15Z9T'}behaviors: "Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n"mission: "Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n"tenantId: "01JW9V1MBG1848CA21K7G15Z9T"vision: "Define your organization's mission, vision, and values to align your OKRs with your strategic goals.\n\n"[[Prototype]]: Object
+okr-system-setup-wizard.tsx:1906 Checking if cadences exist for tenant: 01JW9V1MBG1848CA21K7G15Z9T
+okr-system-setup-wizard.tsx:1922 Existing cadences: (2) [{…}, {…}]
+okr-system-setup-wizard.tsx:2079 Existing timeframes: (5) [{…}, {…}, {…}, {…}, {…}]
+okr-system-setup-wizard.tsx:2167 Timeframes already exist for this tenant: 5
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome
+timeframe-setup-simplified.tsx:56 Fetched timeframes: (5) [{…}, {…}, {…}, {…}, {…}]
+timeframe-setup-simplified.tsx:69 Fetched cadences: (2) [{…}, {…}]
+timeframe-setup-simplified.tsx:56 Fetched timeframes: (5) [{…}, {…}, {…}, {…}, {…}]
+timeframe-setup-simplified.tsx:69 Fetched cadences: (2) [{…}, {…}]
+timeframe-setup-simplified.tsx:56 Fetched timeframes: (5) [{…}, {…}, {…}, {…}, {…}]
+timeframe-setup-simplified.tsx:69 Fetched cadences: (2) [{…}, {…}]
+use-auth.tsx:111 Set default tenant from user data: Welcome
+use-auth.tsx:111 Set default tenant from user data: Welcome

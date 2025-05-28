@@ -11,6 +11,7 @@ import { insertObjectiveSchema, insertKeyResultSchema, insertInitiativeSchema, i
          timeframes, cadences, cycles, insertCycleSchema, insertMeetingSchema, insertMeetingToUserSchema, insertMeetingToObjectiveSchema, 
          insertMeetingToKeyResultSchema, insertActionItemSchema, meetingStatusEnum, meetingPlatformEnum,
          projects, projectStatusEnum, insertProjectSchema, organizationMission, insertOrganizationMissionSchema,
+         strategicDirections as strategicDirectionsTable,
  } from "@shared/schema";
 import { z } from "zod";
 import { db, pool } from "./db";
@@ -395,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the user has permission to update the tenant
       const userTenant = await db.select().from(usersToTenants)
         .where(and(
-          eq(usersToTenants.userId, req.user.id),
+          eq(usersToTenants.userId, req.user?.id),
           eq(usersToTenants.tenantId, tenantId)
         ))
         .limit(1);
@@ -418,7 +419,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mission,
             vision,
             boundaries,
-            strategicDirection: finalStrategicDirection,
             behaviors,
             updatedAt: new Date()
           })
@@ -428,16 +428,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create new record
         result = await db.insert(organizationMission)
           .values({
-            id: ulid(),
             tenantId,
             mission,
             vision,
             boundaries,
-            strategicDirection: finalStrategicDirection,
             behaviors
           })
           .returning();
       }
+
+
       
       // Make sure we have a result to return
       if (result && result.length > 0) {
