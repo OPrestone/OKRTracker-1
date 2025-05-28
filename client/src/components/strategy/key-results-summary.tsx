@@ -317,7 +317,7 @@ const KeyResultSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={progressOverTime} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+              <LineChart data={calculatedData.progressOverTime} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
