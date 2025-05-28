@@ -29,7 +29,7 @@ import {
   Calendar,
   Users2,
   Save,
-  Layers,
+  Layers, 
   Zap,
   Loader2,
   Check,
@@ -477,7 +477,7 @@ export default function OKRSystemSetupWizard() {
       
       form.setValue('generalSettings.strategicDirections', formattedDirections);
     }
-  }, [existingStrategicDirections, isLoadingDirections, form]);
+  }, [existingStrategicDirections, isLoadingDirections]);
 
   // Find the active step index
   const activeIndex = steps.findIndex((step) => step.id === activePage);
