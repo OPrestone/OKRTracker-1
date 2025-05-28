@@ -32,6 +32,15 @@ export function StrategicDirectionsDisplay({
   
   const { data: directions, isLoading, error } = useQuery({
     queryKey: ['api', 'strategic-directions'],
+    queryFn: async () => {
+      const response = await fetch('/api/strategic-directions', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch strategic directions');
+      }
+      return response.json();
+    },
   });
 
   const createMutation = useMutation({
