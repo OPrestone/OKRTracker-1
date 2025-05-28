@@ -1717,21 +1717,31 @@ export default function OKRSystemSetupWizard() {
         if (validDirections.length > 0) {
           console.log("Saving strategic directions:", validDirections);
           
-          const directionsResponse = await fetch("/api/strategic-directions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Tenant-ID": tenantId,
-            },
-            body: JSON.stringify({ strategicDirections: validDirections }),
-            credentials: "include",
-          });
+          // Create each strategic direction individually using the correct endpoint
+          for (const direction of validDirections) {
+            try {
+              const directionsResponse = await fetch("/api/strategic-directions/create", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  title: direction.title,
+                  description: direction.description || ""
+                }),
+                credentials: "include",
+              });
 
-          if (directionsResponse.ok) {
-            console.log("Strategic directions saved successfully");
-          } else {
-            console.warn("Failed to save strategic directions, but continuing...");
+              if (!directionsResponse.ok) {
+                console.warn(`Failed to save strategic direction: ${direction.title}`);
+              } else {
+                console.log(`Strategic direction saved: ${direction.title}`);
+              }
+            } catch (error) {
+              console.warn(`Error saving strategic direction ${direction.title}:`, error);
+            }
           }
+          console.log("Strategic directions processing completed");
         }
       }
 
