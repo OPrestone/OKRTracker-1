@@ -81,16 +81,22 @@ export function StrategicDirectionsDisplay({
       console.log("=== FRONTEND: Creating strategic direction ===");
       console.log("Form data being sent:", data);
       
-      const response = await apiRequest('/api/strategic-directions/create', {
+      const response = await fetch('/api/strategic-directions/create', {
         method: 'POST',
-        body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
+        body: JSON.stringify(data),
       });
       
-      console.log("API response:", response);
-      return response;
+      if (!response.ok) {
+        throw new Error('Failed to create strategic direction');
+      }
+      
+      const result = await response.json();
+      console.log("API response:", result);
+      return result;
     },
     onSuccess: (data) => {
       console.log("Strategic direction created successfully:", data);
