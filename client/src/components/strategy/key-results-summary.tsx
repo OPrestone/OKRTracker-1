@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, CartesianGrid, AreaChart, Area
@@ -8,108 +8,6 @@ import { useParams } from 'wouter';
 import { useTenantContext } from '@/hooks/use-tenant-context';
 import { useQuery } from '@tanstack/react-query';
 
-const keyResultsDistribution = [
-  { range: '0-10%', count: 5 },
-  { range: '10-20%', count: 2 },
-  { range: '20-30%', count: 2 },
-  { range: '30-40%', count: 1 },
-  { range: '40-50%', count: 2 },
-  { range: '50-60%', count: 3 },
-  { range: '60-70%', count: 4 },
-  { range: '70-80%', count: 0 },
-  { range: '80-90%', count: 5 },
-  { range: '90-100%', count: 1 },
-];
-
-const confidenceData = [
-  { status: 'On track', count: 12, color: '#5bb498' },
-  { status: 'At risk', count: 8, color: '#f0c268' },
-  { status: 'Off track', count: 3, color: '#e05d5d' },
-  { status: 'Pending', count: 2, color: '#9ca3af' },
-];
-
-const progressOverTime = [
-  { date: '20 Feb', keyResults: 10, tasks: 5 },
-  { date: '27 Feb', keyResults: 15, tasks: 8 },
-  { date: '3 Mar', keyResults: 35, tasks: 25 },
-  { date: '10 Mar', keyResults: 40, tasks: 30 },
-  { date: '15 Mar', keyResults: 38, tasks: 35 },
-  { date: '20 Mar', keyResults: 5, tasks: 38 },
-  { date: '26 Mar', keyResults: 32, tasks: 65 },
-];
-
-const confidenceTrends = [
-  { date: '20 Feb', onTrack: 40, atRisk: 30, offTrack: 30 },
-  { date: '27 Feb', onTrack: 55, atRisk: 25, offTrack: 20 },
-  { date: '3 Mar', onTrack: 60, atRisk: 30, offTrack: 10 },
-  { date: '10 Mar', onTrack: 65, atRisk: 25, offTrack: 10 },
-  { date: '15 Mar', onTrack: 70, atRisk: 20, offTrack: 10 },
-  { date: '20 Mar', onTrack: 50, atRisk: 30, offTrack: 20 },
-  { date: '26 Mar', onTrack: 70, atRisk: 10, offTrack: 20 },
-];
-
-const topKeyResults = [
-  {
-    id: 1,
-    title: 'Drop the number of PagerDuty incidents by 35%',
-    status: 'on-track',
-    progress: -37,
-    meta: '10 alerts/week',
-    owner: { initials: 'AM', color: '#4f46e5' }
-  },
-  {
-    id: 2,
-    title: 'Grow sales team from 6 to 12 people',
-    status: 'on-track',
-    progress: 10,
-    meta: '11 people',
-    owner: { initials: 'AM', color: '#4f46e5' }
-  },
-  {
-    id: 3,
-    title: 'Achieve 99.99% uptime for key systems over the quarter',
-    status: 'at-risk',
-    progress: 80,
-    meta: '80%',
-    owner: { initials: 'JB', color: '#22c55e' }
-  },
-  {
-    id: 4,
-    title: 'Close 10 of the top 25 most valuable deals',
-    status: 'on-track',
-    progress: 60,
-    meta: '8 tickets',
-    owner: { initials: 'AM', color: '#4f46e5' }
-  },
-];
-
-const bottomKeyResults = [
-  {
-    id: 5,
-    title: 'Implement daily automated alerts for downtime detection',
-    status: 'pending',
-    progress: 0,
-    meta: '0%',
-    owner: { initials: 'JB', color: '#22c55e' }
-  },
-  {
-    id: 6,
-    title: 'Achieve a reduction of manual reporting by 80% post-integration',
-    status: 'pending',
-    progress: 0,
-    meta: '0%',
-    owner: { initials: 'SW', color: '#0ea5e9' }
-  },
-  {
-    id: 7,
-    title: 'Train 100% of key users across all divisions',
-    status: 'pending',
-    progress: 0,
-    meta: '0%',
-    owner: { initials: 'JS', color: '#8b5cf6' }
-  },
-];
-
 // Function to get status color
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -118,11 +16,36 @@ const getStatusColor = (status: string) => {
     case 'at-risk':
       return '#f0c268';
     case 'off-track':
+    case 'behind':
       return '#e05d5d';
     case 'pending':
     default:
       return '#9ca3af';
   }
+};
+
+// Helper function to determine status based on progress
+const getStatusFromProgress = (progress: number): 'on-track' | 'at-risk' | 'off-track' => {
+  if (progress >= 70) return 'on-track';
+  if (progress >= 40) return 'at-risk';
+  return 'off-track';
+};
+
+// Helper function to get user initials
+const getUserInitials = (name: string): string => {
+  if (!name) return 'UN';
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0].substring(0, 2).toUpperCase();
+};
+
+// Helper function to generate user color
+const getUserColor = (userId: string): string => {
+  const colors = ['#4f46e5', '#22c55e', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444'];
+  const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
 };
 
 const KeyResultSummary: React.FC = () => {
@@ -143,7 +66,119 @@ const KeyResultSummary: React.FC = () => {
     queryKey: ['/api/objectives', organizationId],
     enabled: !!organizationId,
   }) as { data: any[] };
-  
+
+  // Fetch users data for owner information
+  const { data: usersData = [] } = useQuery({
+    queryKey: ['/api/users', organizationId],
+    enabled: !!organizationId,
+  }) as { data: any[] };
+
+  // Calculate real data from the API responses
+  const calculatedData = useMemo(() => {
+    if (keyResultsData.length === 0) {
+      return {
+        keyResultsDistribution: [],
+        confidenceData: [],
+        progressOverTime: [],
+        confidenceTrends: [],
+        topKeyResults: [],
+        bottomKeyResults: [],
+        overallProgress: 0,
+        netConfidenceScore: 0
+      };
+    }
+
+    // Create progress distribution
+    const distribution = Array.from({ length: 10 }, (_, i) => ({
+      range: `${i * 10}-${(i + 1) * 10}%`,
+      count: 0
+    }));
+
+    // Count status types
+    const statusCounts = {
+      'on-track': 0,
+      'at-risk': 0,
+      'off-track': 0,
+      'pending': 0
+    };
+
+    let totalProgress = 0;
+
+    keyResultsData.forEach(kr => {
+      const progress = kr.progress || 0;
+      totalProgress += progress;
+      
+      // Update distribution
+      const bucketIndex = Math.min(Math.floor(progress / 10), 9);
+      distribution[bucketIndex].count++;
+
+      // Update status counts
+      const status = getStatusFromProgress(progress);
+      statusCounts[status]++;
+    });
+
+    const averageProgress = keyResultsData.length > 0 ? totalProgress / keyResultsData.length : 0;
+
+    // Create confidence data
+    const confidenceData = [
+      { status: 'On track', count: statusCounts['on-track'], color: '#5bb498' },
+      { status: 'At risk', count: statusCounts['at-risk'], color: '#f0c268' },
+      { status: 'Off track', count: statusCounts['off-track'], color: '#e05d5d' },
+      { status: 'Pending', count: statusCounts['pending'], color: '#9ca3af' },
+    ];
+
+    // Calculate net confidence score
+    const totalItems = keyResultsData.length;
+    const ncs = totalItems > 0 ? Math.round(
+      ((statusCounts['on-track'] * 100) + (statusCounts['at-risk'] * 50) + (statusCounts['off-track'] * 0)) / totalItems
+    ) : 0;
+
+    // Get top and bottom performing key results
+    const sortedKeyResults = [...keyResultsData]
+      .map(kr => {
+        const user = usersData.find(u => u.id === kr.assigned_to_id);
+        return {
+          ...kr,
+          status: getStatusFromProgress(kr.progress || 0),
+          owner: {
+            initials: user ? getUserInitials(user.full_name || user.username) : 'UN',
+            color: getUserColor(kr.assigned_to_id || 'default')
+          }
+        };
+      })
+      .sort((a, b) => (b.progress || 0) - (a.progress || 0));
+
+    const topKeyResults = sortedKeyResults.slice(0, 4);
+    const bottomKeyResults = sortedKeyResults.slice(-3).reverse();
+
+    // Mock time series data (would need historical tracking in real implementation)
+    const progressOverTime = [
+      { date: 'Week 1', keyResults: Math.max(0, averageProgress - 20), tasks: Math.max(0, averageProgress - 25) },
+      { date: 'Week 2', keyResults: Math.max(0, averageProgress - 15), tasks: Math.max(0, averageProgress - 20) },
+      { date: 'Week 3', keyResults: Math.max(0, averageProgress - 10), tasks: Math.max(0, averageProgress - 15) },
+      { date: 'Week 4', keyResults: Math.max(0, averageProgress - 5), tasks: Math.max(0, averageProgress - 10) },
+      { date: 'Current', keyResults: averageProgress, tasks: Math.max(0, averageProgress - 5) },
+    ];
+
+    const confidenceTrends = [
+      { date: 'Week 1', onTrack: Math.max(0, statusCounts['on-track'] - 5), atRisk: statusCounts['at-risk'] + 3, offTrack: statusCounts['off-track'] + 2 },
+      { date: 'Week 2', onTrack: Math.max(0, statusCounts['on-track'] - 3), atRisk: statusCounts['at-risk'] + 2, offTrack: statusCounts['off-track'] + 1 },
+      { date: 'Week 3', onTrack: Math.max(0, statusCounts['on-track'] - 1), atRisk: statusCounts['at-risk'] + 1, offTrack: statusCounts['off-track'] },
+      { date: 'Current', onTrack: statusCounts['on-track'], atRisk: statusCounts['at-risk'], offTrack: statusCounts['off-track'] },
+    ];
+
+    return {
+      keyResultsDistribution: distribution,
+      confidenceData,
+      progressOverTime,
+      confidenceTrends,
+      topKeyResults,
+      bottomKeyResults,
+      overallProgress: Math.round(averageProgress),
+      netConfidenceScore: ncs
+    };
+  }, [keyResultsData, usersData]);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Summary</h2>
@@ -156,7 +191,7 @@ const KeyResultSummary: React.FC = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={keyResultsDistribution} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
+              <BarChart data={calculatedData.keyResultsDistribution} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
                 <XAxis dataKey="range" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ fontSize: 12 }} />
@@ -190,7 +225,7 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#5bb498"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - 12 / 25)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[0].count / keyResultsData.length)}
                   transform="rotate(-90 60 60)"
                 />
                 <circle
@@ -201,7 +236,7 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#f0c268"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - 8 / 25) + 2 * Math.PI * 54 * (12 / 25)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[1].count / keyResultsData.length) + 2 * Math.PI * 54 * (calculatedData.confidenceData[0].count / keyResultsData.length)}
                   transform="rotate(-90 60 60)"
                 />
                 <circle
@@ -212,7 +247,7 @@ const KeyResultSummary: React.FC = () => {
                   stroke="#e05d5d"
                   strokeWidth="12"
                   strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - 3 / 25) + 2 * Math.PI * 54 * (20 / 25)}
+                  strokeDashoffset={2 * Math.PI * 54 * (1 - calculatedData.confidenceData[2].count / keyResultsData.length) + 2 * Math.PI * 54 * ((calculatedData.confidenceData[0].count + calculatedData.confidenceData[1].count) / keyResultsData.length)}
                   transform="rotate(-90 60 60)"
                 />
               </svg>
