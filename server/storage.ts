@@ -2983,35 +2983,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProjectsByTenant(tenantId: string): Promise<Project[]> {
-    // Only select the fields that exist in the database schema
-    // Use snake_case for column names to match the database and camelCase in the output
-    // to match frontend expectations
+    // Query using raw SQL to ensure proper field mapping
     try {
-      // Using simpler query to avoid parameter issues
-      return await db.select()
-        .from(projects)
-        .where(eq(projects.tenantId, tenantId))
-        .then(rows => {
-          // Transform the results to match the frontend schema
-          return rows.map(row => ({
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            status: row.status,
-            priority: row.priority || 'medium',
-            dueDate: row.dueDate,
-            teamId: row.teamId,
-            ownerId: row.createdById, // Map createdById to ownerId for frontend 
-            tenantId: row.tenantId,
-            createdAt: row.createdAt,
-            // Add default values for any missing fields that frontend might expect
-            checklistTotal: 0,
-            checklistCompleted: 0,
-            commentsCount: 0,
-            assignees: [], // Add empty assignees array for kanban board
-            comments: 0 // Add comments count for kanban board
-          }));
-        });
+      const result = await pool.query(`
+        SELECT 
+          id, title, description, status, priority,
+          assigned_to_id, team_id, created_by_id, tenant_id,
+          start_date, due_date, created_at, tags
+        FROM projects 
+        WHERE tenant_id = $1
+        ORDER BY created_at DESC
+      `, [tenantId]);
+      
+      // Transform the results to match the frontend schema
+      return result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        status: row.status,
+        priority: row.priority || 'medium',
+        dueDate: row.due_date,
+        startDate: row.start_date,
+        teamId: row.team_id,
+        assignedToId: row.assigned_to_id,
+        ownerId: row.created_by_id, // Map created_by_id to ownerId for frontend 
+        tenantId: row.tenant_id,
+        createdAt: row.created_at,
+        tags: row.tags || [],
+        // Add default values for any missing fields that frontend might expect
+        checklistTotal: 0,
+        checklistCompleted: 0,
+        commentsCount: 0,
+        assignees: [], // Add empty assignees array for kanban board
+        comments: 0 // Add comments count for kanban board
+      }));
     } catch (error) {
       console.error("Error fetching projects:", error);
       // Return empty array on error to prevent app from crashing
