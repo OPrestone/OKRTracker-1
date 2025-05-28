@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, TrendingUp, Clock, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useUserPermissions } from "@/hooks/use-user-permissions";
+
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -69,8 +69,7 @@ interface OKR {
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
   const [_, navigate] = useLocation();
-  const { canCreateObjectives } = useUserPermissions();
-  const { user } = useAuth();
+  const { user, permissions } = useAuth();
   
   // Fetch all objectives
   const { data: objectives = [], isLoading: loadingObjectives } = useQuery<DBObjective[]>({
@@ -428,7 +427,7 @@ export default function MyOKRs() {
                   <Target className="h-12 w-12 text-neutral-300 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No draft OKRs</h3>
                   <p className="text-neutral-500 mb-6">You don't have any OKRs in draft status.</p>
-                  {canCreateObjectives && canCreateObjectives() && (
+                  {permissions?.canCreateObjectives && (
                     <Button
                       onClick={() => navigate("/create-objective")}
                       className="flex items-center gap-2"
