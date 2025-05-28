@@ -946,7 +946,7 @@ export default function UserProfile() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    {teamLoading ? (
+                    {teamsLoading ? (
                       <Skeleton className="h-6 w-32" />
                     ) : userTeam ? (
                       <>{userTeam.name} Team</>
@@ -955,7 +955,7 @@ export default function UserProfile() {
                     )}
                   </CardTitle>
                   <CardDescription>
-                    {teamLoading ? (
+                    {teamsLoading ? (
                       <Skeleton className="h-4 w-48 mt-1" />
                     ) : userTeam ? (
                       <>Your team members and their progress</>
@@ -976,7 +976,7 @@ export default function UserProfile() {
               </div>
             </CardHeader>
             <CardContent>
-              {teamLoading ? (
+              {teamsLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-16 w-full" />
                   <Skeleton className="h-16 w-full" />
