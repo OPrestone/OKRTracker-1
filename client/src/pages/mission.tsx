@@ -872,41 +872,75 @@ export default function Mission() {
                     setEditMode({...editMode, mission: true});
                     setMissionDraft(missionStatement);
                   }}
+                  className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={saveMission}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setMissionDraft(missionStatement);
+                      setEditMode({...editMode, mission: false});
+                    }}
+                    disabled={isLoading}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={saveMission}
+                    disabled={isLoading || !missionDraft.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent>
               {!editMode.mission ? (
-                <p className="text-gray-700">{missionStatement}</p>
+                <div className="space-y-2">
+                  <p className="text-gray-700 leading-relaxed">
+                    {missionStatement || "No mission statement defined yet. Click Edit to add one."}
+                  </p>
+                  {!missionStatement && (
+                    <p className="text-sm text-gray-500 italic">
+                      A clear mission statement helps align your team's objectives and goals.
+                    </p>
+                  )}
+                </div>
               ) : (
-                <Textarea 
-                  value={missionDraft} 
-                  onChange={(e) => setMissionDraft(e.target.value)}
-                  className="min-h-[120px]"
-                  placeholder="Enter your team mission statement here"
-                />
+                <div className="space-y-3">
+                  <Textarea 
+                    value={missionDraft} 
+                    onChange={(e) => setMissionDraft(e.target.value)}
+                    className="min-h-[120px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your team mission statement here..."
+                  />
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>{missionDraft.length} characters</span>
+                    <span className="text-xs">
+                      Tip: A good mission statement is clear, concise, and inspiring
+                    </span>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
