@@ -20,14 +20,7 @@ export function StrategicDirectionsDisplay({
   className = "" 
 }: StrategicDirectionsDisplayProps) {
   const { data: directions, isLoading, error } = useQuery({
-    queryKey: ['strategic-directions'],
-    queryFn: async () => {
-      const response = await fetch('/api/strategic-directions');
-      if (!response.ok) {
-        throw new Error('Failed to fetch strategic directions');
-      }
-      return response.json() as StrategicDirection[];
-    },
+    queryKey: ['api', 'strategic-directions'],
   });
 
   if (isLoading) {
