@@ -35,17 +35,7 @@ export const organizationMission = pgTableWithUlid("organization_mission", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const strategicDirections = pgTableWithUlid("strategic_directions", {
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  type: strategicDirectionTypeEnum("type").notNull().default("company"),
-  priority: integer("priority").notNull().default(1),
-  tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  teamId: text("team_id").references(() => teams.id),
-  createdById: text("created_by_id").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+
 
 export const cycles = pgTableWithUlid("cycles", {
   name: text("name").notNull(),
@@ -432,38 +422,25 @@ export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
   })
 }));
 
-// Strategic Direction table
+// Strategic Direction table - simplified version
 export const strategicDirections = pgTableWithUlid("strategic_directions", {
   title: text("title").notNull(),
   description: text("description").notNull(),
-  type: text("type").notNull(), // 'company' or 'team'
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
-  teamId: text("team_id").references(() => teams.id), // null for company-level directions
-  parentDirectionId: text("parent_direction_id").references(() => strategicDirections.id), // team directions derive from company directions
   createdById: text("created_by_id").references(() => users.id).notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const strategicDirectionsRelations = relations(strategicDirections, ({ one, many }) => ({
+export const strategicDirectionsRelations = relations(strategicDirections, ({ one }) => ({
   tenant: one(tenants, {
     fields: [strategicDirections.tenantId],
     references: [tenants.id]
   }),
-  team: one(teams, {
-    fields: [strategicDirections.teamId],
-    references: [teams.id]
-  }),
   createdBy: one(users, {
     fields: [strategicDirections.createdById],
     references: [users.id]
-  }),
-  parentDirection: one(strategicDirections, {
-    fields: [strategicDirections.parentDirectionId],
-    references: [strategicDirections.id]
-  }),
-  childDirections: many(strategicDirections)
+  })
 }));
 
 export const financialAccounts = pgTableWithUlid("financial_accounts", {
