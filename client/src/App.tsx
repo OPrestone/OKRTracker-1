@@ -614,24 +614,26 @@ function App() {
         <TenantProvider>
           <AuthProvider>
             <TeamProvider>
-              <HelpProvider>
-                <NotificationProvider>
-                  <OnboardingProvider>
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center min-h-screen">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="ml-3 text-muted-foreground">Loading...</span>
-                      </div>
-                    }>
-                      <LocationTracker />
-                      <FeatureTour />
-                      <OnboardingController />
-                      <AppRoutes />
-                      <NotificationToastContainer />
-                    </Suspense>
-                  </OnboardingProvider>
-                </NotificationProvider>
-              </HelpProvider>
+              <RealTimeSyncProvider>
+                <HelpProvider>
+                  <NotificationProvider>
+                    <OnboardingProvider>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          <span className="ml-3 text-muted-foreground">Loading...</span>
+                        </div>
+                      }>
+                        <LocationTracker />
+                        <FeatureTour />
+                        <OnboardingController />
+                        <AppRoutes />
+                        <NotificationToastContainer />
+                      </Suspense>
+                    </OnboardingProvider>
+                  </NotificationProvider>
+                </HelpProvider>
+              </RealTimeSyncProvider>
             </TeamProvider>
           </AuthProvider>
         </TenantProvider>

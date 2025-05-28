@@ -99,15 +99,3 @@ export const invalidateMissionQueries = (queryClient: QueryClient) => {
   queryClient.invalidateQueries({ queryKey: ["/api/strategic-directions"] });
   queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
 };
-
-export const invalidateUserQueries = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-};
-
-export const invalidateTimeframeQueries = (queryClient: QueryClient) => {
-  queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
-  queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-};
