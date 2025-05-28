@@ -428,7 +428,7 @@ export default function MyOKRs() {
                   <Target className="h-12 w-12 text-neutral-300 mb-4" />
                   <h3 className="text-lg font-medium mb-2">No draft OKRs</h3>
                   <p className="text-neutral-500 mb-6">You don't have any OKRs in draft status.</p>
-                  {canCreateObjectives() && (
+                  {canCreateObjectives && canCreateObjectives() && (
                     <Button
                       onClick={() => navigate("/create-objective")}
                       className="flex items-center gap-2"
