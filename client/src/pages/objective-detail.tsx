@@ -384,6 +384,15 @@ export default function ObjectiveDetail() {
   const [editObjectiveTitle, setEditObjectiveTitle] = useState("");
   const [editObjectiveDescription, setEditObjectiveDescription] = useState("");
   
+  // Edit key result states
+  const [editKeyResultDialogOpen, setEditKeyResultDialogOpen] = useState(false);
+  const [editingKeyResult, setEditingKeyResult] = useState<DbKeyResult | null>(null);
+  const [editKeyResultTitle, setEditKeyResultTitle] = useState("");
+  const [editKeyResultDescription, setEditKeyResultDescription] = useState("");
+  const [editKeyResultCurrentValue, setEditKeyResultCurrentValue] = useState("");
+  const [editKeyResultTargetValue, setEditKeyResultTargetValue] = useState("");
+  const [editKeyResultStartValue, setEditKeyResultStartValue] = useState("");
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { currentTenant } = useTenantContext();
@@ -544,6 +553,17 @@ export default function ObjectiveDetail() {
       setEditObjectiveDescription(objective.description || "");
     }
   }, [objective]);
+
+  // Update edit key result form when editing key result changes
+  useEffect(() => {
+    if (editingKeyResult) {
+      setEditKeyResultTitle(editingKeyResult.title || "");
+      setEditKeyResultDescription(editingKeyResult.description || "");
+      setEditKeyResultCurrentValue(editingKeyResult.currentValue || "");
+      setEditKeyResultTargetValue(editingKeyResult.targetValue || "");
+      setEditKeyResultStartValue(editingKeyResult.startValue || "");
+    }
+  }, [editingKeyResult]);
 
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number): string => {
@@ -844,6 +864,49 @@ export default function ObjectiveDetail() {
       toast({
         title: "Error",
         description: "Failed to update objective. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle edit key result functionality
+  const handleEditKeyResult = (keyResult: DbKeyResult) => {
+    setEditingKeyResult(keyResult);
+    setEditKeyResultDialogOpen(true);
+  };
+
+  // Handle edit key result submission
+  const handleEditKeyResultSubmit = async () => {
+    if (!editingKeyResult || !currentTenant) return;
+
+    try {
+      await apiRequest(`/api/key-results/${editingKeyResult.id}`, {
+        method: "PUT",
+        body: {
+          title: editKeyResultTitle,
+          description: editKeyResultDescription,
+          currentValue: editKeyResultCurrentValue,
+          targetValue: editKeyResultTargetValue,
+          startValue: editKeyResultStartValue,
+        }
+      });
+
+      toast({
+        title: "Key Result Updated",
+        description: "Key result has been updated successfully."
+      });
+
+      // Reset state
+      setEditKeyResultDialogOpen(false);
+      setEditingKeyResult(null);
+
+      // Trigger data refresh
+      queryClient.invalidateQueries({ queryKey: ['/api/key-results'] });
+    } catch (error) {
+      console.error("Error updating key result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update key result. Please try again.",
         variant: "destructive"
       });
     }
