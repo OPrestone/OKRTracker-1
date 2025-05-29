@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
+import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar, CircleCheckBig, Clock } from "lucide-react";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Input } from "@/components/ui/input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -87,12 +88,52 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     upcomingCheckins: (checkInsData as any[]).length
   };
   
-  // Generate chart data based on objectives counts
-  const objectivesChartData = [
-    { name: 'Total', value: stats.totalObjectives },
-    { name: 'Completed', value: stats.completedObjectives },
-    { name: 'In Progress', value: stats.atRiskObjectives }
-  ];
+  // Generate sample chart data for area charts
+  const generateChartData = () => {
+    return Array(12).fill(0).map((_, i) => ({
+      name: `Point ${i + 1}`,
+      value: 50 + Math.random() * 30 + (i * 2) // Trending upward with some variance
+    }));
+  };
+
+  // Home page style StatCard component
+  function StatCard({ title, value, icon, iconColor, chartColor }: {
+    title: string;
+    value: string;
+    icon: React.ReactNode;
+    iconColor: string;
+    chartColor: string;
+  }) {
+    const chartData = generateChartData();
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
+        <div className="flex justify-between mb-1 px-5">
+          <div className="text-sm font-medium text-neutral-500">{title}</div>
+          <div className={`w-6 h-6 ${iconColor}`}>
+            {icon}
+          </div>
+        </div>
+        <div className="flex flex-col mb-2 px-5 grow">
+          <div className="text-2xl font-bold text-slate-900">{value}</div>
+        </div>
+        <div className="mt-1">
+          <ResponsiveContainer width="100%" height={40}>
+            <AreaChart data={chartData}>
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={chartColor}
+                fill={`${chartColor}20`}
+                strokeWidth={2}
+                fillOpacity={0.6}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col space-y-6">
@@ -122,56 +163,37 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
         </div>
       </div>
  
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <StatsCard
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <StatCard
               title="Total Objectives"
-              value={stats.totalObjectives}
-              icon={<Target className="h-5 w-5 text-indigo-500" />}
-              chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#6366f1"
-                  height={40}
-                />
-              }
+              value={`${stats.totalObjectives}`}
+              icon={<Target className="h-6 w-6" />}
+              iconColor="text-primary-600"
+              chartColor="#3b82f6"
             />
             
-            <StatsCard
+            <StatCard
               title="Team Progress"
-              value={`${stats.teamProgress}%`}
-              progressBar
-              progressValue={stats.teamProgress}
-              trendLabel={`${stats.teamProgress}% complete`}
-              icon={<FileBarChart className="h-5 w-5 text-indigo-500" />}
+              value={`${Math.round(stats.teamProgress)}%`}
+              icon={<Users className="h-6 w-6" />}
+              iconColor="text-accent-500"
+              chartColor="#8b5cf6"
             />
             
-            <StatsCard
+            <StatCard
               title="Completed Objectives"
-              value={stats.completedObjectives}
-              icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
-              chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#10b981"
-                  height={40}
-                />
-              }
+              value={`${stats.completedObjectives}`}
+              icon={<CircleCheckBig className="h-6 w-6" />}
+              iconColor="text-green-600"
+              chartColor="#22c55e"
             />
             
-            <StatsCard
+            <StatCard
               title="At Risk Objectives"
-              value={stats.atRiskObjectives}
-              icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
-              chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#ef4444"
-                  height={40}
-                />
-              }
+              value={`${stats.atRiskObjectives}`}
+              icon={<Clock className="h-6 w-6" />}
+              iconColor="text-amber-600"
+              chartColor="#f59e0b"
             />
           </div>
           
