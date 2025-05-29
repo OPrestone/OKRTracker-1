@@ -42,6 +42,8 @@ import {
   X,
   Users,
   Plus,
+  Database,
+  Sparkles,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -387,6 +389,7 @@ const steps = [
   { id: "timeframes", label: "Timeframes", icon: Calendar },
   { id: "objectives", label: "Objectives", icon: Target },
   { id: "teams", label: "Teams", icon: Users2 },
+  { id: "demodata", label: "Demo Data", icon: Database },
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
@@ -408,6 +411,9 @@ export default function OKRSystemSetupWizard() {
   const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
   const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
   const [showDefaultTeams, setShowDefaultTeams] = useState(false);
+  const [importDemoData, setImportDemoData] = useState(false);
+  const [isImportingDemoData, setIsImportingDemoData] = useState(false);
+  const [demoDataImported, setDemoDataImported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -1793,6 +1799,63 @@ export default function OKRSystemSetupWizard() {
     },
   });
 
+  // Create mutation for importing demo data
+  const importDemoDataMutation = useMutation({
+    mutationFn: async () => {
+      if (!tenantId) {
+        throw new Error("No tenant ID available");
+      }
+
+      const formData = form.getValues();
+      
+      const response = await fetch('/api/import-demo-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId,
+        },
+        body: JSON.stringify({
+          tenantId,
+          setupConfig: formData,
+        }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to import demo data');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setDemoDataImported(true);
+      toast({
+        title: "Demo Data Imported Successfully",
+        description: `Created ${data.objectivesCreated || 0} objectives, ${data.keyResultsCreated || 0} key results, and ${data.initiativesCreated || 0} initiatives.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Demo Data Import Failed",
+        description: error.message || "Failed to import demo data. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle demo data import
+  const handleImportDemoData = async () => {
+    setIsImportingDemoData(true);
+    try {
+      await importDemoDataMutation.mutateAsync();
+    } finally {
+      setIsImportingDemoData(false);
+    }
+  };
+
   // Function to check if current step is valid
   const isCurrentStepValid = () => {
     const currentStep = steps[activeIndex];
@@ -1816,6 +1879,10 @@ export default function OKRSystemSetupWizard() {
 
     if (currentStep.id === "teams") {
       return true; // All fields have defaults
+    }
+
+    if (currentStep.id === "demodata") {
+      return true; // Demo data step is optional
     }
 
     if (currentStep.id === "integrations") {
