@@ -277,8 +277,13 @@ export function CompanyAlignmentMap() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    if (isPresentationMode) {
+      document.addEventListener('keydown', handleKeyPress);
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
   }, [isPresentationMode]);
 
   if (isPresentationMode) {
