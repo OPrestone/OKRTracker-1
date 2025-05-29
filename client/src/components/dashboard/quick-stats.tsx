@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Users, CircleCheckBig, Clock, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { useTenantContext } from "@/hooks/use-tenant-context";
 
 // Generate sample chart data for area charts
 const generateChartData = () => {
@@ -135,7 +136,7 @@ export function QuickStats() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <StatCard
         title="Total Objectives"
-        value={`${data.objectives.total}`}
+        value={`${displayData.objectives.total}`}
         icon={<Target className="h-6 w-6" />}
         iconColor="text-primary-600"
         chartColor="#3b82f6"
@@ -143,7 +144,7 @@ export function QuickStats() {
       
       <StatCard
         title="Team Performance"
-        value={`${Math.round(data.teamPerformance.average)}%`}
+        value={`${Math.round(displayData.teamPerformance.average)}%`}
         icon={<Users className="h-6 w-6" />}
         iconColor="text-accent-500"
         chartColor="#8b5cf6"
@@ -151,7 +152,7 @@ export function QuickStats() {
       
       <StatCard
         title="Completed Key Results"
-        value={`${data.keyResults.completed}/${data.keyResults.total}`}
+        value={`${displayData.keyResults.completed}/${displayData.keyResults.total}`}
         icon={<CircleCheckBig className="h-6 w-6" />}
         iconColor="text-green-600"
         chartColor="#22c55e"
@@ -159,7 +160,7 @@ export function QuickStats() {
       
       <StatCard
         title="Time Remaining"
-        value={`${data.timeRemaining.days} days`}
+        value={`${displayData.timeRemaining.days} days`}
         icon={<Clock className="h-6 w-6" />}
         iconColor="text-amber-600"
         chartColor="#f59e0b"
