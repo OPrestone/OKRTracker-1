@@ -880,15 +880,12 @@ export default function ObjectiveDetail() {
     if (!editingKeyResult || !currentTenant) return;
 
     try {
-      await apiRequest(`/api/key-results/${editingKeyResult.id}`, {
-        method: "PUT",
-        body: {
-          title: editKeyResultTitle,
-          description: editKeyResultDescription,
-          currentValue: editKeyResultCurrentValue,
-          targetValue: editKeyResultTargetValue,
-          startValue: editKeyResultStartValue,
-        }
+      await apiRequest(`/api/key-results/${editingKeyResult.id}`, "PUT", {
+        title: editKeyResultTitle,
+        description: editKeyResultDescription,
+        currentValue: editKeyResultCurrentValue,
+        targetValue: editKeyResultTargetValue,
+        startValue: editKeyResultStartValue,
       });
 
       toast({
@@ -1107,7 +1104,11 @@ export default function ObjectiveDetail() {
                               <BarChart3 className="h-4 w-4 mr-1" />
                               Update Progress
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditKeyResult(keyResult)}
+                            >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
@@ -1618,6 +1619,74 @@ export default function ObjectiveDetail() {
               Cancel
             </Button>
             <Button onClick={handleEditObjectiveSubmit}>Update Objective</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Key Result Dialog */}
+      <Dialog open={editKeyResultDialogOpen} onOpenChange={setEditKeyResultDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Key Result</DialogTitle>
+            <DialogDescription>
+              Update the details of this key result.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-kr-title">Title</Label>
+              <Input
+                id="edit-kr-title"
+                value={editKeyResultTitle}
+                onChange={(e) => setEditKeyResultTitle(e.target.value)}
+                placeholder="Enter key result title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-kr-description">Description</Label>
+              <Textarea
+                id="edit-kr-description"
+                value={editKeyResultDescription}
+                onChange={(e) => setEditKeyResultDescription(e.target.value)}
+                placeholder="Enter key result description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-kr-start">Start Value</Label>
+                <Input
+                  id="edit-kr-start"
+                  value={editKeyResultStartValue}
+                  onChange={(e) => setEditKeyResultStartValue(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-kr-current">Current Value</Label>
+                <Input
+                  id="edit-kr-current"
+                  value={editKeyResultCurrentValue}
+                  onChange={(e) => setEditKeyResultCurrentValue(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-kr-target">Target Value</Label>
+                <Input
+                  id="edit-kr-target"
+                  value={editKeyResultTargetValue}
+                  onChange={(e) => setEditKeyResultTargetValue(e.target.value)}
+                  placeholder="100"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditKeyResultDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditKeyResultSubmit}>Update Key Result</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
