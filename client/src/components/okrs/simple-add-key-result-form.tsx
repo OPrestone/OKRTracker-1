@@ -73,8 +73,12 @@ export default function SimpleAddKeyResultForm({
       return result;
     },
     onSuccess: () => {
+      // Invalidate multiple query patterns to ensure immediate refresh
       queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId] });
       queryClient.invalidateQueries({ queryKey: ["/api/objectives", objectiveId, "key-results"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/key-results"] });
+      
       toast({
         title: "Success",
         description: "Key result created successfully!",

@@ -79,24 +79,9 @@ export function RealTimeSyncProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const setupWebSocket = useCallback(() => {
-    if (!user) return;
-
-    const tenantId = getCurrentTenantId();
-    if (!tenantId) return;
-
-    // Clean up existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws?userId=${user.id}&tenantId=${tenantId}`;
-
-    console.log('🔌 Setting up real-time sync WebSocket connection...');
-    
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    // Temporarily disable WebSocket connections to fix connectivity issues
+    console.log('🔌 WebSocket real-time sync temporarily disabled');
+    return;
 
     ws.onopen = () => {
       console.log('✅ Real-time sync connected');

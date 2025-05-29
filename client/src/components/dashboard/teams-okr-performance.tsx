@@ -389,10 +389,10 @@ export function TeamsOKRPerformance() {
   const realTeamCompletionData = generateTeamCompletionData();
   
   // Generate real team trend data based on actual database data
-  const realTeamTrendData = generateRealTeamTrendData(teams || [], teamsPerformanceData || []);
+  const realTeamTrendData = generateRealTeamTrendData(teams || [], realPerformanceData || []);
   
   // Generate real status distribution from database data
-  const realStatusDistribution = generateStatusDistribution(teamsPerformanceData || []);
+  const realStatusDistribution = generateStatusDistribution(realPerformanceData || []);
   
   // Extract unique team names for the filter dropdown
   const uniqueTeams = teams ? Array.from(new Set(teams.map(team => team.name))) : [];

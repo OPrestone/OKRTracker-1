@@ -113,6 +113,7 @@ export default function CreateKeyResult() {
   const [showExamples, setShowExamples] = useState(false);
   const [showDifference, setShowDifference] = useState(false);
   const [contributorsOpen, setContributorsOpen] = useState(false);
+  const [leadOpen, setLeadOpen] = useState(false);
 
   // Generate contextual examples based on objective
   const getExamplesForObjective = () => {
@@ -215,7 +216,32 @@ export default function CreateKeyResult() {
         targetType: data.targetType || 'increase',
         assignedToId: data.assignedToId || null,
         status: 'not_started',
-        progress: Math.round(((parseFloat(data.currentValue || '0') - parseFloat(data.startValue || '0')) / (parseFloat(data.targetValue || '100') - parseFloat(data.startValue || '0'))) * 100) || 0
+        progress: (() => {
+          const current = parseFloat(data.currentValue || '0');
+          const start = parseFloat(data.startValue || '0');
+          const target = parseFloat(data.targetValue || '100');
+          
+          if (data.measureType === 'binary') {
+            // Binary: 100% if target is achieved, 0% otherwise
+            return current === target ? 100 : 0;
+          } else if (data.measureType === 'milestone') {
+            // Milestone: direct percentage calculation
+            return Math.round(current);
+          } else if (data.targetType === 'decrease') {
+            // For decrease: progress = (start - current) / (start - target) * 100
+            const totalDecrease = start - target;
+            const currentDecrease = start - current;
+            return totalDecrease !== 0 ? Math.round((currentDecrease / totalDecrease) * 100) : 0;
+          } else if (data.targetType === 'maintain') {
+            // For maintain: progress based on how close current is to target
+            return current === target ? 100 : 0;
+          } else {
+            // For increase: progress = (current - start) / (target - start) * 100
+            const totalIncrease = target - start;
+            const currentIncrease = current - start;
+            return totalIncrease !== 0 ? Math.round((currentIncrease / totalIncrease) * 100) : 0;
+          }
+        })()
       };
       
       // Use direct fetch with absolute URL to bypass development server issues
@@ -290,6 +316,8 @@ export default function CreateKeyResult() {
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId, 'key-results'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
     },
     onError: (error: any) => {
       toast({
@@ -309,8 +337,41 @@ export default function CreateKeyResult() {
     
     // Description is optional, so no validation needed
     
-    if (keyResultData.targetValue <= keyResultData.startValue) {
-      newErrors.targetValue = 'Target value must be greater than start value';
+    // Validate target value based on measurement and target type
+    if (keyResultData.measureType === 'binary') {
+      // Binary validation - only 0 or 1 allowed
+      if (![0, 1].includes(keyResultData.startValue)) {
+        newErrors.startValue = 'Current status must be Yes or No';
+      }
+      if (![0, 1].includes(keyResultData.targetValue)) {
+        newErrors.targetValue = 'Target status must be Yes or No';
+      }
+    } else if (keyResultData.measureType === 'milestone') {
+      // Milestone validation - 0-100% range
+      if (keyResultData.startValue < 0 || keyResultData.startValue > 100) {
+        newErrors.startValue = 'Current completion must be between 0% and 100%';
+      }
+      if (keyResultData.targetValue < 0 || keyResultData.targetValue > 100) {
+        newErrors.targetValue = 'Target completion must be between 0% and 100%';
+      }
+      if (keyResultData.targetValue < keyResultData.startValue) {
+        newErrors.targetValue = 'Target completion cannot be less than current completion';
+      }
+    } else {
+      // Regular validation based on target type for other measurement types
+      if (keyResultData.targetType === 'increase') {
+        if (keyResultData.targetValue <= keyResultData.startValue) {
+          newErrors.targetValue = 'Target value must be greater than start value for increase objectives';
+        }
+      } else if (keyResultData.targetType === 'decrease') {
+        if (keyResultData.targetValue >= keyResultData.startValue) {
+          newErrors.targetValue = 'Target value must be less than start value for decrease objectives';
+        }
+      } else if (keyResultData.targetType === 'maintain') {
+        if (keyResultData.targetValue !== keyResultData.startValue) {
+          newErrors.targetValue = 'Target value must equal start value for maintain objectives';
+        }
+      }
     }
     
     // Current value can be equal to start value, only prevent it from being less
@@ -519,13 +580,15 @@ export default function CreateKeyResult() {
             {/* Lead */}
             <div className="space-y-2">
               <Label>Lead</Label>
-              <Select
-                value={keyResultData.assignedToId}
-                onValueChange={(value) => setKeyResultData(prev => ({ ...prev, assignedToId: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select lead">
-                    {keyResultData.assignedToId && users.find(u => u.id === keyResultData.assignedToId) && (
+              <Popover open={leadOpen} onOpenChange={setLeadOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={leadOpen}
+                    className="w-full justify-between"
+                  >
+                    {keyResultData.assignedToId ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">
@@ -535,24 +598,50 @@ export default function CreateKeyResult() {
                         </Avatar>
                         <span>{users.find(u => u.id === keyResultData.assignedToId)?.firstName} {users.find(u => u.id === keyResultData.assignedToId)?.lastName}</span>
                       </div>
+                    ) : (
+                      "Select lead..."
                     )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">
-                            {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{user.firstName} {user.lastName}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search users..." />
+                    <CommandEmpty>No user found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandList>
+                        {users.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={`${user.firstName} ${user.lastName} ${user.username}`}
+                            onSelect={() => {
+                              setKeyResultData(prev => ({ 
+                                ...prev, 
+                                assignedToId: user.id === keyResultData.assignedToId ? '' : user.id 
+                              }));
+                              setLeadOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                keyResultData.assignedToId === user.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="text-xs">
+                                  {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{user.firstName} {user.lastName}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Objective - Auto-populated */}
@@ -687,55 +776,138 @@ export default function CreateKeyResult() {
               </Select>
             </div>
 
-            {/* Target type, Start value, Increase to */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Target type</Label>
-                <Select
-                  value={keyResultData.targetType}
-                  onValueChange={(value) => setKeyResultData(prev => ({ ...prev, targetType: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Increase to" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="increase">Increase to</SelectItem>
-                    <SelectItem value="decrease">Decrease to</SelectItem>
-                    <SelectItem value="maintain">Maintain at</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Start value</Label>
-                <div className="flex items-center">
-                  <Hash className="h-4 w-4 text-gray-400 mr-2" />
-                  <Input
-                    type="number"
-                    value={keyResultData.startValue}
-                    onChange={(e) => setKeyResultData(prev => ({ ...prev, startValue: Number(e.target.value) }))}
-                    placeholder="0"
-                  />
+            {/* Target type, Start value, Target value - Conditional rendering based on measure type */}
+            {keyResultData.measureType === 'binary' ? (
+              // Binary (Yes/No) - Special handling
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Current status</Label>
+                  <Select
+                    value={keyResultData.startValue.toString()}
+                    onValueChange={(value) => setKeyResultData(prev => ({ ...prev, startValue: Number(value) }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select current status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">No</SelectItem>
+                      <SelectItem value="1">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Target status</Label>
+                  <Select
+                    value={keyResultData.targetValue.toString()}
+                    onValueChange={(value) => setKeyResultData(prev => ({ ...prev, targetValue: Number(value) }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">No</SelectItem>
+                      <SelectItem value="1">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label>{keyResultData.targetType === 'increase' ? 'Increase to' : keyResultData.targetType === 'decrease' ? 'Decrease to' : 'Maintain at'}</Label>
-                <div className="flex items-center">
-                  <Hash className="h-4 w-4 text-gray-400 mr-2" />
-                  <Input
-                    type="number"
-                    value={keyResultData.targetValue}
-                    onChange={(e) => setKeyResultData(prev => ({ ...prev, targetValue: Number(e.target.value) }))}
-                    placeholder="100"
-                    className={errors.targetValue ? "border-red-500" : ""}
-                  />
+            ) : keyResultData.measureType === 'milestone' ? (
+              // Milestone - Special handling
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Current completion (%)</Label>
+                  <div className="flex items-center">
+                    <TrendingUp className="h-4 w-4 text-gray-400 mr-2" />
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={keyResultData.startValue}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, startValue: Number(e.target.value) }))}
+                      placeholder="0"
+                    />
+                    <span className="ml-1 text-gray-500">%</span>
+                  </div>
                 </div>
-                {errors.targetValue && (
-                  <p className="text-sm text-red-600">{errors.targetValue}</p>
-                )}
+                
+                <div className="space-y-2">
+                  <Label>Target completion (%)</Label>
+                  <div className="flex items-center">
+                    <Target className="h-4 w-4 text-gray-400 mr-2" />
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={keyResultData.targetValue}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, targetValue: Number(e.target.value) }))}
+                      placeholder="100"
+                      className={errors.targetValue ? "border-red-500" : ""}
+                    />
+                    <span className="ml-1 text-gray-500">%</span>
+                  </div>
+                  {errors.targetValue && (
+                    <p className="text-sm text-red-600">{errors.targetValue}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              // Regular numeric inputs for all other measure types
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Target type</Label>
+                  <Select
+                    value={keyResultData.targetType}
+                    onValueChange={(value) => setKeyResultData(prev => ({ ...prev, targetType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Increase to" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="increase">Increase to</SelectItem>
+                      <SelectItem value="decrease">Decrease to</SelectItem>
+                      <SelectItem value="maintain">Maintain at</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Start value</Label>
+                  <div className="flex items-center">
+                    {keyResultData.measureType === 'currency' && <span className="mr-2 text-gray-500">$</span>}
+                    {keyResultData.measureType === 'percentage' && <TrendingUp className="h-4 w-4 text-gray-400 mr-2" />}
+                    {!['currency', 'percentage'].includes(keyResultData.measureType) && <Hash className="h-4 w-4 text-gray-400 mr-2" />}
+                    <Input
+                      type="number"
+                      value={keyResultData.startValue}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, startValue: Number(e.target.value) }))}
+                      placeholder="0"
+                    />
+                    {keyResultData.measureType === 'percentage' && <span className="ml-1 text-gray-500">%</span>}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>{keyResultData.targetType === 'increase' ? 'Increase to' : keyResultData.targetType === 'decrease' ? 'Decrease to' : 'Maintain at'}</Label>
+                  <div className="flex items-center">
+                    {keyResultData.measureType === 'currency' && <span className="mr-2 text-gray-500">$</span>}
+                    {keyResultData.measureType === 'percentage' && <TrendingUp className="h-4 w-4 text-gray-400 mr-2" />}
+                    {!['currency', 'percentage'].includes(keyResultData.measureType) && <Hash className="h-4 w-4 text-gray-400 mr-2" />}
+                    <Input
+                      type="number"
+                      value={keyResultData.targetValue}
+                      onChange={(e) => setKeyResultData(prev => ({ ...prev, targetValue: Number(e.target.value) }))}
+                      placeholder="100"
+                      className={errors.targetValue ? "border-red-500" : ""}
+                    />
+                    {keyResultData.measureType === 'percentage' && <span className="ml-1 text-gray-500">%</span>}
+                  </div>
+                  {errors.targetValue && (
+                    <p className="text-sm text-red-600">{errors.targetValue}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Result type */}
             <div className="space-y-3">

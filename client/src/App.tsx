@@ -55,6 +55,7 @@ const StrategyMap = lazy(() => import("@/pages/strategy-map"));
 const CreateObjective = lazy(() => import("@/pages/create-objective"));
 const CreateKeyResult = lazy(() => import("@/pages/create-key-result"));
 const CreateCompanyObjective = lazy(() => import("@/pages/create-company-objective"));
+const CreateMyOKR = lazy(() => import("@/pages/create-my-okr"));
 const FinancePage = lazy(() => import("@/pages/import-financial"));
 const ProjectKanban = lazy(() => import("@/pages/project-kanban"));
 const FeedbackWall = lazy(() => import("@/pages/feedback-wall"));
@@ -165,6 +166,7 @@ function AppRoutes() {
         path="/create-company-objective"
         component={CreateCompanyObjective}
       />
+      <ProtectedRoute path="/create-myokr" component={CreateMyOKR} />
 
       {/* User Management Section */}
       <ProtectedRoute path="/teams" component={TeamsRedesigned} />
@@ -281,6 +283,10 @@ function AppRoutes() {
       <ProtectedRoute
         path="/:id([A-Z0-9]{26})/create-company-objective"
         component={CreateCompanyObjective}
+      />
+      <ProtectedRoute
+        path="/:id([A-Z0-9]{26})/create-myokr"
+        component={CreateMyOKR}
       />
       <ProtectedRoute
         path="/:id([A-Z0-9]{26})/teams"

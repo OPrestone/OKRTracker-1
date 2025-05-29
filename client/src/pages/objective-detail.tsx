@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -378,6 +379,20 @@ export default function ObjectiveDetail() {
   const [keyResultProgressValue, setKeyResultProgressValue] = useState<string>("0");
   const [keyResultNotes, setKeyResultNotes] = useState("");
   
+  // Edit objective states
+  const [editObjectiveDialogOpen, setEditObjectiveDialogOpen] = useState(false);
+  const [editObjectiveTitle, setEditObjectiveTitle] = useState("");
+  const [editObjectiveDescription, setEditObjectiveDescription] = useState("");
+  
+  // Edit key result states
+  const [editKeyResultDialogOpen, setEditKeyResultDialogOpen] = useState(false);
+  const [editingKeyResult, setEditingKeyResult] = useState<DbKeyResult | null>(null);
+  const [editKeyResultTitle, setEditKeyResultTitle] = useState("");
+  const [editKeyResultDescription, setEditKeyResultDescription] = useState("");
+  const [editKeyResultCurrentValue, setEditKeyResultCurrentValue] = useState("");
+  const [editKeyResultTargetValue, setEditKeyResultTargetValue] = useState("");
+  const [editKeyResultStartValue, setEditKeyResultStartValue] = useState("");
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { currentTenant } = useTenantContext();
@@ -530,6 +545,25 @@ export default function ObjectiveDetail() {
     // Use the calculated display progress (aggregate from key results) instead of stored progress
     setProgressValue(displayProgress.toString());
   }, [displayProgress]);
+
+  // Update edit form when objective data changes
+  useEffect(() => {
+    if (objective) {
+      setEditObjectiveTitle(objective.title || "");
+      setEditObjectiveDescription(objective.description || "");
+    }
+  }, [objective]);
+
+  // Update edit key result form when editing key result changes
+  useEffect(() => {
+    if (editingKeyResult) {
+      setEditKeyResultTitle(editingKeyResult.title || "");
+      setEditKeyResultDescription(editingKeyResult.description || "");
+      setEditKeyResultCurrentValue(editingKeyResult.currentValue || "");
+      setEditKeyResultTargetValue(editingKeyResult.targetValue || "");
+      setEditKeyResultStartValue(editingKeyResult.startValue || "");
+    }
+  }, [editingKeyResult]);
 
   // Helper function to determine progress color class based on value
   const getProgressColorClass = (progress: number): string => {
@@ -708,18 +742,18 @@ export default function ObjectiveDetail() {
   // Handle opening key result progress dialog
   const handleOpenKeyResultProgress = (keyResult: DbKeyResult) => {
     setSelectedKeyResult(keyResult);
-    setKeyResultProgressValue((keyResult.progress || 0).toString());
+    setKeyResultProgressValue((keyResult.currentValue || keyResult.startValue || "0").toString());
     setKeyResultNotes("");
     setKeyResultProgressDialogOpen(true);
   };
 
   // Handle key result progress update
   const handleKeyResultProgressUpdate = async () => {
-    const newProgress = parseInt(keyResultProgressValue, 10);
-    if (isNaN(newProgress) || newProgress < 0 || newProgress > 100) {
+    const newCurrentValue = parseFloat(keyResultProgressValue);
+    if (isNaN(newCurrentValue)) {
       toast({
-        title: "Invalid Progress Value",
-        description: "Progress must be a number between 0 and 100.",
+        title: "Invalid Current Value",
+        description: "Current value must be a valid number.",
         variant: "destructive",
       });
       return;
@@ -735,9 +769,9 @@ export default function ObjectiveDetail() {
     }
 
     try {
-      // Prepare the update data
+      // Prepare the update data with current value
       const updateData = {
-        progress: newProgress,
+        currentValue: newCurrentValue.toString(),
         tenantId: currentTenant.id
       };
 
@@ -750,6 +784,19 @@ export default function ObjectiveDetail() {
 
       if (!response.ok) {
         throw new Error(`Error updating key result: ${response.statusText}`);
+      }
+
+      // Calculate the new progress for display
+      const start = parseFloat(selectedKeyResult.startValue || "0");
+      const target = parseFloat(selectedKeyResult.targetValue || "100");
+      let newProgress = 0;
+      
+      if (target === start) {
+        newProgress = newCurrentValue === target ? 100 : 0;
+      } else if (target > start) {
+        newProgress = Math.max(0, Math.min(100, ((newCurrentValue - start) / (target - start)) * 100));
+      } else {
+        newProgress = Math.max(0, Math.min(100, ((start - newCurrentValue) / (start - target)) * 100));
       }
 
       // Invalidate queries to refetch data with comprehensive cache refresh
@@ -768,7 +815,7 @@ export default function ObjectiveDetail() {
       
       toast({
         title: "Progress Updated",
-        description: `Key result progress updated to ${newProgress}%.`,
+        description: `Key result current value updated to ${newCurrentValue}. Progress is now ${newProgress.toFixed(1)}%.`,
       });
     } catch (error) {
       console.error("Error updating key result progress:", error);
@@ -800,6 +847,109 @@ export default function ObjectiveDetail() {
   // Go back to previous page
   const handleGoBack = () => {
     navigate("/my-okrs");
+  };
+
+  // Handle edit objective submission
+  const handleEditObjectiveSubmit = async () => {
+    if (!objective || !currentTenant) return;
+
+    try {
+      await apiRequest(`/api/objectives/${objective.id}`, {
+        method: "PUT",
+        body: {
+          title: editObjectiveTitle,
+          description: editObjectiveDescription
+        }
+      });
+
+      toast({
+        title: "Objective Updated",
+        description: "Objective has been updated successfully."
+      });
+
+      // Reset state
+      setEditObjectiveDialogOpen(false);
+
+      // Trigger data refresh through real-time sync
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+    } catch (error) {
+      console.error("Error updating objective:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update objective. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle edit key result functionality
+  const handleEditKeyResult = (keyResult: DbKeyResult) => {
+    setEditingKeyResult(keyResult);
+    setEditKeyResultDialogOpen(true);
+  };
+
+  // Handle edit key result submission
+  const handleEditKeyResultSubmit = async () => {
+    if (!editingKeyResult || !currentTenant) return;
+
+    try {
+      await apiRequest("PATCH", `/api/key-results/${editingKeyResult.id}`, {
+        title: editKeyResultTitle,
+        description: editKeyResultDescription,
+        currentValue: editKeyResultCurrentValue,
+        targetValue: editKeyResultTargetValue,
+        startValue: editKeyResultStartValue,
+      });
+
+      toast({
+        title: "Key Result Updated",
+        description: "Key result has been updated successfully."
+      });
+
+      // Reset state
+      setEditKeyResultDialogOpen(false);
+      setEditingKeyResult(null);
+
+      // Trigger data refresh for both key results and objective
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
+    } catch (error) {
+      console.error("Error updating key result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update key result. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle delete key result
+  const handleDeleteKeyResult = async (keyResult: DbKeyResult) => {
+    if (!currentTenant) return;
+
+    try {
+      await apiRequest("DELETE", `/api/key-results/${keyResult.id}`);
+
+      toast({
+        title: "Key Result Deleted",
+        description: "Key result has been deleted successfully."
+      });
+
+      // Close any open dialogs
+      setEditKeyResultDialogOpen(false);
+      
+      // Refresh the data
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}`] });
+    } catch (error) {
+      console.error("Error deleting key result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete key result. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Combine all loading states
@@ -853,6 +1003,10 @@ export default function ObjectiveDetail() {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => setEditObjectiveDialogOpen(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Objective
+            </Button>
             <Button variant="outline" onClick={() => setCheckInDialogOpen(true)}>
               <MessageSquare className="h-4 w-4 mr-2" />
               New Check-in
@@ -892,14 +1046,14 @@ export default function ObjectiveDetail() {
                       <p className="text-gray-500 mb-1">Start Date</p>
                       <p className="font-medium flex items-center">
                         <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                        {objective.startDate}
+                        {objective.startDate ? new Date(objective.startDate).toLocaleDateString() : 'No start date'}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-500 mb-1">End Date</p>
                       <p className="font-medium flex items-center">
                         <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                        {objective.endDate}
+                        {objective.endDate ? new Date(objective.endDate).toLocaleDateString() : 'No end date'}
                       </p>
                     </div>
                   </div>
@@ -993,10 +1147,43 @@ export default function ObjectiveDetail() {
                               <BarChart3 className="h-4 w-4 mr-1" />
                               Update Progress
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditKeyResult(keyResult)}
+                            >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Key Result</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{keyResult.title}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteKeyResult(keyResult)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </div>
@@ -1244,20 +1431,24 @@ export default function ObjectiveDetail() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.keyResults?.length || 0}</p>
+                  <p className="text-2xl font-bold">{keyResults?.length || 0}</p>
                   <p className="text-xs text-gray-500">Key Results</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.initiatives?.length || 0}</p>
-                  <p className="text-xs text-gray-500">Initiatives</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.checkIns?.length || 0}</p>
+                  <p className="text-2xl font-bold">{checkIns?.length || 0}</p>
                   <p className="text-xs text-gray-500">Check-ins</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">0/0</p>
-                  <p className="text-xs text-gray-500">To-Dos Completed</p>
+                  <p className="text-2xl font-bold">
+                    {keyResults?.filter(kr => kr.status === 'completed').length || 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Completed KRs</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-md text-center">
+                  <p className="text-2xl font-bold">
+                    {objective?.createdAt ? Math.ceil((new Date().getTime() - new Date(objective.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Days Active</p>
                 </div>
               </div>
             </CardContent>
@@ -1270,39 +1461,67 @@ export default function ObjectiveDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <MessageSquare className="h-3 w-3 text-blue-600" />
+                {/* Display real check-ins if available */}
+                {checkIns && checkIns.length > 0 ? (
+                  checkIns.slice(0, 3).map((checkIn, index) => {
+                    const checkInUser = users?.find(user => user.id === checkIn.userId);
+                    return (
+                      <div key={checkIn.id} className="flex gap-3 items-start">
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <MessageSquare className="h-3 w-3 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm">
+                            {checkInUser?.firstName} {checkInUser?.lastName} added a check-in
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {checkIn.createdAt ? new Date(checkIn.createdAt).toLocaleDateString() : 'No date available'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  /* Show creation activity */
+                  <div className="flex gap-3 items-start">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm">Objective created</p>
+                      <p className="text-xs text-gray-500">
+                        {objective?.createdAt ? new Date(objective.createdAt).toLocaleDateString() : 'Recently'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm">New check-in added</p>
-                    <p className="text-xs text-gray-500">{objective?.checkIns?.length > 0 ? new Date(objective.checkIns[0].createdAt || '').toLocaleDateString() : 'No date available'}</p>
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex gap-3 items-start">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <CheckCircle className="h-3 w-3 text-green-600" />
+                {/* Show when objective was last updated */}
+                {objective?.updatedAt && objective.updatedAt !== objective.createdAt && (
+                  <div className="flex gap-3 items-start">
+                    <div className="bg-purple-100 p-2 rounded-full">
+                      <Edit className="h-3 w-3 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm">Objective updated</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(objective.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm">UI design revisions completed</p>
-                    <p className="text-xs text-gray-500">August 14, 2023</p>
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex gap-3 items-start">
-                  <div className="bg-amber-100 p-2 rounded-full">
-                    <AlertCircle className="h-3 w-3 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm">Test coverage flagged as at risk</p>
-                    <p className="text-xs text-gray-500">August 23, 2023</p>
-                  </div>
-                </div>
+                {checkIns && checkIns.length > 3 && (
+                  <Button variant="ghost" size="sm" className="w-full text-xs">
+                    View all activity ({checkIns.length} total)
+                  </Button>
+                )}
                 
-                <Button variant="ghost" size="sm" className="w-full text-xs">
-                  View all activity
-                </Button>
+                {!checkIns?.length && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No activity yet. Add a check-in to get started.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1399,51 +1618,148 @@ export default function ObjectiveDetail() {
 
       {/* Key Result Progress Update Dialog */}
       <Dialog open={keyResultProgressDialogOpen} onOpenChange={setKeyResultProgressDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Update Key Result Progress</DialogTitle>
             <DialogDescription>
-              Update the progress for "{selectedKeyResult?.title}".
+              Update the current value for "{selectedKeyResult?.title}".
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-6 space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="keyResultProgress" className="text-sm font-medium">
-                Progress Percentage
-              </label>
-              <Input
-                id="keyResultProgress"
-                type="number"
-                min="0"
-                max="100"
-                value={keyResultProgressValue}
-                onChange={(e) => setKeyResultProgressValue(e.target.value)}
-                placeholder="Enter progress percentage (0-100)"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="keyResultNotes" className="text-sm font-medium">
-                Notes (Optional)
-              </label>
-              <Textarea
-                id="keyResultNotes"
-                value={keyResultNotes}
-                onChange={(e) => setKeyResultNotes(e.target.value)}
-                placeholder="Add any notes about this progress update..."
-                rows={3}
-              />
-            </div>
-
+          <div className="py-6 space-y-6">
             {selectedKeyResult && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Current Progress</label>
-                <div className="flex items-center gap-2">
-                  <Progress value={selectedKeyResult.progress || 0} className="flex-1" />
-                  <span className="text-sm font-medium">{selectedKeyResult.progress || 0}%</span>
+              <>
+                {/* Key Result Details */}
+                <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Start Value:</span>
+                    <span className="text-sm">{selectedKeyResult.startValue || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Current Value:</span>
+                    <span className="text-sm">{selectedKeyResult.currentValue || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Target Value:</span>
+                    <span className="text-sm">{selectedKeyResult.targetValue || 100}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Current Progress:</span>
+                    <span className="text-sm font-semibold">{selectedKeyResult.progress || 0}%</span>
+                  </div>
                 </div>
-              </div>
+
+                {/* Current Value Update */}
+                <div className="space-y-2">
+                  <label htmlFor="keyResultCurrentValue" className="text-sm font-medium">
+                    New Current Value
+                  </label>
+                  <Input
+                    id="keyResultCurrentValue"
+                    type="number"
+                    value={keyResultProgressValue}
+                    onChange={(e) => setKeyResultProgressValue(e.target.value)}
+                    placeholder={`Enter current value (between ${selectedKeyResult.startValue || 0} and ${selectedKeyResult.targetValue || 100})`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Progress will be automatically calculated based on start, current, and target values.
+                  </p>
+                </div>
+                
+                {/* Progress Preview */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Progress Preview</label>
+                  <div className="flex items-center gap-2">
+                    <Progress 
+                      value={(() => {
+                        // Get current input value or fallback to existing current value
+                        const inputValue = keyResultProgressValue.trim();
+                        const current = inputValue ? parseFloat(inputValue) : parseFloat(selectedKeyResult.currentValue || "0");
+                        const start = parseFloat(selectedKeyResult.startValue || "0");
+                        const target = parseFloat(selectedKeyResult.targetValue || "100");
+                        
+                        // Handle invalid numbers
+                        if (isNaN(current) || isNaN(start) || isNaN(target)) return 0;
+                        
+                        // Maintain type: target equals start
+                        if (target === start) {
+                          return current === target ? 100 : 0;
+                        }
+                        
+                        // Increase type: target > start
+                        if (target > start) {
+                          const progress = ((current - start) / (target - start)) * 100;
+                          return Math.max(0, Math.min(100, progress));
+                        }
+                        
+                        // Decrease type: target < start
+                        // If current is at or below target, progress is 100%
+                        if (current <= target) return 100;
+                        // If current is at or above start, progress is 0%
+                        if (current >= start) return 0;
+                        // Otherwise calculate progress between start and target
+                        const progress = ((start - current) / (start - target)) * 100;
+                        return Math.max(0, Math.min(100, progress));
+                      })()} 
+                      className="flex-1" 
+                    />
+                    <span className="text-sm font-medium">
+                      {(() => {
+                        // Get current input value or fallback to existing current value
+                        const inputValue = keyResultProgressValue.trim();
+                        const current = inputValue ? parseFloat(inputValue) : parseFloat(selectedKeyResult.currentValue || "0");
+                        const start = parseFloat(selectedKeyResult.startValue || "0");
+                        const target = parseFloat(selectedKeyResult.targetValue || "100");
+                        
+                        // Handle invalid numbers
+                        if (isNaN(current) || isNaN(start) || isNaN(target)) return "0.0";
+                        
+                        // Maintain type: target equals start
+                        if (target === start) {
+                          return current === target ? "100.0" : "0.0";
+                        }
+                        
+                        // Increase type: target > start
+                        if (target > start) {
+                          const progress = ((current - start) / (target - start)) * 100;
+                          return Math.max(0, Math.min(100, progress)).toFixed(1);
+                        }
+                        
+                        // Decrease type: target < start
+                        // If current is at or below target, progress is 100%
+                        if (current <= target) return "100.0";
+                        // If current is at or above start, progress is 0%
+                        if (current >= start) return "0.0";
+                        // Otherwise calculate progress between start and target
+                        const progress = ((start - current) / (start - target)) * 100;
+                        return Math.max(0, Math.min(100, progress)).toFixed(1);
+                      })()}%
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Target Type: {(() => {
+                      const start = parseFloat(selectedKeyResult.startValue || "0");
+                      const target = parseFloat(selectedKeyResult.targetValue || "100");
+                      if (target === start) return "Maintain";
+                      return target > start ? "Increase" : "Decrease";
+                    })()}
+                  </div>
+                </div>
+            
+                {/* Notes */}
+                <div className="space-y-2">
+                  <label htmlFor="keyResultNotes" className="text-sm font-medium">
+                    Notes (Optional)
+                  </label>
+                  <Textarea
+                    id="keyResultNotes"
+                    value={keyResultNotes}
+                    onChange={(e) => setKeyResultNotes(e.target.value)}
+                    placeholder="Add any notes about this progress update..."
+                    rows={3}
+                  />
+                </div>
+              </>
             )}
           </div>
           
@@ -1464,6 +1780,113 @@ export default function ObjectiveDetail() {
           onOpenChange={setIsAddKeyResultModalOpen}
         />
       )}
+
+      {/* Edit Objective Dialog */}
+      <Dialog open={editObjectiveDialogOpen} onOpenChange={setEditObjectiveDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Objective</DialogTitle>
+            <DialogDescription>
+              Update the title and description of this objective.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editObjectiveTitle}
+                onChange={(e) => setEditObjectiveTitle(e.target.value)}
+                placeholder="Enter objective title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editObjectiveDescription}
+                onChange={(e) => setEditObjectiveDescription(e.target.value)}
+                placeholder="Enter objective description"
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditObjectiveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditObjectiveSubmit}>Update Objective</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Key Result Dialog */}
+      <Dialog open={editKeyResultDialogOpen} onOpenChange={setEditKeyResultDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Key Result</DialogTitle>
+            <DialogDescription>
+              Update the details of this key result.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-kr-title">Title</Label>
+              <Input
+                id="edit-kr-title"
+                value={editKeyResultTitle}
+                onChange={(e) => setEditKeyResultTitle(e.target.value)}
+                placeholder="Enter key result title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-kr-description">Description</Label>
+              <Textarea
+                id="edit-kr-description"
+                value={editKeyResultDescription}
+                onChange={(e) => setEditKeyResultDescription(e.target.value)}
+                placeholder="Enter key result description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-kr-start">Start Value</Label>
+                <Input
+                  id="edit-kr-start"
+                  value={editKeyResultStartValue}
+                  onChange={(e) => setEditKeyResultStartValue(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-kr-current">Current Value</Label>
+                <Input
+                  id="edit-kr-current"
+                  value={editKeyResultCurrentValue}
+                  onChange={(e) => setEditKeyResultCurrentValue(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-kr-target">Target Value</Label>
+                <Input
+                  id="edit-kr-target"
+                  value={editKeyResultTargetValue}
+                  onChange={(e) => setEditKeyResultTargetValue(e.target.value)}
+                  placeholder="100"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditKeyResultDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditKeyResultSubmit}>Update Key Result</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

@@ -200,7 +200,7 @@ export default function CreateCompanyObjective() {
         title: "Company objective created successfully!",
         description: "Your objective has been added to the company OKRs.",
       });
-      setLocation("/company-okrs");
+      setLocation("/my-okrs");
     },
     onError: (error: Error) => {
       toast({

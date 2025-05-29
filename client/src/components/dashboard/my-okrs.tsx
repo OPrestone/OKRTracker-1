@@ -5,10 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, TrendingUp, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -67,6 +68,8 @@ interface KeyResult {
 
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
+  const [, setLocation] = useLocation();
+  const navigate = (path: string) => setLocation(path);
   const { currentTenant } = useTenantContext();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -97,6 +100,7 @@ export default function MyOKRs() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -112,7 +116,7 @@ export default function MyOKRs() {
       });
       
       // Invalidate and refetch objectives
-      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
     },
     onError: (error) => {
       toast({
@@ -124,7 +128,12 @@ export default function MyOKRs() {
     }
   });
 
-  const handleSubmitForApproval = (objectiveId: string) => {
+  const handleSubmitForApproval = (objectiveId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    console.log("Submit for approval button clicked for objective:", objectiveId);
     submitForApprovalMutation.mutate(objectiveId);
   };
 
@@ -415,7 +424,15 @@ export default function MyOKRs() {
         <TabsContent value="drafts" className="space-y-4">
           {draftsOKRs.length > 0 ? (
             draftsOKRs.map((draft) => (
-              <Card key={draft.id} className="shadow-sm border-neutral-200">
+              <Card 
+                key={draft.id} 
+                className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={(e) => {
+                  // Prevent navigation if clicking on buttons inside the card
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  navigate(`/objective/${draft.id}`);
+                }}
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
@@ -442,7 +459,7 @@ export default function MyOKRs() {
                     </Button>
                     <Button 
                       size="sm"
-                      onClick={() => handleSubmitForApproval(draft.id)}
+                      onClick={(e) => handleSubmitForApproval(draft.id, e)}
                       disabled={submitForApprovalMutation.isPending}
                     >
                       {submitForApprovalMutation.isPending ? "Submitting..." : "Submit for Approval"}

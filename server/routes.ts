@@ -576,19 +576,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check user permissions
+      console.log("=== PERMISSION CHECK ===");
+      console.log("User ID:", userId);
+      console.log("Tenant ID:", tenantId);
+      
       const userRole = await db.select()
         .from(usersToTenants)
         .where(and(eq(usersToTenants.userId, userId), eq(usersToTenants.tenantId, tenantId)))
         .limit(1);
 
+      console.log("User role query result:", userRole);
+
       if (!userRole.length) {
+        console.log("ERROR: No role found for user in tenant");
         return res.status(403).json({ error: "Access denied" });
       }
 
       const role = userRole[0].role;
-      if (!['admin', 'owner', 'executive'].includes(role)) {
+      console.log("User role:", role);
+      console.log("Checking if role is in allowed list:", ['admin', 'owner', 'executive', 'manager'].includes(role));
+      
+      if (!['admin', 'owner', 'executive', 'manager'].includes(role)) {
+        console.log("ERROR: Insufficient permissions for role:", role);
         return res.status(403).json({ error: "Insufficient permissions to create strategic directions" });
       }
+      
+      console.log("=== PERMISSION CHECK PASSED ===");
 
       const { title, description, teamId } = req.body;
       console.log("Extracted data - Title:", title, "Description:", description, "TeamId:", teamId);
@@ -2078,43 +2091,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Key result creation endpoint
-  // Key result creation endpoint for objectives
-  app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
-    try {
-      const { objectiveId } = req.params;
-      const { title, description, startValue, currentValue, targetValue, measureType, targetType, assignedToId, status } = req.body;
-      
-      if (!objectiveId || !title) {
-        return res.status(400).json({ error: 'Objective ID and title are required' });
-      }
-
-      const keyResultData = {
-        title,
-        description: description || '',
-        objectiveId,
-        startValue: startValue || '0',
-        currentValue: currentValue || startValue || '0',
-        targetValue: targetValue || '100',
-        measureType: measureType || 'percentage',
-        targetType: targetType || 'increase',
-        assignedToId: assignedToId || null,
-        status: status || 'not_started',
-        tenantId: req.tenantId!
-      };
-
-      const newKeyResult = await storage.createKeyResult(keyResultData);
-      
-      // Recalculate objective progress
-      await recalculateObjectiveProgress(objectiveId);
-      
-      res.json({ success: true, keyResult: newKeyResult });
-    } catch (error) {
-      console.error('Error creating key result:', error);
-      res.status(500).json({ error: 'Failed to create key result' });
-    }
-  });
-
-  // POST endpoint for key result creation
   app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
     try {
       const { objectiveId } = req.params;
@@ -2136,7 +2112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newKeyResult = await storage.createKeyResult(newKeyResultData);
       
-      // Recalculate objective progress
+      // Recalculate objective progress after creating key result
       await recalculateObjectiveProgress(objectiveId);
       
       console.log('=== KEY RESULT CREATED SUCCESSFULLY ===');
@@ -2167,8 +2143,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newKeyResult = await storage.createKeyResult(newKeyResultData);
       
-      // Recalculate objective progress
-      await recalculateObjectiveProgress(objectiveId);
+      // Recalculate objective progress after creating key result
+      console.log(`About to recalculate progress for objective: ${objectiveId}`);
+      try {
+        // Get all key results for this objective
+        const keyResultsQuery = `SELECT progress FROM key_results WHERE objective_id = $1`;
+        const keyResultsResult = await pool.query(keyResultsQuery, [objectiveId]);
+        const keyResults = keyResultsResult.rows;
+        
+        console.log(`Found ${keyResults.length} key results for objective ${objectiveId}`);
+        console.log(`Progress values: ${keyResults.map(kr => kr.progress).join(', ')}`);
+        
+        if (keyResults.length > 0) {
+          // Calculate average progress
+          const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+          const averageProgress = Math.round(totalProgress / keyResults.length);
+          
+          // Update objective progress
+          const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+          await pool.query(updateQuery, [averageProgress, objectiveId]);
+          console.log(`Updated objective ${objectiveId} progress to ${averageProgress}%`);
+        }
+      } catch (error) {
+        console.error(`Error calculating objective progress for ${objectiveId}:`, error);
+      }
       
       res.json({ success: true, keyResult: newKeyResult });
     } catch (error) {
@@ -2210,6 +2208,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initiative endpoints
+  app.post("/api/initiatives", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertInitiativeSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
+      
+      const initiative = await storage.createInitiative(validatedData);
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error creating initiative:', error);
+      res.status(500).json({ error: 'Failed to create initiative' });
+    }
+  });
+
+  app.get("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiative = await storage.getInitiative(req.params.id);
+      if (!initiative) {
+        return res.status(404).json({ error: 'Initiative not found' });
+      }
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error getting initiative:', error);
+      res.status(500).json({ error: 'Failed to get initiative' });
+    }
+  });
+
+  app.put("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiative = await storage.updateInitiative(req.params.id, req.body);
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error updating initiative:', error);
+      res.status(500).json({ error: 'Failed to update initiative' });
+    }
+  });
+
+  app.delete("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteInitiative(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting initiative:', error);
+      res.status(500).json({ error: 'Failed to delete initiative' });
+    }
+  });
+
+  app.get("/api/key-results/:id/initiatives", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiatives = await storage.getInitiativesByKeyResult(req.params.id);
+      res.json(initiatives);
+    } catch (error) {
+      console.error('Error getting initiatives:', error);
+      res.status(500).json({ error: 'Failed to get initiatives' });
+    }
+  });
+
+  // Todo endpoints
+  app.post("/api/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertTodoSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
+      
+      const todo = await storage.createTodo(validatedData);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error creating todo:', error);
+      res.status(500).json({ error: 'Failed to create todo' });
+    }
+  });
+
+  app.get("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.getTodo(req.params.id);
+      if (!todo) {
+        return res.status(404).json({ error: 'Todo not found' });
+      }
+      res.json(todo);
+    } catch (error) {
+      console.error('Error getting todo:', error);
+      res.status(500).json({ error: 'Failed to get todo' });
+    }
+  });
+
+  app.put("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.updateTodo(req.params.id, req.body);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error updating todo:', error);
+      res.status(500).json({ error: 'Failed to update todo' });
+    }
+  });
+
+  app.delete("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteTodo(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      res.status(500).json({ error: 'Failed to delete todo' });
+    }
+  });
+
+  app.post("/api/todos/:id/complete", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.markTodoComplete(req.params.id);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error completing todo:', error);
+      res.status(500).json({ error: 'Failed to complete todo' });
+    }
+  });
+
+  app.get("/api/initiatives/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByInitiative(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/key-results/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByKeyResult(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/objectives/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByObjective(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/user/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByUser(req.user!.id, req.tenantId!);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting user todos:', error);
+      res.status(500).json({ error: 'Failed to get user todos' });
+    }
+  });
+
   // Direct SQL execution endpoint for bypassing routing issues
   app.post("/api/sql-execute", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
     try {
@@ -2238,8 +2394,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const newKeyResult = await storage.createKeyResult(keyResultData);
         
-        // Recalculate objective progress
-        await recalculateObjectiveProgress(objectiveId);
+        // Calculate progress for each key result using inline logic
+        const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+        const progressSum = keyResults.reduce((sum, kr) => {
+          const start = parseFloat(kr.startValue) || 0;
+          const current = parseFloat(kr.currentValue) || 0;
+          const target = parseFloat(kr.targetValue) || 0;
+          
+          let progress = 0;
+          if (kr.targetType === 'increase') {
+            progress = target > start ? Math.min(100, Math.max(0, ((current - start) / (target - start)) * 100)) : 0;
+          } else if (kr.targetType === 'decrease') {
+            progress = target < start ? Math.min(100, Math.max(0, ((start - current) / (start - target)) * 100)) : 0;
+          } else if (kr.targetType === 'maintain') {
+            progress = current === target ? 100 : 0;
+          }
+          
+          return sum + progress;
+        }, 0);
+        
+        const avgProgress = keyResults.length > 0 ? Math.round(progressSum / keyResults.length) : 0;
+        
+        await storage.updateObjective(objectiveId, { progress: avgProgress });
         
         res.json({ success: true, keyResult: newKeyResult });
       } else {
@@ -3389,6 +3565,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+
+  // Get objectives by tenant ID (for dashboard graphs)
+  app.get("/api/objectives/:tenantId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.params.tenantId;
+      console.log(`Fetching objectives for tenant: ${tenantId}`);
+      
+      // Verify user has access to this tenant
+      const userTenants = await storage.getUserTenants(req.user.id);
+      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "Access to tenant denied" });
+      }
+      
+      const objectives = await storage.getObjectivesByTenant(tenantId);
+      console.log(`Found ${objectives.length} objectives for tenant ${tenantId}`);
+      res.json(objectives);
+    } catch (error) {
+      console.error(`Error fetching objectives for tenant:`, error);
+      next(error);
+    }
+  });
   
   // Get objectives owned by the current user
   app.get("/api/my-objectives", ensureAuthenticated, withTenant, async (req, res, next) => {
@@ -3703,7 +3902,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json(objective);
+      // Fetch related owner and team information
+      let enrichedObjective = { ...objective };
+      
+      // Add owner information if ownerId exists
+      if (objective.ownerId) {
+        try {
+          const owner = await storage.getUser(objective.ownerId);
+          if (owner) {
+            enrichedObjective.owner = {
+              id: owner.id,
+              name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.username,
+              role: owner.role || 'Team Member'
+            };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch owner:', err);
+        }
+      }
+      
+      // Add team information if teamId exists
+      if (objective.teamId) {
+        try {
+          const team = await storage.getTeam(objective.teamId);
+          if (team) {
+            enrichedObjective.team = {
+              id: team.id,
+              name: team.name
+            };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch team:', err);
+        }
+      }
+      
+      // Add timeframe information if timeframeId exists
+      if (objective.timeframeId) {
+        try {
+          const timeframe = await storage.getTimeframe(objective.timeframeId);
+          if (timeframe) {
+            enrichedObjective.startDate = timeframe.startDate;
+            enrichedObjective.endDate = timeframe.endDate;
+            enrichedObjective.timeframeName = timeframe.name;
+          }
+        } catch (err) {
+          console.warn('Failed to fetch timeframe:', err);
+        }
+      }
+      
+      res.json(enrichedObjective);
     } catch (error) {
       next(error);
     }
@@ -4218,6 +4465,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
       
       console.log("Key result created successfully:", result.rows[0]);
+      
+      // Recalculate objective progress after creating key result
+      console.log(`About to recalculate progress for objective: ${objectiveId}`);
+      try {
+        // Get all key results for this objective
+        const keyResultsQuery = `SELECT progress FROM key_results WHERE objective_id = $1`;
+        const keyResultsResult = await pool.query(keyResultsQuery, [objectiveId]);
+        const keyResults = keyResultsResult.rows;
+        
+        console.log(`Found ${keyResults.length} key results for objective ${objectiveId}`);
+        console.log(`Progress values: ${keyResults.map(kr => kr.progress).join(', ')}`);
+        
+        if (keyResults.length > 0) {
+          // Calculate average progress
+          const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+          const averageProgress = Math.round(totalProgress / keyResults.length);
+          
+          // Update objective progress
+          const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+          await pool.query(updateQuery, [averageProgress, objectiveId]);
+          console.log(`Updated objective ${objectiveId} progress to ${averageProgress}%`);
+        }
+      } catch (error) {
+        console.error(`Error calculating objective progress for ${objectiveId}:`, error);
+      }
+      
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -4252,27 +4525,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to recalculate objective progress based on key results
-  async function recalculateObjectiveProgress(objectiveId: string) {
-    try {
-      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
-      if (keyResults.length === 0) {
-        // No key results, set objective progress to 0
-        await storage.updateObjective(objectiveId, { progress: 0 });
-        return;
-      }
-      
-      // Calculate average progress of all key results
-      const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
-      const averageProgress = Math.round(totalProgress / keyResults.length);
-      
-      // Update objective progress
-      await storage.updateObjective(objectiveId, { progress: averageProgress });
-    } catch (error) {
-      console.error('Error recalculating objective progress:', error);
-    }
-  }
-
   app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
@@ -4290,8 +4542,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertKeyResultSchema.partial().parse(req.body);
       const updatedKeyResult = await storage.updateKeyResult(id, validatedData);
       
-      // If progress was updated, recalculate objective progress
-      if (validatedData.progress !== undefined && keyResult.objectiveId) {
+      // Recalculate progress if any value that affects progress was updated
+      if ((validatedData.progress !== undefined || 
+           validatedData.currentValue !== undefined || 
+           validatedData.targetValue !== undefined || 
+           validatedData.startValue !== undefined) && keyResult.objectiveId) {
         await recalculateObjectiveProgress(keyResult.objectiveId);
       }
       
@@ -4320,11 +4575,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Recalculate objective progress since key result progress was updated
       if (keyResult.objectiveId) {
-        await recalculateObjectiveProgress(keyResult.objectiveId);
+        console.log(`About to recalculate progress for objective: ${keyResult.objectiveId}`);
+        try {
+          // Get all key results for this objective
+          const keyResultsQuery = `SELECT progress FROM key_results WHERE objective_id = $1`;
+          const keyResultsResult = await pool.query(keyResultsQuery, [keyResult.objectiveId]);
+          const keyResults = keyResultsResult.rows;
+          
+          console.log(`Found ${keyResults.length} key results for objective ${keyResult.objectiveId}`);
+          console.log(`Progress values: ${keyResults.map(kr => kr.progress).join(', ')}`);
+          
+          if (keyResults.length > 0) {
+            // Calculate average progress
+            const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+            const averageProgress = Math.round(totalProgress / keyResults.length);
+            
+            // Update objective progress
+            const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+            await pool.query(updateQuery, [averageProgress, keyResult.objectiveId]);
+            console.log(`Updated objective ${keyResult.objectiveId} progress to ${averageProgress}%`);
+          }
+        } catch (error) {
+          console.error(`Error calculating objective progress for ${keyResult.objectiveId}:`, error);
+        }
       }
       
       res.json(updatedKeyResult);
     } catch (error) {
+      next(error);
+    }
+  });
+
+  // Delete key result
+  app.delete("/api/key-results/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      
+      // Get the key result to check tenant access
+      const keyResult = await storage.getKeyResult(id);
+      if (!keyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      if (keyResult.tenantId && keyResult.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
+      // Delete the key result
+      await storage.deleteKeyResult(id);
+      
+      // Recalculate objective progress since key result was deleted
+      if (keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting key result:", error);
       next(error);
     }
   });
@@ -7475,6 +7782,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Demo Data Import API
+  app.post("/api/import-demo-data", ensureAuthenticated, withTenant, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      if (!tenantId || !userId) {
+        return res.status(400).json({ error: "Missing tenant or user information" });
+      }
+
+      // Get existing tenant data
+      const teams = await storage.getTeamsByTenant(tenantId);
+      const timeframes = await storage.getTimeframesByTenant(tenantId);
+      const allUsers = await storage.getAllUsers();
+      const users = allUsers.filter(u => u.tenantId === tenantId);
+      
+      if (teams.length === 0 || timeframes.length === 0) {
+        return res.status(400).json({ 
+          error: "Please complete teams and timeframes setup before importing demo data" 
+        });
+      }
+
+      // Create demo company objectives
+      const currentTimeframe = timeframes[0];
+      const companyObjectives = [
+        {
+          title: "Increase Customer Satisfaction Score",
+          description: "Improve overall customer satisfaction through enhanced service delivery and product quality",
+          level: "company" as const,
+          status: "active" as const,
+          progress: 65,
+          timeframeId: currentTimeframe.id,
+          tenantId,
+          ownerId: userId
+        },
+        {
+          title: "Expand Market Share",
+          description: "Grow our market presence and capture new customer segments",
+          level: "company" as const,
+          status: "active" as const,
+          progress: 45,
+          timeframeId: currentTimeframe.id,
+          tenantId,
+          ownerId: userId
+        }
+      ];
+
+      const createdCompanyObjectives = [];
+      for (const objective of companyObjectives) {
+        const created = await storage.createObjective(objective);
+        createdCompanyObjectives.push(created);
+      }
+
+      // Create demo key results for company objectives
+      const keyResultTemplates = [
+        {
+          title: "Achieve customer satisfaction score of 4.5/5",
+          description: "Measured through quarterly customer surveys",
+          targetValue: "4.5",
+          startValue: "3.8",
+          currentValue: "4.1",
+          progress: 25
+        },
+        {
+          title: "Reduce customer support response time to under 2 hours",
+          description: "Average first response time for customer inquiries",
+          targetValue: "2",
+          startValue: "6",
+          currentValue: "3.5",
+          progress: 63
+        }
+      ];
+
+      let keyResultIndex = 0;
+      for (const objective of createdCompanyObjectives) {
+        if (keyResultIndex < keyResultTemplates.length) {
+          const template = keyResultTemplates[keyResultIndex];
+          
+          const keyResult = {
+            title: template.title,
+            description: template.description,
+            targetValue: template.targetValue,
+            startValue: template.startValue,
+            currentValue: template.currentValue,
+            progress: template.progress,
+            objectiveId: objective.id,
+            tenantId,
+            assignedToId: users.length > 0 ? users[0].id : userId
+          };
+          
+          await storage.createKeyResult(keyResult);
+          keyResultIndex++;
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Demo data imported successfully",
+        data: {
+          companyObjectives: createdCompanyObjectives.length,
+          teamObjectives: 0,
+          keyResults: keyResultIndex
+        }
+      });
+    } catch (error) {
+      console.error("Error importing demo data:", error);
+      next(error);
+    }
+  });
   
   return httpServer;
 }
@@ -8355,3 +8772,5 @@ async function initializeData() {
     console.error("Error initializing data:", error);
   }
 }
+
+

@@ -42,6 +42,8 @@ import {
   X,
   Users,
   Plus,
+  Database,
+  Sparkles,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -387,6 +389,7 @@ const steps = [
   { id: "timeframes", label: "Timeframes", icon: Calendar },
   { id: "objectives", label: "Objectives", icon: Target },
   { id: "teams", label: "Teams", icon: Users2 },
+  { id: "demodata", label: "Demo Data", icon: Database },
   { id: "review", label: "Review", icon: CheckCircle2 },
 ];
 
@@ -408,6 +411,9 @@ export default function OKRSystemSetupWizard() {
   const [csvImportedUsers, setCsvImportedUsers] = useState<UserImport[]>([]);
   const [isSavingUsersAndTeams, setIsSavingUsersAndTeams] = useState(false);
   const [showDefaultTeams, setShowDefaultTeams] = useState(false);
+  const [importDemoData, setImportDemoData] = useState(false);
+  const [isImportingDemoData, setIsImportingDemoData] = useState(false);
+  const [demoDataImported, setDemoDataImported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -1793,6 +1799,63 @@ export default function OKRSystemSetupWizard() {
     },
   });
 
+  // Create mutation for importing demo data
+  const importDemoDataMutation = useMutation({
+    mutationFn: async () => {
+      if (!tenantId) {
+        throw new Error("No tenant ID available");
+      }
+
+      const formData = form.getValues();
+      
+      const response = await fetch('/api/import-demo-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Tenant-ID': tenantId,
+        },
+        body: JSON.stringify({
+          tenantId,
+          setupConfig: formData,
+        }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to import demo data');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setDemoDataImported(true);
+      toast({
+        title: "Demo Data Imported Successfully",
+        description: `Created ${data.objectivesCreated || 0} objectives, ${data.keyResultsCreated || 0} key results, and ${data.initiativesCreated || 0} initiatives.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/objectives"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Demo Data Import Failed",
+        description: error.message || "Failed to import demo data. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle demo data import
+  const handleImportDemoData = async () => {
+    setIsImportingDemoData(true);
+    try {
+      await importDemoDataMutation.mutateAsync();
+    } finally {
+      setIsImportingDemoData(false);
+    }
+  };
+
   // Function to check if current step is valid
   const isCurrentStepValid = () => {
     const currentStep = steps[activeIndex];
@@ -1816,6 +1879,10 @@ export default function OKRSystemSetupWizard() {
 
     if (currentStep.id === "teams") {
       return true; // All fields have defaults
+    }
+
+    if (currentStep.id === "demodata") {
+      return true; // Demo data step is optional
     }
 
     if (currentStep.id === "integrations") {
@@ -3425,6 +3492,125 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
                           />
                         </div>
                         */}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Demo Data Import */}
+              <TabsContent value="demodata">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold flex items-center">
+                        <Database className="mr-2 h-5 w-5 text-primary" />
+                        Demo Data Import
+                      </h2>
+                      <p className="text-gray-600 mb-4">
+                        Import sample objectives, key results, and initiatives to help you get started with your OKR system.
+                        This will create realistic examples based on your configuration.
+                      </p>
+
+                      <div className="space-y-6">
+                        {!demoDataImported ? (
+                          <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <div className="flex items-start space-x-4">
+                              <div className="flex-shrink-0">
+                                <Sparkles className="h-8 w-8 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-medium text-blue-900 mb-2">
+                                  Import Sample OKRs
+                                </h3>
+                                <p className="text-blue-700 mb-4">
+                                  We'll create sample objectives, key results, and initiatives based on:
+                                </p>
+                                <ul className="list-disc list-inside text-blue-700 space-y-1 mb-4">
+                                  <li>Your selected timeframes and cadences</li>
+                                  <li>Your configured teams and departments</li>
+                                  <li>Your company mission and strategic directions</li>
+                                  <li>Industry best practices for OKR structure</li>
+                                </ul>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id="import-demo-data"
+                                    checked={importDemoData}
+                                    onCheckedChange={(checked) => setImportDemoData(checked as boolean)}
+                                  />
+                                  <label htmlFor="import-demo-data" className="text-sm text-blue-900 font-medium">
+                                    Yes, import demo data to help me get started
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                            <div className="flex items-start space-x-4">
+                              <div className="flex-shrink-0">
+                                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-medium text-green-900 mb-2">
+                                  Demo Data Imported Successfully
+                                </h3>
+                                <p className="text-green-700">
+                                  Sample objectives, key results, and initiatives have been created in your system.
+                                  You can view them in the dashboard or modify them as needed.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {importDemoData && !demoDataImported && (
+                          <div className="flex justify-center">
+                            <Button 
+                              type="button"
+                              onClick={handleImportDemoData}
+                              disabled={isImportingDemoData}
+                              className="w-full max-w-md"
+                            >
+                              {isImportingDemoData ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Importing Demo Data...
+                                </>
+                              ) : (
+                                <>
+                                  <Database className="mr-2 h-4 w-4" />
+                                  Import Demo Data
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-gray-900 mb-2">What will be created:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                            <div>
+                              <strong>Company Objectives</strong>
+                              <p>High-level strategic goals aligned with your mission</p>
+                            </div>
+                            <div>
+                              <strong>Team Objectives</strong>
+                              <p>Department-specific goals for each configured team</p>
+                            </div>
+                            <div>
+                              <strong>Key Results & Initiatives</strong>
+                              <p>Measurable outcomes and action items</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-center text-sm text-gray-500">
+                          <p>
+                            This step is optional. You can skip it and create your own OKRs from scratch,
+                            or import demo data now and customize it later.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
