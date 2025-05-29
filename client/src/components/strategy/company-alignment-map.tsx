@@ -286,6 +286,7 @@ export function CompanyAlignmentMap() {
     };
   }, [isPresentationMode]);
 
+  // Main render function
   if (isPresentationMode) {
     return (
       <div className="fixed inset-0 bg-white z-50 flex flex-col">
@@ -395,7 +396,33 @@ export function CompanyAlignmentMap() {
         </div>
       </div>
     </div>
+    );
+  }
+
+  // Normal mode render
+  return (
+    <div className="bg-white rounded-lg border border-neutral-200 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-neutral-900">Company Alignment Map</h2>
+        <Button
+          onClick={togglePresentationMode}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Presentation className="h-4 w-4" />
+          Present
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top left' }}>
+        {mapData.map((node) => (
+          <div key={node.id} className="bg-white border border-neutral-200 rounded-lg p-4">
+            <h3 className="font-medium text-neutral-900 mb-2">{node.title}</h3>
+            <Progress value={node.progress} className="mb-2" />
+            <span className="text-sm text-neutral-600">{node.progress}% complete</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
-
-export default CompanyAlignmentMap;
