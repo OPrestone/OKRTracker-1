@@ -49,10 +49,12 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   }, [tenantId, queryClient]);
   
   // Fetch real-time dashboard stats from database
-  const { data: dashboardStats } = useQuery({
+  const { data: dashboardStats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/dashboard-stats', tenantId],
     enabled: !!tenantId,
-    refetchInterval: 1000, // Refetch every 1 second for real-time updates
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
+    staleTime: 0, // Always consider stale to force fresh data
+    gcTime: 0, // Don't cache the data
   });
 
   // Fetch all objectives for this tenant
@@ -74,7 +76,8 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   });
   
   // Calculate comprehensive real-time stats from database data
-  const stats = dashboardStats || {
+  // Always use database stats when available, fallback to calculated values only when loading
+  const stats = dashboardStats || (!statsLoading ? {
     totalObjectives: objectivesData.length,
     completedObjectives: objectivesData.filter((obj: any) => obj.progress >= 100).length,
     atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 0 && obj.progress < 70).length,
@@ -82,7 +85,21 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
       ? Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) 
       : 0,
     upcomingCheckins: checkInsData.length
-  };
+  } : {
+    totalObjectives: 0,
+    completedObjectives: 0,
+    atRiskObjectives: 0,
+    teamProgress: 0,
+    upcomingCheckins: 0
+  });
+
+  // Log for debugging - remove in production
+  console.log('Dashboard Stats Debug:', {
+    dashboardStats,
+    statsLoading,
+    objectivesDataLength: objectivesData.length,
+    finalStats: stats
+  });
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [

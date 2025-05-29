@@ -2043,19 +2043,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectives = await db
         .select()
         .from(schema.objectives)
-        .where(eq(schema.objectives.tenant_id, tenantId));
+        .where(eq(schema.objectives.tenantId, tenantId));
 
       // Get all key results for this tenant
       const keyResults = await db
         .select()
         .from(schema.keyResults)
-        .where(eq(schema.keyResults.tenant_id, tenantId));
+        .where(eq(schema.keyResults.tenantId, tenantId));
 
       // Get all check-ins for this tenant
       const checkIns = await db
         .select()
         .from(schema.checkIns)
-        .where(eq(schema.checkIns.tenant_id, tenantId));
+        .where(eq(schema.checkIns.tenantId, tenantId));
 
       // Calculate comprehensive stats
       const totalObjectives = objectives.length;
