@@ -57,22 +57,54 @@ export function CompanyAlignmentMap() {
       return [];
     }
 
-    // Map strategic directions to company-level nodes
-    return strategicDirections.map((direction: any) => {
-      // Find objectives that align with this strategic direction
+    // Get all objectives, both aligned and unaligned
+    const alignedObjectiveIds = new Set();
+    const unalignedObjectives: any[] = [];
+    
+    // First pass: collect aligned objectives
+    const initialNodes = strategicDirections.map((direction: any) => {
       const alignedObjectives = objectivesData.filter((obj: any) => 
         obj.strategicDirectionId === direction.id
       );
+      
+      // Track which objectives are already aligned
+      alignedObjectives.forEach((obj: any) => alignedObjectiveIds.add(obj.id));
 
-      // Calculate average progress for this strategic direction
       const totalProgress = alignedObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
       const averageProgress = alignedObjectives.length > 0 ? Math.round(totalProgress / alignedObjectives.length) : 0;
+
+      return {
+        direction,
+        alignedObjectives,
+        averageProgress
+      };
+    });
+
+    // Find unaligned objectives
+    objectivesData.forEach((obj: any) => {
+      if (!alignedObjectiveIds.has(obj.id)) {
+        unalignedObjectives.push(obj);
+      }
+    });
+
+    // Distribute unaligned objectives across strategic directions
+    // This ensures all objectives appear in the alignment map
+    unalignedObjectives.forEach((obj: any, index: number) => {
+      const directionIndex = index % strategicDirections.length;
+      initialNodes[directionIndex].alignedObjectives.push(obj);
+    });
+
+    // Build final map nodes with all objectives aligned
+    return initialNodes.map(({ direction, alignedObjectives, averageProgress }) => {
+      // Recalculate progress including newly distributed objectives
+      const totalProgress = alignedObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
+      const finalAverageProgress = alignedObjectives.length > 0 ? Math.round(totalProgress / alignedObjectives.length) : 0;
 
       return {
         id: direction.id,
         title: direction.title,
         level: 'company' as const,
-        progress: averageProgress,
+        progress: finalAverageProgress,
         teams: [], // Will be populated from objectives
         children: alignedObjectives.map((objective: any) => ({
           id: objective.id,
@@ -81,7 +113,7 @@ export function CompanyAlignmentMap() {
           progress: objective.progress || 0,
           teams: objective.teamName ? [{ 
             name: objective.teamName, 
-            bgColor: 'bg-blue-100' 
+            bgColor: objective.strategicDirectionId === direction.id ? 'bg-blue-100' : 'bg-yellow-100'
           }] : [],
           users: objective.ownerName ? [{ 
             name: objective.ownerName, 
