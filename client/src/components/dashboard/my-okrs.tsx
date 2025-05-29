@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -92,19 +93,9 @@ export default function MyOKRs() {
   // Submit for approval mutation
   const submitForApprovalMutation = useMutation({
     mutationFn: async (objectiveId: string) => {
-      const response = await fetch(`/api/objectives/${objectiveId}/submit-for-approval`, {
+      return await apiRequest(`/api/objectives/${objectiveId}/submit-for-approval`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit objective for approval');
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({
