@@ -1665,6 +1665,11 @@ export default function ObjectiveDetail() {
                         }
                         
                         // Decrease type: target < start
+                        // If current is at or below target, progress is 100%
+                        if (current <= target) return 100;
+                        // If current is at or above start, progress is 0%
+                        if (current >= start) return 0;
+                        // Otherwise calculate progress between start and target
                         const progress = ((start - current) / (start - target)) * 100;
                         return Math.max(0, Math.min(100, progress));
                       })()} 
@@ -1693,6 +1698,11 @@ export default function ObjectiveDetail() {
                         }
                         
                         // Decrease type: target < start
+                        // If current is at or below target, progress is 100%
+                        if (current <= target) return "100.0";
+                        // If current is at or above start, progress is 0%
+                        if (current >= start) return "0.0";
+                        // Otherwise calculate progress between start and target
                         const progress = ((start - current) / (start - target)) * 100;
                         return Math.max(0, Math.min(100, progress)).toFixed(1);
                       })()}%
