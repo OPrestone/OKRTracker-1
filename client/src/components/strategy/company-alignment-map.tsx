@@ -54,206 +54,65 @@ export function CompanyAlignmentMap() {
     enabled: !!organizationId,
   }) as { data: any[] };
 
-  // Create map data structure from real strategic directions and objectives
-  const mapNodes: MapNode[] = React.useMemo(() => {
-    if (strategicDirections.length === 0) {
-      return [];
-    }
+  // Create a hierarchical map structure based on real data
+  const mapData: MapNode[] = React.useMemo(() => {
+    // Transform objectives data into map nodes
+    const objectives = objectivesData.map(obj => ({
+      id: obj.id,
+      title: obj.title,
+      progress: obj.progress || 0,
+      level: obj.level || 'company' as const,
+      teams: teamsData.filter(team => team.id === obj.team_id).map(team => ({
+        name: team.name,
+        bgColor: team.color
+      })),
+      users: obj.assigned_to ? [{
+        name: obj.assigned_to_name || 'Assigned User',
+        initials: (obj.assigned_to_name || 'AU').split(' ').map((n: string) => n[0]).join('').toUpperCase()
+      }] : []
+    }));
 
-    // Get all objectives, both aligned and unaligned
-    const alignedObjectiveIds = new Set();
-    const unalignedObjectives: any[] = [];
-    
-    // First pass: collect aligned objectives
-    const initialNodes = strategicDirections.map((direction: any) => {
-      const alignedObjectives = objectivesData.filter((obj: any) => 
-        obj.strategyId === direction.id
-      );
-      
-      // Track which objectives are already aligned
-      alignedObjectives.forEach((obj: any) => alignedObjectiveIds.add(obj.id));
+    // Add strategic directions as top-level nodes
+    const strategicNodes = strategicDirections.map(direction => ({
+      id: direction.id,
+      title: direction.title,
+      progress: direction.progress || 0,
+      level: 'company' as const,
+      teams: [],
+      users: []
+    }));
 
-      const totalProgress = alignedObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
-      const averageProgress = alignedObjectives.length > 0 ? Math.round(totalProgress / alignedObjectives.length) : 0;
+    return [...strategicNodes, ...objectives];
+  }, [objectivesData, teamsData, strategicDirections]);
 
-      return {
-        direction,
-        alignedObjectives,
-        averageProgress
-      };
-    });
-
-    // Find unaligned objectives
-    objectivesData.forEach((obj: any) => {
-      if (!alignedObjectiveIds.has(obj.id)) {
-        unalignedObjectives.push(obj);
-      }
-    });
-
-    // Distribute unaligned objectives across strategic directions
-    // This ensures all objectives appear in the alignment map
-    unalignedObjectives.forEach((obj: any, index: number) => {
-      const directionIndex = index % strategicDirections.length;
-      initialNodes[directionIndex].alignedObjectives.push(obj);
-    });
-
-    // Build final map nodes with all objectives aligned
-    return initialNodes.map(({ direction, alignedObjectives, averageProgress }) => {
-      // Recalculate progress including newly distributed objectives
-      const totalProgress = alignedObjectives.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0);
-      const finalAverageProgress = alignedObjectives.length > 0 ? Math.round(totalProgress / alignedObjectives.length) : 0;
-
-      return {
-        id: direction.id,
-        title: direction.title,
-        level: 'company' as const,
-        progress: finalAverageProgress,
-        teams: [], // Will be populated from objectives
-        children: alignedObjectives.map((objective: any) => ({
-          id: objective.id,
-          title: objective.title,
-          level: 'department' as const,
-          progress: objective.progress || 0,
-          teams: objective.teamName ? [{ 
-            name: objective.teamName, 
-            bgColor: objective.strategyId === direction.id ? 'bg-blue-100' : 'bg-yellow-100'
-          }] : [],
-          users: objective.ownerName ? [{ 
-            name: objective.ownerName, 
-            initials: objective.ownerName.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-          }] : [],
-          parent: direction.id,
-          children: [] // Key results could be added here if needed
-        }))
-      };
-    });
-  }, [strategicDirections, objectivesData]);
-
-  // If no strategic directions exist, show empty state
-  if (mapNodes.length === 0) {
-    return (
-      <div className="p-8 bg-slate-50 rounded-lg border">
-        <div className="text-center py-12">
-          <p className="text-neutral-500 text-lg">No strategic directions found.</p>
-          <p className="text-neutral-400 text-sm mt-2">Set up strategic directions to see the company alignment map.</p>
-        </div>
-      </div>
+  // Build hierarchical map nodes
+  const mapNodes = React.useMemo(() => {
+    // Filter root nodes (company level or no parent)
+    const rootNodes = mapData.filter(node => 
+      node.level === 'company' || !node.parent
     );
-  }
-
-
-
-  // Function to render a node
-  const renderNode = (node: MapNode) => {
-    const nodeClasses: Record<string, string> = {
-      company: 'bg-white border border-green-300 p-4 rounded-lg shadow-sm max-w-xs',
-      department: 'bg-white border border-blue-300 p-4 rounded-lg shadow-sm max-w-xs',
-      team: 'bg-white border border-gray-300 p-3 rounded-lg shadow-sm max-w-xs',
-      individual: 'bg-white border border-gray-300 p-3 rounded-lg shadow-sm max-w-xs'
+    
+    // Add children to each node
+    const buildNodeHierarchy = (node: MapNode): MapNode => {
+      const children = mapData.filter(child => child.parent === node.id);
+      return {
+        ...node,
+        children: children.map(buildNodeHierarchy)
+      };
     };
 
-    return (
-      <div className={nodeClasses[node.level]} key={node.id}>
-        {node.level === 'company' && (
-          <div className="w-8 h-8 rounded-full bg-green-100 mb-2 flex items-center justify-center">
-            <span className="text-green-800 text-xs">♦</span>
-          </div>
-        )}
-        {node.level === 'department' && (
-          <div className="w-8 h-8 rounded-full bg-blue-100 mb-2 flex items-center justify-center">
-            <span className="text-blue-800 text-xs">♦</span>
-          </div>
-        )}
-        <h3 className="font-medium text-sm mb-1">{node.title}</h3>
-        
-        <div className="flex flex-wrap gap-1 mb-2">
-          {node.teams?.map((team, index) => (
-            <span key={index} className={`${team.bgColor || 'bg-gray-100'} text-xs px-2 py-0.5 rounded-full`}>
-              {team.name}
-            </span>
-          ))}
-        </div>
-        
-        {node.users && node.users.length > 0 && (
-          <div className="flex mb-2">
-            {node.users.map((user, index) => (
-              <div 
-                key={index} 
-                className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs mr-1"
-                title={user.name}
-              >
-                {user.initials}
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <div className="flex items-center gap-2">
-          <Progress className="h-2 flex-grow" value={node.progress} />
-          <span className="text-xs font-medium">{node.progress}%</span>
-        </div>
-        
-        {node.level === 'department' && (
-          <div className="mt-1">
-            <span className="text-xs text-gray-500">On track</span>
-          </div>
-        )}
-      </div>
-    );
-  };
+    return rootNodes.map(buildNodeHierarchy);
+  }, [mapData]);
 
-  // Render connector lines
-  const renderConnector = () => (
-    <div className="w-px h-12 bg-gray-300 mx-auto"></div>
-  );
-
-  // Render a row of nodes
-  const renderNodesRow = (nodes: MapNode[]) => (
-    <div className="flex justify-center gap-16">
-      {nodes.map(node => renderNode(node))}
-    </div>
-  );
-
-  // Render child rows with appropriate spacing
-  const renderChildRows = (parentNode: MapNode) => {
-    if (!parentNode.children || parentNode.children.length === 0) return null;
-
-    return (
-      <>
-        {renderConnector()}
-        <div className="flex justify-center gap-16">
-          {parentNode.children.map(childNode => (
-            <div key={childNode.id} className="flex flex-col items-center">
-              {renderNode(childNode)}
-              {childNode.children && childNode.children.length > 0 && (
-                <>
-                  {renderConnector()}
-                  <div className="flex justify-center gap-8">
-                    {childNode.children.map(grandChild => (
-                      <div key={grandChild.id} className="flex flex-col items-center">
-                        {renderNode(grandChild)}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  };
-
-  // Toggle presentation mode
   const togglePresentationMode = () => {
     setIsPresentationMode(!isPresentationMode);
     if (!isPresentationMode) {
-      // Enter fullscreen when entering presentation mode
+      // Enter full screen when entering presentation mode
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
       }
     } else {
-      // Exit fullscreen when leaving presentation mode
+      // Exit full screen when leaving presentation mode
       if (document.exitFullscreen) {
         document.exitFullscreen();
       }
@@ -286,7 +145,69 @@ export function CompanyAlignmentMap() {
     };
   }, [isPresentationMode]);
 
-  // Main render function
+  // Render individual node
+  const renderNode = (node: MapNode) => (
+    <div 
+      key={node.id} 
+      className="bg-white border-2 border-neutral-200 rounded-lg p-4 min-w-[250px] shadow-sm hover:shadow-md transition-shadow"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="font-semibold text-neutral-900 text-sm leading-tight">{node.title}</h3>
+        <div className="flex items-center space-x-1">
+          {node.teams && node.teams.map((team, idx) => (
+            <div 
+              key={idx}
+              className="w-3 h-3 rounded-full border border-white"
+              style={{ backgroundColor: team.bgColor || '#6B7280' }}
+              title={team.name}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-neutral-600">Progress</span>
+          <span className="text-xs font-medium text-neutral-900">{node.progress}%</span>
+        </div>
+        <Progress value={node.progress} className="h-2" />
+        
+        {node.users && node.users.length > 0 && (
+          <div className="flex items-center space-x-1 pt-2">
+            {node.users.map((user, idx) => (
+              <div 
+                key={idx}
+                className="w-6 h-6 rounded-full bg-neutral-300 flex items-center justify-center text-xs font-medium text-neutral-700"
+                title={user.name}
+              >
+                {user.initials}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Render child rows recursively
+  const renderChildRows = (node: MapNode) => {
+    if (!node.children || node.children.length === 0) return null;
+    
+    return (
+      <div className="mt-6 flex flex-col items-center space-y-4">
+        <div className="w-px h-8 bg-neutral-300"></div>
+        <div className="flex flex-wrap gap-4 justify-center">
+          {node.children.map(child => (
+            <div key={child.id} className="flex flex-col items-center">
+              {renderNode(child)}
+              {renderChildRows(child)}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (isPresentationMode) {
     return (
       <div className="fixed inset-0 bg-white z-50 flex flex-col">
@@ -325,11 +246,11 @@ export function CompanyAlignmentMap() {
           </div>
         </div>
 
-        {/* Presentation Content */}
-        <div className="flex-1 bg-slate-50 overflow-auto flex justify-center items-center p-8">
+        {/* Map Content */}
+        <div className="flex-1 overflow-auto bg-neutral-50 p-8">
           <div 
-            className="flex flex-col items-center min-w-[1000px]"
-            style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'center center' }}
+            className="flex flex-col items-center space-y-8"
+            style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
           >
             {mapNodes.map(rootNode => (
               <div key={rootNode.id} className="flex flex-col items-center">
@@ -339,63 +260,7 @@ export function CompanyAlignmentMap() {
             ))}
           </div>
         </div>
-
-        {/* Keyboard shortcuts help */}
-        <div className="p-2 bg-slate-800 text-white text-xs text-center">
-          Press ESC to exit | Use + / - to zoom | Use mouse wheel to scroll
-        </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Company Alignment Map</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setZoomLevel(prev => Math.max(50, prev - 10))}
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <span className="text-sm min-w-[50px] text-center">{zoomLevel}%</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setZoomLevel(prev => Math.min(200, prev + 10))}
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button
-            onClick={togglePresentationMode}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Presentation className="h-4 w-4 mr-2" />
-            Present
-          </Button>
-        </div>
-      </div>
-
-      {/* Map Container */}
-      <div className="p-8 bg-slate-50 rounded-lg border overflow-auto">
-        <div 
-          className="flex flex-col items-center min-w-[1000px]"
-          style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
-        >
-          {mapNodes.map(rootNode => (
-            <div key={rootNode.id} className="flex flex-col items-center">
-              {renderNode(rootNode)}
-              {renderChildRows(rootNode)}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
     );
   }
 
