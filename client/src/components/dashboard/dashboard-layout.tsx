@@ -75,31 +75,17 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     enabled: !!tenantId
   });
   
-  // Calculate comprehensive real-time stats from database data
-  // Always use database stats when available, fallback to calculated values only when loading
-  const stats = dashboardStats || (!statsLoading ? {
-    totalObjectives: objectivesData.length,
-    completedObjectives: objectivesData.filter((obj: any) => obj.progress >= 100).length,
-    atRiskObjectives: objectivesData.filter((obj: any) => obj.progress >= 0 && obj.progress < 70).length,
-    teamProgress: objectivesData.length > 0 
-      ? Math.floor(objectivesData.reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / objectivesData.length) 
+  // Calculate real-time stats from authentic database data
+  // Use the dashboard-stats API when available, otherwise calculate from real objectives data
+  const stats = dashboardStats || {
+    totalObjectives: (objectivesData as any[]).length,
+    completedObjectives: (objectivesData as any[]).filter((obj: any) => obj.progress >= 100).length,
+    atRiskObjectives: (objectivesData as any[]).filter((obj: any) => obj.progress >= 0 && obj.progress < 70).length,
+    teamProgress: (objectivesData as any[]).length > 0 
+      ? Math.floor((objectivesData as any[]).reduce((sum: number, obj: any) => sum + (obj.progress || 0), 0) / (objectivesData as any[]).length) 
       : 0,
-    upcomingCheckins: checkInsData.length
-  } : {
-    totalObjectives: 0,
-    completedObjectives: 0,
-    atRiskObjectives: 0,
-    teamProgress: 0,
-    upcomingCheckins: 0
-  });
-
-  // Log for debugging - remove in production
-  console.log('Dashboard Stats Debug:', {
-    dashboardStats,
-    statsLoading,
-    objectivesDataLength: objectivesData.length,
-    finalStats: stats
-  });
+    upcomingCheckins: (checkInsData as any[]).length
+  };
   
   // Generate chart data based on objectives counts
   const objectivesChartData = [
