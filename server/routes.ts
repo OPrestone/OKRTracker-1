@@ -4244,7 +4244,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Key result created successfully:", result.rows[0]);
       
       // Recalculate objective progress after creating key result
-      await recalculateObjectiveProgress(objectiveId);
+      console.log(`About to recalculate progress for objective: ${objectiveId}`);
+      try {
+        await recalculateObjectiveProgress(objectiveId);
+        console.log(`Successfully called recalculateObjectiveProgress for objective: ${objectiveId}`);
+      } catch (error) {
+        console.error(`Error calling recalculateObjectiveProgress for objective ${objectiveId}:`, error);
+      }
       
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json(result.rows[0]);
@@ -4283,10 +4289,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to recalculate objective progress based on key results
   async function recalculateObjectiveProgress(objectiveId: string) {
     try {
-      const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+      // Use raw SQL to get key results since they might be created with different column names
+      const keyResultsQuery = `
+        SELECT progress FROM key_results 
+        WHERE objective_id = $1
+      `;
+      const keyResultsResult = await pool.query(keyResultsQuery, [objectiveId]);
+      const keyResults = keyResultsResult.rows;
+      
       if (keyResults.length === 0) {
         // No key results, set objective progress to 0
-        await storage.updateObjective(objectiveId, { progress: 0 });
+        const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+        await pool.query(updateQuery, [0, objectiveId]);
+        console.log(`Set objective ${objectiveId} progress to 0 (no key results)`);
         return;
       }
       
@@ -4294,8 +4309,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
       const averageProgress = Math.round(totalProgress / keyResults.length);
       
-      // Update objective progress
-      await storage.updateObjective(objectiveId, { progress: averageProgress });
+      // Update objective progress using raw SQL
+      const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+      await pool.query(updateQuery, [averageProgress, objectiveId]);
+      console.log(`Updated objective ${objectiveId} progress to ${averageProgress}% (from ${keyResults.length} key results)`);
     } catch (error) {
       console.error('Error recalculating objective progress:', error);
     }
