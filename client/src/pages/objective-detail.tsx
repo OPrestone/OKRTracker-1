@@ -1644,27 +1644,67 @@ export default function ObjectiveDetail() {
                   <div className="flex items-center gap-2">
                     <Progress 
                       value={(() => {
-                        const current = parseFloat(keyResultProgressValue) || parseFloat(selectedKeyResult.currentValue || "0");
+                        // Get current input value or fallback to existing current value
+                        const inputValue = keyResultProgressValue.trim();
+                        const current = inputValue ? parseFloat(inputValue) : parseFloat(selectedKeyResult.currentValue || "0");
                         const start = parseFloat(selectedKeyResult.startValue || "0");
                         const target = parseFloat(selectedKeyResult.targetValue || "100");
                         
-                        if (target === start) return current === target ? 100 : 0;
-                        if (target > start) return Math.max(0, Math.min(100, ((current - start) / (target - start)) * 100));
-                        return Math.max(0, Math.min(100, ((start - current) / (start - target)) * 100));
+                        // Handle invalid numbers
+                        if (isNaN(current) || isNaN(start) || isNaN(target)) return 0;
+                        
+                        // Maintain type: target equals start
+                        if (target === start) {
+                          return current === target ? 100 : 0;
+                        }
+                        
+                        // Increase type: target > start
+                        if (target > start) {
+                          const progress = ((current - start) / (target - start)) * 100;
+                          return Math.max(0, Math.min(100, progress));
+                        }
+                        
+                        // Decrease type: target < start
+                        const progress = ((start - current) / (start - target)) * 100;
+                        return Math.max(0, Math.min(100, progress));
                       })()} 
                       className="flex-1" 
                     />
                     <span className="text-sm font-medium">
                       {(() => {
-                        const current = parseFloat(keyResultProgressValue) || parseFloat(selectedKeyResult.currentValue || "0");
+                        // Get current input value or fallback to existing current value
+                        const inputValue = keyResultProgressValue.trim();
+                        const current = inputValue ? parseFloat(inputValue) : parseFloat(selectedKeyResult.currentValue || "0");
                         const start = parseFloat(selectedKeyResult.startValue || "0");
                         const target = parseFloat(selectedKeyResult.targetValue || "100");
                         
-                        if (target === start) return current === target ? 100 : 0;
-                        if (target > start) return Math.max(0, Math.min(100, ((current - start) / (target - start)) * 100)).toFixed(1);
-                        return Math.max(0, Math.min(100, ((start - current) / (start - target)) * 100)).toFixed(1);
+                        // Handle invalid numbers
+                        if (isNaN(current) || isNaN(start) || isNaN(target)) return "0.0";
+                        
+                        // Maintain type: target equals start
+                        if (target === start) {
+                          return current === target ? "100.0" : "0.0";
+                        }
+                        
+                        // Increase type: target > start
+                        if (target > start) {
+                          const progress = ((current - start) / (target - start)) * 100;
+                          return Math.max(0, Math.min(100, progress)).toFixed(1);
+                        }
+                        
+                        // Decrease type: target < start
+                        const progress = ((start - current) / (start - target)) * 100;
+                        return Math.max(0, Math.min(100, progress)).toFixed(1);
                       })()}%
                     </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Target Type: {(() => {
+                      const start = parseFloat(selectedKeyResult.startValue || "0");
+                      const target = parseFloat(selectedKeyResult.targetValue || "100");
+                      if (target === start) return "Maintain";
+                      return target > start ? "Increase" : "Decrease";
+                    })()}
                   </div>
                 </div>
             
