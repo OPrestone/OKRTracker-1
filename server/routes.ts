@@ -7488,6 +7488,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Demo Data Import API
+  app.post("/api/import-demo-data", ensureAuthenticated, withTenant, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tenantId = req.tenantId;
+      const userId = req.user?.id;
+      
+      if (!tenantId || !userId) {
+        return res.status(400).json({ error: "Missing tenant or user information" });
+      }
+
+      // Get existing tenant data
+      const teams = await storage.getTeamsByTenant(tenantId);
+      const timeframes = await storage.getTimeframesByTenant(tenantId);
+      const allUsers = await storage.getAllUsers();
+      const users = allUsers.filter(u => u.tenantId === tenantId);
+      
+      if (teams.length === 0 || timeframes.length === 0) {
+        return res.status(400).json({ 
+          error: "Please complete teams and timeframes setup before importing demo data" 
+        });
+      }
+
+      // Create demo company objectives
+      const currentTimeframe = timeframes[0];
+      const companyObjectives = [
+        {
+          title: "Increase Customer Satisfaction Score",
+          description: "Improve overall customer satisfaction through enhanced service delivery and product quality",
+          level: "company" as const,
+          status: "active" as const,
+          progress: 65,
+          timeframeId: currentTimeframe.id,
+          tenantId,
+          ownerId: userId
+        },
+        {
+          title: "Expand Market Share",
+          description: "Grow our market presence and capture new customer segments",
+          level: "company" as const,
+          status: "active" as const,
+          progress: 45,
+          timeframeId: currentTimeframe.id,
+          tenantId,
+          ownerId: userId
+        }
+      ];
+
+      const createdCompanyObjectives = [];
+      for (const objective of companyObjectives) {
+        const created = await storage.createObjective(objective);
+        createdCompanyObjectives.push(created);
+      }
+
+      // Create demo key results for company objectives
+      const keyResultTemplates = [
+        {
+          title: "Achieve customer satisfaction score of 4.5/5",
+          description: "Measured through quarterly customer surveys",
+          targetValue: "4.5",
+          startValue: "3.8",
+          currentValue: "4.1",
+          progress: 25
+        },
+        {
+          title: "Reduce customer support response time to under 2 hours",
+          description: "Average first response time for customer inquiries",
+          targetValue: "2",
+          startValue: "6",
+          currentValue: "3.5",
+          progress: 63
+        }
+      ];
+
+      let keyResultIndex = 0;
+      for (const objective of createdCompanyObjectives) {
+        if (keyResultIndex < keyResultTemplates.length) {
+          const template = keyResultTemplates[keyResultIndex];
+          
+          const keyResult = {
+            title: template.title,
+            description: template.description,
+            targetValue: template.targetValue,
+            startValue: template.startValue,
+            currentValue: template.currentValue,
+            progress: template.progress,
+            objectiveId: objective.id,
+            tenantId,
+            assignedToId: users.length > 0 ? users[0].id : userId
+          };
+          
+          await storage.createKeyResult(keyResult);
+          keyResultIndex++;
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Demo data imported successfully",
+        data: {
+          companyObjectives: createdCompanyObjectives.length,
+          teamObjectives: 0,
+          keyResults: keyResultIndex
+        }
+      });
+    } catch (error) {
+      console.error("Error importing demo data:", error);
+      next(error);
+    }
+  });
   
   return httpServer;
 }
@@ -8368,3 +8478,5 @@ async function initializeData() {
     console.error("Error initializing data:", error);
   }
 }
+
+
