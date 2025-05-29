@@ -2208,6 +2208,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initiative endpoints
+  app.post("/api/initiatives", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertInitiativeSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
+      
+      const initiative = await storage.createInitiative(validatedData);
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error creating initiative:', error);
+      res.status(500).json({ error: 'Failed to create initiative' });
+    }
+  });
+
+  app.get("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiative = await storage.getInitiative(req.params.id);
+      if (!initiative) {
+        return res.status(404).json({ error: 'Initiative not found' });
+      }
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error getting initiative:', error);
+      res.status(500).json({ error: 'Failed to get initiative' });
+    }
+  });
+
+  app.put("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiative = await storage.updateInitiative(req.params.id, req.body);
+      res.json(initiative);
+    } catch (error) {
+      console.error('Error updating initiative:', error);
+      res.status(500).json({ error: 'Failed to update initiative' });
+    }
+  });
+
+  app.delete("/api/initiatives/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteInitiative(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting initiative:', error);
+      res.status(500).json({ error: 'Failed to delete initiative' });
+    }
+  });
+
+  app.get("/api/key-results/:id/initiatives", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const initiatives = await storage.getInitiativesByKeyResult(req.params.id);
+      res.json(initiatives);
+    } catch (error) {
+      console.error('Error getting initiatives:', error);
+      res.status(500).json({ error: 'Failed to get initiatives' });
+    }
+  });
+
+  // Todo endpoints
+  app.post("/api/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertTodoSchema.parse({
+        ...req.body,
+        tenantId: req.tenantId
+      });
+      
+      const todo = await storage.createTodo(validatedData);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error creating todo:', error);
+      res.status(500).json({ error: 'Failed to create todo' });
+    }
+  });
+
+  app.get("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.getTodo(req.params.id);
+      if (!todo) {
+        return res.status(404).json({ error: 'Todo not found' });
+      }
+      res.json(todo);
+    } catch (error) {
+      console.error('Error getting todo:', error);
+      res.status(500).json({ error: 'Failed to get todo' });
+    }
+  });
+
+  app.put("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.updateTodo(req.params.id, req.body);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error updating todo:', error);
+      res.status(500).json({ error: 'Failed to update todo' });
+    }
+  });
+
+  app.delete("/api/todos/:id", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteTodo(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      res.status(500).json({ error: 'Failed to delete todo' });
+    }
+  });
+
+  app.post("/api/todos/:id/complete", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todo = await storage.markTodoComplete(req.params.id);
+      res.json(todo);
+    } catch (error) {
+      console.error('Error completing todo:', error);
+      res.status(500).json({ error: 'Failed to complete todo' });
+    }
+  });
+
+  app.get("/api/initiatives/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByInitiative(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/key-results/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByKeyResult(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/objectives/:id/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByObjective(req.params.id);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting todos:', error);
+      res.status(500).json({ error: 'Failed to get todos' });
+    }
+  });
+
+  app.get("/api/user/todos", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const todos = await storage.getTodosByUser(req.user!.id, req.tenantId!);
+      res.json(todos);
+    } catch (error) {
+      console.error('Error getting user todos:', error);
+      res.status(500).json({ error: 'Failed to get user todos' });
+    }
+  });
+
   // Direct SQL execution endpoint for bypassing routing issues
   app.post("/api/sql-execute", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
     try {
@@ -2236,8 +2394,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const newKeyResult = await storage.createKeyResult(keyResultData);
         
-        // Recalculate objective progress
-        await recalculateObjectiveProgress(objectiveId);
+        // Calculate progress for each key result using inline logic
+        const keyResults = await storage.getKeyResultsByObjective(objectiveId);
+        const progressSum = keyResults.reduce((sum, kr) => {
+          const start = parseFloat(kr.startValue) || 0;
+          const current = parseFloat(kr.currentValue) || 0;
+          const target = parseFloat(kr.targetValue) || 0;
+          
+          let progress = 0;
+          if (kr.targetType === 'increase') {
+            progress = target > start ? Math.min(100, Math.max(0, ((current - start) / (target - start)) * 100)) : 0;
+          } else if (kr.targetType === 'decrease') {
+            progress = target < start ? Math.min(100, Math.max(0, ((start - current) / (start - target)) * 100)) : 0;
+          } else if (kr.targetType === 'maintain') {
+            progress = current === target ? 100 : 0;
+          }
+          
+          return sum + progress;
+        }, 0);
+        
+        const avgProgress = keyResults.length > 0 ? Math.round(progressSum / keyResults.length) : 0;
+        
+        await storage.updateObjective(objectiveId, { progress: avgProgress });
         
         res.json({ success: true, keyResult: newKeyResult });
       } else {

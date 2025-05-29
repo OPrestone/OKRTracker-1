@@ -651,8 +651,8 @@ export const initiativesRelations = relations(initiatives, ({ one }) => ({
     fields: [initiatives.keyResultId],
     references: [keyResults.id]
   }),
-  owner: one(users, {
-    fields: [initiatives.ownerId],
+  assignedTo: one(users, {
+    fields: [initiatives.assignedToId],
     references: [users.id]
   }),
   tenant: one(tenants, {

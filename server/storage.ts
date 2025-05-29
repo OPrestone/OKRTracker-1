@@ -1,7 +1,7 @@
 import { users, User, InsertUser, teams, Team, InsertTeam, accessGroups, AccessGroup, InsertAccessGroup, 
          cadences, Cadence, InsertCadence, timeframes, Timeframe, InsertTimeframe,
          objectives, Objective, InsertObjective, keyResults, KeyResult, InsertKeyResult,
-         initiatives, Initiative, InsertInitiative, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
+         initiatives, Initiative, InsertInitiative, todos, Todo, InsertTodo, checkIns, CheckIn, InsertCheckIn, userAccessGroups,
          chatRooms, ChatRoom, InsertChatRoom, chatRoomMembers, ChatRoomMember, InsertChatRoomMember,
          messages, Message, InsertMessage, attachments, Attachment, InsertAttachment,
          reactions, Reaction, InsertReaction, tenants, Tenant, usersToTenants,
@@ -147,6 +147,18 @@ export interface IStorage {
   getInitiative(id: string): Promise<Initiative | undefined>;
   updateInitiative(id: string, initiative: Partial<InsertInitiative>): Promise<Initiative>;
   getInitiativesByKeyResult(keyResultId: string): Promise<Initiative[]>;
+  deleteInitiative(id: string): Promise<void>;
+  
+  // Todos
+  createTodo(todo: InsertTodo): Promise<Todo>;
+  getTodo(id: string): Promise<Todo | undefined>;
+  updateTodo(id: string, todo: Partial<InsertTodo>): Promise<Todo>;
+  deleteTodo(id: string): Promise<void>;
+  getTodosByInitiative(initiativeId: string): Promise<Todo[]>;
+  getTodosByKeyResult(keyResultId: string): Promise<Todo[]>;
+  getTodosByObjective(objectiveId: string): Promise<Todo[]>;
+  getTodosByUser(userId: string, tenantId: string): Promise<Todo[]>;
+  markTodoComplete(id: string): Promise<Todo>;
   
   // Check-ins
   createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>;
@@ -1830,6 +1842,68 @@ export class DatabaseStorage implements IStorage {
 
   async getInitiativesByKeyResult(keyResultId: string): Promise<Initiative[]> {
     return db.select().from(initiatives).where(eq(initiatives.keyResultId, keyResultId));
+  }
+
+  async deleteInitiative(id: string): Promise<void> {
+    await db.delete(initiatives).where(eq(initiatives.id, id));
+  }
+
+  // Todos
+  async createTodo(todo: InsertTodo): Promise<Todo> {
+    const [newTodo] = await db.insert(todos).values(todo).returning();
+    return newTodo;
+  }
+
+  async getTodo(id: string): Promise<Todo | undefined> {
+    const [todo] = await db.select().from(todos).where(eq(todos.id, id));
+    return todo;
+  }
+
+  async updateTodo(id: string, todo: Partial<InsertTodo>): Promise<Todo> {
+    const [updatedTodo] = await db.update(todos)
+      .set(todo)
+      .where(eq(todos.id, id))
+      .returning();
+    
+    if (!updatedTodo) {
+      throw new Error(`Todo with id ${id} not found`);
+    }
+    
+    return updatedTodo;
+  }
+
+  async deleteTodo(id: string): Promise<void> {
+    await db.delete(todos).where(eq(todos.id, id));
+  }
+
+  async getTodosByInitiative(initiativeId: string): Promise<Todo[]> {
+    return db.select().from(todos).where(eq(todos.initiativeId, initiativeId));
+  }
+
+  async getTodosByKeyResult(keyResultId: string): Promise<Todo[]> {
+    return db.select().from(todos).where(eq(todos.keyResultId, keyResultId));
+  }
+
+  async getTodosByObjective(objectiveId: string): Promise<Todo[]> {
+    return db.select().from(todos).where(eq(todos.objectiveId, objectiveId));
+  }
+
+  async getTodosByUser(userId: string, tenantId: string): Promise<Todo[]> {
+    return db.select().from(todos)
+      .where(and(eq(todos.assignedToId, userId), eq(todos.tenantId, tenantId)));
+  }
+
+  async markTodoComplete(id: string): Promise<Todo> {
+    const [completedTodo] = await db.update(todos)
+      .set({ completed: true })
+      .where(eq(todos.id, id))
+      .returning();
+    
+    if (!completedTodo) {
+      throw new Error(`Todo with id ${id} not found`);
+    }
+    
+    return completedTodo;
   }
 
   // Check-ins
