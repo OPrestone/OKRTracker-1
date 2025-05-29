@@ -3,13 +3,66 @@ import { Users, CircleCheckBig, Clock, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { useMemo } from "react";
 
-// Generate sample chart data for area charts
-const generateChartData = () => {
-  return Array(12).fill(0).map((_, i) => ({
-    name: `Point ${i + 1}`,
-    value: 50 + Math.random() * 30 + (i * 2) // Trending upward with some variance
-  }));
+// Static chart data to prevent reloading
+const CHART_DATA = {
+  objectives: [
+    { name: 'Jan', value: 45 },
+    { name: 'Feb', value: 52 },
+    { name: 'Mar', value: 48 },
+    { name: 'Apr', value: 58 },
+    { name: 'May', value: 62 },
+    { name: 'Jun', value: 55 },
+    { name: 'Jul', value: 67 },
+    { name: 'Aug', value: 73 },
+    { name: 'Sep', value: 68 },
+    { name: 'Oct', value: 75 },
+    { name: 'Nov', value: 78 },
+    { name: 'Dec', value: 82 }
+  ],
+  performance: [
+    { name: 'Jan', value: 35 },
+    { name: 'Feb', value: 42 },
+    { name: 'Mar', value: 38 },
+    { name: 'Apr', value: 48 },
+    { name: 'May', value: 52 },
+    { name: 'Jun', value: 45 },
+    { name: 'Jul', value: 57 },
+    { name: 'Aug', value: 63 },
+    { name: 'Sep', value: 58 },
+    { name: 'Oct', value: 65 },
+    { name: 'Nov', value: 68 },
+    { name: 'Dec', value: 72 }
+  ],
+  keyResults: [
+    { name: 'Jan', value: 25 },
+    { name: 'Feb', value: 32 },
+    { name: 'Mar', value: 28 },
+    { name: 'Apr', value: 38 },
+    { name: 'May', value: 42 },
+    { name: 'Jun', value: 35 },
+    { name: 'Jul', value: 47 },
+    { name: 'Aug', value: 53 },
+    { name: 'Sep', value: 48 },
+    { name: 'Oct', value: 55 },
+    { name: 'Nov', value: 58 },
+    { name: 'Dec', value: 62 }
+  ],
+  time: [
+    { name: 'Jan', value: 85 },
+    { name: 'Feb', value: 82 },
+    { name: 'Mar', value: 78 },
+    { name: 'Apr', value: 75 },
+    { name: 'May', value: 72 },
+    { name: 'Jun', value: 68 },
+    { name: 'Jul', value: 65 },
+    { name: 'Aug', value: 62 },
+    { name: 'Sep', value: 58 },
+    { name: 'Oct', value: 55 },
+    { name: 'Nov', value: 52 },
+    { name: 'Dec', value: 48 }
+  ]
 };
 
 interface StatCardProps {
@@ -18,10 +71,10 @@ interface StatCardProps {
   icon: React.ReactNode;
   iconColor: string;
   chartColor: string;
+  chartData: Array<{ name: string; value: number }>;
 }
 
-function StatCard({ title, value, icon, iconColor, chartColor }: StatCardProps) {
-  const chartData = generateChartData();
+function StatCard({ title, value, icon, iconColor, chartColor, chartData }: StatCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
@@ -140,6 +193,7 @@ export function QuickStats() {
         icon={<Target className="h-6 w-6" />}
         iconColor="text-primary-600"
         chartColor="#3b82f6"
+        chartData={CHART_DATA.objectives}
       />
       
       <StatCard
@@ -148,6 +202,7 @@ export function QuickStats() {
         icon={<Users className="h-6 w-6" />}
         iconColor="text-accent-500"
         chartColor="#8b5cf6"
+        chartData={CHART_DATA.performance}
       />
       
       <StatCard
@@ -156,6 +211,7 @@ export function QuickStats() {
         icon={<CircleCheckBig className="h-6 w-6" />}
         iconColor="text-green-600"
         chartColor="#22c55e"
+        chartData={CHART_DATA.keyResults}
       />
       
       <StatCard
@@ -164,6 +220,7 @@ export function QuickStats() {
         icon={<Clock className="h-6 w-6" />}
         iconColor="text-amber-600"
         chartColor="#f59e0b"
+        chartData={CHART_DATA.time}
       />
     </div>
   );
