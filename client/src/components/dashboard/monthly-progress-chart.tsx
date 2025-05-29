@@ -20,10 +20,12 @@ export default function MonthlyProgressChart() {
 
   // Fetch all tenant objectives data to calculate monthly progress across the organization
   const { data: objectives, isLoading } = useQuery({
-    queryKey: ["/api/objectives", currentTenant?.id],
+    queryKey: ["/api/objectives", currentTenant?.id, Date.now()],
     enabled: !!currentTenant?.id && !!user,
     refetchInterval: 3000,
     refetchIntervalInBackground: true,
+    staleTime: 0, // Force fresh data
+    cacheTime: 0, // Don't cache
   });
 
   // Process data to create monthly progress chart
