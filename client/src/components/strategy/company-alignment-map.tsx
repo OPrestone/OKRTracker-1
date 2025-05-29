@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Maximize2, Minimize2, ZoomIn, ZoomOut, Presentation } from "lucide-react";
 
 // Types for our map data
 interface TeamTag {
@@ -28,6 +30,7 @@ interface MapNode {
 
 export function CompanyAlignmentMap() {
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
   const params = useParams<{ organisation: string }>();
   const { currentTenant } = useTenantContext();
   
@@ -241,18 +244,150 @@ export function CompanyAlignmentMap() {
     );
   };
 
-  return (
-    <div className="p-8 bg-slate-50 rounded-lg border overflow-auto">
-      <div 
-        className="flex flex-col items-center min-w-[1000px]"
-        style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
-      >
-        {mapNodes.map(rootNode => (
-          <div key={rootNode.id} className="flex flex-col items-center">
-            {renderNode(rootNode)}
-            {renderChildRows(rootNode)}
+  // Toggle presentation mode
+  const togglePresentationMode = () => {
+    setIsPresentationMode(!isPresentationMode);
+    if (!isPresentationMode) {
+      // Enter fullscreen when entering presentation mode
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    } else {
+      // Exit fullscreen when leaving presentation mode
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  // Handle keyboard shortcuts for presentation mode
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (isPresentationMode) {
+        if (e.key === 'Escape') {
+          setIsPresentationMode(false);
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        } else if (e.key === '+' || e.key === '=') {
+          setZoomLevel(prev => Math.min(200, prev + 10));
+        } else if (e.key === '-') {
+          setZoomLevel(prev => Math.max(50, prev - 10));
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isPresentationMode]);
+
+  if (isPresentationMode) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        {/* Presentation Mode Header */}
+        <div className="flex justify-between items-center p-4 bg-slate-900 text-white">
+          <h1 className="text-xl font-bold">Company Alignment Map - Presentation Mode</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoomLevel(prev => Math.max(50, prev - 10))}
+                className="text-white hover:bg-slate-700"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-sm min-w-[50px] text-center">{zoomLevel}%</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoomLevel(prev => Math.min(200, prev + 10))}
+                className="text-white hover:bg-slate-700"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={togglePresentationMode}
+              className="text-white hover:bg-slate-700"
+            >
+              <Minimize2 className="h-4 w-4 mr-2" />
+              Exit Presentation
+            </Button>
           </div>
-        ))}
+        </div>
+
+        {/* Presentation Content */}
+        <div className="flex-1 bg-slate-50 overflow-auto flex justify-center items-center p-8">
+          <div 
+            className="flex flex-col items-center min-w-[1000px]"
+            style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'center center' }}
+          >
+            {mapNodes.map(rootNode => (
+              <div key={rootNode.id} className="flex flex-col items-center">
+                {renderNode(rootNode)}
+                {renderChildRows(rootNode)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Keyboard shortcuts help */}
+        <div className="p-2 bg-slate-800 text-white text-xs text-center">
+          Press ESC to exit | Use + / - to zoom | Use mouse wheel to scroll
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Company Alignment Map</h2>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setZoomLevel(prev => Math.max(50, prev - 10))}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-sm min-w-[50px] text-center">{zoomLevel}%</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setZoomLevel(prev => Math.min(200, prev + 10))}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            onClick={togglePresentationMode}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Presentation className="h-4 w-4 mr-2" />
+            Present
+          </Button>
+        </div>
+      </div>
+
+      {/* Map Container */}
+      <div className="p-8 bg-slate-50 rounded-lg border overflow-auto">
+        <div 
+          className="flex flex-col items-center min-w-[1000px]"
+          style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
+        >
+          {mapNodes.map(rootNode => (
+            <div key={rootNode.id} className="flex flex-col items-center">
+              {renderNode(rootNode)}
+              {renderChildRows(rootNode)}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
