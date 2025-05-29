@@ -1,0 +1,149 @@
+Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:43Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:46Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:43Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:46Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:46Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTY

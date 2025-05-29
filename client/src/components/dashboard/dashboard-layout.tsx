@@ -32,19 +32,15 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   // Use real-time sync for instant updates
   useRealTimeSync();
   
-  // Enhanced auto-refresh for critical dashboard data
+  // Auto-refresh for dashboard data with reasonable intervals
   useEffect(() => {
     if (!tenantId) return;
     
     const interval = setInterval(() => {
-      // Invalidate all dashboard-related queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/my-objectives'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/teams-performance'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/check-ins'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      // Invalidate only essential queries to reduce server load
       queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard-stats'] });
-    }, 2000); // Reduced to 2 seconds for more responsive updates
+    }, 30000); // Reduced frequency to 30 seconds to avoid overwhelming the server
     
     return () => clearInterval(interval);
   }, [tenantId, queryClient]);
