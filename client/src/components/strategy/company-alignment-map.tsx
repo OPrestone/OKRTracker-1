@@ -37,7 +37,7 @@ export function CompanyAlignmentMap() {
   // Build tenant-specific endpoint for API calls
   const organizationId = params?.organisation || currentTenant?.id;
   
-  // Fetch data from API
+  // Fetch data from API - Always call these hooks
   const { data: objectivesData = [] } = useQuery({
     queryKey: ['/api/objectives', organizationId],
     enabled: !!organizationId,
