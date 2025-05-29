@@ -316,6 +316,8 @@ export default function CreateKeyResult() {
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives', objectiveId, 'key-results'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
     },
     onError: (error: any) => {
       toast({
