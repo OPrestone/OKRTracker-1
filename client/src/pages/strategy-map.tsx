@@ -12,7 +12,7 @@ import { useParams } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CompanyAlignmentMap } from "@/components/strategy/company-alignment-map";
+import CompanyAlignmentMap from "@/components/strategy/company-alignment-map";
 import TeamsOKRView from "@/components/strategy/teams-okr-view";
 import KeyResultSummary from "@/components/strategy/key-results-summary";
 import TableView from "@/components/strategy/table-view";
