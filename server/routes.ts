@@ -2143,8 +2143,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newKeyResult = await storage.createKeyResult(newKeyResultData);
       
-      // Recalculate objective progress
-      await recalculateObjectiveProgress(objectiveId);
+      // Recalculate objective progress after creating key result
+      console.log(`About to recalculate progress for objective: ${objectiveId}`);
+      try {
+        // Get all key results for this objective
+        const keyResultsQuery = `SELECT progress FROM key_results WHERE objective_id = $1`;
+        const keyResultsResult = await pool.query(keyResultsQuery, [objectiveId]);
+        const keyResults = keyResultsResult.rows;
+        
+        console.log(`Found ${keyResults.length} key results for objective ${objectiveId}`);
+        console.log(`Progress values: ${keyResults.map(kr => kr.progress).join(', ')}`);
+        
+        if (keyResults.length > 0) {
+          // Calculate average progress
+          const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+          const averageProgress = Math.round(totalProgress / keyResults.length);
+          
+          // Update objective progress
+          const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+          await pool.query(updateQuery, [averageProgress, objectiveId]);
+          console.log(`Updated objective ${objectiveId} progress to ${averageProgress}%`);
+        }
+      } catch (error) {
+        console.error(`Error calculating objective progress for ${objectiveId}:`, error);
+      }
       
       res.json({ success: true, keyResult: newKeyResult });
     } catch (error) {
@@ -4352,7 +4374,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Recalculate objective progress since key result progress was updated
       if (keyResult.objectiveId) {
-        await recalculateObjectiveProgress(keyResult.objectiveId);
+        console.log(`About to recalculate progress for objective: ${keyResult.objectiveId}`);
+        try {
+          // Get all key results for this objective
+          const keyResultsQuery = `SELECT progress FROM key_results WHERE objective_id = $1`;
+          const keyResultsResult = await pool.query(keyResultsQuery, [keyResult.objectiveId]);
+          const keyResults = keyResultsResult.rows;
+          
+          console.log(`Found ${keyResults.length} key results for objective ${keyResult.objectiveId}`);
+          console.log(`Progress values: ${keyResults.map(kr => kr.progress).join(', ')}`);
+          
+          if (keyResults.length > 0) {
+            // Calculate average progress
+            const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
+            const averageProgress = Math.round(totalProgress / keyResults.length);
+            
+            // Update objective progress
+            const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
+            await pool.query(updateQuery, [averageProgress, keyResult.objectiveId]);
+            console.log(`Updated objective ${keyResult.objectiveId} progress to ${averageProgress}%`);
+          }
+        } catch (error) {
+          console.error(`Error calculating objective progress for ${keyResult.objectiveId}:`, error);
+        }
       }
       
       res.json(updatedKeyResult);
