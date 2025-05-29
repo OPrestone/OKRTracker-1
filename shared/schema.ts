@@ -187,11 +187,24 @@ export const keyResults = pgTableWithUlid("key_results", {
 export const initiatives = pgTableWithUlid("initiatives", {
   title: text("title").notNull(),
   description: text("description"),
-  status: text("status").notNull(), // e.g., todo, in-progress, done
   keyResultId: text("key_result_id").references(() => keyResults.id).notNull(),
-  ownerId: text("owner_id").references(() => users.id),
-  dueDate: timestamp("due_date"),
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  status: text("status").default("not_started"),
+  tenantId: text("tenant_id").references(() => tenants.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Todos table - extending the initiatives concept for more granular task management
+export const todos = pgTableWithUlid("todos", {
+  title: text("title").notNull(),
+  description: text("description"),
   completed: boolean("completed").default(false).notNull(),
+  dueDate: timestamp("due_date"),
+  priority: text("priority").default("medium"), // low, medium, high, critical
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  initiativeId: text("initiative_id").references(() => initiatives.id),
+  keyResultId: text("key_result_id").references(() => keyResults.id),
+  objectiveId: text("objective_id").references(() => objectives.id),
   tenantId: text("tenant_id").references(() => tenants.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -930,7 +943,8 @@ export const insertCadenceSchema = createInsertSchema(cadences).omit({ id: true,
 export const insertTimeframeSchema = createInsertSchema(timeframes).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertObjectiveSchema = createInsertSchema(objectives).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertKeyResultSchema = createInsertSchema(keyResults).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertInitiativeSchema = createInsertSchema(initiatives).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertInitiativeSchema = createInsertSchema(initiatives).omit({ id: true, createdAt: true });
+export const insertTodoSchema = createInsertSchema(todos).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCheckInSchema = createInsertSchema(checkIns).omit({ id: true, createdAt: true });
 export const insertChatRoomSchema = createInsertSchema(chatRooms).omit({ id: true, createdAt: true, updatedAt: true });
 // Explicitly define the schema to avoid issues with the actual database structure
@@ -1046,6 +1060,9 @@ export type InsertKeyResult = z.infer<typeof insertKeyResultSchema>;
 
 export type Initiative = typeof initiatives.$inferSelect;
 export type InsertInitiative = z.infer<typeof insertInitiativeSchema>;
+
+export type Todo = typeof todos.$inferSelect;
+export type InsertTodo = z.infer<typeof insertTodoSchema>;
 
 export type CheckIn = typeof checkIns.$inferSelect;
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
