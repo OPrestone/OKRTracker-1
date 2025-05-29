@@ -339,65 +339,79 @@ export function CompanyAlignmentMap() {
           </div>
         </div>
 
-        {/* Main Presentation Content */}
-        <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-          <Card className="w-full max-w-6xl bg-white shadow-2xl">
-            <CardContent className="p-12">
-              {/* Strategic Direction Title */}
-              <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-slate-900 mb-4">
+        {/* Main Presentation Content - Full Screen */}
+        <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
+          <div className="w-full h-full flex flex-col items-center justify-center p-8">
+            {/* Tree Structure Presentation - Full Screen */}
+            <div className="flex flex-col items-center justify-center space-y-12 relative w-full h-full max-w-7xl">
+              {/* Title with Progress */}
+              <div className="text-center mb-16">
+                <h1 className="text-5xl font-bold text-white mb-6">
                   {currentNode.title}
                 </h1>
-                <div className="flex items-center justify-center gap-4">
-                  <div className="text-2xl font-semibold text-green-600">
-                    {currentNode.progress}% Progress
+                <div className="flex items-center justify-center gap-6">
+                  <div className="text-3xl font-semibold text-green-400">
+                    {currentNode.progress}% Overall Progress
                   </div>
-                  <Progress value={currentNode.progress} className="w-64 h-3" />
+                  <Progress value={currentNode.progress} className="w-80 h-4 bg-slate-700" />
                 </div>
               </div>
 
-              {/* Tree Structure Presentation */}
-              <div className="flex flex-col items-center space-y-8">
-                {/* Strategic Direction Node (Enhanced for Presentation) */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300 p-8 rounded-xl shadow-lg max-w-md text-center">
-                  <div className="w-12 h-12 rounded-full bg-green-200 mb-4 flex items-center justify-center mx-auto">
-                    <span className="text-green-800 text-lg">♦</span>
+              {/* Strategic Direction Node (Top Level) */}
+              <div className="relative flex flex-col items-center">
+                <div id="strategic-node" className="bg-gradient-to-br from-green-50 to-emerald-100 border-3 border-green-300 p-10 rounded-2xl shadow-2xl text-center z-10 relative">
+                  <div className="w-16 h-16 rounded-full bg-green-200 mb-6 flex items-center justify-center mx-auto">
+                    <span className="text-green-800 text-2xl">♦</span>
                   </div>
-                  <h2 className="font-bold text-xl text-slate-900 mb-2">{currentNode.title}</h2>
-                  <div className="text-sm text-slate-600 mb-3">Strategic Direction</div>
-                  <div className="flex items-center justify-center gap-3">
-                    <Progress value={currentNode.progress} className="flex-grow h-3" />
-                    <span className="text-lg font-bold text-green-700">{currentNode.progress}%</span>
+                  <h2 className="font-bold text-2xl text-slate-900 mb-3">{currentNode.title}</h2>
+                  <div className="text-lg text-slate-600 mb-4">Strategic Direction</div>
+                  <div className="flex items-center justify-center gap-4">
+                    <Progress value={currentNode.progress} className="w-48 h-4" />
+                    <span className="text-xl font-bold text-green-700">{currentNode.progress}%</span>
                   </div>
                 </div>
 
-                {/* Connector Line */}
+                {/* Enhanced Connector System */}
                 {currentNode.children && currentNode.children.length > 0 && (
-                  <div className="w-px h-16 bg-slate-400"></div>
+                  <>
+                    {/* Main vertical line from strategic direction */}
+                    <div className="w-1 h-24 bg-slate-300 relative z-0"></div>
+                    
+                    {/* Horizontal distribution line */}
+                    <div className="relative w-full flex justify-center">
+                      <div 
+                        className="h-1 bg-slate-300 absolute"
+                        style={{ 
+                          width: `${Math.min(currentNode.children.length * 320, 1200)}px`,
+                          top: '-0.5px'
+                        }}
+                      ></div>
+                    </div>
+                  </>
                 )}
 
-                {/* Objectives Row */}
+                {/* Objectives Row with Individual Connectors */}
                 {currentNode.children && currentNode.children.length > 0 && (
-                  <div className="flex justify-center items-start gap-12 flex-wrap">
+                  <div className="flex justify-center items-start gap-16 flex-wrap mt-8">
                     {currentNode.children.map((objective, index) => (
-                      <div key={objective.id} className="flex flex-col items-center">
-                        {/* Connector to parent */}
-                        <div className="w-px h-8 bg-slate-400 mb-4"></div>
+                      <div key={objective.id} className="flex flex-col items-center relative">
+                        {/* Individual vertical connector to horizontal line */}
+                        <div className="w-1 h-16 bg-slate-300 mb-8"></div>
                         
                         {/* Objective Node */}
-                        <div className="bg-gradient-to-br from-blue-50 to-sky-100 border-2 border-blue-300 p-6 rounded-xl shadow-lg max-w-xs text-center">
-                          <div className="w-10 h-10 rounded-full bg-blue-200 mb-3 flex items-center justify-center mx-auto">
-                            <span className="text-blue-800 text-sm">♦</span>
+                        <div className="bg-gradient-to-br from-blue-50 to-sky-100 border-3 border-blue-300 p-8 rounded-2xl shadow-2xl text-center max-w-sm">
+                          <div className="w-14 h-14 rounded-full bg-blue-200 mb-4 flex items-center justify-center mx-auto">
+                            <span className="text-blue-800 text-xl">♦</span>
                           </div>
                           
-                          <h3 className="font-semibold text-lg text-slate-900 mb-3 leading-tight">
+                          <h3 className="font-bold text-xl text-slate-900 mb-4 leading-tight min-h-[3rem]">
                             {objective.title}
                           </h3>
                           
                           {/* Team Tags */}
-                          <div className="flex flex-wrap gap-1 justify-center mb-3">
+                          <div className="flex flex-wrap gap-2 justify-center mb-4">
                             {objective.teams?.map((team, teamIndex) => (
-                              <span key={teamIndex} className={`${team.bgColor || 'bg-blue-100'} text-xs px-2 py-1 rounded-full font-medium`}>
+                              <span key={teamIndex} className={`${team.bgColor || 'bg-blue-100'} text-sm px-3 py-1 rounded-full font-semibold`}>
                                 {team.name}
                               </span>
                             ))}
@@ -405,29 +419,29 @@ export function CompanyAlignmentMap() {
                           
                           {/* Users */}
                           {objective.users && objective.users.length > 0 && (
-                            <div className="flex justify-center items-center gap-2 mb-3">
+                            <div className="flex justify-center items-center gap-3 mb-4">
                               {objective.users.map((user, userIndex) => (
                                 <div key={userIndex} className="flex flex-col items-center">
-                                  <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-medium mb-1">
+                                  <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center text-sm font-bold mb-2">
                                     {user.initials}
                                   </div>
-                                  <span className="text-xs text-slate-600">{user.name}</span>
+                                  <span className="text-sm text-slate-700 font-medium">{user.name}</span>
                                 </div>
                               ))}
                             </div>
                           )}
                           
                           {/* Progress */}
-                          <div className="space-y-2">
+                          <div className="space-y-3 mt-6">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-slate-600">Progress</span>
-                              <span className="text-sm font-bold text-slate-900">{objective.progress}%</span>
+                              <span className="text-base font-semibold text-slate-600">Progress</span>
+                              <span className="text-xl font-bold text-slate-900">{objective.progress}%</span>
                             </div>
-                            <Progress value={objective.progress} className="h-2" />
-                            <div className="text-xs text-slate-500">
-                              {objective.progress >= 75 ? 'Excellent' : 
-                               objective.progress >= 50 ? 'On track' : 
-                               objective.progress >= 25 ? 'Attention needed' : 'At risk'}
+                            <Progress value={objective.progress} className="h-3" />
+                            <div className="text-sm font-medium text-slate-600">
+                              {objective.progress >= 75 ? '🎯 Excellent Progress' : 
+                               objective.progress >= 50 ? '✅ On Track' : 
+                               objective.progress >= 25 ? '⚠️ Needs Attention' : '🚨 At Risk'}
                             </div>
                           </div>
                         </div>
@@ -436,8 +450,8 @@ export function CompanyAlignmentMap() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Presentation Controls */}
