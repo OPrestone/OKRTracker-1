@@ -880,7 +880,7 @@ export default function ObjectiveDetail() {
     if (!editingKeyResult || !currentTenant) return;
 
     try {
-      await apiRequest("PUT", `/api/key-results/${editingKeyResult.id}`, {
+      await apiRequest("PATCH", `/api/key-results/${editingKeyResult.id}`, {
         title: editKeyResultTitle,
         description: editKeyResultDescription,
         currentValue: editKeyResultCurrentValue,
