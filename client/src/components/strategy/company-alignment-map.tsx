@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { useTenantContext } from "@/hooks/use-tenant-context";
+import { Presentation, ZoomIn, ZoomOut, Maximize, X, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 
 // Types for our map data
 interface TeamTag {
@@ -28,6 +31,9 @@ interface MapNode {
 
 export function CompanyAlignmentMap() {
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [presentationMode, setPresentationMode] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(false);
   const params = useParams<{ organisation: string }>();
   const { currentTenant } = useTenantContext();
   
@@ -125,6 +131,64 @@ export function CompanyAlignmentMap() {
       };
     });
   }, [strategicDirections, objectivesData]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (isAutoPlay && presentationMode && mapNodes.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % mapNodes.length);
+      }, 4000); // Change slide every 4 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [isAutoPlay, presentationMode, mapNodes.length]);
+
+  // Keyboard navigation for presentation mode
+  useEffect(() => {
+    if (!presentationMode) return;
+    
+    const handleKeyPress = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          setCurrentSlide(prev => Math.min(prev + 1, mapNodes.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setCurrentSlide(prev => Math.max(prev - 1, 0));
+          break;
+        case 'Escape':
+          setPresentationMode(false);
+          break;
+        case 'p':
+          setIsAutoPlay(prev => !prev);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [presentationMode, mapNodes.length]);
+
+  // Presentation functions
+  const startPresentation = () => {
+    setPresentationMode(true);
+    setCurrentSlide(0);
+  };
+
+  const exitPresentation = () => {
+    setPresentationMode(false);
+    setIsAutoPlay(false);
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide(prev => Math.min(prev + 1, mapNodes.length - 1));
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide(prev => Math.max(prev - 1, 0));
+  };
 
   // If no strategic directions exist, show empty state
   if (mapNodes.length === 0) {
@@ -241,18 +305,211 @@ export function CompanyAlignmentMap() {
     );
   };
 
-  return (
-    <div className="p-8 bg-slate-50 rounded-lg border overflow-auto">
-      <div 
-        className="flex flex-col items-center min-w-[1000px]"
-        style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
-      >
-        {mapNodes.map(rootNode => (
-          <div key={rootNode.id} className="flex flex-col items-center">
-            {renderNode(rootNode)}
-            {renderChildRows(rootNode)}
+  // Render presentation mode
+  if (presentationMode) {
+    const currentNode = mapNodes[currentSlide];
+    
+    return (
+      <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
+        {/* Presentation Header */}
+        <div className="flex items-center justify-between p-4 bg-slate-800 text-white">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold">Company Alignment Map Presentation</h2>
+            <div className="text-sm text-slate-300">
+              Slide {currentSlide + 1} of {mapNodes.length}
+            </div>
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAutoPlay(!isAutoPlay)}
+              className="text-white hover:bg-slate-700"
+            >
+              {isAutoPlay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exitPresentation}
+              className="text-white hover:bg-slate-700"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Presentation Content */}
+        <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
+          <Card className="w-full max-w-6xl bg-white shadow-2xl">
+            <CardContent className="p-12">
+              {/* Strategic Direction Title */}
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold text-slate-900 mb-4">
+                  {currentNode.title}
+                </h1>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="text-2xl font-semibold text-green-600">
+                    {currentNode.progress}% Progress
+                  </div>
+                  <Progress value={currentNode.progress} className="w-64 h-3" />
+                </div>
+              </div>
+
+              {/* Objectives Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentNode.children?.map((objective) => (
+                  <div key={objective.id} className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="font-semibold text-lg text-slate-900 leading-tight">
+                        {objective.title}
+                      </h3>
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center ml-2">
+                        <span className="text-blue-800 text-xs">♦</span>
+                      </div>
+                    </div>
+                    
+                    {/* Team Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {objective.teams?.map((team, index) => (
+                        <span key={index} className={`${team.bgColor || 'bg-blue-100'} text-xs px-3 py-1 rounded-full font-medium`}>
+                          {team.name}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    {/* Users */}
+                    {objective.users && objective.users.length > 0 && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-sm text-slate-600">Owner:</span>
+                        {objective.users.map((user, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-sm font-medium">
+                              {user.initials}
+                            </div>
+                            <span className="text-sm text-slate-700">{user.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Progress */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-600">Progress</span>
+                        <span className="text-sm font-bold text-slate-900">{objective.progress}%</span>
+                      </div>
+                      <Progress value={objective.progress} className="h-2" />
+                      <div className="text-xs text-slate-500">
+                        {objective.progress >= 75 ? 'Excellent progress' : 
+                         objective.progress >= 50 ? 'On track' : 
+                         objective.progress >= 25 ? 'Needs attention' : 'At risk'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Presentation Controls */}
+        <div className="flex items-center justify-between p-4 bg-slate-800 text-white">
+          <Button
+            variant="ghost"
+            onClick={prevSlide}
+            disabled={currentSlide === 0}
+            className="text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          
+          <div className="flex gap-2">
+            {mapNodes.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentSlide ? 'bg-blue-500' : 'bg-slate-600 hover:bg-slate-500'
+                }`}
+              />
+            ))}
+          </div>
+          
+          <Button
+            variant="ghost"
+            onClick={nextSlide}
+            disabled={currentSlide === mapNodes.length - 1}
+            className="text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+
+        {/* Keyboard Instructions */}
+        <div className="absolute bottom-16 right-4 text-slate-400 text-xs">
+          Use ← → arrows, Space, P (auto-play), or Esc to control
+        </div>
+      </div>
+    );
+  }
+
+  // Regular view with presentation controls
+  return (
+    <div className="space-y-4">
+      {/* Controls Bar */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200">
+        <div className="flex items-center gap-4">
+          <h3 className="font-semibold text-slate-900">Company Alignment Map</h3>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setZoomLevel(Math.max(50, zoomLevel - 10))}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-slate-600 min-w-[4rem] text-center">
+              {zoomLevel}%
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setZoomLevel(Math.min(200, zoomLevel + 10))}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startPresentation}
+            className="flex items-center gap-2"
+          >
+            <Presentation className="h-4 w-4" />
+            Start Presentation
+          </Button>
+        </div>
+      </div>
+
+      {/* Map Content */}
+      <div className="p-8 bg-slate-50 rounded-lg border overflow-auto">
+        <div 
+          className="flex flex-col items-center min-w-[1000px]"
+          style={{ transform: `scale(${zoomLevel/100})`, transformOrigin: 'top center' }}
+        >
+          {mapNodes.map(rootNode => (
+            <div key={rootNode.id} className="flex flex-col items-center mb-12">
+              {renderNode(rootNode)}
+              {renderChildRows(rootNode)}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
