@@ -64,7 +64,7 @@ export function CompanyAlignmentMap() {
     // First pass: collect aligned objectives
     const initialNodes = strategicDirections.map((direction: any) => {
       const alignedObjectives = objectivesData.filter((obj: any) => 
-        obj.strategicDirectionId === direction.id
+        obj.strategyId === direction.id
       );
       
       // Track which objectives are already aligned
@@ -113,7 +113,7 @@ export function CompanyAlignmentMap() {
           progress: objective.progress || 0,
           teams: objective.teamName ? [{ 
             name: objective.teamName, 
-            bgColor: objective.strategicDirectionId === direction.id ? 'bg-blue-100' : 'bg-yellow-100'
+            bgColor: objective.strategyId === direction.id ? 'bg-blue-100' : 'bg-yellow-100'
           }] : [],
           users: objective.ownerName ? [{ 
             name: objective.ownerName, 
