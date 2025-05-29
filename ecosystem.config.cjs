@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     apps: Array.from({ length: 11 }).map((_, i) => ({
         name: `okr-app-${5000 + i}`,
         script: 'dist/index.js',
