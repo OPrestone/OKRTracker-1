@@ -909,6 +909,34 @@ export default function ObjectiveDetail() {
     }
   };
 
+  // Handle delete key result
+  const handleDeleteKeyResult = async (keyResult: DbKeyResult) => {
+    if (!currentTenant) return;
+
+    try {
+      await apiRequest("DELETE", `/api/key-results/${keyResult.id}`);
+
+      toast({
+        title: "Key Result Deleted",
+        description: "Key result has been deleted successfully."
+      });
+
+      // Close any open dialogs
+      setEditKeyResultDialogOpen(false);
+      
+      // Refresh the data
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${params.id}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${params.id}`] });
+    } catch (error) {
+      console.error("Error deleting key result:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete key result. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Combine all loading states
   const isLoading = objectiveLoading || keyResultsLoading || teamsLoading || usersLoading || checkInsLoading;
 
@@ -1112,6 +1140,35 @@ export default function ObjectiveDetail() {
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Key Result</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{keyResult.title}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteKeyResult(keyResult)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </div>

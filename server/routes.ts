@@ -4342,6 +4342,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete key result
+  app.delete("/api/key-results/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      
+      // Get the key result to check tenant access
+      const keyResult = await storage.getKeyResult(id);
+      if (!keyResult) {
+        return res.status(404).json({ error: "Key result not found" });
+      }
+      
+      if (keyResult.tenantId && keyResult.tenantId !== req.tenantId) {
+        return res.status(403).json({ error: "Access denied to this key result" });
+      }
+      
+      // Delete the key result
+      await storage.deleteKeyResult(id);
+      
+      // Recalculate objective progress since key result was deleted
+      if (keyResult.objectiveId) {
+        await recalculateObjectiveProgress(keyResult.objectiveId);
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting key result:", error);
+      next(error);
+    }
+  });
+
   // Initiatives API
   app.get("/api/key-results/:keyResultId/initiatives", withTenant, async (req, res, next) => {
     try {
