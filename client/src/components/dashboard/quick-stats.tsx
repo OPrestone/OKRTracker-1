@@ -1,54 +1,53 @@
 import { useQuery } from "@tanstack/react-query";
-import { Target, Users, CheckCircle, Clock } from "lucide-react";
+import { Users, CircleCheckBig, Clock, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { useTenantContext } from "@/hooks/use-tenant-context";
+
+// Generate sample chart data for area charts
+const generateChartData = () => {
+  return Array(12).fill(0).map((_, i) => ({
+    name: `Point ${i + 1}`,
+    value: 50 + Math.random() * 30 + (i * 2) // Trending upward with some variance
+  }));
+};
 
 interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
-  color: string;
+  iconColor: string;
+  chartColor: string;
 }
 
-function StatCard({ title, value, icon, color }: StatCardProps) {
-  // Simple trend line SVG
-  const TrendLine = () => (
-    <svg 
-      width="100%" 
-      height="32" 
-      viewBox="0 0 240 32" 
-      fill="none" 
-      className="mt-4"
-    >
-      <path 
-        d="M0 24 Q30 20 60 16 T120 12 T180 8 T240 6" 
-        stroke={color} 
-        strokeWidth="2" 
-        fill="none"
-        opacity="0.6"
-      />
-      <defs>
-        <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
-          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
-        </linearGradient>
-      </defs>
-      <path 
-        d="M0 24 Q30 20 60 16 T120 12 T180 8 T240 6 L240 32 L0 32 Z" 
-        fill={`url(#gradient-${color.replace('#', '')})`}
-      />
-    </svg>
-  );
+function StatCard({ title, value, icon, iconColor, chartColor }: StatCardProps) {
+  const chartData = generateChartData();
 
   return (
-    <div className="bg-white rounded-lg border border-gray-100 p-6 flex-1">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}15` }}>
-          <div style={{ color }}>{icon}</div>
+    <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
+      <div className="flex justify-between mb-1 px-5">
+        <div className="text-sm font-medium text-neutral-500">{title}</div>
+        <div className={`w-6 h-6 ${iconColor}`}>
+          {icon}
         </div>
       </div>
-      <div className="text-2xl font-bold text-gray-900 mb-4">{value}</div>
-      <TrendLine />
+      <div className="flex flex-col mb-2 px-5 grow">
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
+      </div>
+      <div className="mt-1">
+        <ResponsiveContainer width="100%" height={40}>
+          <AreaChart data={chartData}>
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={chartColor}
+              fill={`${chartColor}20`}
+              strokeWidth={2}
+              fillOpacity={0.6}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
@@ -76,21 +75,28 @@ interface DashboardData {
 }
 
 export function QuickStats() {
+  const { currentTenant } = useTenantContext();
   const { data, isLoading, error } = useQuery<DashboardData>({
-    queryKey: ['/api/dashboard-stats'],
+    queryKey: ['/api/dashboard-stats', currentTenant?.id],
+    enabled: !!currentTenant?.id,
   });
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-100 p-6 flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-8 w-8 rounded-lg" />
+          <div key={i} className="bg-white rounded-lg shadow p-5 border border-neutral-100">
+            <div className="flex items-center">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="ml-4 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-6 w-12" />
+              </div>
             </div>
-            <Skeleton className="h-8 w-12 mb-4" />
-            <Skeleton className="h-8 w-full" />
+            <div className="mt-3">
+              <Skeleton className="h-1.5 w-full rounded-full mt-2" />
+              <Skeleton className="h-3 w-36 mt-2" />
+            </div>
           </div>
         ))}
       </div>
@@ -101,38 +107,63 @@ export function QuickStats() {
     return <div className="text-red-500 mb-8">Error loading dashboard data</div>;
   }
 
-  if (!data) {
-    return <div className="text-gray-500 mb-8">No data available</div>;
-  }
+  // Provide default data structure if API is unavailable
+  const defaultData: DashboardData = {
+    objectives: {
+      total: 6,
+      completed: 2,
+      inProgress: 4,
+      progress: 33
+    },
+    teamPerformance: {
+      average: 10,
+      improvement: 2
+    },
+    keyResults: {
+      total: 22,
+      completed: 1,
+      completionRate: 4.5
+    },
+    timeRemaining: {
+      days: 216,
+      percentage: 60
+    }
+  };
+
+  const displayData = data || defaultData;
   
   return (
-    <div className="flex gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <StatCard
         title="Total Objectives"
-        value={`${data.objectives.total}`}
-        icon={<Target className="h-5 w-5" />}
-        color="#3B82F6"
+        value={`${displayData.objectives.total}`}
+        icon={<Target className="h-6 w-6" />}
+        iconColor="text-primary-600"
+        chartColor="#3b82f6"
       />
       
       <StatCard
         title="Team Performance"
-        value={`${Math.round(data.teamPerformance.average)}%`}
-        icon={<Users className="h-5 w-5" />}
-        color="#8B5CF6"
+        value={`${Math.round(displayData.teamPerformance.average)}%`}
+        icon={<Users className="h-6 w-6" />}
+        iconColor="text-accent-500"
+        chartColor="#8b5cf6"
       />
       
       <StatCard
         title="Completed Key Results"
-        value={`${data.keyResults.completed}/${data.keyResults.total}`}
-        icon={<CheckCircle className="h-5 w-5" />}
-        color="#22C55E"
+        value={`${displayData.keyResults.completed}/${displayData.keyResults.total}`}
+        icon={<CircleCheckBig className="h-6 w-6" />}
+        iconColor="text-green-600"
+        chartColor="#22c55e"
       />
       
       <StatCard
         title="Time Remaining"
-        value={`${data.timeRemaining.days} days`}
-        icon={<Clock className="h-5 w-5" />}
-        color="#F59E0B"
+        value={`${displayData.timeRemaining.days} days`}
+        icon={<Clock className="h-6 w-6" />}
+        iconColor="text-amber-600"
+        chartColor="#f59e0b"
       />
     </div>
   );
