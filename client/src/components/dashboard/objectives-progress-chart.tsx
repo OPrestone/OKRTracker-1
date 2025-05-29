@@ -18,9 +18,9 @@ export default function ObjectivesProgressChart() {
   const { currentTenant } = useTenantContext();
   const { user } = useAuth();
 
-  // Fetch objectives data to calculate progress over time
+  // Fetch all tenant objectives data to calculate progress over time across the organization
   const { data: objectives, isLoading } = useQuery({
-    queryKey: ["/api/my-objectives"],
+    queryKey: ["/api/objectives", currentTenant?.id],
     enabled: !!currentTenant?.id && !!user,
     refetchInterval: 3000,
     refetchIntervalInBackground: true,
