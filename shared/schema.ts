@@ -661,6 +661,13 @@ export const initiativesRelations = relations(initiatives, ({ one }) => ({
   })
 }));
 
+export const todosRelations = relations(todos, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [todos.tenantId],
+    references: [tenants.id]
+  })
+}));
+
 export const checkInsRelations = relations(checkIns, ({ one }) => ({
   user: one(users, {
     fields: [checkIns.userId],
