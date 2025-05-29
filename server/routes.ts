@@ -4242,6 +4242,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ]);
       
       console.log("Key result created successfully:", result.rows[0]);
+      
+      // Recalculate objective progress after creating key result
+      await recalculateObjectiveProgress(objectiveId);
+      
       res.setHeader('Content-Type', 'application/json');
       res.status(201).json(result.rows[0]);
     } catch (error) {
