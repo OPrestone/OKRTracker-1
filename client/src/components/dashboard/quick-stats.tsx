@@ -1,94 +1,55 @@
 import { useQuery } from "@tanstack/react-query";
-import { Zap, Users, CheckCircle, Clock, Target } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Target, Users, CheckCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatsCard } from "@/components/dashboard/stats-card";
-import { MetricsCard } from "@/components/metrics/metrics-card";
-import { MiniChart } from "@/components/dashboard/mini-chart";
 
-// Keeping the QuickStatProps interface for backward compatibility
-interface QuickStatProps {
-  icon: React.ReactNode;
-  iconColor: string;
-  bgColor: string;
+interface StatCardProps {
   title: string;
   value: string;
-  progress: number;
-  description: string;
+  icon: React.ReactNode;
+  color: string;
 }
 
-// Using MetricsCard component with line chart for trend visualization
-function QuickStat({ 
-  icon, 
-  iconColor, 
-  bgColor, 
-  title, 
-  value, 
-  progress, 
-  description 
-}: QuickStatProps) {
-  // Generate smooth ascending chart data for the line chart
-  const generateChartData = () => {
-    // Base value that will be modified to create a trend
-    const baseValue = 50;
-    // Generate 12 data points representing days or weeks
-    return Array(12).fill(0).map((_, i) => {
-      // Creating a slight upward trend with some randomness for natural look
-      const trend = (i / 11) * 20; // Value increases by ~20% over the series
-      const randomFactor = Math.random() * 10 - 5; // Random variance +/- 5%
-      return {
-        name: `Point ${i+1}`,
-        value: baseValue + trend + randomFactor
-      };
-    });
-  };
-  
-  const chartData = generateChartData();
-  
-  // Extract trend percentage from description if available
-  let trendValue: number | undefined = undefined;
-  if (description.includes('increase')) {
-    const match = description.match(/(\d+(\.\d+)?)%\s+increase/);
-    if (match) trendValue = parseFloat(match[1]);
-  } else if (description.includes('decrease')) {
-    const match = description.match(/(\d+(\.\d+)?)%\s+decrease/);
-    if (match) trendValue = -parseFloat(match[1]);
-  }
-  
-  // Derive chart color based on the icon color class
-  let chartColor = "#818cf8"; // Default color (indigo)
-  if (iconColor.includes("primary")) {
-    chartColor = "#3b82f6"; // Blue for primary
-  } else if (iconColor.includes("accent")) {
-    chartColor = "#8b5cf6"; // Purple for accent
-  } else if (iconColor.includes("green")) {
-    chartColor = "#22c55e"; // Green
-  } else if (iconColor.includes("amber")) {
-    chartColor = "#f59e0b"; // Amber
-  } else if (iconColor.includes("rose")) {
-    chartColor = "#f43f5e"; // Rose/red
-  }
-  
+function StatCard({ title, value, icon, color }: StatCardProps) {
+  // Simple trend line SVG
+  const TrendLine = () => (
+    <svg 
+      width="100%" 
+      height="32" 
+      viewBox="0 0 240 32" 
+      fill="none" 
+      className="mt-4"
+    >
+      <path 
+        d="M0 24 Q30 20 60 16 T120 12 T180 8 T240 6" 
+        stroke={color} 
+        strokeWidth="2" 
+        fill="none"
+        opacity="0.6"
+      />
+      <defs>
+        <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.05"/>
+        </linearGradient>
+      </defs>
+      <path 
+        d="M0 24 Q30 20 60 16 T120 12 T180 8 T240 6 L240 32 L0 32 Z" 
+        fill={`url(#gradient-${color.replace('#', '')})`}
+      />
+    </svg>
+  );
+
   return (
-    <MetricsCard
-      icon={icon}
-      iconColor={iconColor}
-      title={title}
-      value={value}
-      trend={trendValue}
-      chart={
-        <MiniChart
-          data={chartData}
-          dataKey="value"
-          type="area"
-          color={chartColor}
-          height={40}
-          showGrid={false}
-          showTooltip={false}
-          showAxis={false}
-        />
-      }
-    />
+    <div className="bg-white rounded-lg border border-gray-100 p-6 flex-1">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+        <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}15` }}>
+          <div style={{ color }}>{icon}</div>
+        </div>
+      </div>
+      <div className="text-2xl font-bold text-gray-900 mb-4">{value}</div>
+      <TrendLine />
+    </div>
   );
 }
 
@@ -116,25 +77,20 @@ interface DashboardData {
 
 export function QuickStats() {
   const { data, isLoading, error } = useQuery<DashboardData>({
-    queryKey: ['/api/dashboard'],
+    queryKey: ['/api/dashboard-stats'],
   });
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="flex gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow p-5 border border-neutral-100">
-            <div className="flex items-center">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="ml-4 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-6 w-12" />
-              </div>
+          <div key={i} className="bg-white rounded-lg border border-gray-100 p-6 flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
             </div>
-            <div className="mt-3">
-              <Skeleton className="h-1.5 w-full rounded-full mt-2" />
-              <Skeleton className="h-3 w-36 mt-2" />
-            </div>
+            <Skeleton className="h-8 w-12 mb-4" />
+            <Skeleton className="h-8 w-full" />
           </div>
         ))}
       </div>
@@ -150,45 +106,33 @@ export function QuickStats() {
   }
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <QuickStat
-        icon={<Target className="h-6 w-6" />}
-        iconColor="text-primary-600"
-        bgColor="bg-primary-100"
+    <div className="flex gap-4 mb-8">
+      <StatCard
         title="Total Objectives"
         value={`${data.objectives.total}`}
-        progress={data.objectives.progress}
-        description={`${data.objectives.inProgress} in progress, ${data.objectives.completed} completed`}
+        icon={<Target className="h-5 w-5" />}
+        color="#3B82F6"
       />
       
-      <QuickStat
-        icon={<Users className="h-6 w-6" />}
-        iconColor="text-accent-500"
-        bgColor="bg-accent-100"
+      <StatCard
         title="Team Performance"
         value={`${Math.round(data.teamPerformance.average)}%`}
-        progress={data.teamPerformance.average}
-        description={`${data.teamPerformance.improvement}% increase from last month`}
+        icon={<Users className="h-5 w-5" />}
+        color="#8B5CF6"
       />
       
-      <QuickStat
-        icon={<CheckCircle className="h-6 w-6" />}
-        iconColor="text-green-600"
-        bgColor="bg-green-100"
+      <StatCard
         title="Completed Key Results"
         value={`${data.keyResults.completed}/${data.keyResults.total}`}
-        progress={data.keyResults.completionRate}
-        description={`${Math.round(data.keyResults.completionRate)}% completion rate`}
+        icon={<CheckCircle className="h-5 w-5" />}
+        color="#22C55E"
       />
       
-      <QuickStat
-        icon={<Clock className="h-6 w-6" />}
-        iconColor="text-amber-600"
-        bgColor="bg-amber-100"
+      <StatCard
         title="Time Remaining"
         value={`${data.timeRemaining.days} days`}
-        progress={data.timeRemaining.percentage}
-        description={`${data.timeRemaining.percentage}% of Q2 remaining`}
+        icon={<Clock className="h-5 w-5" />}
+        color="#F59E0B"
       />
     </div>
   );
