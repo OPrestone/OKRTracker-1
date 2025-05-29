@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Target, TrendingUp, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTenantContext } from "@/hooks/use-tenant-context";
@@ -422,7 +422,15 @@ export default function MyOKRs() {
         <TabsContent value="drafts" className="space-y-4">
           {draftsOKRs.length > 0 ? (
             draftsOKRs.map((draft) => (
-              <Card key={draft.id} className="shadow-sm border-neutral-200">
+              <Card 
+                key={draft.id} 
+                className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={(e) => {
+                  // Prevent navigation if clicking on buttons inside the card
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  navigate(`/objective/${draft.id}`);
+                }}
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
