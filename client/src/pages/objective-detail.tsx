@@ -742,18 +742,18 @@ export default function ObjectiveDetail() {
   // Handle opening key result progress dialog
   const handleOpenKeyResultProgress = (keyResult: DbKeyResult) => {
     setSelectedKeyResult(keyResult);
-    setKeyResultProgressValue((keyResult.progress || 0).toString());
+    setKeyResultProgressValue((keyResult.currentValue || keyResult.startValue || "0").toString());
     setKeyResultNotes("");
     setKeyResultProgressDialogOpen(true);
   };
 
   // Handle key result progress update
   const handleKeyResultProgressUpdate = async () => {
-    const newProgress = parseInt(keyResultProgressValue, 10);
-    if (isNaN(newProgress) || newProgress < 0 || newProgress > 100) {
+    const newCurrentValue = parseFloat(keyResultProgressValue);
+    if (isNaN(newCurrentValue)) {
       toast({
-        title: "Invalid Progress Value",
-        description: "Progress must be a number between 0 and 100.",
+        title: "Invalid Current Value",
+        description: "Current value must be a valid number.",
         variant: "destructive",
       });
       return;
@@ -769,9 +769,9 @@ export default function ObjectiveDetail() {
     }
 
     try {
-      // Prepare the update data
+      // Prepare the update data with current value
       const updateData = {
-        progress: newProgress,
+        currentValue: newCurrentValue.toString(),
         tenantId: currentTenant.id
       };
 
@@ -784,6 +784,19 @@ export default function ObjectiveDetail() {
 
       if (!response.ok) {
         throw new Error(`Error updating key result: ${response.statusText}`);
+      }
+
+      // Calculate the new progress for display
+      const start = parseFloat(selectedKeyResult.startValue || "0");
+      const target = parseFloat(selectedKeyResult.targetValue || "100");
+      let newProgress = 0;
+      
+      if (target === start) {
+        newProgress = newCurrentValue === target ? 100 : 0;
+      } else if (target > start) {
+        newProgress = Math.max(0, Math.min(100, ((newCurrentValue - start) / (target - start)) * 100));
+      } else {
+        newProgress = Math.max(0, Math.min(100, ((start - newCurrentValue) / (start - target)) * 100));
       }
 
       // Invalidate queries to refetch data with comprehensive cache refresh
@@ -802,7 +815,7 @@ export default function ObjectiveDetail() {
       
       toast({
         title: "Progress Updated",
-        description: `Key result progress updated to ${newProgress}%.`,
+        description: `Key result current value updated to ${newCurrentValue}. Progress is now ${newProgress.toFixed(1)}%.`,
       });
     } catch (error) {
       console.error("Error updating key result progress:", error);
@@ -1577,51 +1590,98 @@ export default function ObjectiveDetail() {
 
       {/* Key Result Progress Update Dialog */}
       <Dialog open={keyResultProgressDialogOpen} onOpenChange={setKeyResultProgressDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Update Key Result Progress</DialogTitle>
             <DialogDescription>
-              Update the progress for "{selectedKeyResult?.title}".
+              Update the current value for "{selectedKeyResult?.title}".
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-6 space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="keyResultProgress" className="text-sm font-medium">
-                Progress Percentage
-              </label>
-              <Input
-                id="keyResultProgress"
-                type="number"
-                min="0"
-                max="100"
-                value={keyResultProgressValue}
-                onChange={(e) => setKeyResultProgressValue(e.target.value)}
-                placeholder="Enter progress percentage (0-100)"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="keyResultNotes" className="text-sm font-medium">
-                Notes (Optional)
-              </label>
-              <Textarea
-                id="keyResultNotes"
-                value={keyResultNotes}
-                onChange={(e) => setKeyResultNotes(e.target.value)}
-                placeholder="Add any notes about this progress update..."
-                rows={3}
-              />
-            </div>
-
+          <div className="py-6 space-y-6">
             {selectedKeyResult && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Current Progress</label>
-                <div className="flex items-center gap-2">
-                  <Progress value={selectedKeyResult.progress || 0} className="flex-1" />
-                  <span className="text-sm font-medium">{selectedKeyResult.progress || 0}%</span>
+              <>
+                {/* Key Result Details */}
+                <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Start Value:</span>
+                    <span className="text-sm">{selectedKeyResult.startValue || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Current Value:</span>
+                    <span className="text-sm">{selectedKeyResult.currentValue || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Target Value:</span>
+                    <span className="text-sm">{selectedKeyResult.targetValue || 100}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Current Progress:</span>
+                    <span className="text-sm font-semibold">{selectedKeyResult.progress || 0}%</span>
+                  </div>
                 </div>
-              </div>
+
+                {/* Current Value Update */}
+                <div className="space-y-2">
+                  <label htmlFor="keyResultCurrentValue" className="text-sm font-medium">
+                    New Current Value
+                  </label>
+                  <Input
+                    id="keyResultCurrentValue"
+                    type="number"
+                    value={keyResultProgressValue}
+                    onChange={(e) => setKeyResultProgressValue(e.target.value)}
+                    placeholder={`Enter current value (between ${selectedKeyResult.startValue || 0} and ${selectedKeyResult.targetValue || 100})`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Progress will be automatically calculated based on start, current, and target values.
+                  </p>
+                </div>
+                
+                {/* Progress Preview */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Progress Preview</label>
+                  <div className="flex items-center gap-2">
+                    <Progress 
+                      value={(() => {
+                        const current = parseFloat(keyResultProgressValue) || parseFloat(selectedKeyResult.currentValue || "0");
+                        const start = parseFloat(selectedKeyResult.startValue || "0");
+                        const target = parseFloat(selectedKeyResult.targetValue || "100");
+                        
+                        if (target === start) return current === target ? 100 : 0;
+                        if (target > start) return Math.max(0, Math.min(100, ((current - start) / (target - start)) * 100));
+                        return Math.max(0, Math.min(100, ((start - current) / (start - target)) * 100));
+                      })()} 
+                      className="flex-1" 
+                    />
+                    <span className="text-sm font-medium">
+                      {(() => {
+                        const current = parseFloat(keyResultProgressValue) || parseFloat(selectedKeyResult.currentValue || "0");
+                        const start = parseFloat(selectedKeyResult.startValue || "0");
+                        const target = parseFloat(selectedKeyResult.targetValue || "100");
+                        
+                        if (target === start) return current === target ? 100 : 0;
+                        if (target > start) return Math.max(0, Math.min(100, ((current - start) / (target - start)) * 100)).toFixed(1);
+                        return Math.max(0, Math.min(100, ((start - current) / (start - target)) * 100)).toFixed(1);
+                      })()}%
+                    </span>
+                  </div>
+                </div>
+            
+                {/* Notes */}
+                <div className="space-y-2">
+                  <label htmlFor="keyResultNotes" className="text-sm font-medium">
+                    Notes (Optional)
+                  </label>
+                  <Textarea
+                    id="keyResultNotes"
+                    value={keyResultNotes}
+                    onChange={(e) => setKeyResultNotes(e.target.value)}
+                    placeholder="Add any notes about this progress update..."
+                    rows={3}
+                  />
+                </div>
+              </>
             )}
           </div>
           
