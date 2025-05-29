@@ -3750,6 +3750,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Add timeframe information if timeframeId exists
+      if (objective.timeframeId) {
+        try {
+          const timeframe = await storage.getTimeframe(objective.timeframeId);
+          if (timeframe) {
+            enrichedObjective.startDate = timeframe.startDate;
+            enrichedObjective.endDate = timeframe.endDate;
+            enrichedObjective.timeframeName = timeframe.name;
+          }
+        } catch (err) {
+          console.warn('Failed to fetch timeframe:', err);
+        }
+      }
+      
       res.json(enrichedObjective);
     } catch (error) {
       next(error);

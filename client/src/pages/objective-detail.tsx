@@ -1046,14 +1046,14 @@ export default function ObjectiveDetail() {
                       <p className="text-gray-500 mb-1">Start Date</p>
                       <p className="font-medium flex items-center">
                         <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                        {objective.startDate}
+                        {objective.startDate ? new Date(objective.startDate).toLocaleDateString() : 'No start date'}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-500 mb-1">End Date</p>
                       <p className="font-medium flex items-center">
                         <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                        {objective.endDate}
+                        {objective.endDate ? new Date(objective.endDate).toLocaleDateString() : 'No end date'}
                       </p>
                     </div>
                   </div>
