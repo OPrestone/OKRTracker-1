@@ -68,6 +68,8 @@ interface KeyResult {
 
 export default function MyOKRs() {
   const [currentTab, setCurrentTab] = useState("active");
+  const [, setLocation] = useLocation();
+  const navigate = (path: string) => setLocation(path);
   const { currentTenant } = useTenantContext();
   const { user } = useAuth();
   const { toast } = useToast();
