@@ -1695,6 +1695,23 @@ export class DatabaseStorage implements IStorage {
     
     console.log("objectiveId found:", keyResult.objectiveId);
     
+    // Calculate progress from current, start, and target values
+    const startValue = parseFloat(keyResult.startValue || "0");
+    const currentValue = parseFloat(keyResult.currentValue || keyResult.startValue || "0");
+    const targetValue = parseFloat(keyResult.targetValue || "100");
+    const targetType = keyResult.targetType || "increase";
+    
+    let calculatedProgress = 0;
+    if (targetType === "increase") {
+      calculatedProgress = targetValue > startValue ? 
+        Math.max(0, Math.min(100, ((currentValue - startValue) / (targetValue - startValue)) * 100)) : 0;
+    } else if (targetType === "decrease") {
+      calculatedProgress = currentValue <= targetValue ? 100 : 
+        startValue > targetValue ? Math.max(0, Math.min(100, ((startValue - currentValue) / (startValue - targetValue)) * 100)) : 0;
+    } else if (targetType === "maintain") {
+      calculatedProgress = currentValue === targetValue ? 100 : 0;
+    }
+    
     // Map camelCase input to snake_case database columns - ensuring all required fields are present
     const values = {
       title: keyResult.title,
@@ -1703,10 +1720,12 @@ export class DatabaseStorage implements IStorage {
       startValue: keyResult.startValue || "0",
       targetValue: keyResult.targetValue || "100", 
       currentValue: keyResult.currentValue || keyResult.startValue || "0",
-      progress: keyResult.progress || 0,
+      progress: Math.round(calculatedProgress),
       status: keyResult.status || "not_started",
       tenantId: keyResult.tenantId,
-      assignedToId: keyResult.assignedToId
+      assignedToId: keyResult.assignedToId,
+      targetType: keyResult.targetType || "increase",
+      measureType: keyResult.measureType || "numerical"
     };
     
     // Add error handling and logging
