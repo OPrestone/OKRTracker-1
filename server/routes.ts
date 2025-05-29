@@ -3565,6 +3565,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+
+  // Get objectives by tenant ID (for dashboard graphs)
+  app.get("/api/objectives/:tenantId", ensureAuthenticated, withTenant, async (req, res, next) => {
+    try {
+      const tenantId = req.params.tenantId;
+      console.log(`Fetching objectives for tenant: ${tenantId}`);
+      
+      // Verify user has access to this tenant
+      const userTenants = await storage.getUserTenants(req.user.id);
+      const hasTenantAccess = userTenants.some(tenant => tenant.id === tenantId);
+      
+      if (!hasTenantAccess) {
+        return res.status(403).json({ error: "Access to tenant denied" });
+      }
+      
+      const objectives = await storage.getObjectivesByTenant(tenantId);
+      console.log(`Found ${objectives.length} objectives for tenant ${tenantId}`);
+      res.json(objectives);
+    } catch (error) {
+      console.error(`Error fetching objectives for tenant:`, error);
+      next(error);
+    }
+  });
   
   // Get objectives owned by the current user
   app.get("/api/my-objectives", ensureAuthenticated, withTenant, async (req, res, next) => {

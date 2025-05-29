@@ -1,0 +1,1959 @@
+Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:519
+Promise.then
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:515
+Promise.catch
+run @ @tanstack_react-query.js?v=e46b1212:498
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+upcoming-checkins.tsx:40 Check-ins data: []
+queryClient.ts:130 
+            
+            
+           GET https://2bbfecb4-257a-4cd7-883f-5a837e66be62-00-1ppv4y1vlli4f.kirk.replit.dev/api/objectives/01JW9V1MBG1848CA21K7G15Z9T?tenantId=01JW9V1MBG1848CA21K7G15Z9T 404 (Not Found)
+(anonymous) @ queryClient.ts:130
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/objectives: Error: 404: Objective not found
+    at throwIfResNotOk (queryClient.ts:32:11)
+    at async queryClient.ts:139:7
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:44
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/check-ins: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:42
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/teams-performance: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:41
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
+queryClient.ts:151 Error in getQueryFn for /api/dashboard-stats: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+(anonymous) @ queryClient.ts:151
+await in (anonymous)
+fetchFn @ @tanstack_react-query.js?v=e46b1212:844
+run @ @tanstack_react-query.js?v=e46b1212:494
+start @ @tanstack_react-query.js?v=e46b1212:536
+fetch @ @tanstack_react-query.js?v=e46b1212:931
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1770
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1769
+batch @ @tanstack_react-query.js?v=e46b1212:584
+refetchQueries @ @tanstack_react-query.js?v=e46b1212:1768
+(anonymous) @ @tanstack_react-query.js?v=e46b1212:1754
+batch @ @tanstack_react-query.js?v=e46b1212:584
+invalidateQueries @ @tanstack_react-query.js?v=e46b1212:1747
+(anonymous) @ dashboard-layout.tsx:45
+setInterval
+(anonymous) @ dashboard-layout.tsx:38
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e46b1212:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e46b1212:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e46b1212:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e46b1212:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e46b1212:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e46b1212:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e46b1212:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e46b1212:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e46b1212:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e46b1212:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e46b1212:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e46b1212:18718
+workLoop @ chunk-RPCDYKBN.js?v=e46b1212:197
+flushWork @ chunk-RPCDYKBN.js?v=e46b1212:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e46b1212:384Understand this error
