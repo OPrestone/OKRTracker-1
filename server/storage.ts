@@ -1699,16 +1699,18 @@ export class DatabaseStorage implements IStorage {
     const startValue = parseFloat(keyResult.startValue || "0");
     const currentValue = parseFloat(keyResult.currentValue || keyResult.startValue || "0");
     const targetValue = parseFloat(keyResult.targetValue || "100");
-    const targetType = keyResult.targetType || "increase";
     
+    // Default to increase type since we don't have targetType in database yet
     let calculatedProgress = 0;
-    if (targetType === "increase") {
-      calculatedProgress = targetValue > startValue ? 
-        Math.max(0, Math.min(100, ((currentValue - startValue) / (targetValue - startValue)) * 100)) : 0;
-    } else if (targetType === "decrease") {
+    if (targetValue > startValue) {
+      // Increase type: progress = (current - start) / (target - start) * 100
+      calculatedProgress = Math.max(0, Math.min(100, ((currentValue - startValue) / (targetValue - startValue)) * 100));
+    } else if (targetValue < startValue) {
+      // Decrease type: progress = (start - current) / (start - target) * 100
       calculatedProgress = currentValue <= targetValue ? 100 : 
-        startValue > targetValue ? Math.max(0, Math.min(100, ((startValue - currentValue) / (startValue - targetValue)) * 100)) : 0;
-    } else if (targetType === "maintain") {
+        Math.max(0, Math.min(100, ((startValue - currentValue) / (startValue - targetValue)) * 100));
+    } else {
+      // Maintain type: 100% if current equals target, 0% otherwise
       calculatedProgress = currentValue === targetValue ? 100 : 0;
     }
     
@@ -1723,9 +1725,7 @@ export class DatabaseStorage implements IStorage {
       progress: Math.round(calculatedProgress),
       status: keyResult.status || "not_started",
       tenantId: keyResult.tenantId,
-      assignedToId: keyResult.assignedToId,
-      targetType: keyResult.targetType || "increase",
-      measureType: keyResult.measureType || "numerical"
+      assignedToId: keyResult.assignedToId
     };
     
     // Add error handling and logging
