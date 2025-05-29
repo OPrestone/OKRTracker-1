@@ -151,10 +151,9 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.completedObjectives}
               icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
               chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#10b981"
+                <MiniTrendChart 
+                  tenantId={tenantId}
+                  period={14}
                   height={40}
                 />
               }
@@ -165,10 +164,9 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.atRiskObjectives}
               icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
               chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#ef4444"
+                <MiniTrendChart 
+                  tenantId={tenantId}
+                  period={14}
                   height={40}
                 />
               }
