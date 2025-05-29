@@ -2090,6 +2090,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Historical progress trends endpoint
+  app.get("/api/progress-trends", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {
+    try {
+      const tenantId = req.tenantId;
+      if (!tenantId) {
+        return res.status(400).json({ error: 'Tenant ID is required' });
+      }
+
+      const { period = '30', type = 'objectives' } = req.query;
+      const days = parseInt(period as string, 10);
+      
+      // Generate date range for the specified period
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      // Get all objectives for this tenant with creation dates
+      const objectives = await db
+        .select()
+        .from(schema.objectives)
+        .where(eq(schema.objectives.tenant_id, tenantId));
+
+      // Get all check-ins for historical progress tracking
+      const checkIns = await db
+        .select()
+        .from(schema.checkIns)
+        .where(eq(schema.checkIns.tenant_id, tenantId))
+        .orderBy(schema.checkIns.created_at);
+
+      // Generate daily progress data
+      const progressData = [];
+      const currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Calculate objectives created by this date
+        const objectivesAtDate = objectives.filter(obj => 
+          new Date(obj.created_at) <= currentDate
+        );
+        
+        // Calculate average progress at this date
+        let avgProgress = 0;
+        if (objectivesAtDate.length > 0) {
+          // Use check-ins to get historical progress, or fall back to current progress
+          const relevantCheckIns = checkIns.filter(ci => 
+            new Date(ci.created_at) <= currentDate &&
+            objectivesAtDate.some(obj => obj.id === ci.objective_id)
+          );
+          
+          if (relevantCheckIns.length > 0) {
+            // Use most recent check-in progress for each objective
+            const latestCheckInPerObjective = objectivesAtDate.map(obj => {
+              const objCheckIns = relevantCheckIns
+                .filter(ci => ci.objective_id === obj.id)
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              
+              return objCheckIns[0]?.progress ?? obj.progress ?? 0;
+            });
+            
+            avgProgress = latestCheckInPerObjective.reduce((sum, progress) => sum + progress, 0) / latestCheckInPerObjective.length;
+          } else {
+            // Fall back to current objective progress
+            avgProgress = objectivesAtDate.reduce((sum, obj) => sum + (obj.progress || 0), 0) / objectivesAtDate.length;
+          }
+        }
+
+        progressData.push({
+          date: dateStr,
+          progress: Math.round(avgProgress * 100) / 100,
+          totalObjectives: objectivesAtDate.length,
+          completedObjectives: objectivesAtDate.filter(obj => (obj.progress || 0) >= 100).length,
+          timestamp: currentDate.getTime()
+        });
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      res.json({
+        period: days,
+        type,
+        data: progressData,
+        summary: {
+          startProgress: progressData[0]?.progress || 0,
+          endProgress: progressData[progressData.length - 1]?.progress || 0,
+          totalObjectives: objectives.length,
+          avgProgress: progressData.length > 0 
+            ? progressData.reduce((sum, day) => sum + day.progress, 0) / progressData.length 
+            : 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching progress trends:', error);
+      res.status(500).json({ error: 'Failed to fetch progress trends' });
+    }
+  });
+
   // Key result creation endpoint
   // Key result creation endpoint for objectives
   app.post("/api/objectives/:objectiveId/key-results", ensureAuthenticated, withTenant, async (req: Request, res: Response) => {

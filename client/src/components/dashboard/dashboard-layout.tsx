@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
+import { EnhancedTrendChart, MiniTrendChart } from "@/components/dashboard/enhanced-trend-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -128,10 +129,9 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.totalObjectives}
               icon={<Target className="h-5 w-5 text-indigo-500" />}
               chart={
-                <MiniSparkline 
-                  data={objectivesChartData}
-                  dataKey="value"
-                  color="#6366f1"
+                <MiniTrendChart 
+                  tenantId={tenantId}
+                  period={7}
                   height={40}
                 />
               }
@@ -177,7 +177,12 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="col-span-2">
-              <ObjectivesProgressChart />
+              <EnhancedTrendChart 
+                tenantId={tenantId}
+                defaultPeriod={30}
+                height={250}
+                showControls={true}
+              />
             </div>
             
             <div className="space-y-5">
