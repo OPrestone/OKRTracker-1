@@ -3716,7 +3716,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json(objective);
+      // Fetch related owner and team information
+      let enrichedObjective = { ...objective };
+      
+      // Add owner information if ownerId exists
+      if (objective.ownerId) {
+        try {
+          const owner = await storage.getUser(objective.ownerId);
+          if (owner) {
+            enrichedObjective.owner = {
+              id: owner.id,
+              name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.username,
+              role: owner.role || 'Team Member'
+            };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch owner:', err);
+        }
+      }
+      
+      // Add team information if teamId exists
+      if (objective.teamId) {
+        try {
+          const team = await storage.getTeam(objective.teamId);
+          if (team) {
+            enrichedObjective.team = {
+              id: team.id,
+              name: team.name
+            };
+          }
+        } catch (err) {
+          console.warn('Failed to fetch team:', err);
+        }
+      }
+      
+      res.json(enrichedObjective);
     } catch (error) {
       next(error);
     }

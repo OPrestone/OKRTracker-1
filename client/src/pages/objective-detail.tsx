@@ -1461,39 +1461,67 @@ export default function ObjectiveDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <MessageSquare className="h-3 w-3 text-blue-600" />
+                {/* Display real check-ins if available */}
+                {checkIns && checkIns.length > 0 ? (
+                  checkIns.slice(0, 3).map((checkIn, index) => {
+                    const checkInUser = users?.find(user => user.id === checkIn.userId);
+                    return (
+                      <div key={checkIn.id} className="flex gap-3 items-start">
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <MessageSquare className="h-3 w-3 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm">
+                            {checkInUser?.firstName} {checkInUser?.lastName} added a check-in
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {checkIn.createdAt ? new Date(checkIn.createdAt).toLocaleDateString() : 'No date available'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  /* Show creation activity */
+                  <div className="flex gap-3 items-start">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm">Objective created</p>
+                      <p className="text-xs text-gray-500">
+                        {objective?.createdAt ? new Date(objective.createdAt).toLocaleDateString() : 'Recently'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm">New check-in added</p>
-                    <p className="text-xs text-gray-500">{objective?.checkIns?.length > 0 ? new Date(objective.checkIns[0].createdAt || '').toLocaleDateString() : 'No date available'}</p>
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex gap-3 items-start">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <CheckCircle className="h-3 w-3 text-green-600" />
+                {/* Show when objective was last updated */}
+                {objective?.updatedAt && objective.updatedAt !== objective.createdAt && (
+                  <div className="flex gap-3 items-start">
+                    <div className="bg-purple-100 p-2 rounded-full">
+                      <Edit className="h-3 w-3 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm">Objective updated</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(objective.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm">UI design revisions completed</p>
-                    <p className="text-xs text-gray-500">August 14, 2023</p>
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex gap-3 items-start">
-                  <div className="bg-amber-100 p-2 rounded-full">
-                    <AlertCircle className="h-3 w-3 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm">Test coverage flagged as at risk</p>
-                    <p className="text-xs text-gray-500">August 23, 2023</p>
-                  </div>
-                </div>
+                {checkIns && checkIns.length > 3 && (
+                  <Button variant="ghost" size="sm" className="w-full text-xs">
+                    View all activity ({checkIns.length} total)
+                  </Button>
+                )}
                 
-                <Button variant="ghost" size="sm" className="w-full text-xs">
-                  View all activity
-                </Button>
+                {!checkIns?.length && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No activity yet. Add a check-in to get started.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
