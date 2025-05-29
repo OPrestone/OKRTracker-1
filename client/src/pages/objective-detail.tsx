@@ -1295,16 +1295,16 @@ export default function ObjectiveDetail() {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.keyResults?.length || 0}</p>
+                  <p className="text-2xl font-bold">{keyResults?.length || 0}</p>
                   <p className="text-xs text-gray-500">Key Results</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
-                  <p className="text-2xl font-bold">{objective?.checkIns?.length || 0}</p>
+                  <p className="text-2xl font-bold">{checkIns?.length || 0}</p>
                   <p className="text-xs text-gray-500">Check-ins</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md text-center">
                   <p className="text-2xl font-bold">
-                    {objective?.keyResults?.filter(kr => kr.status === 'completed').length || 0}
+                    {keyResults?.filter(kr => kr.status === 'completed').length || 0}
                   </p>
                   <p className="text-xs text-gray-500">Completed KRs</p>
                 </div>
