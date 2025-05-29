@@ -97,6 +97,7 @@ export default function MyOKRs() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -112,7 +113,7 @@ export default function MyOKRs() {
       });
       
       // Invalidate and refetch objectives
-      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives", currentTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-objectives"] });
     },
     onError: (error) => {
       toast({
@@ -125,6 +126,7 @@ export default function MyOKRs() {
   });
 
   const handleSubmitForApproval = (objectiveId: string) => {
+    console.log("Submit for approval button clicked for objective:", objectiveId);
     submitForApprovalMutation.mutate(objectiveId);
   };
 
