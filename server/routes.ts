@@ -4286,38 +4286,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to recalculate objective progress based on key results
-  async function recalculateObjectiveProgress(objectiveId: string) {
-    try {
-      // Use raw SQL to get key results since they might be created with different column names
-      const keyResultsQuery = `
-        SELECT progress FROM key_results 
-        WHERE objective_id = $1
-      `;
-      const keyResultsResult = await pool.query(keyResultsQuery, [objectiveId]);
-      const keyResults = keyResultsResult.rows;
-      
-      if (keyResults.length === 0) {
-        // No key results, set objective progress to 0
-        const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
-        await pool.query(updateQuery, [0, objectiveId]);
-        console.log(`Set objective ${objectiveId} progress to 0 (no key results)`);
-        return;
-      }
-      
-      // Calculate average progress of all key results
-      const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress || 0), 0);
-      const averageProgress = Math.round(totalProgress / keyResults.length);
-      
-      // Update objective progress using raw SQL
-      const updateQuery = `UPDATE objectives SET progress = $1 WHERE id = $2`;
-      await pool.query(updateQuery, [averageProgress, objectiveId]);
-      console.log(`Updated objective ${objectiveId} progress to ${averageProgress}% (from ${keyResults.length} key results)`);
-    } catch (error) {
-      console.error('Error recalculating objective progress:', error);
-    }
-  }
-
   app.patch("/api/key-results/:id", withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
