@@ -897,8 +897,10 @@ export default function ObjectiveDetail() {
       setEditKeyResultDialogOpen(false);
       setEditingKeyResult(null);
 
-      // Trigger data refresh
-      queryClient.invalidateQueries({ queryKey: ['/api/key-results'] });
+      // Trigger data refresh for both key results and objective
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/objectives'] });
     } catch (error) {
       console.error("Error updating key result:", error);
       toast({
@@ -925,8 +927,8 @@ export default function ObjectiveDetail() {
       setEditKeyResultDialogOpen(false);
       
       // Refresh the data
-      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${params.id}/key-results`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${params.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}/key-results`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/objectives/${objectiveId}`] });
     } catch (error) {
       console.error("Error deleting key result:", error);
       toast({

@@ -4303,8 +4303,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertKeyResultSchema.partial().parse(req.body);
       const updatedKeyResult = await storage.updateKeyResult(id, validatedData);
       
-      // If progress was updated, recalculate objective progress
-      if (validatedData.progress !== undefined && keyResult.objectiveId) {
+      // Recalculate progress if any value that affects progress was updated
+      if ((validatedData.progress !== undefined || 
+           validatedData.currentValue !== undefined || 
+           validatedData.targetValue !== undefined || 
+           validatedData.startValue !== undefined) && keyResult.objectiveId) {
         await recalculateObjectiveProgress(keyResult.objectiveId);
       }
       
