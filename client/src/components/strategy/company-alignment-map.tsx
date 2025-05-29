@@ -356,58 +356,85 @@ export function CompanyAlignmentMap() {
                 </div>
               </div>
 
-              {/* Objectives Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentNode.children?.map((objective) => (
-                  <div key={objective.id} className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="font-semibold text-lg text-slate-900 leading-tight">
-                        {objective.title}
-                      </h3>
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center ml-2">
-                        <span className="text-blue-800 text-xs">♦</span>
-                      </div>
-                    </div>
-                    
-                    {/* Team Tags */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {objective.teams?.map((team, index) => (
-                        <span key={index} className={`${team.bgColor || 'bg-blue-100'} text-xs px-3 py-1 rounded-full font-medium`}>
-                          {team.name}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    {/* Users */}
-                    {objective.users && objective.users.length > 0 && (
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-sm text-slate-600">Owner:</span>
-                        {objective.users.map((user, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-sm font-medium">
-                              {user.initials}
-                            </div>
-                            <span className="text-sm text-slate-700">{user.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Progress */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-600">Progress</span>
-                        <span className="text-sm font-bold text-slate-900">{objective.progress}%</span>
-                      </div>
-                      <Progress value={objective.progress} className="h-2" />
-                      <div className="text-xs text-slate-500">
-                        {objective.progress >= 75 ? 'Excellent progress' : 
-                         objective.progress >= 50 ? 'On track' : 
-                         objective.progress >= 25 ? 'Needs attention' : 'At risk'}
-                      </div>
-                    </div>
+              {/* Tree Structure Presentation */}
+              <div className="flex flex-col items-center space-y-8">
+                {/* Strategic Direction Node (Enhanced for Presentation) */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300 p-8 rounded-xl shadow-lg max-w-md text-center">
+                  <div className="w-12 h-12 rounded-full bg-green-200 mb-4 flex items-center justify-center mx-auto">
+                    <span className="text-green-800 text-lg">♦</span>
                   </div>
-                ))}
+                  <h2 className="font-bold text-xl text-slate-900 mb-2">{currentNode.title}</h2>
+                  <div className="text-sm text-slate-600 mb-3">Strategic Direction</div>
+                  <div className="flex items-center justify-center gap-3">
+                    <Progress value={currentNode.progress} className="flex-grow h-3" />
+                    <span className="text-lg font-bold text-green-700">{currentNode.progress}%</span>
+                  </div>
+                </div>
+
+                {/* Connector Line */}
+                {currentNode.children && currentNode.children.length > 0 && (
+                  <div className="w-px h-16 bg-slate-400"></div>
+                )}
+
+                {/* Objectives Row */}
+                {currentNode.children && currentNode.children.length > 0 && (
+                  <div className="flex justify-center items-start gap-12 flex-wrap">
+                    {currentNode.children.map((objective, index) => (
+                      <div key={objective.id} className="flex flex-col items-center">
+                        {/* Connector to parent */}
+                        <div className="w-px h-8 bg-slate-400 mb-4"></div>
+                        
+                        {/* Objective Node */}
+                        <div className="bg-gradient-to-br from-blue-50 to-sky-100 border-2 border-blue-300 p-6 rounded-xl shadow-lg max-w-xs text-center">
+                          <div className="w-10 h-10 rounded-full bg-blue-200 mb-3 flex items-center justify-center mx-auto">
+                            <span className="text-blue-800 text-sm">♦</span>
+                          </div>
+                          
+                          <h3 className="font-semibold text-lg text-slate-900 mb-3 leading-tight">
+                            {objective.title}
+                          </h3>
+                          
+                          {/* Team Tags */}
+                          <div className="flex flex-wrap gap-1 justify-center mb-3">
+                            {objective.teams?.map((team, teamIndex) => (
+                              <span key={teamIndex} className={`${team.bgColor || 'bg-blue-100'} text-xs px-2 py-1 rounded-full font-medium`}>
+                                {team.name}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          {/* Users */}
+                          {objective.users && objective.users.length > 0 && (
+                            <div className="flex justify-center items-center gap-2 mb-3">
+                              {objective.users.map((user, userIndex) => (
+                                <div key={userIndex} className="flex flex-col items-center">
+                                  <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-medium mb-1">
+                                    {user.initials}
+                                  </div>
+                                  <span className="text-xs text-slate-600">{user.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Progress */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-slate-600">Progress</span>
+                              <span className="text-sm font-bold text-slate-900">{objective.progress}%</span>
+                            </div>
+                            <Progress value={objective.progress} className="h-2" />
+                            <div className="text-xs text-slate-500">
+                              {objective.progress >= 75 ? 'Excellent' : 
+                               objective.progress >= 50 ? 'On track' : 
+                               objective.progress >= 25 ? 'Attention needed' : 'At risk'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
