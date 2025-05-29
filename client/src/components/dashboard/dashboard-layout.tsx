@@ -2,8 +2,6 @@ import { ReactNode, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
-import { EnhancedTrendChart, MiniTrendChart } from "@/components/dashboard/enhanced-trend-chart";
-import { ProgressChart } from "@/components/dashboard/progress-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Target, Users, CheckCircle, AlertCircle, FileBarChart, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -130,9 +128,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.totalObjectives}
               icon={<Target className="h-5 w-5 text-indigo-500" />}
               chart={
-                <MiniTrendChart 
-                  tenantId={tenantId}
-                  period={7}
+                <MiniSparkline 
+                  data={objectivesChartData}
+                  dataKey="value"
+                  color="#6366f1"
                   height={40}
                 />
               }
@@ -152,9 +151,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.completedObjectives}
               icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
               chart={
-                <MiniTrendChart 
-                  tenantId={tenantId}
-                  period={14}
+                <MiniSparkline 
+                  data={objectivesChartData}
+                  dataKey="value"
+                  color="#10b981"
                   height={40}
                 />
               }
@@ -165,9 +165,10 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
               value={stats.atRiskObjectives}
               icon={<AlertCircle className="h-5 w-5 text-rose-500" />}
               chart={
-                <MiniTrendChart 
-                  tenantId={tenantId}
-                  period={14}
+                <MiniSparkline 
+                  data={objectivesChartData}
+                  dataKey="value"
+                  color="#ef4444"
                   height={40}
                 />
               }
@@ -176,7 +177,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="col-span-2">
-              <ProgressChart />
+              <ObjectivesProgressChart />
             </div>
             
             <div className="space-y-5">
