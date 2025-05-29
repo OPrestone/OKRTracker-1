@@ -113,6 +113,7 @@ export default function CreateKeyResult() {
   const [showExamples, setShowExamples] = useState(false);
   const [showDifference, setShowDifference] = useState(false);
   const [contributorsOpen, setContributorsOpen] = useState(false);
+  const [leadOpen, setLeadOpen] = useState(false);
 
   // Generate contextual examples based on objective
   const getExamplesForObjective = () => {
@@ -519,13 +520,15 @@ export default function CreateKeyResult() {
             {/* Lead */}
             <div className="space-y-2">
               <Label>Lead</Label>
-              <Select
-                value={keyResultData.assignedToId}
-                onValueChange={(value) => setKeyResultData(prev => ({ ...prev, assignedToId: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select lead">
-                    {keyResultData.assignedToId && users.find(u => u.id === keyResultData.assignedToId) && (
+              <Popover open={leadOpen} onOpenChange={setLeadOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={leadOpen}
+                    className="w-full justify-between"
+                  >
+                    {keyResultData.assignedToId ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">
@@ -535,24 +538,50 @@ export default function CreateKeyResult() {
                         </Avatar>
                         <span>{users.find(u => u.id === keyResultData.assignedToId)?.firstName} {users.find(u => u.id === keyResultData.assignedToId)?.lastName}</span>
                       </div>
+                    ) : (
+                      "Select lead..."
                     )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">
-                            {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{user.firstName} {user.lastName}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search users..." />
+                    <CommandEmpty>No user found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandList>
+                        {users.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={`${user.firstName} ${user.lastName} ${user.username}`}
+                            onSelect={() => {
+                              setKeyResultData(prev => ({ 
+                                ...prev, 
+                                assignedToId: user.id === keyResultData.assignedToId ? '' : user.id 
+                              }));
+                              setLeadOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                keyResultData.assignedToId === user.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="text-xs">
+                                  {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{user.firstName} {user.lastName}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Objective - Auto-populated */}
