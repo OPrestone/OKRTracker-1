@@ -93,9 +93,19 @@ export default function MyOKRs() {
   // Submit for approval mutation
   const submitForApprovalMutation = useMutation({
     mutationFn: async (objectiveId: string) => {
-      return await apiRequest(`/api/objectives/${objectiveId}/submit-for-approval`, {
+      const response = await fetch(`/api/objectives/${objectiveId}/submit-for-approval`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit objective for approval');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -116,7 +126,11 @@ export default function MyOKRs() {
     }
   });
 
-  const handleSubmitForApproval = (objectiveId: string) => {
+  const handleSubmitForApproval = (objectiveId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
     console.log("Submit for approval button clicked for objective:", objectiveId);
     submitForApprovalMutation.mutate(objectiveId);
   };
@@ -435,7 +449,7 @@ export default function MyOKRs() {
                     </Button>
                     <Button 
                       size="sm"
-                      onClick={() => handleSubmitForApproval(draft.id)}
+                      onClick={(e) => handleSubmitForApproval(draft.id, e)}
                       disabled={submitForApprovalMutation.isPending}
                     >
                       {submitForApprovalMutation.isPending ? "Submitting..." : "Submit for Approval"}
