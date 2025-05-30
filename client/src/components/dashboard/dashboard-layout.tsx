@@ -90,14 +90,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     upcomingCheckins: (checkInsData as any[]).length
   };
   
-  // Generate stable chart data for area charts using useMemo
-  const chartData = useMemo(() => {
-    return Array(12).fill(0).map((_, i) => ({
-      name: `Point ${i + 1}`,
-      value: 50 + (i * 3) + (i % 3 === 0 ? 5 : i % 3 === 1 ? -2 : 3) // Stable trending pattern
-    }));
-  }, []); // Empty dependency array means this only runs once
-
   // Home page style StatCard component
   function StatCard({ title, value, icon, iconColor, chartColor }: {
     title: string;
@@ -106,6 +98,13 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     iconColor: string;
     chartColor: string;
   }) {
+    // Generate stable chart data for this specific StatCard
+    const stableChartData = useMemo(() => {
+      return Array(12).fill(0).map((_, i) => ({
+        name: `Point ${i + 1}`,
+        value: 50 + (i * 3) + (i % 3 === 0 ? 5 : i % 3 === 1 ? -2 : 3) // Stable trending pattern
+      }));
+    }, []); // Empty dependency array means this only runs once
 
     return (
       <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
@@ -120,7 +119,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
         </div>
         <div className="mt-1">
           <ResponsiveContainer width="100%" height={40}>
-            <AreaChart data={chartData}>
+            <AreaChart data={stableChartData}>
               <Area
                 type="monotone"
                 dataKey="value"
