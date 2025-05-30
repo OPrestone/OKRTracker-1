@@ -3567,7 +3567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get objectives by tenant ID (for dashboard graphs)
-  app.get("/api/objectives/:tenantId", ensureAuthenticated, withTenant, async (req, res, next) => {
+  app.get("/api/objectives/tenant/:tenantId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const tenantId = req.params.tenantId;
       console.log(`Fetching objectives for tenant: ${tenantId}`);
@@ -3889,18 +3889,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/objectives/:id", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const id = req.params.id;
+      console.log(`[OBJECTIVE ACCESS] Fetching objective ${id} for user ${req.user?.id} with tenant ${req.tenantId}`);
+      
       const objective = await storage.getObjective(id);
       
       if (!objective) {
+        console.log(`[OBJECTIVE ACCESS] Objective ${id} not found in database`);
         return res.status(404).send("Objective not found");
       }
       
+      console.log(`[OBJECTIVE ACCESS] Found objective ${id} with tenantId: ${objective.tenantId}, user tenant: ${req.tenantId}`);
+      
       // Ensure the objective belongs to the current tenant
       if (objective.tenantId !== req.tenantId) {
+        console.log(`[OBJECTIVE ACCESS] DENIED - Objective tenant ${objective.tenantId} does not match user tenant ${req.tenantId}`);
         return res.status(403).json({ 
           error: "You do not have access to this objective" 
         });
       }
+      
+      console.log(`[OBJECTIVE ACCESS] Access granted for objective ${id}`);
       
       // Fetch related owner and team information
       let enrichedObjective = { ...objective };
