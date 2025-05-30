@@ -3566,7 +3566,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get objectives by tenant ID (for dashboard graphs)
+  // TEMPORARILY DISABLED: Get objectives by tenant ID (for dashboard graphs)
+  // This route was causing conflicts with individual objective access
+  // TODO: Re-implement with a different route pattern if needed
+  /*
   app.get("/api/objectives/tenant/:tenantId", ensureAuthenticated, withTenant, async (req, res, next) => {
     try {
       const tenantId = req.params.tenantId;
@@ -3588,6 +3591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  */
   
   // Get objectives owned by the current user
   app.get("/api/my-objectives", ensureAuthenticated, withTenant, async (req, res, next) => {
