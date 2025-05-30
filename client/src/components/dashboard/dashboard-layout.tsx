@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard, MiniStatsCard } from "@/components/dashboard/stats-card";
 import { MiniChart, MiniSparkline, GaugeChart } from "@/components/dashboard/mini-chart";
@@ -74,7 +74,13 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
   
   // Calculate real-time stats from authentic database data
   // Use the dashboard-stats API when available, otherwise calculate from real objectives data
-  const stats = dashboardStats || {
+  const stats = dashboardStats ? {
+    totalObjectives: dashboardStats.objectives?.total || 0,
+    completedObjectives: dashboardStats.objectives?.completed || 0,
+    atRiskObjectives: dashboardStats.objectives?.inProgress || 0,
+    teamProgress: dashboardStats.teamPerformance?.average || 0,
+    upcomingCheckins: dashboardStats.keyResults?.total || 0
+  } : {
     totalObjectives: (objectivesData as any[]).length,
     completedObjectives: (objectivesData as any[]).filter((obj: any) => obj.progress >= 100).length,
     atRiskObjectives: (objectivesData as any[]).filter((obj: any) => obj.progress >= 0 && obj.progress < 70).length,
@@ -84,14 +90,6 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     upcomingCheckins: (checkInsData as any[]).length
   };
   
-  // Generate sample chart data for area charts
-  const generateChartData = () => {
-    return Array(12).fill(0).map((_, i) => ({
-      name: `Point ${i + 1}`,
-      value: 50 + Math.random() * 30 + (i * 2) // Trending upward with some variance
-    }));
-  };
-
   // Home page style StatCard component
   function StatCard({ title, value, icon, iconColor, chartColor }: {
     title: string;
@@ -100,7 +98,13 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
     iconColor: string;
     chartColor: string;
   }) {
-    const chartData = generateChartData();
+    // Generate stable chart data for this specific StatCard
+    const stableChartData = useMemo(() => {
+      return Array(12).fill(0).map((_, i) => ({
+        name: `Point ${i + 1}`,
+        value: 50 + (i * 3) + (i % 3 === 0 ? 5 : i % 3 === 1 ? -2 : 3) // Stable trending pattern
+      }));
+    }, []); // Empty dependency array means this only runs once
 
     return (
       <div className="bg-white rounded-lg shadow-sm pt-5 border border-slate-100 content-end flex flex-col">
@@ -115,7 +119,7 @@ export function DashboardLayout({ children, overviewStats }: DashboardLayoutProp
         </div>
         <div className="mt-1">
           <ResponsiveContainer width="100%" height={40}>
-            <AreaChart data={chartData}>
+            <AreaChart data={stableChartData}>
               <Area
                 type="monotone"
                 dataKey="value"

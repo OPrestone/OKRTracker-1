@@ -340,20 +340,20 @@ export function CompanyAlignmentMap() {
         </div>
 
         {/* Main Presentation Content - Full Screen */}
-        <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
+        <div className="flex-1 flex items-center justify-center bg-slate-100 relative overflow-hidden">
           <div className="w-full h-full flex flex-col items-center justify-center p-8">
             {/* Tree Structure Presentation - Full Screen */}
             <div className="flex flex-col items-center justify-center space-y-12 relative w-full h-full max-w-7xl">
               {/* Title with Progress */}
               <div className="text-center mb-16">
-                <h1 className="text-5xl font-bold text-white mb-6">
+                <h1 className="text-5xl font-bold text-slate-800 mb-6">
                   {currentNode.title}
                 </h1>
                 <div className="flex items-center justify-center gap-6">
-                  <div className="text-3xl font-semibold text-green-400">
+                  <div className="text-3xl font-semibold text-green-700">
                     {currentNode.progress}% Overall Progress
                   </div>
-                  <Progress value={currentNode.progress} className="w-80 h-4 bg-slate-700" />
+                  <Progress value={currentNode.progress} className="w-80 h-4" />
                 </div>
               </div>
 
