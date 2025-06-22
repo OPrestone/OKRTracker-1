@@ -1,0 +1,638 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DefaultCadences from "@/data/default-cadences.json";
+import {
+	addCadence,
+	getAllCadences,
+	getCadenceByPeriod,
+} from "@/lib/queries/cadences";
+import { addTimeframe, getTimeframes } from "@/lib/queries/timeframes";
+import { InsertCadence, InsertTimeframe } from "@/util/schema";
+import { format } from "date-fns";
+import {
+	Calendar,
+	CheckCircle,
+	Clock,
+	Loader2,
+	RefreshCw,
+	Save,
+	X,
+	Zap,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
+
+interface TimeframeSetupProps {
+	tenantId: string;
+	primaryCadence: "quarterly" | "trimester" | "halfYearly" | "annual";
+	startMonth: string;
+	onTimeframesSaved?: () => void;
+}
+
+function TimeframeSetupSimplified({
+	tenantId,
+	primaryCadence,
+	startMonth,
+	onTimeframesSaved,
+}: TimeframeSetupProps) {
+	const [activeTab, setActiveTab] = useState("create");
+	const [generatedTimeframes, setGeneratedTimeframes] = useState<
+		InsertTimeframe[]
+	>([]);
+
+	// Fetch existing timeframes
+	const { data: existingTimeframes, isLoading: isLoadingTimeframes } = useSWR(
+		"all-timeframes",
+		getTimeframes
+	);
+
+	// Fetch cadences for this tenant
+	const { data: cadences, isLoading: isLoadingCadences } = useSWR(
+		"all-cadences",
+		async () => getAllCadences(tenantId)
+	);
+
+	const { trigger: addCadenceTrigger } = useSWRMutation(
+		"add-cadence",
+		async (_: any, { arg }: { arg: InsertCadence }) => addCadence(arg)
+	);
+
+	const { trigger: getCadenceByPeroidTrigger } = useSWRMutation(
+		"add-cadence",
+		async (_: any, { arg }: { arg: string }) => getCadenceByPeriod(tenantId, arg)
+	);
+
+	// Helper to get month number from name
+	const getMonthNumber = (monthName: string): number => {
+		const months = [
+			"january",
+			"february",
+			"march",
+			"april",
+			"may",
+			"june",
+			"july",
+			"august",
+			"september",
+			"october",
+			"november",
+			"december",
+		];
+		return months.indexOf(monthName.toLowerCase());
+	};
+
+	// Get the appropriate cadence ID for a given cadence type
+	const getCadenceId = (cadenceType: string): string | undefined => {
+		if (!cadences || cadences.length === 0) {
+			console.warn("No cadences available");
+			return undefined;
+		}
+
+		const searchName = cadenceType === "quarterly" ? "quarter" : cadenceType;
+
+		const matchedCadence = cadences.find((c) =>
+			c.name.toLowerCase().includes(searchName.toLowerCase())
+		);
+
+		if (matchedCadence) {
+			console.log(`Found cadence for ${cadenceType}:`, matchedCadence);
+			return matchedCadence.id;
+		}
+
+		console.warn(`No cadence found for type: ${cadenceType}`);
+		return undefined;
+	};
+
+	// Create default timeframes based on primary cadence and start month
+	const createDefaultTimeframes = (cadenceId: string) => {
+		const now = new Date();
+		const year = now.getFullYear();
+		const monthNum = getMonthNumber(startMonth);
+
+		const defaultTimeframes = [];
+
+		if (primaryCadence === "quarterly") {
+			for (let i = 0; i < 4; i++) {
+				const startDate = new Date(year, monthNum + i * 3, 1);
+				const endDate = new Date(year, monthNum + (i + 1) * 3, 0);
+				defaultTimeframes.push({
+					name: `Q${i + 1} ${year}`,
+					description: `Quarter ${i + 1} of ${year}`,
+					startDate,
+					endDate,
+					tenantId,
+					cadenceId: cadenceId,
+				});
+			}
+		} else if (primaryCadence === "annual") {
+			const startDate = new Date(year, monthNum, 1);
+			const endDate = new Date(year + 1, monthNum, 0);
+			defaultTimeframes.push({
+				name: `FY ${year}`,
+				description: `Fiscal Year ${year}`,
+				startDate,
+				endDate,
+				tenantId,
+				cadenceId: cadenceId,
+			});
+		} else if (primaryCadence === "halfYearly") {
+			for (let i = 0; i < 2; i++) {
+				const startDate = new Date(year, monthNum + i * 6, 1);
+				const endDate = new Date(year, monthNum + (i + 1) * 6, 0);
+				defaultTimeframes.push({
+					name: `H${i + 1} ${year}`,
+					description: `Half ${i + 1} of ${year}`,
+					startDate,
+					endDate,
+					tenantId,
+					cadenceId: cadenceId,
+				});
+			}
+		} else if (primaryCadence === "trimester") {
+			for (let i = 0; i < 3; i++) {
+				const startDate = new Date(year, monthNum + i * 4, 1);
+				const endDate = new Date(year, monthNum + (i + 1) * 4, 0);
+				defaultTimeframes.push({
+					name: `T${i + 1} ${year}`,
+					description: `Trimester ${i + 1} of ${year}`,
+					startDate,
+					endDate,
+					tenantId,
+					cadenceId: cadenceId,
+				});
+			}
+		}
+
+		return defaultTimeframes;
+	};
+
+	// Generate timeframes only when user clicks the button
+	const handleGenerateTimeframes = async () => {
+		const cadenceTemplate = DefaultCadences.find(
+			(c) => c.name.toLowerCase() === primaryCadence.toLowerCase()
+		);
+
+		if (!cadenceTemplate) {
+			toast.error("Invalid Cadence", {
+				description: `No default cadence found for "${primaryCadence}". Please select a valid cadence.`,
+			});
+			return;
+		}
+
+		console.log("Creating cadence template:");
+
+		let cadenceId;
+
+		const createdCadence = await addCadenceTrigger({
+			...cadenceTemplate,
+			tenantId,
+		});
+
+		if ("error" in createdCadence) {
+			if (createdCadence.code === 500) {
+				toast.error("Error", {
+					description: "Failed to create cadence. Please try again.",
+				});
+				return;
+			}
+			toast("Cadence exists");
+
+			const existingCadence = await getCadenceByPeroidTrigger(
+				cadenceTemplate.period
+			);
+
+			if (!existingCadence) {
+				toast.error("Error", {
+					description: "Failed to fetch existing cadence. Please try again.",
+				});
+				return;
+			}
+
+			if ("error" in existingCadence) {
+				toast.error("Error", {
+					description: "Failed to fetch existing cadence. Please try again.",
+				});
+				return;
+			}
+			console.log("Using existing cadence:", existingCadence);
+
+			cadenceId = existingCadence.id;
+		} else {
+			console.log("Created new cadence:", createdCadence);
+			cadenceId = createdCadence.id;
+		}
+
+		if (!isLoadingCadences) {
+			const defaultFrames = createDefaultTimeframes(cadenceId);
+			if (defaultFrames.length > 0) {
+				setGeneratedTimeframes(defaultFrames);
+				// setAutoGenerated(true);
+			}
+		}
+	};
+
+	const {
+		trigger: createTimeframeTrigger,
+		data: createTimeframeData,
+		isMutating: createTimeframeIsMutating,
+	} = useSWRMutation(
+		"create-timeframe",
+		async (_, { arg }: { arg: InsertTimeframe }) => addTimeframe(arg)
+	);
+
+	// Create timeframe mutation
+	// const createTimeframeMutation = useMutation({
+	//   mutationFn: async (data: any) => {
+	//     console.log("Creating timeframe with data:", data);
+	//     const timeframeData = {
+	//       ...data,
+	//       tenantId: tenantId
+	//     };
+	//     console.log("Sending timeframe with tenant ID:", timeframeData);
+	//     const res = await apiRequest("POST", "/api/timeframes", timeframeData);
+	//     return await res.json();
+	//   },
+	//   onSuccess: (data) => {
+	//     console.log("Timeframe created successfully:", data);
+	//     // queryClient.invalidateQueries({ queryKey: ["/api/timeframes"] });
+	//   },
+	//   onError: (error) => {
+	//     console.error("Failed to create timeframe:", error);
+	//     toast.error("Error",{
+	//       description: "Failed to create timeframe. Please try again.",
+	//     });
+	//   }
+	// });
+
+	// Generate default timeframes and display them
+	const handleApplyDefaultTimeframes = () => {
+		if (isLoadingCadences) {
+			toast("Loading", {
+				description: "Please wait while we load the cadence information.",
+			});
+			return;
+		}
+
+		// Call the new generate function
+		handleGenerateTimeframes();
+
+		toast("Timeframes Generated!", {
+			description:
+				'Generated timeframes based on your configuration. Review them below and click "Save Timeframes" when ready.',
+		});
+	};
+
+	// Save the generated timeframes to the database
+	const handleSaveTimeframes = async () => {
+		if (generatedTimeframes.length === 0) {
+			toast.error("No Timeframes", {
+				description: "Please generate timeframes first.",
+			});
+			return;
+		}
+
+		try {
+			console.log("Saving timeframes:", generatedTimeframes);
+			let saveCount = 0;
+			let skippedDuplicates = 0;
+
+			const defaultCadenceId = getCadenceId(primaryCadence);
+			console.log("Using default cadence ID:", defaultCadenceId);
+
+			// Check for duplicates against existing timeframes
+			for (const timeframe of generatedTimeframes) {
+				const timeframeData = {
+					...timeframe,
+					startDate:
+						timeframe.startDate instanceof Date
+							? timeframe.startDate
+							: timeframe.startDate,
+					endDate:
+						timeframe.endDate instanceof Date ? timeframe.endDate : timeframe.endDate,
+					tenantId: tenantId,
+					cadenceId: timeframe.cadenceId || defaultCadenceId,
+				};
+
+				if (!timeframeData.cadenceId) {
+					console.warn("Skipping timeframe without cadence ID:", timeframe.name);
+					continue;
+				}
+
+				// Check if a timeframe with the same name already exists
+				const isDuplicate =
+					existingTimeframes &&
+					existingTimeframes.some(
+						(existing) =>
+							existing.name === timeframeData.name &&
+							existing.tenantId === timeframeData.tenantId
+					);
+
+				if (isDuplicate) {
+					console.log("Skipping duplicate timeframe:", timeframeData.name);
+					skippedDuplicates++;
+					continue;
+				}
+
+				console.log("Saving timeframe with tenant ID:", timeframeData);
+				// await createTimeframeMutation.mutateAsync(timeframeData);
+				await createTimeframeTrigger(timeframeData);
+				saveCount++;
+			}
+
+			// await refetchTimeframes();
+			setGeneratedTimeframes([]);
+
+			let message = `${saveCount} timeframes have been saved to the database.`;
+			if (skippedDuplicates > 0) {
+				message += ` ${skippedDuplicates} duplicate${
+					skippedDuplicates > 1 ? "s" : ""
+				} were skipped.`;
+			}
+
+			toast("Success", {
+				description: message,
+			});
+
+			setActiveTab("view");
+
+			if (onTimeframesSaved) {
+				setTimeout(() => {
+					onTimeframesSaved();
+				}, 500);
+			}
+		} catch (error) {
+			toast("Error", {
+				description: "Failed to save timeframes. Please try again.",
+			});
+			console.error("Failed to save timeframes:", error);
+		}
+	};
+
+	return (
+		<div className="space-y-6">
+			{/* Loading overlay */}
+			{createTimeframeIsMutating && (
+				<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+					<div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+						<div className="flex flex-col items-center">
+							<Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+							<h3 className="text-lg font-medium mb-2">Creating Timeframes</h3>
+							<p className="text-gray-500 text-center">
+								Please wait while we create your timeframes...
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Tabs for Create/View */}
+			<Tabs
+				defaultValue={activeTab}
+				onValueChange={setActiveTab}
+				className="w-full"
+			>
+				<div className="flex justify-between items-center mb-4">
+					<TabsList>
+						<TabsTrigger value="create" className="relative">
+							<div className="flex items-center">
+								<Zap className="w-4 h-4 mr-2" />
+								<span>Apply Default Timeframes</span>
+							</div>
+						</TabsTrigger>
+						<TabsTrigger value="view" className="relative">
+							<div className="flex items-center">
+								<Clock className="w-4 h-4 mr-2" />
+								<span>Existing Timeframes</span>
+								{existingTimeframes && existingTimeframes.length > 0 && (
+									<Badge
+										variant="secondary"
+										className="ml-2 bg-blue-100 hover:bg-blue-100"
+									>
+										{existingTimeframes.length}
+									</Badge>
+								)}
+							</div>
+						</TabsTrigger>
+					</TabsList>
+
+					<div className="space-x-2">
+						{activeTab === "view" && (
+							<Button
+								variant="outline"
+								// onClick={() => refetchTimeframes()}
+								className="flex items-center"
+							>
+								<RefreshCw className="w-4 h-4 mr-2" />
+								Refresh
+							</Button>
+						)}
+					</div>
+				</div>
+
+				<TabsContent value="create" className="mt-4">
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center">
+								<Zap className="w-5 h-5 mr-2 text-blue-600" />
+								Apply Default Timeframes
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+								<div className="flex items-center justify-between text-sm">
+									<div className="flex items-center space-x-4">
+										<span className="text-gray-600">
+											Cadence:{" "}
+											<span className="font-medium text-gray-900 capitalize">
+												{primaryCadence || "Not selected"}
+											</span>
+										</span>
+										<span className="text-gray-400">•</span>
+										<span className="text-gray-600">
+											Start:{" "}
+											<span className="font-medium text-gray-900 capitalize">
+												{startMonth || "Not selected"}
+											</span>
+										</span>
+									</div>
+								</div>
+							</div>
+
+							<div className="text-center">
+								<Button
+									type="button"
+									onClick={handleApplyDefaultTimeframes}
+									disabled={false}
+									className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+									size="lg"
+								>
+									<Zap className="w-4 h-4 mr-2" />
+									Generate Default Timeframes
+								</Button>
+							</div>
+
+							{/* Generated Timeframes Display */}
+							{generatedTimeframes.length > 0 && (
+								<div className="mt-6 space-y-4">
+									<div className="bg-green-50 p-4 rounded-lg border border-green-200">
+										<div className="flex items-center justify-between mb-4">
+											<div className="flex items-center">
+												<CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+												<h4 className="font-medium text-green-800">
+													Generated Timeframes ({generatedTimeframes.length})
+												</h4>
+											</div>
+											<Badge variant="secondary" className="bg-green-100 text-green-800">
+												Ready to Save
+											</Badge>
+										</div>
+
+										<div className="grid gap-3 mb-4">
+											{generatedTimeframes.map((timeframe, index) => (
+												<div
+													key={index}
+													className="bg-white p-3 rounded-lg border border-green-100 shadow-sm"
+												>
+													<div className="flex justify-between items-start">
+														<div className="flex-1">
+															<h5 className="font-medium text-gray-800 mb-1">
+																{timeframe.name}
+															</h5>
+															<p className="text-sm text-gray-600 mb-2">
+																{timeframe.description}
+															</p>
+															<div className="flex items-center text-sm text-gray-500">
+																<Calendar className="w-4 h-4 mr-1" />
+																{format(new Date(timeframe.startDate), "MMM dd, yyyy")} -{" "}
+																{format(new Date(timeframe.endDate), "MMM dd, yyyy")}
+															</div>
+														</div>
+														<div className="text-right ml-4">
+															<span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+																{primaryCadence}
+															</span>
+														</div>
+													</div>
+												</div>
+											))}
+										</div>
+
+										<div className="flex gap-3 justify-center">
+											<Button
+												type="button"
+												onClick={handleSaveTimeframes}
+												disabled={createTimeframeIsMutating}
+												className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+											>
+												{createTimeframeIsMutating ? (
+													<>
+														<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+														Saving...
+													</>
+												) : (
+													<>
+														<Save className="w-4 h-4 mr-2" />
+														Save Timeframes
+													</>
+												)}
+											</Button>
+
+											<Button
+												type="button"
+												onClick={() => setGeneratedTimeframes([])}
+												variant="outline"
+												className="border-red-200 text-red-600 hover:bg-red-50"
+											>
+												<X className="w-4 h-4 mr-2" />
+												Clear
+											</Button>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{generatedTimeframes.length === 0 && (
+								<p className="text-xs text-gray-500 text-center">
+									Click "Generate Default Timeframes" to create standard timeframes based
+									on your cadence settings.
+								</p>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				<TabsContent value="view" className="mt-4">
+					{isLoadingTimeframes ? (
+						<div className="flex items-center justify-center py-8">
+							<Loader2 className="h-6 w-6 animate-spin mr-2" />
+							<span>Loading timeframes...</span>
+						</div>
+					) : existingTimeframes && existingTimeframes.length > 0 ? (
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							{existingTimeframes.map((timeframe) => (
+								<Card key={timeframe.id} className="relative overflow-hidden">
+									<CardHeader className="pb-3">
+										<div className="flex items-center justify-between">
+											<CardTitle className="text-lg">{timeframe.name}</CardTitle>
+											<CheckCircle className="h-5 w-5 text-green-500" />
+										</div>
+									</CardHeader>
+									<CardContent>
+										{timeframe.description && (
+											<p className="text-gray-600 text-sm mb-3">{timeframe.description}</p>
+										)}
+										<div className="space-y-2 text-sm">
+											<div className="flex justify-between">
+												<span className="text-gray-500">Start:</span>
+												<span className="font-medium">
+													{format(new Date(timeframe.startDate), "MMM dd, yyyy")}
+												</span>
+											</div>
+											<div className="flex justify-between">
+												<span className="text-gray-500">End:</span>
+												<span className="font-medium">
+													{format(new Date(timeframe.endDate), "MMM dd, yyyy")}
+												</span>
+											</div>
+										</div>
+									</CardContent>
+								</Card>
+							))}
+						</div>
+					) : (
+						<Card>
+							<CardContent className="pt-6">
+								<div className="text-center py-8">
+									<Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+									<h3 className="text-lg font-medium text-gray-700 mb-2">
+										No Timeframes Yet
+									</h3>
+									<p className="text-gray-500 mb-4">
+										You haven't created any timeframes yet. Use the "Apply Default
+										Timeframes" tab to get started.
+									</p>
+									<Button
+										type="button"
+										onClick={() => setActiveTab("create")}
+										className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+									>
+										<Zap className="w-4 h-4 mr-2" />
+										Apply Default Timeframes
+									</Button>
+								</div>
+							</CardContent>
+						</Card>
+					)}
+				</TabsContent>
+			</Tabs>
+		</div>
+	);
+}
+
+export default TimeframeSetupSimplified;

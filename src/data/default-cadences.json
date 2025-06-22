@@ -1,0 +1,22 @@
+[
+	{
+		"name": "Quarterly",
+		"description": "Quarterly planning cycle",
+		"period": "quarterly"
+	},
+	{
+		"name": "HalfYearly",
+		"description": "Half-yearly planning cycle",
+		"period": "halfyearly"
+	},
+	{
+		"name": "Annual",
+		"description": "Annual planning cycle",
+		"period": "annual"
+	},
+	{
+		"name": "Trimester",
+		"description": "Trimester planning cycle",
+		"period": "trimester"
+	}
+]

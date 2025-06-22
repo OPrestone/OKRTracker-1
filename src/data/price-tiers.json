@@ -1,0 +1,100 @@
+[
+	{
+		"id": "free",
+		"name": "Free",
+		"description": "Basic features for small teams",
+		"price": 0,
+		"popular": false,
+		"features": [
+			"Up to 10 users",
+			"3 teams maximum",
+			"Basic OKR tracking",
+			"Default OKR templates",
+			"Weekly check-ins",
+			"Email support (48hr response)",
+			"7-day history retention",
+			"Public dashboard sharing",
+			"Basic progress reporting",
+			"1 Admin user"
+		],
+		"maxUsers": 10,
+		"recommended": false,
+		"buttonText": "Start Free Plan"
+	},
+	{
+		"id": "starter",
+		"name": "Starter",
+		"description": "Great for small teams getting started",
+		"price": 9.99,
+		"popular": true,
+		"features": [
+			"Up to 25 users",
+			"10 teams maximum",
+			"Comprehensive OKR tracking",
+			"Custom OKR templates",
+			"Daily & weekly check-ins",
+			"Priority email support (24hr response)",
+			"30-day history retention",
+			"Custom dashboard layouts",
+			"Team analytics dashboard",
+			"Up to 3 Admin users",
+			"Progress tracking notifications",
+			"Engagement metrics"
+		],
+		"maxUsers": 25,
+		"recommended": true,
+		"buttonText": "Select Starter Plan"
+	},
+	{
+		"id": "professional",
+		"name": "Professional",
+		"description": "Enhanced features for growing teams",
+		"price": 29.99,
+		"popular": false,
+		"features": [
+			"Up to 100 users",
+			"Unlimited teams",
+			"Advanced OKR tracking & alignment",
+			"Custom templates library",
+			"Scheduled & ad-hoc check-ins",
+			"Priority support with dedicated account manager",
+			"90-day history retention",
+			"Advanced reporting & export",
+			"Department analytics",
+			"Unlimited Admin users",
+			"API access",
+			"Custom integrations",
+			"SSO authentication"
+		],
+		"maxUsers": 100,
+		"recommended": false,
+		"buttonText": "Select Professional Plan"
+	},
+	{
+		"id": "enterprise",
+		"name": "Enterprise",
+		"description": "Full solution for large organizations",
+		"price": 99.99,
+		"popular": false,
+		"features": [
+			"Unlimited users",
+			"Unlimited teams",
+			"Enterprise-grade security",
+			"Advanced permissions & roles",
+			"Custom OKR methodologies",
+			"Advanced alignment tools",
+			"Custom check-in schedules",
+			"24/7 priority support",
+			"Unlimited history retention",
+			"Executive dashboard",
+			"Advanced analytics & insights",
+			"Custom training & onboarding",
+			"Dedicated success manager",
+			"On-premise deployment option",
+			"Custom contract terms"
+		],
+		"maxUsers": 1000000000,
+		"recommended": false,
+		"buttonText": "Contact Sales"
+	}
+]

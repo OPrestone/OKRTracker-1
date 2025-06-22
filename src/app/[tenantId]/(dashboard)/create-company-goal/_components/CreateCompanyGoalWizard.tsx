@@ -1,0 +1,1407 @@
+"use client";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { TenantContext } from "@/contexts/TenantContext";
+import { UserContext } from "@/contexts/UserContext";
+import { UserPermissions } from "@/lib/actions";
+import { createObjective, getAllObjectives } from "@/lib/queries/objectives";
+import { getStrategicIntentsCompany } from "@/lib/queries/strategic-intents";
+import { getTeams } from "@/lib/queries/teams";
+import { getAllTimeframes } from "@/lib/queries/timeframes";
+import { getTenantUsers } from "@/lib/queries/users";
+import {
+	InsertObjective,
+	StrategicDirection,
+	Team,
+	Tenant,
+	Timeframe,
+	User,
+} from "@/util/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+	AlertCircle,
+	ArrowLeft,
+	BarChart,
+	Building,
+	Check,
+	Circle,
+	Code,
+	Goal,
+	InfoIcon,
+	Loader2,
+	Tag,
+	Target,
+	Users,
+	X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useContext, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+// interface User {
+//   id: string;
+//   name: string;
+//   fullName: string;
+//   username: string;
+//   teamId: string | null;
+//   email?: string;
+//   avatarUrl?: string;
+// }
+
+// interface Team {
+//   id: string;
+//   name: string;
+//   description: string | null;
+//   ownerId: string | null;
+//   color?: string;
+//   icon?: string;
+// }
+
+// interface Timeframe {
+//   id: string;
+//   name: string;
+//   description: string | null;
+//   startDate: string;
+//   endDate: string;
+//   cadenceId: string | null;
+//   tenantId: string;
+// }
+
+// interface StrategicDirection {
+//   id: string;
+//   title: string;
+//   description: string;
+//   tenantId: string;
+//   createdById: string;
+//   createdAt: string;
+// }
+
+// Form schema for creating company goals
+const companyGoalFormSchema = z.object({
+	title: z.string().min(5, { message: "Title must be at least 5 characters" }),
+	description: z.string().optional(),
+	teamId: z
+		.string()
+		.min(1, { message: "Team selection is required for company goals" }), // Required for company goals
+	ownerId: z.string().optional(),
+	timeframeId: z.string(), // Making timeframeId required
+	status: z.enum(["draft", "active", "completed", "archived"]),
+	parentId: z.string().optional(),
+	strategyId: z.string().optional(),
+	// Tags and contributors will be handled separately
+});
+
+type CompanyGoalFormValues = z.infer<typeof companyGoalFormSchema>;
+
+export default function CreateCompanyObjective() {
+	const [alignmentOption, setAlignmentOption] =
+		useState<string>("strategic-pillar");
+	const [progressDriver, setProgressDriver] = useState<string>("manual");
+	const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [selectedContributors, setSelectedContributors] = useState<string[]>([]);
+	const [activeTab, setActiveTab] = useState<string>("details");
+	// Removed multi-step process since company goals don't have key results
+	const [objectiveType, setObjectiveType] = useState<string>("financial");
+	const [currentStep, setCurrentStep] = useState<number>(1);
+
+	const tenant = useContext(TenantContext) as Tenant;
+	const user = useContext(UserContext) as UserPermissions;
+	const router = useRouter();
+
+	// Set of objective types (matching the filtering options in company-okrs.tsx)
+	const objectiveTypes = [
+		{
+			value: "financial",
+			label: "Financial",
+			icon: <BarChart className="h-4 w-4" />,
+		},
+		{ value: "product", label: "Product", icon: <Target className="h-4 w-4" /> },
+		{ value: "customer", label: "Customer", icon: <Users className="h-4 w-4" /> },
+		{ value: "market", label: "Market", icon: <Target className="h-4 w-4" /> },
+		{
+			value: "operations",
+			label: "Operations",
+			icon: <Users className="h-4 w-4" />,
+		},
+		{ value: "people", label: "People", icon: <Users className="h-4 w-4" /> },
+		{ value: "process", label: "Process", icon: <Goal className="h-4 w-4" /> },
+		{
+			value: "technology",
+			label: "Technology",
+			icon: <Code className="h-4 w-4" />,
+		},
+		{ value: "other", label: "Other", icon: <Circle className="h-4 w-4" /> },
+	];
+
+	// Set of tags based on request
+	const availableTags = [
+		"Innovation",
+		"Customer Experience",
+		"Growth",
+		"Operational Excellence",
+		"Sustainability",
+	];
+
+	// Form setup
+	const form = useForm<CompanyGoalFormValues>({
+		resolver: zodResolver(companyGoalFormSchema),
+		defaultValues: {
+			title: "",
+			description: "",
+			status: "draft",
+			teamId: "", // Required field, so using empty string for validation
+			ownerId: undefined,
+			timeframeId: "", // Using empty string as initial value until user selects a timeframe
+			parentId: undefined,
+			strategyId: undefined,
+		},
+	});
+
+	// Create company goal mutation
+	const createCompanyGoalMutation = useMutation({
+		mutationFn: async (payload: InsertObjective) => {
+			console.log("Creating company goal:", payload);
+
+			const response = await createObjective(payload);
+			if ("error" in response) {
+				console.log("Error creating company goal:", response.error);
+				throw new Error(response.error);
+			}
+			return await response;
+		},
+		onSuccess: () => {
+			// Use centralized invalidation to refresh all related queries across the app
+			//   invalidateObjectiveQueries(queryClient);
+			toast("Company goal created successfully!", {
+				description: "Your objective has been added to the company OKRs.",
+			});
+			router.push(`/${tenant.id}/teams`);
+		},
+		onError: (error: Error) => {
+			toast.error("Failed to create objective", {
+				description: error.message,
+			});
+		},
+	});
+
+	// Create objective and add another mutation
+	const createGoalAndAddAnotherMutation = useMutation({
+		mutationFn: async (payload: InsertObjective) => {
+			console.log("Creating company goal and adding another:", payload);
+
+			const response = await createObjective(payload);
+			if ("error" in response) {
+				throw new Error(response.error);
+			}
+			return await response;
+		},
+		onSuccess: () => {
+			// Use centralized invalidation to refresh all related queries across the app
+			//   invalidateObjectiveQueries(queryClient);
+			toast.success("Company goal created successfully!", {
+				description: "Ready to create another goal.",
+			});
+			// Reset form and go back to step 1
+			form.reset();
+			setCurrentStep(1);
+			setActiveTab("details");
+			setSelectedTags([]);
+			setSelectedContributors([]);
+			setSelectedTeam(null);
+			setObjectiveType("financial");
+		},
+		onError: (error: Error) => {
+			toast.error("Failed to create objective", {
+				description: error.message,
+			});
+		},
+	});
+
+	// Fetch teams from API
+	const {
+		data: teams = [],
+		isError: teamsError,
+		error: teamsErrorData,
+	} = useQuery<Team[]>({
+		queryKey: ["teams", tenant.id],
+		queryFn: async () => {
+			const teams = await getTeams(tenant.id);
+			if ("error" in teams) throw new Error(teams.error);
+			return teams;
+		},
+	});
+
+	// Fetch users from API
+	const {
+		data: users = [],
+		isError: usersError,
+		error: usersErrorData,
+	} = useQuery<User[]>({
+		queryKey: ["users", tenant.id],
+		queryFn: async () => {
+			const users = await getTenantUsers(tenant.id);
+			if ("error" in users) throw new Error(users.error);
+			return users;
+		},
+	});
+
+	// Fetch timeframes from API
+	const {
+		data: timeframes = [],
+		isError: timeframesError,
+		error: timeframesErrorData,
+	} = useQuery<Timeframe[]>({
+		queryKey: ["timeframes", tenant.id],
+		queryFn: async () => {
+			const timeframes = await getAllTimeframes(tenant.id);
+			if ("error" in timeframes) throw new Error(timeframes.error);
+			return timeframes;
+		},
+	});
+
+	// Fetch parent objectives from API for alignment
+	const {
+		data: objectives = [],
+		isError: objectivesError,
+		error: objectivesErrorData,
+	} = useQuery({
+		queryKey: ["objectives", tenant.id],
+		queryFn: async () => {
+			const objectives = await getAllObjectives(tenant.id);
+			if ("error" in objectives) throw new Error(objectives.error);
+			return objectives;
+		},
+	});
+
+	// Fetch strategic directions from API for alignment
+	const {
+		data: strategicDirections,
+		isError: strategicDirectionsError,
+		error: strategicDirectionsErrorData,
+	} = useQuery<StrategicDirection>({
+		queryKey: ["intents", tenant.id],
+		queryFn: async () => {
+			const intents = await getStrategicIntentsCompany(tenant.id);
+			if ("error" in intents) throw new Error(intents.error);
+			return intents;
+		},
+	});
+
+	// Check for any data loading errors
+	const hasAuthError =
+		teamsError ||
+		usersError ||
+		timeframesError ||
+		objectivesError ||
+		strategicDirectionsError;
+	const isAuthError =
+		(teamsErrorData instanceof Error &&
+			teamsErrorData.message.includes("Unauthorized")) ||
+		(usersErrorData instanceof Error &&
+			usersErrorData.message.includes("Unauthorized")) ||
+		(timeframesErrorData instanceof Error &&
+			timeframesErrorData.message.includes("Unauthorized")) ||
+		(objectivesErrorData instanceof Error &&
+			objectivesErrorData.message.includes("Unauthorized")) ||
+		(strategicDirectionsErrorData instanceof Error &&
+			strategicDirectionsErrorData.message.includes("Unauthorized"));
+
+	// Filter team members based on the selected team
+	const teamMembers =
+		users?.filter((user: User) => selectedTeam && user.teamId === selectedTeam) ||
+		[];
+
+	const handleCancel = () => {
+		router.push("/company-okrs");
+	};
+
+	const onSubmit = (values: CompanyGoalFormValues) => {
+		// Check if timeframeId is missing or empty
+		if (!values.timeframeId) {
+			if (timeframes && timeframes.length > 0) {
+				values.timeframeId = timeframes[0].id;
+				console.log("Using default timeframe ID:", values.timeframeId);
+			} else {
+				toast.error("Timeframe Required", {
+					description: "Please create a timeframe before creating objectives.",
+				});
+				return;
+			}
+		}
+
+		// Step 1: Create the objective (without key results)
+		const objectivePayload: InsertObjective = {
+			...values,
+			level: "company",
+			//   type: objectiveType,
+			//   tags: selectedTags,
+			//   contributors: selectedContributors
+			tenantId: tenant.id,
+			ownerId: values.ownerId || user.user!.id,
+		};
+
+		console.log("Step 1: Creating company goal:", objectivePayload);
+		createCompanyGoalMutation.mutate(objectivePayload);
+	};
+
+	const handleSaveAndAddAnother = async () => {
+		// Validate the form first
+		const isValid = await form.trigger();
+		if (!isValid) return;
+
+		const values = form.getValues();
+
+		// Check if timeframeId is missing or empty
+		if (!values.timeframeId) {
+			if (timeframes && timeframes.length > 0) {
+				values.timeframeId = timeframes[0].id;
+				console.log("Using default timeframe ID:", values.timeframeId);
+			} else {
+				toast.error("Timeframe Required", {
+					description: "Please create a timeframe before creating objectives.",
+				});
+				return;
+			}
+		}
+
+		// Create objective payload
+		const objectivePayload = {
+			...values,
+			level: "company",
+			type: objectiveType,
+			tags: selectedTags,
+			contributors: selectedContributors,
+			tenantId: tenant.id,
+			ownerId: values.ownerId || user.id,
+		};
+
+		console.log("Save and add another: Creating company goal:", objectivePayload);
+		createGoalAndAddAnotherMutation.mutate(objectivePayload);
+	};
+
+	const handleTeamChange = (teamId: string) => {
+		setSelectedTeam(teamId);
+		form.setValue("teamId", teamId);
+		// Reset selected contributors when team changes
+		setSelectedContributors([]);
+	};
+
+	const handleContributorToggle = (userId: string) => {
+		if (selectedContributors.includes(userId)) {
+			setSelectedContributors(selectedContributors.filter((id) => id !== userId));
+		} else {
+			setSelectedContributors([...selectedContributors, userId]);
+		}
+	};
+
+	const handleTagToggle = (tag: string) => {
+		if (selectedTags.includes(tag)) {
+			setSelectedTags(selectedTags.filter((t) => t !== tag));
+		} else {
+			setSelectedTags([...selectedTags, tag]);
+		}
+	};
+
+	const handleKeyResultChange = (
+		index: number,
+		field: string,
+		value: string
+	) => {
+		// setKeyResults(prev => prev.map((kr, i) =>
+		//   i === index ? { ...kr, [field]: value } : kr
+		// ));
+		console.log(`Key Result ${index} ${field} changed to:`, value);
+	};
+
+	const nextStep = async () => {
+		// Validate current step
+		if (currentStep === 1) {
+			const result = await form.trigger(["title", "description"]);
+			if (!result) return;
+		}
+
+		setCurrentStep(Math.min(currentStep + 1, 2));
+		if (currentStep === 1) setActiveTab("alignment");
+	};
+
+	const prevStep = () => {
+		setCurrentStep(Math.max(currentStep - 1, 1));
+		if (currentStep === 2) setActiveTab("details");
+	};
+
+	const getStepTitle = (step: number) => {
+		switch (step) {
+			case 1:
+				return "Company Objective Details";
+			case 2:
+				return "Alignment & Ownership";
+			default:
+				return "Create Company Objective";
+		}
+	};
+
+	// Show error message for authentication issues
+	if (hasAuthError) {
+		return (
+			<>
+				<div className="container mx-auto p-6 max-w-5xl">
+					<Card className="overflow-hidden border-none shadow-lg">
+						<CardHeader className="border-b bg-muted/20">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-2">
+									<div className="rounded-full bg-primary/10 p-1.5">
+										<AlertCircle className="h-6 w-6 text-primary" />
+									</div>
+									<CardTitle>Authentication Required</CardTitle>
+								</div>
+								<Button variant="ghost" size="icon" onClick={handleCancel}>
+									<X className="h-5 w-5" />
+								</Button>
+							</div>
+						</CardHeader>
+						<CardContent className="p-0">
+							<div className="flex flex-col items-center justify-center p-8 text-center">
+								<div className="rounded-full bg-red-100 p-3 mb-4">
+									<AlertCircle className="h-8 w-8 text-red-600" />
+								</div>
+								<h2 className="text-xl font-semibold mb-2">Authentication Error</h2>
+								<p className="text-muted-foreground mb-6 max-w-md">
+									You need to be logged in and have the right permissions to create
+									company objectives. Only organization owners and administrators can
+									create company-level objectives.
+								</p>
+								<Button variant="default" onClick={handleCancel}>
+									Go Back
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</>
+		);
+	}
+
+	// Show loading state when authentication is being checked
+	if (createCompanyGoalMutation.isPending) {
+		return (
+			<>
+				<div className="container mx-auto p-6 max-w-5xl">
+					<Card className="overflow-hidden border-none shadow-lg">
+						<CardHeader className="border-b bg-muted/20">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-2">
+									<div className="rounded-full bg-primary/10 p-1.5">
+										<Target className="h-6 w-6 text-primary" />
+									</div>
+									<CardTitle>Creating Company Objective...</CardTitle>
+								</div>
+								<Button variant="ghost" size="icon" onClick={handleCancel} disabled>
+									<X className="h-5 w-5" />
+								</Button>
+							</div>
+						</CardHeader>
+						<CardContent>
+							<div className="flex flex-col items-center justify-center py-16">
+								<div className="relative mb-6">
+									<div className="h-20 w-20 rounded-full border-4 border-primary/20"></div>
+									<div className="absolute inset-0 flex items-center justify-center">
+										<Loader2 className="h-12 w-12 animate-spin text-primary" />
+									</div>
+								</div>
+								<h2 className="text-xl font-medium mb-2">
+									Creating your company objective
+								</h2>
+								<p className="text-muted-foreground">
+									Please wait while we save your Company OKR...
+								</p>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</>
+		);
+	}
+
+	return (
+		<>
+			<div className="container mx-auto p-6 max-w-5xl">
+				<Card className="overflow-hidden border-none shadow-lg">
+					<CardHeader className="border-b bg-muted/20">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<div className="rounded-full bg-primary/10 p-1.5">
+									<Building className="h-6 w-6 text-primary" />
+								</div>
+								<CardTitle>{getStepTitle(currentStep)}</CardTitle>
+							</div>
+							<Button variant="ghost" size="icon" onClick={handleCancel}>
+								<X className="h-5 w-5" />
+							</Button>
+						</div>
+					</CardHeader>
+
+					<CardContent className="p-0">
+						<div className="flex flex-col-reverse md:flex-row">
+							{/* Main Content */}
+							<div className="flex-1 p-6 md:border-r">
+								<Form {...form}>
+									<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+										{/* Step 1: Details - First step */}
+										<AnimatePresence mode="wait">
+											{currentStep === 1 && (
+												<motion.div
+													key="step1"
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													exit={{ opacity: 0, y: -10 }}
+													transition={{ duration: 0.2 }}
+													className="space-y-6"
+												>
+													<div className="space-y-2 mb-6">
+														<Label htmlFor="objective-type" className="text-base">
+															Objective Type
+														</Label>
+														<div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+															{objectiveTypes.map((type) => (
+																<div
+																	key={type.value}
+																	className={`flex items-center cursor-pointer p-3 rounded-md border-2 transition-all ${
+																		objectiveType === type.value
+																			? "border-primary bg-primary/5"
+																			: "border-border hover:border-primary/50"
+																	}`}
+																	onClick={() => setObjectiveType(type.value)}
+																>
+																	<div className="mr-2 rounded-full bg-background p-1.5">
+																		{type.icon}
+																	</div>
+																	<span className="text-sm font-medium">{type.label}</span>
+																</div>
+															))}
+														</div>
+													</div>
+
+													<FormField
+														control={form.control}
+														name="title"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Objective Title</FormLabel>
+																<FormControl>
+																	<Input placeholder="e.g., Increase Market Share" {...field} />
+																</FormControl>
+																<FormDescription>
+																	A clear, concise title that summarizes the objective
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name="description"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Description</FormLabel>
+																<FormControl>
+																	<Textarea
+																		placeholder="Add details about this company-level objective..."
+																		className="min-h-[120px]"
+																		{...field}
+																	/>
+																</FormControl>
+																<FormDescription>
+																	Provide context and details about why this objective is
+																	important for the company
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name="timeframeId"
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Timeframe</FormLabel>
+																<Select
+																	onValueChange={field.onChange}
+																	defaultValue={field.value}
+																>
+																	<FormControl>
+																		<SelectTrigger>
+																			<SelectValue placeholder="Select a timeframe for this objective" />
+																		</SelectTrigger>
+																	</FormControl>
+																	<SelectContent>
+																		{timeframes.map((timeframe) => (
+																			<SelectItem key={timeframe.id} value={timeframe.id}>
+																				{timeframe.name}
+																			</SelectItem>
+																		))}
+																	</SelectContent>
+																</Select>
+																<FormDescription>
+																	The period during which this objective should be achieved
+																</FormDescription>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<div className="space-y-2">
+														<Label className="text-base">Tags</Label>
+														<div className="flex flex-wrap gap-2 mt-2">
+															{availableTags.map((tag) => (
+																<Badge
+																	key={tag}
+																	variant={selectedTags.includes(tag) ? "default" : "outline"}
+																	className="cursor-pointer px-3 py-1.5"
+																	onClick={() => handleTagToggle(tag)}
+																>
+																	<Tag className="mr-1.5 h-3 w-3" />
+																	{tag}
+																</Badge>
+															))}
+														</div>
+													</div>
+												</motion.div>
+											)}
+										</AnimatePresence>
+
+										{/* Step 2: Alignment & Ownership */}
+										<AnimatePresence mode="wait">
+											{currentStep === 2 && (
+												<motion.div
+													key="step2"
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													exit={{ opacity: 0, y: -10 }}
+													transition={{ duration: 0.2 }}
+													className="space-y-6"
+												>
+													<div className="space-y-4">
+														<Label className="text-base">Ownership</Label>
+														<FormField
+															control={form.control}
+															name="ownerId"
+															render={({ field }) => (
+																<FormItem>
+																	<FormLabel>Primary Owner</FormLabel>
+																	<Select
+																		onValueChange={field.onChange}
+																		defaultValue={field.value}
+																	>
+																		<FormControl>
+																			<SelectTrigger>
+																				<SelectValue placeholder="Select a primary owner" />
+																			</SelectTrigger>
+																		</FormControl>
+																		<SelectContent>
+																			{users.map((user) => (
+																				<SelectItem key={user.id} value={user.id}>
+																					{user.name || user.username}
+																				</SelectItem>
+																			))}
+																		</SelectContent>
+																	</Select>
+																	<FormDescription>
+																		The person ultimately responsible for this objective
+																	</FormDescription>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+
+														<FormField
+															control={form.control}
+															name="teamId"
+															render={({ field }) => (
+																<FormItem>
+																	<FormLabel>Responsible Team</FormLabel>
+																	<Select
+																		onValueChange={(value) => {
+																			handleTeamChange(value);
+																			field.onChange(value);
+																		}}
+																		defaultValue={field.value}
+																	>
+																		<FormControl>
+																			<SelectTrigger>
+																				<SelectValue placeholder="Select a team" />
+																			</SelectTrigger>
+																		</FormControl>
+																		<SelectContent>
+																			{teams.map((team) => (
+																				<SelectItem key={team.id} value={team.id}>
+																					{team.name}
+																				</SelectItem>
+																			))}
+																		</SelectContent>
+																	</Select>
+																	<FormDescription>
+																		The team responsible for leading this company objective
+																	</FormDescription>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+													</div>
+
+													<div className="space-y-4">
+														<Label className="text-base">Contributors</Label>
+														<div className="border rounded-md p-4 space-y-3">
+															<p className="text-sm text-muted-foreground mb-4">
+																Add contributors who will be involved in this company objective
+															</p>
+															<div className="space-y-2">
+																{teamMembers.length > 0 ? (
+																	<div className="grid grid-cols-2 gap-2">
+																		{teamMembers.map((member) => (
+																			<div
+																				key={member.id}
+																				className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors ${
+																					selectedContributors.includes(member.id)
+																						? "border-primary bg-primary/5"
+																						: "border-border hover:border-primary/20"
+																				}`}
+																				onClick={() => handleContributorToggle(member.id)}
+																			>
+																				<Avatar className="h-6 w-6">
+																					<AvatarFallback>
+																						{member.name?.charAt(0) ||
+																							member.username?.charAt(0) ||
+																							"U"}
+																					</AvatarFallback>
+																				</Avatar>
+																				<span className="text-sm">
+																					{member.name || member.username}
+																				</span>
+																			</div>
+																		))}
+																	</div>
+																) : (
+																	<div className="text-center py-4 text-sm text-muted-foreground">
+																		{selectedTeam
+																			? "No team members found for selected team"
+																			: "Select a team to view members"}
+																	</div>
+																)}
+															</div>
+														</div>
+													</div>
+
+													<div className="space-y-4">
+														<Label className="text-base">Strategic Alignment</Label>
+														<RadioGroup
+															value={alignmentOption}
+															onValueChange={setAlignmentOption}
+														>
+															<div className="flex flex-col space-y-3">
+																<div
+																	className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${
+																																			alignmentOption === "strategic-pillar"
+																																				? "border-primary"
+																																				: "border-border"
+																																		}
+                                `}
+																>
+																	<RadioGroupItem
+																		value="strategic-pillar"
+																		id="strategic-pillar"
+																		className="mt-1"
+																	/>
+																	<div className="flex-1">
+																		<Label htmlFor="strategic-pillar" className="font-medium">
+																			Support a Strategic Pillar
+																		</Label>
+																		<p className="text-sm text-muted-foreground mb-2">
+																			This objective supports a top-level company strategy
+																		</p>
+																		<Select
+																			disabled={alignmentOption !== "strategic-pillar"}
+																			onValueChange={(value) => form.setValue("strategyId", value)}
+																		>
+																			<SelectTrigger
+																				className={
+																					alignmentOption !== "strategic-pillar" ? "opacity-50" : ""
+																				}
+																			>
+																				<SelectValue placeholder="Select strategic direction" />
+																			</SelectTrigger>
+																			<SelectContent>
+																				{strategicDirections ? (
+																					<SelectItem
+																						key={strategicDirections.id}
+																						value={strategicDirections.id}
+																					>
+																						{strategicDirections.title}
+																					</SelectItem>
+																				) : (
+																					<SelectItem value="no-directions" disabled>
+																						No strategic directions available
+																					</SelectItem>
+																				)}
+																			</SelectContent>
+																		</Select>
+																	</div>
+																</div>
+																<div
+																	className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${
+																																			alignmentOption === "company-objective"
+																																				? "border-primary"
+																																				: "border-border"
+																																		}
+                                `}
+																>
+																	<RadioGroupItem
+																		value="company-objective"
+																		id="company-objective"
+																		className="mt-1"
+																	/>
+																	<div className="flex-1">
+																		<Label htmlFor="company-objective" className="font-medium">
+																			Support a Company Goal
+																		</Label>
+																		<p className="text-sm text-muted-foreground mb-2">
+																			This goal supports another company goal
+																		</p>
+																		<Select
+																			disabled={alignmentOption !== "company-objective"}
+																			onValueChange={(value) => form.setValue("parentId", value)}
+																		>
+																			<SelectTrigger
+																				className={
+																					alignmentOption !== "company-objective" ? "opacity-50" : ""
+																				}
+																			>
+																				<SelectValue placeholder="Select company goal" />
+																			</SelectTrigger>
+																			<SelectContent>
+																				{objectives && objectives.length > 0 ? (
+																					objectives
+																						.filter(
+																							(obj: any) =>
+																								obj.level === "company" && obj.status !== "completed"
+																						)
+																						.map((obj: any) => (
+																							<SelectItem key={obj.id} value={obj.id}>
+																								{obj.title}
+																							</SelectItem>
+																						))
+																				) : (
+																					<SelectItem value="no-objectives" disabled>
+																						No company objectives available
+																					</SelectItem>
+																				)}
+																			</SelectContent>
+																		</Select>
+																	</div>
+																</div>
+																<div
+																	className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${
+																																			alignmentOption === "team-objective"
+																																				? "border-primary"
+																																				: "border-border"
+																																		}
+                                `}
+																>
+																	<RadioGroupItem
+																		value="team-objective"
+																		id="team-objective"
+																		className="mt-1"
+																	/>
+																	<div className="flex-1">
+																		<Label htmlFor="team-objective" className="font-medium">
+																			Support a Team Objective
+																		</Label>
+																		<p className="text-sm text-muted-foreground mb-2">
+																			This objective supports a team-level objective
+																		</p>
+																		<Select
+																			disabled={alignmentOption !== "team-objective"}
+																			onValueChange={(value) => form.setValue("parentId", value)}
+																		>
+																			<SelectTrigger
+																				className={
+																					alignmentOption !== "team-objective" ? "opacity-50" : ""
+																				}
+																			>
+																				<SelectValue placeholder="Select team objective" />
+																			</SelectTrigger>
+																			<SelectContent>
+																				{objectives && objectives.length > 0 ? (
+																					objectives
+																						.filter(
+																							(obj: any) =>
+																								obj.level === "team" && obj.status !== "completed"
+																						)
+																						.map((obj: any) => (
+																							<SelectItem key={obj.id} value={obj.id}>
+																								{obj.title}
+																							</SelectItem>
+																						))
+																				) : (
+																					<SelectItem value="no-team-objectives" disabled>
+																						No team objectives available
+																					</SelectItem>
+																				)}
+																			</SelectContent>
+																		</Select>
+																	</div>
+																</div>
+															</div>
+														</RadioGroup>
+													</div>
+												</motion.div>
+											)}
+										</AnimatePresence>
+
+										{/* Step 3: Key Results */}
+										<AnimatePresence mode="wait">
+											{currentStep === 3 && (
+												<motion.div
+													key="step3"
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													exit={{ opacity: 0, y: -10 }}
+													transition={{ duration: 0.2 }}
+													className="space-y-6"
+												>
+													<div className="space-y-4">
+														<Label className="text-base">Measure Progress With</Label>
+														<RadioGroup
+															value={progressDriver}
+															onValueChange={setProgressDriver}
+														>
+															<div className="flex flex-col space-y-3">
+																<div
+																	className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${
+																																			progressDriver === "key-results"
+																																				? "border-primary"
+																																				: "border-border"
+																																		}
+                                `}
+																>
+																	<RadioGroupItem
+																		value="key-results"
+																		id="key-results"
+																		className="mt-1"
+																	/>
+																	<div>
+																		<Label htmlFor="key-results" className="font-medium">
+																			Key Results
+																		</Label>
+																		<p className="text-sm text-muted-foreground">
+																			Track progress through measurable key results with start,
+																			current, and target values
+																		</p>
+																	</div>
+																</div>
+																<div
+																	className={`
+                                  flex items-start space-x-3 border rounded-md p-3 cursor-pointer
+                                  ${
+																																			progressDriver === "manual-updates"
+																																				? "border-primary"
+																																				: "border-border"
+																																		}
+                                `}
+																>
+																	<RadioGroupItem
+																		value="manual-updates"
+																		id="manual-updates"
+																		className="mt-1"
+																	/>
+																	<div>
+																		<Label htmlFor="manual-updates" className="font-medium">
+																			Manual Updates
+																		</Label>
+																		<p className="text-sm text-muted-foreground">
+																			Update progress manually with status updates and check-ins
+																		</p>
+																	</div>
+																</div>
+															</div>
+														</RadioGroup>
+													</div>
+
+													{/* {progressDriver === "key-results" && (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-base">Key Results</Label>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleAddKeyResult}
+                                  className="h-8"
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" />
+                                  Add Key Result
+                                </Button>
+                              </div>
+                              <div className="space-y-6">
+                                {keyResults.map((keyResult, index) => (
+                                  <Card key={index} className="relative">
+                                    <CardHeader className="pb-2">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="outline" className="rounded-full px-2 py-1 h-6">
+                                            {index + 1}
+                                          </Badge>
+                                          <CardTitle className="text-base">Key Result</CardTitle>
+                                        </div>
+                                        {keyResults.length > 1 && (
+                                          <Button 
+                                            type="button" 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => handleRemoveKeyResult(index)}
+                                            className="h-8 p-0 w-8"
+                                          >
+                                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`kr-title-${index}`}>Title</Label>
+                                        <Input 
+                                          id={`kr-title-${index}`}
+                                          value={keyResult.title}
+                                          onChange={(e) => handleKeyResultChange(index, 'title', e.target.value)}
+                                          placeholder="e.g., Increase revenue by 20%"
+                                          className={!keyResult.title || keyResult.title.length < 3 ? "border-destructive" : ""}
+                                        />
+                                        {(!keyResult.title || keyResult.title.length < 3) && (
+                                          <p className="text-xs text-destructive">Title must be at least 3 characters</p>
+                                        )}
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`kr-description-${index}`}>Description (Optional)</Label>
+                                        <Textarea 
+                                          id={`kr-description-${index}`}
+                                          value={keyResult.description || ""}
+                                          onChange={(e) => handleKeyResultChange(index, 'description', e.target.value)}
+                                          placeholder="Add details about this key result..."
+                                          className="min-h-[80px]"
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-3 gap-4">
+                                        <div className="space-y-2">
+                                          <Label htmlFor={`kr-start-${index}`}>Start Value</Label>
+                                          <Input 
+                                            id={`kr-start-${index}`}
+                                            value={keyResult.start_value}
+                                            onChange={(e) => handleKeyResultChange(index, 'start_value', e.target.value)}
+                                            type="text"
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label htmlFor={`kr-current-${index}`}>Current Value</Label>
+                                          <Input 
+                                            id={`kr-current-${index}`}
+                                            value={keyResult.current_value}
+                                            onChange={(e) => handleKeyResultChange(index, 'current_value', e.target.value)}
+                                            type="text"
+                                          />
+                                        </div>
+                                        <div className="space-y-2">
+                                          <Label htmlFor={`kr-target-${index}`}>Target Value</Label>
+                                          <Input 
+                                            id={`kr-target-${index}`}
+                                            value={keyResult.target_value}
+                                            onChange={(e) => handleKeyResultChange(index, 'target_value', e.target.value)}
+                                            type="text"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`kr-format-${index}`}>Value Format</Label>
+                                        <Select
+                                          value={keyResult.format}
+                                          onValueChange={(value: any) => handleKeyResultChange(index, 'format', value)}
+                                        >
+                                          <SelectTrigger id={`kr-format-${index}`}>
+                                            <SelectValue placeholder="Select format" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="number">Number</SelectItem>
+                                            <SelectItem value="percentage">Percentage</SelectItem>
+                                            <SelectItem value="currency">Currency</SelectItem>
+                                            <SelectItem value="boolean">Completion (Yes/No)</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <Label htmlFor={`kr-progress-${index}`}>Progress</Label>
+                                          <span className="text-sm">{Math.round(keyResult.progress || 0)}%</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                          <div 
+                                            className="h-full bg-primary rounded-full" 
+                                            style={{ width: `${keyResult.progress || 0}%` }}
+                                          ></div>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label htmlFor={`kr-owner-${index}`}>Assigned To (Optional)</Label>
+                                        <Select
+                                          value={keyResult.assignedToId}
+                                          onValueChange={(value) => handleKeyResultChange(index, 'assignedToId', value)}
+                                        >
+                                          <SelectTrigger id={`kr-owner-${index}`}>
+                                            <SelectValue placeholder="Select owner" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {users.map((user) => (
+                                              <SelectItem key={user.id} value={user.id}>
+                                                { user.name || user.username}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          )} */}
+												</motion.div>
+											)}
+										</AnimatePresence>
+
+										<div className="pt-4 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0">
+											<div>
+												{currentStep > 1 && (
+													<Button
+														type="button"
+														variant="outline"
+														onClick={prevStep}
+														className="w-full sm:w-auto"
+													>
+														<ArrowLeft className="h-4 w-4 mr-2" />
+														Previous
+													</Button>
+												)}
+											</div>
+											<div className="flex gap-2 justify-end">
+												<Button
+													type="button"
+													variant="outline"
+													onClick={handleCancel}
+													className="w-full sm:w-auto"
+												>
+													Cancel
+												</Button>
+												{currentStep === 1 ? (
+													<Button
+														type="button"
+														onClick={nextStep}
+														className="w-full sm:w-auto"
+													>
+														Next
+														<ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+													</Button>
+												) : (
+													<>
+														<Button
+															type="button"
+															variant="outline"
+															onClick={handleSaveAndAddAnother}
+															className="w-full sm:w-auto"
+															disabled={
+																createGoalAndAddAnotherMutation.isPending ||
+																createCompanyGoalMutation.isPending
+															}
+														>
+															{createGoalAndAddAnotherMutation.isPending ? (
+																<>
+																	<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+																	Saving...
+																</>
+															) : (
+																"Save and Add Another"
+															)}
+														</Button>
+														<Button
+															type="submit"
+															className="w-full sm:w-auto bg-primary"
+															disabled={
+																createCompanyGoalMutation.isPending ||
+																createGoalAndAddAnotherMutation.isPending
+															}
+														>
+															{createCompanyGoalMutation.isPending ? (
+																<>
+																	<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+																	Saving...
+																</>
+															) : (
+																"Save Company Goal"
+															)}
+														</Button>
+													</>
+												)}
+											</div>
+										</div>
+									</form>
+								</Form>
+							</div>
+
+							{/* Sidebar */}
+							<div className="w-full md:w-80 md:shrink-0 bg-muted/10 p-6">
+								<div className="sticky top-6 space-y-6">
+									<div className="space-y-1.5">
+										<h3 className="text-sm font-medium">Company Goal</h3>
+										<p className="text-xs text-muted-foreground">
+											Creating a company-level goal that will be visible to everyone in the
+											organization.
+										</p>
+									</div>
+
+									<div className="space-y-1.5">
+										<h3 className="text-sm font-medium">Current Step</h3>
+										<div className="space-y-3">
+											<div
+												className={`flex items-center space-x-2 cursor-pointer`}
+												onClick={() => (currentStep > 1 ? setCurrentStep(1) : null)}
+											>
+												<div
+													className={`h-6 w-6 rounded-full flex items-center justify-center text-xs
+                          ${
+																											currentStep === 1
+																												? "bg-primary text-white"
+																												: currentStep > 1
+																												? "bg-primary/20 text-primary"
+																												: "bg-muted text-muted-foreground"
+																										}`}
+												>
+													{currentStep > 1 ? <Check className="h-3 w-3" /> : "1"}
+												</div>
+												<span
+													className={`text-sm ${currentStep === 1 ? "font-medium" : ""}`}
+												>
+													Goal Details
+												</span>
+											</div>
+
+											<div
+												className={`flex items-center space-x-2 cursor-pointer`}
+												onClick={() => (currentStep > 2 ? setCurrentStep(2) : null)}
+											>
+												<div
+													className={`h-6 w-6 rounded-full flex items-center justify-center text-xs
+                          ${
+																											currentStep === 2
+																												? "bg-primary text-white"
+																												: currentStep > 2
+																												? "bg-primary/20 text-primary"
+																												: "bg-muted text-muted-foreground"
+																										}`}
+												>
+													{currentStep > 2 ? <Check className="h-3 w-3" /> : "2"}
+												</div>
+												<span
+													className={`text-sm ${currentStep === 2 ? "font-medium" : ""}`}
+												>
+													Alignment & Ownership
+												</span>
+											</div>
+										</div>
+									</div>
+
+									<div className="space-y-1.5">
+										<h3 className="text-sm font-medium">Tips</h3>
+										<div className="text-xs text-muted-foreground space-y-3">
+											{currentStep === 1 && (
+												<>
+													<p>• Use clear, specific language for your objective title</p>
+													<p>
+														• Include the &quot;what&quot; and the &quot;why&quot; in your
+														description
+													</p>
+													<p>• Tags help with filtering and categorization</p>
+												</>
+											)}
+
+											{currentStep === 2 && (
+												<>
+													<p>
+														• Assign a primary owner who is accountable for this objective
+													</p>
+													<p>• Select the team primarily responsible for implementation</p>
+													<p>• Add contributors who will help accomplish this objective</p>
+													<p>• Align with strategic pillars or other company objectives</p>
+												</>
+											)}
+										</div>
+									</div>
+
+									<Card className="bg-yellow-50 border-yellow-100">
+										<CardContent className="p-4">
+											<div className="flex items-start space-x-2">
+												<InfoIcon className="h-4 w-4 text-yellow-600 mt-0.5" />
+												<div className="space-y-1">
+													<h4 className="text-xs font-medium text-yellow-800">
+														Important Note
+													</h4>
+													<p className="text-xs text-yellow-700">
+														Company objectives are visible to everyone in your organization
+														and help align teams around common goals.
+													</p>
+												</div>
+											</div>
+										</CardContent>
+									</Card>
+								</div>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		</>
+	);
+}

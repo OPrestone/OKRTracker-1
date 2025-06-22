@@ -1,0 +1,58 @@
+[
+	{
+		"id": "marketing",
+		"name": "Marketing Team",
+		"description": "Team responsible for brand, communications and marketing campaigns",
+		"icon": "megaphone",
+		"color": "#3B82F6"
+	},
+	{
+		"id": "sales",
+		"name": "Sales Team",
+		"description": "Team responsible for sales and revenue growth",
+		"icon": "briefcase",
+		"color": "#10B981"
+	},
+	{
+		"id": "engineering",
+		"name": "Engineering Team",
+		"description": "Team responsible for product development and technical operations",
+		"icon": "code",
+		"color": "#8B5CF6"
+	},
+	{
+		"id": "product",
+		"name": "Product Team",
+		"description": "Team responsible for product strategy and roadmap",
+		"icon": "layers",
+		"color": "#F59E0B"
+	},
+	{
+		"id": "operations",
+		"name": "Operations Team",
+		"description": "Team responsible for business operations and logistics",
+		"icon": "settings",
+		"color": "#6B7280"
+	},
+	{
+		"id": "hr",
+		"name": "Human Resources",
+		"description": "Team responsible for talent acquisition and employee development",
+		"icon": "users",
+		"color": "#EC4899"
+	},
+	{
+		"id": "finance",
+		"name": "Finance Team",
+		"description": "Team responsible for financial planning and analysis",
+		"icon": "dollar-sign",
+		"color": "#059669"
+	},
+	{
+		"id": "customer-success",
+		"name": "Customer Success",
+		"description": "Team responsible for customer satisfaction and retention",
+		"icon": "heart",
+		"color": "#EF4444"
+	}
+]
