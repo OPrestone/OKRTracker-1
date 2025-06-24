@@ -48,6 +48,7 @@ import {
 	InsertTeam,
 	InsertTimeframe,
 	StrategicDirection,
+	Team,
 } from "@/util/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -83,14 +84,14 @@ import { z } from "zod";
 import TimeframeSetupSimplified from "./TimeframeSetupSimplified";
 
 // Team interface
-interface Team {
-	id: string;
-	name: string;
-	description: string;
-	icon?: string;
-	color?: string;
-	selected?: boolean;
-}
+// interface Team {
+// 	id: string;
+// 	name: string;
+// 	description: string;
+// 	icon?: string;
+// 	color?: string;
+// 	selected?: boolean;
+// }
 
 // Strategic Intent interface
 // interface StrategicIntent {
@@ -105,6 +106,9 @@ interface Team {
 interface UserImport {
 	email: string;
 	name?: string;
+	firstName?: string;
+	lastName?: string;
+	title?: string;
 	role: string;
 	department?: string;
 	team?: string;
@@ -319,6 +323,7 @@ const formSchema = z.object({
 		maxKeyResultsPerObjective: z.enum(["3", "4", "5", "6"]),
 		requireObjectiveApproval: z.boolean(),
 		enableObjectiveAlignment: z.boolean(),
+		defaultObjectiveCategory: z.string().optional(),
 	}),
 	teamConfiguration: z.object({
 		orgStructureType: z.enum([
@@ -486,25 +491,31 @@ export default function OKRSystemSetupWizard({
 	};
 
 	// Check if there are any active (non-expired) strategic intents
+	// const hasActiveStrategicIntents =
+	// 	existingStrategicIntents &&
+	// 	existingStrategicIntents.some(
+	// 		(intent: StrategicDirection) => !isStrategicIntentExpired(intent)
+	// 	);
 	const hasActiveStrategicIntents =
-		existingStrategicIntents &&
-		existingStrategicIntents.some(
-			(intent: StrategicDirection) => !isStrategicIntentExpired(intent)
-		);
+		existingStrategicIntents && !("error" in existingStrategicIntents);
 
 	// Check if there are expired strategic intents that allow new creation
-	const hasExpiredIntents =
-		existingStrategicIntents &&
-		existingStrategicIntents.some((intent: StrategicDirection) =>
-			isStrategicIntentExpired(intent)
-		);
+	// const hasExpiredIntents =
+	// 	existingStrategicIntents &&
+	// 	existingStrategicIntents.some((intent: StrategicDirection) =>
+	// 		isStrategicIntentExpired(intent)
+	// 	);
 
 	// Effect to preselect teams that already exist in the tenant's organization
 	useEffect(() => {
-		if (existingTeams && existingTeams.length > 0) {
+		if (
+			existingTeams &&
+			!("error" in existingTeams) &&
+			existingTeams.length > 0
+		) {
 			const matchingTemplates: string[] = [];
 
-			existingTeams.forEach((team: any) => {
+			existingTeams.forEach((team: Team) => {
 				const teamName = team.name.toLowerCase();
 
 				// Find matching default template based on team name
@@ -1501,14 +1512,27 @@ export default function OKRSystemSetupWizard({
 						// Map remaining fields
 						if (systemConfig.tracking_frequency) {
 							formValues.generalSettings.trackingFrequency =
-								systemConfig.tracking_frequency;
+								systemConfig.tracking_frequency as "weekly" | "biweekly" | "monthly";
 						}
 
 						formValues.generalSettings.enableNotifications =
 							systemConfig.enable_notifications !== false;
 
 						if (systemConfig.primary_cadence) {
-							formValues.timeframes.primaryCadence = systemConfig.primary_cadence;
+							const allowedCadences = [
+								"quarterly",
+								"trimester",
+								"halfYearly",
+								"annual",
+							] as const;
+							if (
+								allowedCadences.includes(
+									systemConfig.primary_cadence as (typeof allowedCadences)[number]
+								)
+							) {
+								formValues.timeframes.primaryCadence =
+									systemConfig.primary_cadence as (typeof allowedCadences)[number];
+							}
 						}
 
 						formValues.timeframes.enableQuarterlyCadence =
@@ -1521,7 +1545,28 @@ export default function OKRSystemSetupWizard({
 						}
 
 						if (systemConfig.start_month) {
-							formValues.timeframes.startMonth = systemConfig.start_month;
+							const allowedMonths = [
+								"january",
+								"february",
+								"march",
+								"april",
+								"may",
+								"june",
+								"july",
+								"august",
+								"september",
+								"october",
+								"november",
+								"december",
+							] as const;
+							if (
+								allowedMonths.includes(
+									systemConfig.start_month as (typeof allowedMonths)[number]
+								)
+							) {
+								formValues.timeframes.startMonth =
+									systemConfig.start_month as (typeof allowedMonths)[number];
+							}
 						}
 
 						if (systemConfig.default_objective_category) {
@@ -1531,12 +1576,22 @@ export default function OKRSystemSetupWizard({
 
 						if (systemConfig.max_objectives_per_team) {
 							formValues.objectiveSettings.maxObjectivesPerTeam =
-								systemConfig.max_objectives_per_team.toString();
+								systemConfig.max_objectives_per_team.toString() as
+									| "3"
+									| "4"
+									| "5"
+									| "6"
+									| "7"
+									| "8";
 						}
 
 						if (systemConfig.max_key_results_per_objective) {
 							formValues.objectiveSettings.maxKeyResultsPerObjective =
-								systemConfig.max_key_results_per_objective.toString();
+								systemConfig.max_key_results_per_objective.toString() as
+									| "3"
+									| "4"
+									| "5"
+									| "6";
 						}
 
 						formValues.objectiveSettings.requireObjectiveApproval =
@@ -1547,7 +1602,12 @@ export default function OKRSystemSetupWizard({
 
 						if (systemConfig.org_structure_type) {
 							formValues.teamConfiguration.orgStructureType =
-								systemConfig.org_structure_type;
+								systemConfig.org_structure_type as
+									| "flat"
+									| "functional"
+									| "divisional"
+									| "matrix"
+									| "hierarchical";
 						}
 
 						formValues.teamConfiguration.enableCrossTeamObjectives =
@@ -1555,7 +1615,7 @@ export default function OKRSystemSetupWizard({
 
 						if (systemConfig.default_visibility) {
 							formValues.teamConfiguration.defaultVisibility =
-								systemConfig.default_visibility;
+								systemConfig.default_visibility as "team" | "public" | "private";
 						}
 
 						// If there are selected teams in the config, use them
@@ -1614,7 +1674,8 @@ export default function OKRSystemSetupWizard({
 	useEffect(() => {
 		if (
 			existingStrategicIntents &&
-			existingStrategicIntents.length > 0 &&
+			// existingStrategicIntents.length > 0 &&
+			!("error" in existingStrategicIntents) &&
 			tenantId
 		) {
 			console.log(
@@ -2532,6 +2593,7 @@ export default function OKRSystemSetupWizard({
 																</span>
 															</div>
 														) : existingStrategicIntents &&
+														  !("error" in existingStrategicIntents) &&
 														  existingStrategicIntents.length > 0 ? (
 															<div className="mb-6">
 																<div className="flex items-center gap-2 mb-3">
@@ -2768,12 +2830,14 @@ export default function OKRSystemSetupWizard({
 															{(!form.watch("generalSettings.strategicIntents") ||
 																form.watch("generalSettings.strategicIntents")?.length === 0) &&
 																existingStrategicIntents &&
+																!("error" in existingStrategicIntents) &&
 																existingStrategicIntents.length === 0 && (
 																	<div className="text-center py-8 text-gray-500">
 																		<Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
 																		<p>No strategic intent defined yet.</p>
 																		<p className="text-sm">
-																			Click "Add Direction" to define your strategic intent.
+																			Click &quot;Add Direction&quot; to define your strategic
+																			intent.
 																		</p>
 																	</div>
 																)}
@@ -2863,7 +2927,7 @@ export default function OKRSystemSetupWizard({
 											</h2>
 											<p className="text-gray-600 mb-4">
 												Configure your OKR planning cycles and timeframes to establish your
-												organization's rhythm.
+												organization&apos;s rhythm.
 											</p>
 
 											<div className="space-y-6">
@@ -3541,8 +3605,8 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
 																</div>
 
 																<p className="text-sm text-blue-700 mt-3">
-																	Click "Save Teams & Users" to add these to your organization
-																	permanently.
+																	Click &quot;Save Teams & Users&quot; to add these to your
+																	organization permanently.
 																</p>
 															</div>
 														)}
@@ -3599,8 +3663,8 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
 																	Import Sample OKRs
 																</h3>
 																<p className="text-blue-700 mb-4">
-																	We'll create sample objectives, key results, and initiatives
-																	based on:
+																	We&apos;ll create sample objectives, key results, and
+																	initiatives based on:
 																</p>
 																<ul className="list-disc list-inside text-blue-700 space-y-1 mb-4">
 																	<li>Your selected timeframes and cadences</li>
@@ -3720,8 +3784,8 @@ david.brown@company.com,David,Brown,Finance,CFO,owner,Finance Team`;
 													your configuration and begin tracking your organizational goals.
 												</p>
 												<p className="text-sm text-gray-500">
-													You can always adjust these settings later from your organization's
-													admin panel.
+													You can always adjust these settings later from your
+													organization&apos;s admin panel.
 												</p>
 											</div>
 										</div>

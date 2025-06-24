@@ -9,10 +9,12 @@ import {
 	addEdge,
 	BaseEdge,
 	Controls,
+	EdgeProps,
 	Handle,
 	MiniMap,
 	Node,
 	NodeProps,
+	OnConnect,
 	Position,
 	ReactFlow,
 	useEdgesState,
@@ -23,7 +25,7 @@ import "@xyflow/react/dist/style.css";
 import { ActivityIcon, Lightbulb } from "lucide-react";
 import { useCallback, useContext, useEffect } from "react";
 
-function StepEdge({ id, sourceX, sourceY, targetX, targetY }) {
+function StepEdge({ id, sourceX, sourceY, targetX, targetY }: EdgeProps) {
 	const centerY = (targetY - sourceY) / 2 + sourceY;
 
 	const edgePath = `M ${sourceX} ${sourceY} L ${sourceX} ${centerY} L ${targetX} ${centerY} L ${targetX} ${targetY}`;
@@ -64,10 +66,6 @@ const initialEdges = [
 type IntentNode = Node<{ title: string }, "string">;
 
 const IntentNode = ({ data }: NodeProps<IntentNode>) => {
-	const onChange = useCallback((event) => {
-		console.log("Intent changed:", event.target.value);
-	}, []);
-
 	return (
 		<div className="intent-node border border-green-300 p-4 bg-green-100 rounded max-w-[600px]">
 			<div className="flex gap-3">
@@ -85,10 +83,6 @@ const IntentNode = ({ data }: NodeProps<IntentNode>) => {
 type GoalNode = Node<{ title: string }, "string">;
 
 const GoalNode = ({ data }: NodeProps<GoalNode>) => {
-	const onChange = useCallback((event) => {
-		console.log("Intent changed:", event.target.value);
-	}, []);
-
 	return (
 		<div className="goal-node border p-4 bg-white rounded w-[400px]">
 			<div className="flex gap-3">
@@ -138,7 +132,7 @@ const OrganizationalChart = () => {
 		},
 	});
 
-	const onConnect = useCallback(
+	const onConnect: OnConnect = useCallback(
 		(params) => setEdges((eds) => addEdge(params, eds)),
 		[setEdges]
 	);

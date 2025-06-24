@@ -133,7 +133,7 @@ export default function CreateCompanyObjective() {
 	const [currentStep, setCurrentStep] = useState<number>(1);
 
 	const tenant = useContext(TenantContext) as Tenant;
-	const user = useContext(UserContext) as UserPermissions;
+	const { user } = useContext(UserContext) as UserPermissions;
 	const router = useRouter();
 
 	// Set of objective types (matching the filtering options in company-okrs.tsx)
@@ -365,7 +365,7 @@ export default function CreateCompanyObjective() {
 			//   tags: selectedTags,
 			//   contributors: selectedContributors
 			tenantId: tenant.id,
-			ownerId: values.ownerId || user.user!.id,
+			ownerId: values.ownerId || user!.id,
 		};
 
 		console.log("Step 1: Creating company goal:", objectivePayload);
@@ -400,7 +400,7 @@ export default function CreateCompanyObjective() {
 			tags: selectedTags,
 			contributors: selectedContributors,
 			tenantId: tenant.id,
-			ownerId: values.ownerId || user.id,
+			ownerId: values.ownerId || user!.id,
 		};
 
 		console.log("Save and add another: Creating company goal:", objectivePayload);

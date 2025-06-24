@@ -123,7 +123,6 @@ export default function ObjectiveDetailsDisplay({
 
 	// For debugging
 	//   console.log("Route params:", { simpleParams, tenantParams, orgParams });
-	console.log("Objective ID from URL:", objectiveId);
 
 	// Fetch the objective data from API with tenant context
 	const {
@@ -140,15 +139,10 @@ export default function ObjectiveDetailsDisplay({
 			}
 			return objective;
 		},
-		enabled: !!objectiveId,
 	});
 
 	// Fetch key results related to this objective
-	const {
-		data: keyResults,
-		isLoading: keyResultsLoading,
-		...otherKey
-	} = useQuery({
+	const { data: keyResults, isLoading: keyResultsLoading } = useQuery({
 		queryKey: ["key-results", tenant.id, objectiveId],
 		queryFn: async () => {
 			const keyResults = await getKeyResultsByObjective(objectiveId, tenant.id);
@@ -644,7 +638,7 @@ export default function ObjectiveDetailsDisplay({
 							<Badge className={getStatusColor(objective.objectives.status)}>
 								{getStatusText(objective.objectives.status)}
 							</Badge>
-							<Badge variant="outline">{objective.timeframes.name}</Badge>
+							<Badge variant="outline">{objective.timeframes?.name}</Badge>
 						</div>
 						<h1 className="text-2xl font-bold tracking-tight">
 							{objective.objectives.title}
@@ -704,7 +698,7 @@ export default function ObjectiveDetailsDisplay({
 											<p className="text-gray-500 mb-1">Start Date</p>
 											<p className="font-medium flex items-center">
 												<Calendar className="h-4 w-4 mr-1 text-gray-400" />
-												{objective.timeframes.startDate
+												{objective.timeframes && objective.timeframes.startDate
 													? new Date(objective.timeframes.startDate).toLocaleDateString()
 													: "No start date"}
 											</p>
@@ -713,7 +707,7 @@ export default function ObjectiveDetailsDisplay({
 											<p className="text-gray-500 mb-1">End Date</p>
 											<p className="font-medium flex items-center">
 												<Calendar className="h-4 w-4 mr-1 text-gray-400" />
-												{objective.timeframes.endDate
+												{objective.timeframes && objective.timeframes.endDate
 													? new Date(objective.timeframes.endDate).toLocaleDateString()
 													: "No end date"}
 											</p>
@@ -810,7 +804,8 @@ export default function ObjectiveDetailsDisplay({
 													<div className="flex items-center gap-2">
 														<div className="flex items-center">
 															<User className="h-4 w-4 mr-1" />
-															{keyResult.assignedTo?.name || "Unassigned"}
+															{/* {keyResult.assignedTo?.name || "Unassigned"} */}
+															{keyResult.assignedToId || "Unassigned"}
 														</div>
 													</div>
 
@@ -846,8 +841,8 @@ export default function ObjectiveDetailsDisplay({
 																<AlertDialogHeader>
 																	<AlertDialogTitle>Delete Key Result</AlertDialogTitle>
 																	<AlertDialogDescription>
-																		Are you sure you want to delete "{keyResult.title}"? This
-																		action cannot be undone.
+																		Are you sure you want to delete &quot;{keyResult.title}&quot;?
+																		This action cannot be undone.
 																	</AlertDialogDescription>
 																</AlertDialogHeader>
 																<AlertDialogFooter>
@@ -889,7 +884,7 @@ export default function ObjectiveDetailsDisplay({
 										Projects and activities that contribute to achieving the key results
 									</CardDescription>
 								</CardHeader>
-								<CardContent className="space-y-4">
+								{/* <CardContent className="space-y-4">
 									{objective?.initiatives?.length > 0 ? (
 										objective.initiatives.map((initiative) => (
 											<div key={initiative.id} className="border rounded-md p-4">
@@ -939,7 +934,7 @@ export default function ObjectiveDetailsDisplay({
 											No initiatives found for this objective
 										</div>
 									)}
-								</CardContent>
+								</CardContent> */}
 							</Card>
 						</TabsContent>
 
@@ -1059,7 +1054,7 @@ export default function ObjectiveDetailsDisplay({
 														</div>
 													</div>
 
-													{keyResult.assignedTo && (
+													{/* {keyResult.assignedTo && (
 														<div className="flex items-center gap-2">
 															<Avatar className="h-6 w-6">
 																<AvatarFallback className="text-xs">
@@ -1070,7 +1065,7 @@ export default function ObjectiveDetailsDisplay({
 																{keyResult.assignedTo.name}
 															</span>
 														</div>
-													)}
+													)} */}
 												</div>
 											))
 										) : (
