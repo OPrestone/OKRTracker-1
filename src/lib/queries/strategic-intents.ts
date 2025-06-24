@@ -8,12 +8,19 @@ import {
 } from "@/util/schema";
 import { and, eq } from "drizzle-orm";
 
-export async function getStrategicIntents(tenantId: string) {
-	const allStrategicIntents = await db
-		.select()
-		.from(strategicIntents)
-		.where(eq(strategicIntents.tenantId, tenantId));
-	return allStrategicIntents;
+export async function getStrategicIntents(
+	tenantId: string
+): Promise<StrategicDirection[] | { error: string; code: number }> {
+	try {
+		const allStrategicIntents = await db
+			.select()
+			.from(strategicIntents)
+			.where(eq(strategicIntents.tenantId, tenantId));
+		return allStrategicIntents;
+	} catch (error) {
+		console.error("Error fetching strategic intents:", error);
+		return { error: "Failed to fetch strategic intents", code: 500 };
+	}
 }
 
 export async function getStrategicIntentsCompany(

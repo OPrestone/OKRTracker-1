@@ -133,8 +133,6 @@ const Sidebar = ({ open, onOpenChange, userNPermissions }: SidebarProps) => {
 	// Initialize expanded states based on current location
 	const [configExpanded, setConfigExpanded] = useState(isConfigPathActive);
 	const [okrsExpanded, setOkrsExpanded] = useState(isOkrPathActive);
-	const [companyObjectivesExpanded, setCompanyObjectivesExpanded] =
-		useState(false);
 	const [userManagementExpanded, setUserManagementExpanded] = useState(
 		isUserManagementPathActive
 	);
@@ -481,12 +479,12 @@ const Sidebar = ({ open, onOpenChange, userNPermissions }: SidebarProps) => {
 							<div
 								className={cn(
 									"flex items-center mx-2 px-3 py-2 text-sm transition-all duration-200 rounded-md",
-									location === "/my-okrs"
+									location === "/team-okrs"
 										? "text-white font-medium bg-indigo-900/60 shadow-sm"
 										: "text-indigo-200 hover:text-white hover:bg-indigo-900/40"
 								)}
 							>
-								<Link href={getLink("/my-okrs")} className="w-full">
+								<Link href={getLink("/team-okrs")} className="w-full">
 									Team OKRs
 								</Link>
 							</div>

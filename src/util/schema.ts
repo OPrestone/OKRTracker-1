@@ -348,7 +348,7 @@ export const keyResults = pgTable("key_results", {
 	status: text("status").default("not_started"),
 	tenantId: text("tenant_id").references(() => tenants.id),
 	createdAt: timestamp("created_at").defaultNow(),
-	updatedAt: timestamp("created_at").defaultNow(),
+	updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const initiatives = pgTable("initiatives", {
