@@ -497,7 +497,9 @@ export default function OKRSystemSetupWizard({
 	// 		(intent: StrategicDirection) => !isStrategicIntentExpired(intent)
 	// 	);
 	const hasActiveStrategicIntents =
-		existingStrategicIntents && !("error" in existingStrategicIntents);
+		existingStrategicIntents &&
+		!("error" in existingStrategicIntents) &&
+		existingStrategicIntents.length > 0;
 
 	// Check if there are expired strategic intents that allow new creation
 	// const hasExpiredIntents =
@@ -1676,7 +1678,8 @@ export default function OKRSystemSetupWizard({
 			existingStrategicIntents &&
 			// existingStrategicIntents.length > 0 &&
 			!("error" in existingStrategicIntents) &&
-			tenantId
+			tenantId &&
+			existingStrategicIntents.length > 0
 		) {
 			console.log(
 				"Populating strategic intents with real data:",
